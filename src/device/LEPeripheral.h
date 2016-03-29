@@ -14,7 +14,7 @@
 #include <thread>
 
 #include "../data/BlockingQueue.h"
-#include "../Device.h"
+#include "Device.h"
 #include "shared.h"
 
 enum AddrType {
@@ -23,10 +23,11 @@ enum AddrType {
 
 class LEPeripheral: public Device {
 public:
-	LEPeripheral(Beetle &beetle, std::string name, bdaddr_t addr, AddrType addrType);
+	LEPeripheral(Beetle *beetle, std::string name, bdaddr_t addr, AddrType addrType);
 	virtual ~LEPeripheral();
 protected:
-	bool write(char *buf, int len);
+	void startInternal();
+	bool write(uint8_t *buf, int len);
 private:
 	bdaddr_t bdaddr;
 	AddrType bdaddrType;

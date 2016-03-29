@@ -8,19 +8,19 @@
 #ifndef ROUTER_H_
 #define ROUTER_H_
 
-#include "Device.h"
+#include "device/Device.h"
 
 class Router {
 public:
-	Router(Beetle &beetle_) : beetle{beetle_} {};
+	Router(const Beetle *beetle);
 	virtual ~Router();
-	int route(char *buf, int len, device_t src);
+	int route(uint8_t *buf, int len, device_t src);
 private:
-	Beetle &beetle;
+	const Beetle *beetle;
 
-	int routeFindInfo(char *buf, int len, device_t src);
-	int routeFindByType(char *buf, int len, device_t src);
-	int routeReadByType(char *buf, int len, device_t src);
+	int routeFindInfo(uint8_t *buf, int len, device_t src);
+	int routeFindByType(uint8_t *buf, int len, device_t src);
+	int routeReadByType(uint8_t *buf, int len, device_t src);
 };
 
 #endif /* ROUTER_H_ */

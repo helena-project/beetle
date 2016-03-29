@@ -14,7 +14,7 @@
 
 const int UUID_LEN = 16;
 const int SHORT_UUID_LEN = 2;
-const char BLUETOOTH_BASE_UUID[16] = {0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB};
+const uint8_t BLUETOOTH_BASE_UUID[16] = {0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB};
 
 UUID::UUID(const unsigned char *buf, size_t len) {
 	assert(len == SHORT_UUID_LEN || len == UUID_LEN);
@@ -25,6 +25,10 @@ UUID::UUID(const unsigned char *buf, size_t len) {
 	} else {
 		memcpy(uuid.buf, buf, UUID_LEN);
 	}
+}
+
+UUID::UUID(uuid_t uuid_) {
+	uuid = uuid_;
 }
 
 UUID::~UUID() {

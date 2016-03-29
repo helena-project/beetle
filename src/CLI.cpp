@@ -14,13 +14,16 @@
 #include <iostream>
 #include <iterator>
 
-CLI::CLI(Beetle &beetle) {
+CLI::CLI(const Beetle *beetle) : t() {
 	CLI::beetle = beetle;
-	t(cmdLineDaemon);
 }
 
 CLI::~CLI() {
 	// TODO Auto-generated destructor stub
+}
+
+void CLI::start() {
+	t = std::thread(&CLI::cmdLineDaemon, this);
 }
 
 void CLI::join() {

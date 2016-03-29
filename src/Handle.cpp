@@ -7,11 +7,14 @@
 
 #include "Handle.h"
 
-Handle::Handle(uint16_t handle, UUID uuid, uint16_t serviceHandle, uint16_t charHandle) {
-	Handle::handle = handle;
-	Handle::uuid = uuid;
-	Handle::serviceHandle = serviceHandle;
-	Handle::charHandle = charHandle;
+Handle::Handle(uint16_t handle_, uuid_t uuid_, uint16_t serviceHandle_, uint16_t charHandle_) :	uuid(uuid_) {
+	handle = handle_;
+	serviceHandle = serviceHandle_;
+	charHandle = charHandle_;
+}
+
+Handle::~Handle() {
+
 }
 
 uint16_t Handle::getCharHandle() {
@@ -30,7 +33,7 @@ std::set<device_t>& Handle::getSubscribers() {
 	return subscribers;
 }
 
-const UUID& Handle::getUuid() {
+UUID Handle::getUuid() {
 	return uuid;
 }
 

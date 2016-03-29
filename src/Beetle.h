@@ -14,6 +14,11 @@
 
 class Device;
 class Router;
+class HAT;
+
+typedef int device_t;
+const device_t BEETLE_RESERVED_DEVICE = 0;
+const device_t NULL_RESERVED_DEVICE = -1;
 
 class Beetle {
 public:
@@ -28,7 +33,10 @@ public:
 	std::map<device_t, Device *> devices;
 	boost::shared_mutex devicesMutex;
 
-	Router &router;
+	HAT *hat;
+	boost::shared_mutex hatMutex;
+
+	Router *router;
 };
 
 #endif /* BEETLE_H_ */

@@ -9,7 +9,7 @@
 #define DEVICE_SHARED_H_
 
 typedef struct {
-	char *buf;
+	uint8_t *buf;
 	int len;
 } queued_write_t;
 

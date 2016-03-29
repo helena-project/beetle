@@ -9,26 +9,23 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include <cstdbool>
-#include <queue>
-#include <string>
+#include <cstring>
 
-#include "ble/att.h"
-#include "Router.h"
+#include "../ble/att.h"
+#include "../Router.h"
 
-Device::Device(Beetle &beetle, std::string name) {
-	Device::beetle = beetle;
-	Device::name = name;
+std::atomic_int Device::idCounter(1);
+
+Device::Device(Beetle *beetle_, std::string name_) : transactionSemaphore{1} {
+	beetle = beetle_;
+	name = name_;
 	id = idCounter++;
 
-	handleOffset = -1;
-	highestHandle = 0;
+	highestHandle = -1;
 
 	running = true;
 
 	currentTransaction = NULL;
-
-	transactionSemaphore(1);
 }
 
 Device::~Device() {
@@ -46,13 +43,13 @@ void Device::stop() {
 	transactionMutex.lock();
 	if (currentTransaction) {
 		// TODO abort
-		free(currentTransaction->buf);
+		delete[] currentTransaction->buf;
 		delete currentTransaction;
 	}
 	while (pendingTransactions.size() > 0) {
 		transaction_t *t = pendingTransactions.front();
 		// TODO abort
-		free(t->buf);
+		delete[] t->buf;
 		delete t;
 		pendingTransactions.pop();
 	}
@@ -61,24 +58,24 @@ void Device::stop() {
 	//	TODO doCleanup;
 }
 
-bool Device::writeCommand(char *buf, int len) {
+bool Device::writeCommand(uint8_t *buf, int len) {
 	return isStopped() || write(buf, len);
 }
 
-bool Device::writeResponse(char *buf, int len) {
+bool Device::writeResponse(uint8_t *buf, int len) {
 	return isStopped() || write(buf, len);
 }
 
-bool Device::writeTransaction(char *buf, int len, TransactionCallback cb) {
-	if (isStopped) {
+bool Device::writeTransaction(uint8_t *buf, int len, TransactionCallback cb) {
+	if (isStopped()) {
 		return false;
 	}
 
 	transaction_t *t = new transaction_t;
-	t->buf = malloc(len);
+	t->buf = new uint8_t[len];
 	memcpy(t->buf, buf, len);
 	t->len = len;
-	t->cb = TransactionCallback;
+	t->cb = cb;
 
 	std::lock_guard<std::mutex> lg(transactionMutex);
 	if (currentTransaction == NULL) {
@@ -90,7 +87,7 @@ bool Device::writeTransaction(char *buf, int len, TransactionCallback cb) {
 	return true;
 }
 
-void Device::handleTransactionResponse(char *buf, int len) {
+void Device::handleTransactionResponse(uint8_t *buf, int len) {
 	transactionMutex.lock();
 	if (!currentTransaction) {
 		// TODO
@@ -111,13 +108,13 @@ void Device::handleTransactionResponse(char *buf, int len) {
 	}
 }
 
-void Device::handleRead(char *buf, int len) {
-	if (((buf[0] & 1 == 1) && buf[0] != ATT_OP_HANDLE_NOTIFY && buf[0] != ATT_OP_HANDLE_IND)
+void Device::handleRead(uint8_t *buf, int len) {
+	if (((buf[0] & 1) == 1 && buf[0] != ATT_OP_HANDLE_NOTIFY && buf[0] != ATT_OP_HANDLE_IND)
 			|| buf[0] == ATT_OP_HANDLE_CNF)
 	{
 		handleTransactionResponse(buf, len);
 	} else {
-		beetle.router.route(buf, len, id);
+		beetle->router->route(buf, len, id);
 	}
 }
 

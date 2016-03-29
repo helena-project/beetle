@@ -11,18 +11,18 @@
 #include <cstdint>
 #include <set>
 
-#include "Device.h"
+#include "Beetle.h"
 #include "UUID.h"
 
 class Handle {
 public:
-	Handle(uint16_t handle, UUID uuid, uint16_t serviceHandle, uint16_t charHandle);
+	Handle(uint16_t handle, uuid_t uuid, uint16_t serviceHandle, uint16_t charHandle);
 	virtual ~Handle();
 	uint16_t getCharHandle();
 	uint16_t getHandle();
 	uint16_t getServiceHandle();
 	std::set<device_t>& getSubscribers();
-	const UUID& getUuid();
+	UUID getUuid();
 private:
 	uint16_t handle;
 	UUID uuid;

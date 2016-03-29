@@ -7,7 +7,6 @@
 
 #include "LEPeripheral.h"
 
-#include <bits/socket_type.h>
 #include <bluetooth/l2cap.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -17,13 +16,15 @@
 
 #include "../ble/att.h"
 
-LEPeripheral::LEPeripheral(Beetle &beetle, std::string name, bdaddr_t addr, AddrType addrType) : Device(beetle, name) {
+LEPeripheral::LEPeripheral(Beetle *beetle, std::string name, bdaddr_t addr, AddrType addrType
+		) : Device(beetle, name), readThread(), writeThread() {
 	bdaddr = addr;
 	bdaddrType = addrType;
 
     struct sockaddr_l2 loc_addr = {0};
     loc_addr.l2_family = AF_BLUETOOTH;
-    bacpy(&loc_addr.l2_bdaddr, BDADDR_ANY);
+    bdaddr_t tmp = {0, 0, 0, 0, 0, 0}; // BDADDR_ANY
+    bacpy(&loc_addr.l2_bdaddr, &tmp);
     loc_addr.l2_psm = 0;
     loc_addr.l2_cid = htobs(ATT_CID);
     loc_addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
@@ -47,9 +48,6 @@ LEPeripheral::LEPeripheral(Beetle &beetle, std::string name, bdaddr_t addr, Addr
         close(sockfd);
         throw "could not connect";
     }
-
-    writeThread(writeDaemon);
-    readThread(readDaemon);
 }
 
 LEPeripheral::~LEPeripheral() {
@@ -67,9 +65,14 @@ LEPeripheral::~LEPeripheral() {
 	close(sockfd);
 }
 
-bool LEPeripheral::write(char *buf, int len) {
+void LEPeripheral::startInternal() {
+    writeThread = std::thread(&LEPeripheral::writeDaemon, this);
+    readThread = std::thread(&LEPeripheral::readDaemon, this);
+}
+
+bool LEPeripheral::write(uint8_t *buf, int len) {
 	queued_write_t qw;
-	qw.buf = malloc(len);
+	qw.buf = new uint8_t[len];
 	memcpy(qw.buf, buf, len);
 	qw.len = len;
 	try {
@@ -81,7 +84,7 @@ bool LEPeripheral::write(char *buf, int len) {
 }
 
 void LEPeripheral::readDaemon() {
-	char buf[256];
+	uint8_t buf[256];
 	while (!isStopped()) {
 		int n = read(sockfd, buf, sizeof(buf));
 		if (n < 0) {
@@ -100,7 +103,7 @@ void LEPeripheral::writeDaemon() {
 		try {
 			queued_write_t qw = writeQueue.pop();
 			::write(sockfd, qw.buf, qw.len);
-			free(qw.buf);
+			delete[] qw.buf;
 		} catch (QueueDestroyedException &e) {
 			break;
 		}

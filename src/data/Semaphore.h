@@ -13,8 +13,13 @@
 
 class Semaphore {
 public:
-	Semaphore(int init = 0) : count{init} {};
-	virtual ~Semaphore();
+	Semaphore(int init) {
+		count = init;
+	};
+
+	virtual ~Semaphore() {
+
+	};
 
 	void notify() {
 		std::lock_guard<std::mutex> lg(m);

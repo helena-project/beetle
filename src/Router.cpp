@@ -7,18 +7,28 @@
 
 #include "Router.h"
 
-#include <mutex>
 #include <assert.h>
-#include <vector>
-#include <utility>
-#include <boost/thread.hpp>
 #include <bluetooth/bluetooth.h>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <cstdbool>
+#include <cstdint>
+#include <utility>
+#include <vector>
 
 #include "ble/att.h"
-#include "ble/gatt.h"
 #include "Beetle.h"
+#include "UUID.h"
 
-int Router::route(char *buf, int len, device_t src) {
+Router::Router(const Beetle *b) {
+	beetle = b;
+}
+
+Router::~Router() {
+
+}
+
+int Router::route(uint8_t *buf, int len, device_t src) {
 	assert(len > 0);
 	int result;
 
@@ -49,7 +59,7 @@ int Router::route(char *buf, int len, device_t src) {
 	return 0;
 }
 
-bool parseFindInfoRequest(char *buf, int len, uint16_t &startHandle, uint16_t &endHandle) {
+bool parseFindInfoRequest(uint8_t *buf, int len, uint16_t &startHandle, uint16_t &endHandle) {
 	if (len < 5) {
 		return false; // invalid length
 	}
@@ -58,24 +68,25 @@ bool parseFindInfoRequest(char *buf, int len, uint16_t &startHandle, uint16_t &e
 	return true;
 }
 
-int Router::routeFindInfo(char *buf, int len, device_t src) {
+int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 	uint16_t startHandle;
 	uint16_t endHandle;
 	if (!parseFindInfoRequest(buf, len, startHandle, endHandle)) {
 		// TODO err
 		return -1;
 	} else {
-		boost::shared_lock<boost::shared_mutex> lk(beetle.devicesMutex);
+//		boost::shared_lock<boost::shared_mutex> lkDevices(beetle->devicesMutex);
+//		boost::shared_lock<boost::shared_mutex> lkHat(beetle->hatMutex);
 		std::vector<std::pair<uint16_t, uuid_t>> handles;
 
 		return 0;
 	}
 }
 
-int Router::routeFindByType(char *buf, int len, device_t src) {
+int Router::routeFindByType(unsigned char *buf, int len, device_t src) {
 	return 0;
 }
 
-int Router::routeReadByType(char *buf, int len, device_t src) {
+int Router::routeReadByType(unsigned char *buf, int len, device_t src) {
 	return 0;
 }

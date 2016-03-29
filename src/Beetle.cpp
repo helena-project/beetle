@@ -1,9 +1,14 @@
 
 #include "Beetle.h"
 
-#include <assert.h>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/pthread/shared_mutex.hpp>
+#include <thread>
 
 #include "CLI.h"
+#include "device/Device.h"
+#include "hat/BlockAllocator.h"
+#include "Router.h"
 
 int main() {
 	Beetle btl;
@@ -11,15 +16,16 @@ int main() {
 }
 
 Beetle::Beetle() {
-	// TODO Auto-generated constructor stub
 
 }
 
 Beetle::~Beetle() {
-	// TODO Auto-generated destructor stub
+
 }
 
 void Beetle::run() {
+	hat = new BlockAllocator(128);
+	router = new Router(this);
 	CLI cli(this);
 	cli.join();
 }
@@ -33,7 +39,7 @@ void Beetle::removeDevice(device_t id) {
 	boost::unique_lock<boost::shared_mutex> lk(devicesMutex);
 	Device *d = devices[id];
 	devices.erase(id);
-	std::thread t([](d) { delete d; });
+	std::thread t([d]() { delete d; });
 	t.detach();
 }
 

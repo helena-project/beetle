@@ -17,23 +17,23 @@
 #include <set>
 #include <string>
 
-#include "Beetle.h"
-#include "Handle.h"
-#include "data/Semaphore.h"
+#include "../Beetle.h"
+#include "../data/Semaphore.h"
+#include "../Handle.h"
 
-typedef int device_t;
-
-typedef void (*TransactionCallback)(char *, int);
+typedef void (*TransactionCallback)(uint8_t *, int);
 
 typedef struct {
-	char *buf;
+	uint8_t *buf;
 	int len;
 	TransactionCallback cb;
 } transaction_t;
 
+class Handle;
+
 class Device {
 public:
-	Device(Beetle &beetle, std::string name);
+	Device(Beetle *beetle, std::string name);
 	virtual ~Device();
 	std::string getName() { return name; }
 	device_t getId() { return id; };
@@ -43,33 +43,32 @@ public:
 	bool isStopped() { return !running; };
 
 	std::set<int> getSubscribers();
-	std::map<uint16_t, Handle> getHandles();
-	int getHandleOffset();
+	std::map<uint16_t, Handle *> getHandles();
 	int getHighestHandle();
 
-	bool writeResponse(char *buf, int len);
-	bool writeCommand(char *buf, int len);
-	bool writeTransaction(char *buf, int len, TransactionCallback);
+	bool writeResponse(uint8_t *buf, int len);
+	bool writeCommand(uint8_t *buf, int len);
+	bool writeTransaction(uint8_t *buf, int len, TransactionCallback);
 
 protected:
-	void handleRead(char *buf, int len);
-	virtual bool write(char *buf, int len);
+	virtual void startInternal() = 0;
+	void handleRead(uint8_t *buf, int len);
+	virtual bool write(uint8_t *buf, int len) = 0;
 private:
-	Beetle beetle;
+	Beetle *beetle;
 
 	bool running;
 
 	device_t id;
 	std::string name;
 
-	int handleOffset;
 	int highestHandle;
-	std::map<uint16_t, Handle> handles;
+	std::map<uint16_t, Handle *> handles;
 
 	/*
 	 * Server transactions
 	 */
-	void handleTransactionResponse(char *buf, int len);
+	void handleTransactionResponse(uint8_t *buf, int len);
 	transaction_t *currentTransaction;
 	std::queue<transaction_t *> pendingTransactions;
 	std::mutex transactionMutex;
@@ -79,7 +78,7 @@ private:
 	 */
 	Semaphore transactionSemaphore;
 
-	static std::atomic_int idCounter = 0;
+	static std::atomic_int idCounter;
 };
 
 #endif /* DEVICE_H_ */
