@@ -33,7 +33,7 @@ class Handle;
 
 class Device {
 public:
-	Device(Beetle *beetle, std::string name);
+	Device(Beetle &beetle, std::string name);
 	virtual ~Device();
 	std::string getName() { return name; }
 	device_t getId() { return id; };
@@ -55,7 +55,7 @@ protected:
 	void handleRead(uint8_t *buf, int len);
 	virtual bool write(uint8_t *buf, int len) = 0;
 private:
-	Beetle *beetle;
+	Beetle &beetle;
 
 	bool running;
 

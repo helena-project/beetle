@@ -25,8 +25,8 @@ Beetle::~Beetle() {
 
 void Beetle::run() {
 	hat = new BlockAllocator(128);
-	router = new Router(this);
-	CLI cli(this);
+	router = new Router(*this);
+	CLI cli(*this);
 	cli.join();
 }
 

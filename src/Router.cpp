@@ -20,8 +20,8 @@
 #include "Beetle.h"
 #include "UUID.h"
 
-Router::Router(const Beetle *b) {
-	beetle = b;
+Router::Router(Beetle &beetle_) : beetle(beetle_) {
+
 }
 
 Router::~Router() {
@@ -75,8 +75,8 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 		// TODO err
 		return -1;
 	} else {
-//		boost::shared_lock<boost::shared_mutex> lkDevices(beetle->devicesMutex);
-//		boost::shared_lock<boost::shared_mutex> lkHat(beetle->hatMutex);
+		boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
+		boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
 		std::vector<std::pair<uint16_t, uuid_t>> handles;
 
 		return 0;

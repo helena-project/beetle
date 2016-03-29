@@ -12,11 +12,11 @@
 
 class Router {
 public:
-	Router(const Beetle *beetle);
+	Router(Beetle &beetle);
 	virtual ~Router();
 	int route(uint8_t *buf, int len, device_t src);
 private:
-	const Beetle *beetle;
+	Beetle &beetle;
 
 	int routeFindInfo(uint8_t *buf, int len, device_t src);
 	int routeFindByType(uint8_t *buf, int len, device_t src);

@@ -16,8 +16,7 @@
 
 std::atomic_int Device::idCounter(1);
 
-Device::Device(Beetle *beetle_, std::string name_) : transactionSemaphore{1} {
-	beetle = beetle_;
+Device::Device(Beetle &beetle_, std::string name_) : beetle(beetle_), transactionSemaphore{1} {
 	name = name_;
 	id = idCounter++;
 
@@ -33,7 +32,7 @@ Device::~Device() {
 }
 
 void Device::start() {
-
+	startInternal();
 }
 
 void Device::stop() {
@@ -110,11 +109,10 @@ void Device::handleTransactionResponse(uint8_t *buf, int len) {
 
 void Device::handleRead(uint8_t *buf, int len) {
 	if (((buf[0] & 1) == 1 && buf[0] != ATT_OP_HANDLE_NOTIFY && buf[0] != ATT_OP_HANDLE_IND)
-			|| buf[0] == ATT_OP_HANDLE_CNF)
-	{
+			|| buf[0] == ATT_OP_HANDLE_CNF) {
 		handleTransactionResponse(buf, len);
 	} else {
-		beetle->router->route(buf, len, id);
+		beetle.router->route(buf, len, id);
 	}
 }
 

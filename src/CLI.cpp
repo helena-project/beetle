@@ -14,8 +14,8 @@
 #include <iostream>
 #include <iterator>
 
-CLI::CLI(const Beetle *beetle) : t() {
-	CLI::beetle = beetle;
+CLI::CLI(Beetle &beetle_) : beetle(beetle_), t() {
+
 }
 
 CLI::~CLI() {

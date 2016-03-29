@@ -23,7 +23,7 @@ enum AddrType {
 
 class LEPeripheral: public Device {
 public:
-	LEPeripheral(Beetle *beetle, std::string name, bdaddr_t addr, AddrType addrType);
+	LEPeripheral(Beetle &beetle, std::string name, bdaddr_t addr, AddrType addrType);
 	virtual ~LEPeripheral();
 protected:
 	void startInternal();

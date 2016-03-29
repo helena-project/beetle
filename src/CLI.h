@@ -17,14 +17,14 @@
 
 class CLI {
 public:
-	CLI(const Beetle *beetle);
+	CLI(Beetle &beetle);
 	virtual ~CLI();
 	void start();
 	void join();
 private:
 	bool getCommand(std::vector<std::string> &ret);
 
-	const Beetle *beetle;
+	Beetle &beetle;
 	std::thread t;
 	void cmdLineDaemon();
 };

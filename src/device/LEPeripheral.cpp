@@ -16,7 +16,7 @@
 
 #include "../ble/att.h"
 
-LEPeripheral::LEPeripheral(Beetle *beetle, std::string name, bdaddr_t addr, AddrType addrType
+LEPeripheral::LEPeripheral(Beetle &beetle, std::string name, bdaddr_t addr, AddrType addrType
 		) : Device(beetle, name), readThread(), writeThread() {
 	bdaddr = addr;
 	bdaddrType = addrType;
