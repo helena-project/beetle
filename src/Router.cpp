@@ -47,16 +47,16 @@ int Router::route(uint8_t *buf, int len, device_t src) {
 		result = routeReadByType(buf, len, src);
 		break;
 	case ATT_OP_HANDLE_NOTIFY:
-		// TODO
+		result = routeHandleNotification(buf, len, src);
 		break;
 	case ATT_OP_READ_REQ:
 	case ATT_OP_READ_BLOB_REQ:
 	case ATT_OP_WRITE_REQ:
 	case ATT_OP_SIGNED_WRITE_CMD:
-		// TODO
+		result = routeReadWrite(buf, len, src);
 		break;
 	default:
-		// TODO unsupported
+		result = -1;
 		break;
 	}
 
@@ -320,6 +320,96 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 			int len = pack_error_pdu(ATT_OP_FIND_BY_TYPE_RESP, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
 			beetle.devices[src]->writeResponse(err, len);
 			delete[] err;
+		}
+	}
+	return 0;
+}
+
+int Router::routeHandleNotification(uint8_t *buf, int len, device_t src) {
+	boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
+	boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
+	uint16_t handle = btohs(*(uint16_t *)(buf + 1));
+	Handle *h = beetle.devices[src]->getHandles()[handle];
+	if (h == NULL) {
+		return -1; // no such handle
+	}
+
+	handle_range_t handleRange = beetle.hat->getDeviceRange(src);
+	if (handleRange.start == 0 && handleRange.start == handleRange.end) {
+		return -1; // this device has no mapped handles
+	} else {
+		handle += handleRange.start;
+		*(uint16_t *)(buf + 1) = htobs(handle);
+		for (device_t dst : h->getSubscribers()) {
+			beetle.devices[dst]->writeCommand(buf, len);
+		}
+	}
+	return 0;
+}
+
+int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
+	boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
+	boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
+	uint8_t opCode = buf[0];
+	uint16_t handle = btohs(*(uint16_t *)(buf + 1));
+	device_t dst = beetle.hat->getDeviceForHandle(src);
+	handle_range_t handleRange = beetle.hat->getDeviceRange(src);
+	if (dst == BEETLE_RESERVED_DEVICE) {
+
+	} else if (dst == NULL_RESERVED_DEVICE || dst == src) {
+		uint8_t *err;
+		int len = pack_error_pdu(buf[0], handle, ATT_ECODE_ATTR_NOT_FOUND, err);
+		beetle.devices[src]->writeResponse(err, len);
+		delete[] err;
+	} else {
+		uint16_t remoteHandle = handle - handleRange.start;
+		Handle *proxyH = beetle.devices[dst]->getHandles()[remoteHandle];
+		if (proxyH == NULL) {
+			uint8_t *err;
+			int len = pack_error_pdu(buf[0], handle, ATT_ECODE_ATTR_NOT_FOUND, err);
+			beetle.devices[src]->writeResponse(err, len);
+			delete[] err;
+		} else {
+			if (opCode == ATT_OP_WRITE_REQ && proxyH->getUuid().isShort()
+					&& proxyH->getUuid().getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
+				uint16_t charHandle = proxyH->getCharHandle();
+				Handle *charH = beetle.devices[dst]->getHandles()[charHandle];
+				if (buf[3] == 0) {
+					charH->getSubscribers().erase(src);
+				} else {
+					charH->getSubscribers().insert(src);
+				}
+				int numSubscribers = charH->getSubscribers().size();
+				if ((numSubscribers == 0 && buf[3] == 0) || (numSubscribers == 1 && buf[3] == 1)) {
+					*(uint16_t *)(buf + 1) = htobs(remoteHandle);
+					beetle.devices[dst]->writeTransaction(buf, len, [this, handle, src, dst, opCode](uint8_t *resp, int respLen) -> void {
+						boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
+						boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
+						if (resp == NULL) {
+							uint8_t *err;
+							int len = pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);
+							beetle.devices[src]->writeResponse(err, len);
+							delete[] err;
+						} else {
+							beetle.devices[src]->writeResponse(resp, respLen);
+						}
+					});
+				} else {
+					uint8_t resp = ATT_OP_WRITE_RESP;
+					beetle.devices[src]->writeResponse(&resp, 1);
+				}
+			} else {
+				CachedHandle cachedH = proxyH->getCached();
+				if (opCode == ATT_OP_READ_REQ && cachedH.value != NULL
+						&& cachedH.cachedSet.find(src) == cachedH.cachedSet.end()
+						&& proxyH->isCacheInfinite()) {
+
+
+				} else {
+
+				}
+
+			}
 		}
 	}
 	return 0;

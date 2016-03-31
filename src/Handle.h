@@ -20,9 +20,10 @@ class CachedHandle {
 public:
 	CachedHandle();
 	virtual ~CachedHandle();
-	uint8_t *value;
-	int len;
-	time_t time;
+	uint8_t *value = NULL;
+	int len = 0;
+	time_t time = 0;
+	std::set<device_t> cachedSet;
 };
 
 class Handle {
@@ -37,6 +38,7 @@ public:
 	UUID getUuid();
 	CachedHandle getCached();
 	void setCached(uint8_t *val, int len);
+	bool isCacheInfinite() {return cacheInfinite;};
 private:
 	uint16_t handle;
 	UUID uuid;
@@ -47,6 +49,7 @@ private:
 
 	std::mutex cacheMutex;
 	CachedHandle cache;
+	bool cacheInfinite;
 };
 
 #endif /* HANDLE_H_ */
