@@ -110,4 +110,8 @@ void LEPeripheral::writeDaemon() {
 	}
 }
 
+int LEPeripheral::getMTU() {
+	return 24;
+}
+
 

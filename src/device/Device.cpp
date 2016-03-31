@@ -65,7 +65,7 @@ bool Device::writeResponse(uint8_t *buf, int len) {
 	return isStopped() || write(buf, len);
 }
 
-bool Device::writeTransaction(uint8_t *buf, int len, TransactionCallback cb) {
+bool Device::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
 	if (isStopped()) {
 		return false;
 	}
@@ -116,3 +116,6 @@ void Device::handleRead(uint8_t *buf, int len) {
 	}
 }
 
+std::map<uint16_t, Handle *> Device::getHandles() {
+	return handles;
+}

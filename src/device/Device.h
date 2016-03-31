@@ -11,6 +11,7 @@
 #include <atomic>
 #include <cstdbool>
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <mutex>
 #include <queue>
@@ -21,12 +22,10 @@
 #include "../data/Semaphore.h"
 #include "../Handle.h"
 
-typedef void (*TransactionCallback)(uint8_t *, int);
-
 typedef struct {
 	uint8_t *buf;
 	int len;
-	TransactionCallback cb;
+	std::function<void(uint8_t*, int)> cb;
 } transaction_t;
 
 class Handle;
@@ -48,8 +47,9 @@ public:
 
 	bool writeResponse(uint8_t *buf, int len);
 	bool writeCommand(uint8_t *buf, int len);
-	bool writeTransaction(uint8_t *buf, int len, TransactionCallback);
+	bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);
 
+	virtual int getMTU() = 0;
 protected:
 	virtual void startInternal() = 0;
 	void handleRead(uint8_t *buf, int len);

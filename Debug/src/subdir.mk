@@ -5,7 +5,7 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/Beetle.cpp \
-../src/Device.cpp \
+../src/CLI.cpp \
 ../src/Discover.cpp \
 ../src/Handle.cpp \
 ../src/Router.cpp \
@@ -13,7 +13,7 @@ CPP_SRCS += \
 
 OBJS += \
 ./src/Beetle.o \
-./src/Device.o \
+./src/CLI.o \
 ./src/Discover.o \
 ./src/Handle.o \
 ./src/Router.o \
@@ -21,7 +21,7 @@ OBJS += \
 
 CPP_DEPS += \
 ./src/Beetle.d \
-./src/Device.d \
+./src/CLI.d \
 ./src/Discover.d \
 ./src/Handle.d \
 ./src/Router.d \
@@ -32,7 +32,7 @@ CPP_DEPS += \
 src/%.o: ../src/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -D__cplusplus=201103L -O0 -g3 -Wall -c -fmessage-length=0 -c++11 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
+	g++ -D__cplusplus=201103L -O0 -g3 -Wall -c -fmessage-length=0 -std=c++11 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

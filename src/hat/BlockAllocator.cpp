@@ -25,22 +25,27 @@ BlockAllocator::BlockAllocator(int size) {
 }
 
 BlockAllocator::~BlockAllocator() {
-	// should never get called on exit
+	// should never get called
 	delete[] blocks;
 }
 
-std::pair<uint16_t, uint16_t> BlockAllocator::getDeviceRange(device_t d) {
+handle_range_t BlockAllocator::getDeviceRange(device_t d) {
 	for (int i = 0; i < numBlocks; i++) {
 		if (blocks[i] == d) {
 			uint16_t baseHandle = i * blockSize;
-			return std::pair<uint16_t, uint16_t>(baseHandle, baseHandle + blockSize - 1);
+			return handle_range_t{baseHandle, baseHandle + blockSize - 1};
 		}
 	}
-	return std::pair<uint16_t, uint16_t>(0, 0);
+	return handle_range_t{0, 0};
 }
 
 device_t BlockAllocator::getDeviceForHandle(uint16_t handle) {
 	return blocks[handle / blockSize];
+}
+
+handle_range_t BlockAllocator::getHandleRange(uint16_t handle) {
+	uint16_t base = (handle / blockSize) * blockSize;
+	return handle_range_t{base, base + blockSize - 1};
 }
 
 bool BlockAllocator::reserve(device_t d, int n) {

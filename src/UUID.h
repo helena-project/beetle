@@ -17,7 +17,8 @@ typedef struct {
 
 class UUID {
 public:
-	UUID(const unsigned char *buf, size_t len);
+	UUID(uint8_t *buf, size_t len);
+	UUID(uint16_t);
 	UUID(uuid_t uuid_);
 	virtual ~UUID();
 	uuid_t get();

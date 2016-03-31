@@ -10,17 +10,17 @@
 
 #include <cstdbool>
 #include <cstdint>
-#include <utility>
 
-#include "../device/Device.h"
+#include "../Beetle.h"
 #include "HAT.h"
 
 class BlockAllocator: public HAT {
 public:
 	BlockAllocator(int blockSize);
 	virtual ~BlockAllocator();
-	std::pair<uint16_t, uint16_t> getDeviceRange(device_t d);
+	handle_range_t getDeviceRange(device_t d);
 	device_t getDeviceForHandle(uint16_t h);
+	handle_range_t getHandleRange(uint16_t h);
 	bool reserve(device_t d, int n);
 	bool reserve(device_t d);
 	void free(device_t d);

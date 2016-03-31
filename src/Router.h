@@ -19,7 +19,7 @@ private:
 	Beetle &beetle;
 
 	int routeFindInfo(uint8_t *buf, int len, device_t src);
-	int routeFindByType(uint8_t *buf, int len, device_t src);
+	int routeFindByTypeValue(uint8_t *buf, int len, device_t src);
 	int routeReadByType(uint8_t *buf, int len, device_t src);
 };
 

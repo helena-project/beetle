@@ -25,6 +25,7 @@ class LEPeripheral: public Device {
 public:
 	LEPeripheral(Beetle &beetle, std::string name, bdaddr_t addr, AddrType addrType);
 	virtual ~LEPeripheral();
+	int getMTU();
 protected:
 	void startInternal();
 	bool write(uint8_t *buf, int len);
