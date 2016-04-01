@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef LIB_ATT_H_
-#define LIB_ATT_H_
+#ifndef BLE_ATT_H_
+#define BLE_ATT_H_
 
 /* Len of signature in write signed packet */
 #define ATT_SIGNATURE_LEN		12
@@ -79,4 +79,4 @@
 #define ATT_FIND_INFO_RESP_FMT_16BIT		0x01
 #define ATT_FIND_INFO_RESP_FMT_128BIT		0x02
 
-#endif /* LIB_ATT_H_ */
+#endif /* BLE_ATT_H_ */

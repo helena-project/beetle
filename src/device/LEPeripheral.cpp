@@ -16,8 +16,8 @@
 
 #include "../ble/att.h"
 
-LEPeripheral::LEPeripheral(Beetle &beetle, std::string name, bdaddr_t addr, AddrType addrType
-		) : Device(beetle, name), readThread(), writeThread() {
+LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType
+		) : Device(beetle), readThread(), writeThread() {
 	bdaddr = addr;
 	bdaddrType = addrType;
 
@@ -48,6 +48,9 @@ LEPeripheral::LEPeripheral(Beetle &beetle, std::string name, bdaddr_t addr, Addr
         close(sockfd);
         throw "could not connect";
     }
+
+    writeThread = std::thread(&LEPeripheral::writeDaemon, this);
+    readThread = std::thread(&LEPeripheral::readDaemon, this);
 }
 
 LEPeripheral::~LEPeripheral() {
@@ -55,7 +58,7 @@ LEPeripheral::~LEPeripheral() {
 	if (q != NULL) {
 		while (q->size() > 0) {
 			queued_write_t qw = q->front();
-			free(qw.buf);
+			delete[] qw.buf;
 			q->pop();
 		}
 		delete q;
@@ -63,11 +66,6 @@ LEPeripheral::~LEPeripheral() {
 	writeThread.join();
 	readThread.join();
 	close(sockfd);
-}
-
-void LEPeripheral::startInternal() {
-    writeThread = std::thread(&LEPeripheral::writeDaemon, this);
-    readThread = std::thread(&LEPeripheral::readDaemon, this);
 }
 
 bool LEPeripheral::write(uint8_t *buf, int len) {
@@ -84,7 +82,7 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 }
 
 void LEPeripheral::readDaemon() {
-	uint8_t buf[256];
+	uint8_t buf[64];
 	while (!isStopped()) {
 		int n = read(sockfd, buf, sizeof(buf));
 		if (n < 0) {
@@ -93,7 +91,7 @@ void LEPeripheral::readDaemon() {
 		} else if (n == 0) {
 			continue;
 		} else {
-			handleRead(buf, n);
+			readHandler(buf, n);
 		}
 	}
 }

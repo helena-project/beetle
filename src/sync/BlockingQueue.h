@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef DATA_BLOCKINGQUEUE_H_
-#define DATA_BLOCKINGQUEUE_H_
+#ifndef SYNC_BLOCKINGQUEUE_H_
+#define SYNC_BLOCKINGQUEUE_H_
 
 #include <stddef.h>
 #include <condition_variable>
@@ -73,4 +73,4 @@ private:
 	std::queue<T> *q;
 };
 
-#endif /* DATA_BLOCKINGQUEUE_H_ */
+#endif /* SYNC_BLOCKINGQUEUE_H_ */

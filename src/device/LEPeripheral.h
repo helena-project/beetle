@@ -9,11 +9,11 @@
 #define LEPERIPHERAL_H_
 
 #include <bluetooth/bluetooth.h>
-#include <cstdbool>
+#include <cstdint>
 #include <string>
 #include <thread>
 
-#include "../data/BlockingQueue.h"
+#include "../sync/BlockingQueue.h"
 #include "Device.h"
 #include "shared.h"
 
@@ -23,11 +23,11 @@ enum AddrType {
 
 class LEPeripheral: public Device {
 public:
-	LEPeripheral(Beetle &beetle, std::string name, bdaddr_t addr, AddrType addrType);
+	LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType);
 	virtual ~LEPeripheral();
+	std::string getName();
 	int getMTU();
 protected:
-	void startInternal();
 	bool write(uint8_t *buf, int len);
 private:
 	bdaddr_t bdaddr;

@@ -9,18 +9,16 @@
 #define DEVICE_H_
 
 #include <atomic>
-#include <cstdbool>
 #include <cstdint>
 #include <functional>
 #include <map>
 #include <mutex>
 #include <queue>
-#include <set>
 #include <string>
 
 #include "../Beetle.h"
-#include "../data/Semaphore.h"
 #include "../Handle.h"
+#include "../sync/Semaphore.h"
 
 typedef struct {
 	uint8_t *buf;
@@ -32,27 +30,34 @@ class Handle;
 
 class Device {
 public:
-	Device(Beetle &beetle, std::string name);
+	Device(Beetle &beetle);
 	virtual ~Device();
-	std::string getName() { return name; }
+
 	device_t getId() { return id; };
+	std::string getName() { return name; };
 
 	void start();
 	void stop();
 	bool isStopped() { return !running; };
 
 	int getHighestHandle();
-	std::map<uint16_t, Handle *> &getHandles();
+	std::map<uint16_t, Handle *> handles;
 	std::recursive_mutex handlesMutex;
 
 	bool writeResponse(uint8_t *buf, int len);
 	bool writeCommand(uint8_t *buf, int len);
 	bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);
+	uint8_t *writeTransactionBlocking(uint8_t *buf, int len, int &respLen);
 
 	virtual int getMTU() = 0;
 protected:
-	virtual void startInternal() = 0;
-	void handleRead(uint8_t *buf, int len);
+	/*
+	 * Called by derived class when a packet is received.
+	 */
+	void readHandler(uint8_t *buf, int len);
+	/*
+	 * Called by base class to write packet.
+	 */
 	virtual bool write(uint8_t *buf, int len) = 0;
 private:
 	Beetle &beetle;
@@ -61,8 +66,6 @@ private:
 
 	device_t id;
 	std::string name;
-
-	std::map<uint16_t, Handle *> handles;
 
 	/*
 	 * Server transactions

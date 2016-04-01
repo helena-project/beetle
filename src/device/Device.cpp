@@ -16,8 +16,7 @@
 
 std::atomic_int Device::idCounter(1);
 
-Device::Device(Beetle &beetle_, std::string name_) : beetle(beetle_), transactionSemaphore{1} {
-	name = name_;
+Device::Device(Beetle &beetle_) : beetle(beetle_), transactionSemaphore{1} {
 	id = idCounter++;
 
 	running = true;
@@ -30,7 +29,7 @@ Device::~Device() {
 }
 
 void Device::start() {
-	startInternal();
+
 }
 
 void Device::stop() {
@@ -84,6 +83,23 @@ bool Device::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*
 	return true;
 }
 
+uint8_t *Device::writeTransactionBlocking(uint8_t *buf, int len, int &respLen) {
+	Semaphore sema(0);
+	uint8_t *resp;
+	bool success = writeTransaction(buf, len, [&sema, &resp, &respLen](uint8_t *resp_, int respLen_) -> void {
+		resp = new uint8_t[respLen_];
+		memcpy(resp, resp_, respLen_);
+		respLen = respLen_;
+		sema.notify();
+	});
+	if (!success) {
+		return NULL;
+	} else {
+		sema.wait();
+		return resp;
+	}
+}
+
 void Device::handleTransactionResponse(uint8_t *buf, int len) {
 	transactionMutex.lock();
 	if (!currentTransaction) {
@@ -105,7 +121,7 @@ void Device::handleTransactionResponse(uint8_t *buf, int len) {
 	}
 }
 
-void Device::handleRead(uint8_t *buf, int len) {
+void Device::readHandler(uint8_t *buf, int len) {
 	if (((buf[0] & 1) == 1 && buf[0] != ATT_OP_HANDLE_NOTIFY && buf[0] != ATT_OP_HANDLE_IND)
 			|| buf[0] == ATT_OP_HANDLE_CNF) {
 		handleTransactionResponse(buf, len);
@@ -116,9 +132,9 @@ void Device::handleRead(uint8_t *buf, int len) {
 
 int Device::getHighestHandle() {
 	std::lock_guard<std::recursive_mutex> lg(handlesMutex);
-	return handles.rbegin()->first;
-}
-
-std::map<uint16_t, Handle *> &Device::getHandles() {
-	return handles;
+	if (handles.size() > 0) {
+		return handles.rbegin()->first;
+	} else {
+		return -1;
+	}
 }

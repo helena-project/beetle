@@ -11,10 +11,13 @@
 #include <bluetooth/bluetooth.h>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
-#include <cstdbool>
 #include <cstdint>
+#include <cstring>
+#include <functional>
+#include <map>
+#include <mutex>
+#include <set>
 #include <utility>
-#include <vector>
 
 #include "ble/att.h"
 #include "ble/gatt.h"
@@ -106,7 +109,7 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 				continue;
 			} else if (dst >= 0) {
 				std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
-				for (auto &mapping : beetle.devices[dst]->getHandles()) {
+				for (auto &mapping : beetle.devices[dst]->handles) {
 					uint16_t offset = mapping.first + handleRange.start;
 					if (offset < startHandle) {
 						continue;
@@ -180,7 +183,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 		int srcMTU = beetle.devices[src]->getMTU();
 		int respLen = 0;
 		int respHandleCount = 0;
-		bool cutShort = false;
+//		bool cutShort = false;
 		uint8_t *resp = new uint8_t[srcMTU];
 		resp[0] = ATT_OP_FIND_BY_TYPE_RESP;
 		respLen++;
@@ -198,7 +201,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 				continue;
 			} else if (dst >= 0) {
 				std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
-				for (auto &mapping : beetle.devices[dst]->getHandles()) {
+				for (auto &mapping : beetle.devices[dst]->handles) {
 					uint16_t offset = mapping.first + handleRange.start;
 					if (offset < startHandle) {
 						continue;
@@ -220,7 +223,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 
 							if (respLen + 4 > srcMTU) {
 								done = true;
-								cutShort = true;
+//								cutShort = true;
 								resp[respLen - 1] = 0xFF;
 								resp[respLen - 2] = 0xFF;
 								break;
@@ -332,7 +335,7 @@ int Router::routeHandleNotification(uint8_t *buf, int len, device_t src) {
 	boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
 	std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[src]->handlesMutex);
 	uint16_t handle = btohs(*(uint16_t *)(buf + 1));
-	Handle *h = beetle.devices[src]->getHandles()[handle];
+	Handle *h = beetle.devices[src]->handles[handle];
 	if (h == NULL) {
 		return -1; // no such handle
 	}
@@ -367,7 +370,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 	} else {
 		std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
 		uint16_t remoteHandle = handle - handleRange.start;
-		Handle *proxyH = beetle.devices[dst]->getHandles()[remoteHandle];
+		Handle *proxyH = beetle.devices[dst]->handles[remoteHandle];
 		if (proxyH == NULL) {
 			uint8_t *err;
 			int len = pack_error_pdu(buf[0], handle, ATT_ECODE_ATTR_NOT_FOUND, err);
@@ -377,7 +380,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 			if (opCode == ATT_OP_WRITE_REQ && proxyH->getUuid().isShort()
 					&& proxyH->getUuid().getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
 				uint16_t charHandle = proxyH->getCharHandle();
-				Handle *charH = beetle.devices[dst]->getHandles()[charHandle];
+				Handle *charH = beetle.devices[dst]->handles[charHandle];
 				if (buf[3] == 0) {
 					charH->getSubscribers().erase(src);
 				} else {
@@ -419,7 +422,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 					if (opCode == ATT_OP_WRITE_CMD || opCode == ATT_OP_SIGNED_WRITE_CMD) {
 						beetle.devices[dst]->writeCommand(buf, len);
 					} else {
-						beetle.devices[dst]->writeTransaction(buf, len, [this, src, dst, handle, remoteHandle](uint8_t *resp, int respLen) -> void {
+						beetle.devices[dst]->writeTransaction(buf, len, [this, opCode, src, dst, handle, remoteHandle](uint8_t *resp, int respLen) -> void {
 							boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
 							boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
 							if (resp == NULL) {
@@ -430,7 +433,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 							} else {
 								if (resp[0] == ATT_OP_READ_RESP) {
 									std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
-									Handle *proxyH = beetle.devices[dst]->getHandles()[remoteHandle];
+									Handle *proxyH = beetle.devices[dst]->handles[remoteHandle];
 									CachedHandle ch = proxyH->getCached();
 									ch.cachedSet.clear();
 									delete[] ch.value;

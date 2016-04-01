@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef DATA_SEMAPHORE_H_
-#define DATA_SEMAPHORE_H_
+#ifndef SYNC_SEMAPHORE_H_
+#define SYNC_SEMAPHORE_H_
 
 #include <condition_variable>
 #include <mutex>
@@ -40,4 +40,4 @@ private:
 	std::mutex m;
 };
 
-#endif /* DATA_SEMAPHORE_H_ */
+#endif /* SYNC_SEMAPHORE_H_ */

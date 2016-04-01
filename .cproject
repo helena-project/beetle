@@ -41,6 +41,7 @@
 								<option id="gnu.cpp.link.option.libs.325291705" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="boost_system"/>
 									<listOptionValue builtIn="false" value="boost_thread"/>
+									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="bluetooth"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1627533520" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">

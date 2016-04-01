@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lboost_system -lboost_thread -lbluetooth
+LIBS := -lboost_system -lboost_thread -lpthread -lbluetooth
 
