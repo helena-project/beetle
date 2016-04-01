@@ -42,23 +42,8 @@ uint16_t Handle::getEndGroupHandle() {
 	return endGroupHandle;
 }
 
-CachedHandle Handle::getCached() {
-	std::lock_guard<std::mutex> lg(cacheMutex);
-	CachedHandle ret;
-	ret.value = new uint8_t[cache.len];
-	memcpy(ret.value, cache.value, cache.len);
-	ret.len = cache.len;
-	ret.time = cache.time;
-	return ret;
-}
-
-void Handle::setCached(uint8_t *val, int len) {
-	std::lock_guard<std::mutex> lg(cacheMutex);
-	delete[] cache.value;
-	cache.len = len;
-	cache.value = new uint8_t[len];
-	memcpy(cache.value, val, len);
-	time(&cache.time);
+CachedHandle &Handle::getCached() {
+	return cache;
 }
 
 CachedHandle::CachedHandle() {

@@ -41,9 +41,9 @@ public:
 	void stop();
 	bool isStopped() { return !running; };
 
-	std::set<int> getSubscribers();
-	std::map<uint16_t, Handle *> getHandles();
 	int getHighestHandle();
+	std::map<uint16_t, Handle *> &getHandles();
+	std::recursive_mutex handlesMutex;
 
 	bool writeResponse(uint8_t *buf, int len);
 	bool writeCommand(uint8_t *buf, int len);
@@ -62,7 +62,6 @@ private:
 	device_t id;
 	std::string name;
 
-	int highestHandle;
 	std::map<uint16_t, Handle *> handles;
 
 	/*

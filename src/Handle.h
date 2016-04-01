@@ -36,9 +36,8 @@ public:
 	uint16_t getEndGroupHandle();
 	std::set<device_t>& getSubscribers();
 	UUID getUuid();
-	CachedHandle getCached();
-	void setCached(uint8_t *val, int len);
-	bool isCacheInfinite() {return cacheInfinite;};
+	CachedHandle &getCached();
+	bool isCacheInfinite() { return cacheInfinite; };
 private:
 	uint16_t handle;
 	UUID uuid;
@@ -47,7 +46,6 @@ private:
 	uint16_t endGroupHandle;
 	std::set<device_t> subscribers;
 
-	std::mutex cacheMutex;
 	CachedHandle cache;
 	bool cacheInfinite;
 };

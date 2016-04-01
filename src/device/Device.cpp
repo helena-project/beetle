@@ -20,8 +20,6 @@ Device::Device(Beetle &beetle_, std::string name_) : beetle(beetle_), transactio
 	name = name_;
 	id = idCounter++;
 
-	highestHandle = -1;
-
 	running = true;
 
 	currentTransaction = NULL;
@@ -116,6 +114,11 @@ void Device::handleRead(uint8_t *buf, int len) {
 	}
 }
 
-std::map<uint16_t, Handle *> Device::getHandles() {
+int Device::getHighestHandle() {
+	std::lock_guard<std::recursive_mutex> lg(handlesMutex);
+	return handles.rbegin()->first;
+}
+
+std::map<uint16_t, Handle *> &Device::getHandles() {
 	return handles;
 }
