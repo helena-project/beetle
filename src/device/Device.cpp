@@ -302,13 +302,14 @@ static std::vector<handle_info_t> discoverHandles(Device *d, uint16_t startGroup
 			uint8_t format = resp[0];
 			int attDataLen = (format == ATT_FIND_INFO_RESP_FMT_16BIT) ? 4 : 18;
 			for (int i = 2; i < respLen; i += attDataLen) {
-				handle_info_t hi;
-				hi.format = format;
-				hi.handle = btohs(*(uint16_t *)(resp + i));
-				hi.len = attDataLen - 2;
-				hi.value = new uint8_t[hi.len];
-				memcpy(hi.value, resp + i + 2, hi.len);
-				handles.push_back(hi);
+				handle_info_t handleInfo;
+				handleInfo.format = format;
+				handleInfo.handle = btohs(*(uint16_t *)(resp + i));
+				handleInfo.len = attDataLen - 2;
+				handleInfo.value = new uint8_t[handleInfo.len];
+				memcpy(handleInfo.value, resp + i + 2, handleInfo.len);
+				handleInfo.uuid = UUID(handleInfo.value, handleInfo.len);
+				handles.push_back(handleInfo);
 			}
 			currHandle = handles.rbegin()->handle + 1;
 			if (currHandle >= endGroup) {
@@ -354,7 +355,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(Device *d) {
 			handles[characteristic.handle] = charHandle;
 		}
 
-		for (int i = 0; i < characteristics.size() - 1; i++) {
+		for (int i = 0; i + 1 < characteristics.size(); i++) {
 			handle_value_t characteristic = characteristics[i];
 			uint16_t startGroup = characteristic.handle;
 			uint16_t endGroup = characteristics[i + i].handle;
