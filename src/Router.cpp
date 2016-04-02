@@ -213,7 +213,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 					// TODO handle non standard uuids (cb4.2 p2180)
 					Handle *handle = mapping.second;
 					if (handle->getUuid().getShort() == attType) {
-						CachedHandle cached = handle->getCached();
+						CachedHandle cached = handle->getCache();
 						int cmpLen = (attValLen < cached.len) ? attValLen : cached.len;
 						if (memcmp(cached.value, attValue, cmpLen) == 0) {
 							*(uint16_t *)(resp + respLen) = htobs(offset);
@@ -406,7 +406,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 					beetle.devices[src]->writeResponse(&resp, 1);
 				}
 			} else {
-				CachedHandle cachedH = proxyH->getCached();
+				CachedHandle cachedH = proxyH->getCache();
 				if (opCode == ATT_OP_READ_REQ && cachedH.value != NULL
 						&& cachedH.cachedSet.find(src) == cachedH.cachedSet.end()
 						&& proxyH->isCacheInfinite()) {
@@ -434,12 +434,12 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 								if (resp[0] == ATT_OP_READ_RESP) {
 									std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
 									Handle *proxyH = beetle.devices[dst]->handles[remoteHandle];
-									CachedHandle ch = proxyH->getCached();
+									CachedHandle ch = proxyH->getCache();
 									ch.cachedSet.clear();
-									delete[] ch.value;
-									ch.len = respLen - 1;
-									ch.value = new uint8_t[ch.len];
-									memcpy(ch.value, resp, ch.len);
+									int tmpLen = respLen - 1;
+									uint8_t *tmpVal = new uint8_t[respLen - 1];
+									memcpy(ch.value, resp, respLen - 1);
+									ch.set(tmpVal, tmpLen);
 								}
 								beetle.devices[src]->writeResponse(resp, respLen);
 							}

@@ -47,7 +47,7 @@ public:
 	bool writeResponse(uint8_t *buf, int len);
 	bool writeCommand(uint8_t *buf, int len);
 	bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);
-	uint8_t *writeTransactionBlocking(uint8_t *buf, int len, int &respLen);
+	int writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp);
 
 	virtual int getMTU() = 0;
 protected:
@@ -81,6 +81,7 @@ private:
 	Semaphore transactionSemaphore;
 
 	static std::atomic_int idCounter;
+
 };
 
 #endif /* DEVICE_H_ */

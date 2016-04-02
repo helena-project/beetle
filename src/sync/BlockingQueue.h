@@ -40,23 +40,19 @@ public:
 
 	T pop() {
 	    std::unique_lock<std::mutex> ul(m);
-	    ul.lock();
 	    if (q == NULL) {
-	        ul.unlock();
 	        throw QueueDestroyedException();
 	    }
 
 	    while (q->size() == 0) {
 	        cv.wait(ul);
 	        if (q == NULL) {
-	            ul.unlock();
 	            throw QueueDestroyedException();
 	        }
 	    }
 
 	    T ret = q->front();
 	    q->pop();
-	    ul.unlock();
 	    return ret;
 	};
 
