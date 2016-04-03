@@ -201,6 +201,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 				continue;
 			} else if (dst >= 0) {
 				std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
+
 				for (auto &mapping : beetle.devices[dst]->handles) {
 					uint16_t offset = mapping.first + handleRange.start;
 					if (offset < startHandle) {
@@ -213,9 +214,8 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 					// TODO handle non standard uuids (cb4.2 p2180)
 					Handle *handle = mapping.second;
 					if (handle->getUuid().getShort() == attType) {
-						CachedHandle cached = handle->getCache();
-						int cmpLen = (attValLen < cached.len) ? attValLen : cached.len;
-						if (memcmp(cached.value, attValue, cmpLen) == 0) {
+						int cmpLen = (attValLen < handle->cache.len) ? attValLen : handle->cache.len;
+						if (memcmp(handle->cache.value, attValue, cmpLen) == 0) {
 							*(uint16_t *)(resp + respLen) = htobs(offset);
 							*(uint16_t *)(resp + respLen + 2) = htobs(handle->getEndGroupHandle());
 							respLen += 4;
@@ -261,14 +261,6 @@ bool parseReadByTypeValueRequest(uint8_t *buf, int len, uint16_t &startHandle, u
 	uuid = new UUID(buf + 5, len - 5);
 	return true;
 }
-
-//int packReadByTypeRequest(uint *&buf, uint16_t startHandle, uint16_t endHandle, UUID attType) {
-//	if (attType.isShort()) {
-//		buf = new uint8_t[7];
-//	} else {
-//		buf = new uint8_t[21];
-//	}
-//}
 
 int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 	boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
@@ -334,6 +326,7 @@ int Router::routeHandleNotification(uint8_t *buf, int len, device_t src) {
 	boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
 	boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
 	std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[src]->handlesMutex);
+
 	uint16_t handle = btohs(*(uint16_t *)(buf + 1));
 	Handle *h = beetle.devices[src]->handles[handle];
 	if (h == NULL) {
@@ -346,7 +339,7 @@ int Router::routeHandleNotification(uint8_t *buf, int len, device_t src) {
 	} else {
 		handle += handleRange.start;
 		*(uint16_t *)(buf + 1) = htobs(handle);
-		for (device_t dst : h->getSubscribers()) {
+		for (device_t dst : h->subscribers) {
 			beetle.devices[dst]->writeCommand(buf, len);
 		}
 	}
@@ -382,11 +375,11 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 				uint16_t charHandle = proxyH->getCharHandle();
 				Handle *charH = beetle.devices[dst]->handles[charHandle];
 				if (buf[3] == 0) {
-					charH->getSubscribers().erase(src);
+					charH->subscribers.erase(src);
 				} else {
-					charH->getSubscribers().insert(src);
+					charH->subscribers.insert(src);
 				}
-				int numSubscribers = charH->getSubscribers().size();
+				int numSubscribers = charH->subscribers.size();
 				if ((numSubscribers == 0 && buf[3] == 0) || (numSubscribers == 1 && buf[3] == 1)) {
 					*(uint16_t *)(buf + 1) = htobs(remoteHandle);
 					beetle.devices[dst]->writeTransaction(buf, len, [this, handle, src, dst, opCode](uint8_t *resp, int respLen) -> void {
@@ -406,15 +399,14 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 					beetle.devices[src]->writeResponse(&resp, 1);
 				}
 			} else {
-				CachedHandle cachedH = proxyH->getCache();
-				if (opCode == ATT_OP_READ_REQ && cachedH.value != NULL
-						&& cachedH.cachedSet.find(src) == cachedH.cachedSet.end()
+				if (opCode == ATT_OP_READ_REQ && proxyH->cache.value != NULL
+						&& proxyH->cache.cachedSet.find(src) == proxyH->cache.cachedSet.end()
 						&& proxyH->isCacheInfinite()) {
-					cachedH.cachedSet.insert(src);
-					int respLen = 1 + cachedH.len;
+					proxyH->cache.cachedSet.insert(src);
+					int respLen = 1 + proxyH->cache.len;
 					uint8_t *resp = new uint8_t[respLen];
 					resp[0] = ATT_OP_READ_RESP;
-					memcpy(resp + 1, cachedH.value, cachedH.len);
+					memcpy(resp + 1, proxyH->cache.value, proxyH->cache.len);
 					beetle.devices[src]->writeResponse(resp, respLen);
 					delete[] resp;
 				} else {
@@ -422,7 +414,8 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 					if (opCode == ATT_OP_WRITE_CMD || opCode == ATT_OP_SIGNED_WRITE_CMD) {
 						beetle.devices[dst]->writeCommand(buf, len);
 					} else {
-						beetle.devices[dst]->writeTransaction(buf, len, [this, opCode, src, dst, handle, remoteHandle](uint8_t *resp, int respLen) -> void {
+						beetle.devices[dst]->writeTransaction(buf, len,
+								[this, opCode, src, dst, handle, remoteHandle](uint8_t *resp, int respLen) -> void {
 							boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
 							boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
 							if (resp == NULL) {
@@ -434,12 +427,11 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 								if (resp[0] == ATT_OP_READ_RESP) {
 									std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
 									Handle *proxyH = beetle.devices[dst]->handles[remoteHandle];
-									CachedHandle ch = proxyH->getCache();
-									ch.cachedSet.clear();
+									proxyH->cache.cachedSet.clear();
 									int tmpLen = respLen - 1;
 									uint8_t *tmpVal = new uint8_t[respLen - 1];
-									memcpy(ch.value, resp, respLen - 1);
-									ch.set(tmpVal, tmpLen);
+									memcpy(proxyH->cache.value, resp, respLen - 1);
+									proxyH->cache.set(tmpVal, tmpLen);
 								}
 								beetle.devices[src]->writeResponse(resp, respLen);
 							}

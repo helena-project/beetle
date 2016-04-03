@@ -20,14 +20,7 @@
 class CachedHandle {
 public:
 	virtual ~CachedHandle() {};
-	void set(uint8_t *value, int len) {
-		if (this->value != NULL) {
-			delete[] this->value;
-		}
-		this->value = value;
-		this->len = len;
-		::time(&(this->time));
-	};
+	void set(uint8_t *value, int len);
 	uint8_t *value = NULL;
 	int len = 0;
 	time_t time = 0;
@@ -36,79 +29,34 @@ public:
 
 class Handle {
 public:
-	Handle() : uuid{0} {};
+	bool isCacheInfinite();
+	void setCacheInfinite(bool cacheInfinite);
 
-	virtual ~Handle() {};
+	uint16_t getCharHandle();
+	void setCharHandle(uint16_t charHandle);
 
-	CachedHandle& getCache() {
-		return cache;
-	}
+	uint16_t getEndGroupHandle();
+	void setEndGroupHandle(uint16_t endGroupHandle);
 
-	bool isCacheInfinite() {
-		return cacheInfinite;
-	}
+	uint16_t getHandle();
+	void setHandle(uint16_t handle);
 
-	void setCacheInfinite(bool cacheInfinite) {
-		this->cacheInfinite = cacheInfinite;
-	}
+	uint16_t getServiceHandle();
+	void setServiceHandle(uint16_t serviceHandle);
 
-	uint16_t getCharHandle() {
-		return charHandle;
-	}
+	UUID& getUuid();
+	void setUuid(UUID uuid);
 
-	void setCharHandle(uint16_t charHandle) {
-		this->charHandle = charHandle;
-	}
-
-	uint16_t getEndGroupHandle() {
-		return endGroupHandle;
-	}
-
-	void setEndGroupHandle(uint16_t endGroupHandle) {
-		this->endGroupHandle = endGroupHandle;
-	}
-
-	uint16_t getHandle() {
-		return handle;
-	}
-
-	void setHandle(uint16_t handle) {
-		this->handle = handle;
-	}
-
-	uint16_t getServiceHandle() {
-		return serviceHandle;
-	}
-
-	void setServiceHandle(uint16_t serviceHandle) {
-		this->serviceHandle = serviceHandle;
-	}
-
-	std::set<device_t>& getSubscribers() {
-		return subscribers;
-	}
-
-	void setSubscribers(const std::set<device_t>& subscribers) {
-		this->subscribers = subscribers;
-	}
-
-	UUID& getUuid() {
-		return uuid;
-	}
-
-	void setUuid(UUID uuid) {
-		this->uuid = uuid;
-	}
-
-private:
-	uint16_t handle;
-	UUID uuid;
-	uint16_t serviceHandle;
-	uint16_t charHandle;
-	uint16_t endGroupHandle;
-	std::set<device_t> subscribers;
+	std::string str();
 
 	CachedHandle cache;
+	std::set<device_t> subscribers;
+private:
+	uint16_t handle = 0;
+	UUID uuid;
+	uint16_t serviceHandle = 0;
+	uint16_t charHandle = 0;
+	uint16_t endGroupHandle = 0;
 	bool cacheInfinite;
 };
 

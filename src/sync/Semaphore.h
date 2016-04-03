@@ -29,7 +29,7 @@ public:
 
 	void wait() {
 		std::unique_lock<std::mutex> ul(m);
-		while (count < 0) {
+		while (count <= 0) {
 			cv.wait(ul);
 		}
 		count--;

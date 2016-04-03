@@ -16,7 +16,7 @@ class Device;
 class Router;
 class HAT;
 
-typedef int device_t;
+typedef long device_t;
 const device_t BEETLE_RESERVED_DEVICE = 0;
 const device_t NULL_RESERVED_DEVICE = -1;
 

@@ -7,6 +7,7 @@ CPP_SRCS += \
 ../src/Beetle.cpp \
 ../src/CLI.cpp \
 ../src/Discover.cpp \
+../src/Handle.cpp \
 ../src/Router.cpp \
 ../src/UUID.cpp 
 
@@ -14,6 +15,7 @@ OBJS += \
 ./src/Beetle.o \
 ./src/CLI.o \
 ./src/Discover.o \
+./src/Handle.o \
 ./src/Router.o \
 ./src/UUID.o 
 
@@ -21,6 +23,7 @@ CPP_DEPS += \
 ./src/Beetle.d \
 ./src/CLI.d \
 ./src/Discover.d \
+./src/Handle.d \
 ./src/Router.d \
 ./src/UUID.d 
 

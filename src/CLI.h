@@ -19,7 +19,6 @@ class CLI {
 public:
 	CLI(Beetle &beetle);
 	virtual ~CLI();
-	void start();
 	void join();
 private:
 	bool getCommand(std::vector<std::string> &ret);
@@ -27,6 +26,12 @@ private:
 	Beetle &beetle;
 	std::thread t;
 	void cmdLineDaemon();
+
+	void doConnect(const std::vector<std::string>& cmd);
+	void doListDevices(const std::vector<std::string>& cmd);
+	void doListHandles(const std::vector<std::string>& cmd);
+	void doListOffsets(std::vector<std::string>& cmd);
+	void doToggleDebug(const std::vector<std::string>& cmd);
 };
 
 #endif /* CLI_H_ */

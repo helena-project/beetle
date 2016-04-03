@@ -10,6 +10,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <exception>
 #include <functional>
 #include <map>
 #include <mutex>
@@ -20,11 +21,15 @@
 #include "../Handle.h"
 #include "../sync/Semaphore.h"
 
-typedef struct {
-	uint8_t *buf;
-	int len;
-	std::function<void(uint8_t*, int)> cb;
-} transaction_t;
+class DeviceException : public std::exception {
+  public:
+    DeviceException(std::string msg) : msg(msg) {};
+    DeviceException(const char *msg) : msg(msg) {};
+    ~DeviceException() throw() {};
+    const char *what() const throw() { return this->msg.c_str(); };
+  private:
+    std::string msg;
+};
 
 class Handle;
 
@@ -35,53 +40,26 @@ public:
 
 	device_t getId() { return id; };
 	std::string getName() { return name; };
-
-	void start();
-	void stop();
-	bool isStopped() { return !running; };
+	std::string getType() { return type; };
 
 	int getHighestHandle();
 	std::map<uint16_t, Handle *> handles;
 	std::recursive_mutex handlesMutex;
 
-	bool writeResponse(uint8_t *buf, int len);
-	bool writeCommand(uint8_t *buf, int len);
-	bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);
-	int writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp);
+	void unsubscribeAll(device_t d);
+
+	virtual bool writeResponse(uint8_t *buf, int len) = 0;
+	virtual bool writeCommand(uint8_t *buf, int len) = 0;
+	virtual bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) = 0;
+	virtual int writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp) = 0;
 
 	virtual int getMTU() = 0;
 protected:
-	/*
-	 * Called by derived class when a packet is received.
-	 */
-	void readHandler(uint8_t *buf, int len);
-	/*
-	 * Called by base class to write packet.
-	 */
-	virtual bool write(uint8_t *buf, int len) = 0;
-private:
 	Beetle &beetle;
-
-	bool running;
 
 	device_t id;
 	std::string name;
-
-	/*
-	 * Server transactions
-	 */
-	void handleTransactionResponse(uint8_t *buf, int len);
-	transaction_t *currentTransaction;
-	std::queue<transaction_t *> pendingTransactions;
-	std::mutex transactionMutex;
-
-	/*
-	 * Client transactions
-	 */
-	Semaphore transactionSemaphore;
-
-	static std::atomic_int idCounter;
-
+	std::string type;
 };
 
 #endif /* DEVICE_H_ */

@@ -10,9 +10,10 @@
 
 #include <stddef.h>
 #include <cstdint>
+#include <string>
 
 typedef struct {
-	unsigned char buf[16];
+	unsigned char value[16];
 } uuid_t;
 
 class UUID {
@@ -25,6 +26,7 @@ public:
 	uuid_t get();
 	uint16_t getShort();
 	bool isShort();
+	std::string str();
 private:
 	uuid_t uuid;
 };

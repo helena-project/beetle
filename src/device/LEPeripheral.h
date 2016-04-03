@@ -1,5 +1,5 @@
 /*
- * Peripheral.h
+ * LEPeripheral.h
  *
  *  Created on: Mar 28, 2016
  *      Author: james
@@ -14,21 +14,25 @@
 #include <thread>
 
 #include "../sync/BlockingQueue.h"
-#include "Device.h"
+#include "VirtualDevice.h"
 #include "shared.h"
 
 enum AddrType {
 	PUBLIC, RANDOM,
 };
 
-class LEPeripheral: public Device {
+class LEPeripheral: public VirtualDevice {
 public:
 	LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType);
 	virtual ~LEPeripheral();
-	std::string getName();
+
 	int getMTU();
+
+	bdaddr_t getBdaddr() { return bdaddr; };
+	AddrType getAddrType() { return bdaddrType; };
 protected:
 	bool write(uint8_t *buf, int len);
+	void startInternal();
 private:
 	bdaddr_t bdaddr;
 	AddrType bdaddrType;

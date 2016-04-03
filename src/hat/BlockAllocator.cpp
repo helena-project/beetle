@@ -15,8 +15,8 @@
 
 BlockAllocator::BlockAllocator(int size) {
 	blockSize = size;
-	assert(MAX_HANDLE % blockSize == 0);
-	numBlocks = MAX_HANDLE / blockSize;
+	assert((MAX_HANDLE + 1) % blockSize == 0);
+	numBlocks = (MAX_HANDLE + 1) / blockSize;
 	blocks = new device_t[numBlocks];
 	blocks[0] = BEETLE_RESERVED_DEVICE;
 	for (int i = 1; i < numBlocks; i++) {
@@ -33,7 +33,10 @@ handle_range_t BlockAllocator::getDeviceRange(device_t d) {
 	for (int i = 0; i < numBlocks; i++) {
 		if (blocks[i] == d) {
 			uint16_t baseHandle = i * blockSize;
-			return handle_range_t{baseHandle, baseHandle + blockSize - 1};
+			handle_range_t ret;
+			ret.start = baseHandle;
+			ret.end = baseHandle + blockSize - 1;
+			return ret;
 		}
 	}
 	return handle_range_t{0, 0};
@@ -45,7 +48,10 @@ device_t BlockAllocator::getDeviceForHandle(uint16_t handle) {
 
 handle_range_t BlockAllocator::getHandleRange(uint16_t handle) {
 	uint16_t base = (handle / blockSize) * blockSize;
-	return handle_range_t{base, base + blockSize - 1};
+	handle_range_t ret;
+	ret.start = base;
+	ret.end = base + blockSize - 1;
+	return ret;
 }
 
 bool BlockAllocator::reserve(device_t d, int n) {

@@ -8,26 +8,27 @@
 #include "UUID.h"
 
 #include <assert.h>
-#include <stddef.h>
-#include <cstdint>
+#include <boost/format.hpp>
 #include <cstring>
+#include <sstream>
+
+#include "ble/gatt.h"
 
 const int UUID_LEN = 16;
 const int SHORT_UUID_LEN = 2;
-const uint8_t BLUETOOTH_BASE_UUID[16] = {0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB};
 
 UUID::UUID() {
 	uuid = {0};
 }
 
-UUID::UUID(uint8_t *buf, size_t len) {
+UUID::UUID(uint8_t *value, size_t len) {
 	assert(len == SHORT_UUID_LEN || len == UUID_LEN);
 	if (len == SHORT_UUID_LEN) {
-		memset(uuid.buf, 0, UUID_LEN);
-		memcpy(uuid.buf + 2, buf, len);
-		memcpy(uuid.buf + 4, BLUETOOTH_BASE_UUID, 12);
+		memset(uuid.value, 0, UUID_LEN);
+		memcpy(uuid.value + 2, value, len);
+		memcpy(uuid.value + 4, BLUETOOTH_BASE_UUID, 12);
 	} else {
-		memcpy(uuid.buf, buf, UUID_LEN);
+		memcpy(uuid.value, value, UUID_LEN);
 	}
 }
 
@@ -36,9 +37,9 @@ UUID::UUID(uuid_t uuid_) {
 }
 
 UUID::UUID(uint16_t val) {
-	memset(uuid.buf, 0, UUID_LEN);
-	memcpy(uuid.buf + 2, &val, 2);
-	memcpy(uuid.buf + 4, BLUETOOTH_BASE_UUID, 12);
+	memset(uuid.value, 0, UUID_LEN);
+	memcpy(uuid.value + 2, &val, 2);
+	memcpy(uuid.value + 4, BLUETOOTH_BASE_UUID, 12);
 }
 
 UUID::~UUID() {
@@ -50,10 +51,30 @@ uuid_t UUID::get() {
 }
 
 uint16_t UUID::getShort() {
-	return *(uint16_t *)(uuid.buf + 2);
+	return *(uint16_t *)(uuid.value + 2);
 }
 
 bool UUID::isShort() {
-	return memcmp(uuid.buf + 4, BLUETOOTH_BASE_UUID, 12);
+	return memcmp(uuid.value + 4, BLUETOOTH_BASE_UUID, 12) == 0;
 }
 
+std::string UUID::str() {
+	std::stringstream ss;
+	if (isShort()) {
+		ss << boost::format("%02x") % static_cast<int>(uuid.value[3]);
+		ss << boost::format("%02x") % static_cast<int>(uuid.value[2]);
+	} else {
+		// TODO not sure why the first 4 bytes are big-endian
+		ss << boost::format("%02x") % static_cast<int>(uuid.value[1]);
+		ss << boost::format("%02x") % static_cast<int>(uuid.value[0]);
+		ss << boost::format("%02x") % static_cast<int>(uuid.value[3]);
+		ss << boost::format("%02x") % static_cast<int>(uuid.value[2]);
+		for (int i = 4; i < UUID_LEN; i++) {
+			if (i == 4 || i == 6 || i == 8 || i == 10) {
+				ss << '-';
+			}
+			ss << boost::format("%02x") % static_cast<int>(uuid.value[i]);
+		}
+	}
+	return ss.str();
+}
