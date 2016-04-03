@@ -23,12 +23,10 @@
 
 std::atomic_int VirtualDevice::idCounter(1);
 
-VirtualDevice::VirtualDevice(Beetle &beetle) : Device(beetle), transactionSemaphore{1} {
+VirtualDevice::VirtualDevice(Beetle &beetle) : Device(beetle, idCounter++), transactionSemaphore{1} {
 	started = false;
 	stopped = false;
 	currentTransaction = NULL;
-
-	id = idCounter++;
 }
 
 VirtualDevice::~VirtualDevice() {
@@ -56,12 +54,6 @@ void VirtualDevice::stop() {
 
 	assert(stopped == false);
 	stopped = true;
-
-	beetle.devicesMutex.lock();
-	beetle.hatMutex.lock();
-	beetle.hat->free(getId());
-	beetle.hatMutex.unlock();
-	beetle.devicesMutex.unlock();
 
 	transactionMutex.lock();
 	if (currentTransaction) {

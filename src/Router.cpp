@@ -101,9 +101,7 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 		while (currHandle <= endHandle && !done) {
 			device_t dst = beetle.hat->getDeviceForHandle(startHandle);
 			handle_range_t handleRange = beetle.hat->getHandleRange(currHandle);
-			if (dst == BEETLE_RESERVED_DEVICE) { // 0
-				// beetle respond
-			} else if (dst == NULL_RESERVED_DEVICE) { // -1
+			if (dst == NULL_RESERVED_DEVICE) { // -1
 				continue;
 			} else if (dst == src) {
 				continue;
@@ -193,9 +191,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 		while (currHandle <= endHandle && !done) {
 			device_t dst = beetle.hat->getDeviceForHandle(startHandle);
 			handle_range_t handleRange = beetle.hat->getHandleRange(currHandle);
-			if (dst == BEETLE_RESERVED_DEVICE) { // 0
-				// beetle respond
-			} else if (dst == NULL_RESERVED_DEVICE){ // -1
+			if (dst == NULL_RESERVED_DEVICE){ // -1
 				continue;
 			} else if (dst == src) {
 				continue;
@@ -276,10 +272,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 	} else {
 		boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
 		device_t dst = beetle.hat->getDeviceForHandle(startHandle);
-		if (dst == BEETLE_RESERVED_DEVICE) { // 0
-			// TODO
-
-		} else if (dst != NULL_RESERVED_DEVICE && dst != src) {
+		if (dst != src) {
 			handle_range_t handleRange = beetle.hat->getHandleRange(startHandle);
 			// TODO forward the request to the device where the range falls, this does not work if you want to read across multiple devices
 			*(uint16_t *)(buf + 1) = htobs(startHandle - handleRange.start);
@@ -353,9 +346,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 	uint16_t handle = btohs(*(uint16_t *)(buf + 1));
 	device_t dst = beetle.hat->getDeviceForHandle(src);
 	handle_range_t handleRange = beetle.hat->getDeviceRange(src);
-	if (dst == BEETLE_RESERVED_DEVICE) {
-
-	} else if (dst == NULL_RESERVED_DEVICE || dst == src) {
+	if (dst == src) {
 		uint8_t *err;
 		int len = pack_error_pdu(buf[0], handle, ATT_ECODE_ATTR_NOT_FOUND, err);
 		beetle.devices[src]->writeResponse(err, len);

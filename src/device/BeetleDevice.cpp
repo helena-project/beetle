@@ -7,8 +7,7 @@
 
 #include "BeetleDevice.h"
 
-BeetleDevice::BeetleDevice(Beetle &beetle) : Device(beetle) {
-	id = BEETLE_RESERVED_DEVICE;
+BeetleDevice::BeetleDevice(Beetle &beetle) : Device(beetle, BEETLE_RESERVED_DEVICE) {
 	name = "Beetle";
 	type = "Beetle";
 }

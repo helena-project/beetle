@@ -35,7 +35,7 @@ class Handle;
 
 class Device {
 public:
-	Device(Beetle &beetle);
+	Device(Beetle &beetle, device_t id);
 	virtual ~Device();
 
 	device_t getId() { return id; };
@@ -57,9 +57,10 @@ public:
 protected:
 	Beetle &beetle;
 
-	device_t id;
 	std::string name;
 	std::string type;
+private:
+	device_t id;
 };
 
 #endif /* DEVICE_H_ */

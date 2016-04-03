@@ -28,10 +28,13 @@ private:
 	void cmdLineDaemon();
 
 	void doConnect(const std::vector<std::string>& cmd);
+	void doDisconnect(const std::vector<std::string>& cmd);
 	void doListDevices(const std::vector<std::string>& cmd);
 	void doListHandles(const std::vector<std::string>& cmd);
 	void doListOffsets(std::vector<std::string>& cmd);
 	void doToggleDebug(const std::vector<std::string>& cmd);
+
+	Device *matchDevice(const std::string &device);
 };
 
 #endif /* CLI_H_ */

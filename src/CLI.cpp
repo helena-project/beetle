@@ -65,7 +65,7 @@ void CLI::cmdLineDaemon() {
 		} else if (c1 == "connect") {
 			doConnect(cmd);
 		} else if (c1 == "disconnect") {
-
+			doDisconnect(cmd);
 		} else if (c1 == "devices") {
 			doListDevices(cmd);
 		} else if (c1 == "handles") {
@@ -142,6 +142,29 @@ void CLI::doConnect(const std::vector<std::string>& cmd) {
 	}
 }
 
+void CLI::doDisconnect(const std::vector<std::string>& cmd) {
+	if (cmd.size() != 2) {
+		printUsage("disconnect name|id|addr");
+		return;
+	}
+
+	boost::unique_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
+	Device *device = matchDevice(cmd[1]);
+	deviceslk.unlock();
+
+	if (device != NULL) {
+		VirtualDevice *virtualDevice = dynamic_cast<VirtualDevice *>(device);
+		if (virtualDevice) {
+			virtualDevice->stop();
+			beetle.removeDevice(device->getId());
+		} else {
+			printMessage("cannot stop " + device->getName());
+		}
+	} else {
+		printMessage(cmd[1] + " does not exist");
+	}
+}
+
 void CLI::doListDevices(const std::vector<std::string>& cmd) {
 	boost::shared_lock<boost::shared_mutex> lg(beetle.devicesMutex);
 	if (beetle.devices.size() == 0) {
@@ -165,38 +188,8 @@ void CLI::doListHandles(const std::vector<std::string>& cmd) {
 	}
 
 	boost::shared_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
-	Device *device = NULL;
+	Device *device = matchDevice(cmd[1]);
 
-	bdaddr_t addr;
-	if (str2ba(cmd[1].c_str(), &addr) == 0) {
-		// match by address
-		for (auto &kv : beetle.devices) {
-			LEPeripheral *peripheral = dynamic_cast<LEPeripheral *>(kv.second);
-			if (peripheral && memcmp(peripheral->getBdaddr().b, addr.b, sizeof(bdaddr_t)) == 0) {
-				device = peripheral;
-				break;
-			}
-		}
-	} else {
-		device_t id = NULL_RESERVED_DEVICE;
-		try {
-			id = std::stoi(cmd[1]);
-		} catch (std::invalid_argument &e) { };
-
-		if (id == BEETLE_RESERVED_DEVICE || id > 0) {
-			// match by id
-			if (beetle.devices.find(id) != beetle.devices.end()) {
-				device = beetle.devices[id];
-			}
-		} else {
-			// match by name
-			for (auto &kv : beetle.devices) {
-				if (kv.second->getName() == cmd[1]) {
-					device = kv.second;
-				}
-			}
-		}
-	}
 	if (device != NULL) {
 		boost::shared_lock<boost::shared_mutex> hatLk(beetle.hatMutex);
 		handle_range_t handleRange = beetle.hat->getDeviceRange(device->getId());
@@ -253,5 +246,41 @@ void CLI::doListOffsets(std::vector<std::string>& cmd) {
 			printMessage(ss.str());
 		}
 	}
+}
+
+Device *CLI::matchDevice(const std::string &input) {
+	Device *device = NULL;
+
+	bdaddr_t addr;
+	if (str2ba(input.c_str(), &addr) == 0) {
+		// match by address
+		for (auto &kv : beetle.devices) {
+			LEPeripheral *peripheral = dynamic_cast<LEPeripheral *>(kv.second);
+			if (peripheral && memcmp(peripheral->getBdaddr().b, addr.b, sizeof(bdaddr_t)) == 0) {
+				device = peripheral;
+				break;
+			}
+		}
+	} else {
+		device_t id = NULL_RESERVED_DEVICE;
+		try {
+			id = std::stoi(input);
+		} catch (std::invalid_argument &e) { };
+
+		if (id == BEETLE_RESERVED_DEVICE || id > 0) {
+			// match by id
+			if (beetle.devices.find(id) != beetle.devices.end()) {
+				device = beetle.devices[id];
+			}
+		} else {
+			// match by name
+			for (auto &kv : beetle.devices) {
+				if (kv.second->getName() == input) {
+					device = kv.second;
+				}
+			}
+		}
+	}
+	return device;
 }
 

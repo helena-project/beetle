@@ -46,9 +46,13 @@ void Beetle::addDevice(Device *d) {
 }
 
 void Beetle::removeDevice(device_t id) {
+	assert(id != BEETLE_RESERVED_DEVICE);
 	boost::unique_lock<boost::shared_mutex> lk(devicesMutex);
 	Device *d = devices[id];
 	devices.erase(id);
+	for (auto &kv : devices) {
+		kv.second->unsubscribeAll(id);
+	}
 	std::thread t([d]() { delete d; });
 	t.detach();
 }

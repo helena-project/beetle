@@ -21,8 +21,8 @@
 #include "../Router.h"
 #include "../UUID.h"
 
-Device::Device(Beetle &beetle_) : beetle(beetle_) {
-
+Device::Device(Beetle &beetle_, device_t id_) : beetle(beetle_) {
+	id = id_;
 }
 
 Device::~Device() {
@@ -30,6 +30,9 @@ Device::~Device() {
 		delete kv.second;
 	}
 	handles.clear();
+
+	boost::unique_lock<boost::shared_mutex> lg(beetle.hatMutex);
+	beetle.hat->free(id);
 }
 
 int Device::getHighestHandle() {
