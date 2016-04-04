@@ -24,6 +24,9 @@ class ServerException : public std::exception {
     std::string msg;
 };
 
+/*
+ * Run a TCP server to listen for remote Beetle clients.
+ */
 class TCPDeviceServer {
 public:
 	TCPDeviceServer(Beetle &beetle, int port);

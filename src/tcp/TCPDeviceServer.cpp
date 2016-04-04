@@ -55,6 +55,7 @@ void TCPDeviceServer::serverDaemon(int port) {
 			continue;
 		}
 
+		// TODO read first N bytes to find nature of connection
 		VirtualDevice *device = NULL;
 		try {
 			device = new TCPConnection(beetle, clifd);

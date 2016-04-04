@@ -14,6 +14,11 @@
 #include "../Beetle.h"
 #include "HAT.h"
 
+/*
+ * Implementation of the HAT interface that allocates
+ * fixed size blocks to devices. The first block is
+ * reserved for Beetle.
+ */
 class BlockAllocator: public HAT {
 public:
 	BlockAllocator(int blockSize);

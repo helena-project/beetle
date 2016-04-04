@@ -29,6 +29,9 @@ public:
 
 	~BlockingQueue() {};
 
+	/*
+	 * Enqueues an element at the end.
+	 */
 	void push(T v) {
 	    std::lock_guard<std::mutex> lg(m);
 	    if (q == NULL) {
@@ -38,6 +41,11 @@ public:
 	    cv.notify_one();
 	};
 
+	/*
+	 * Dequeues an element from the front, or blocks until one is
+	 * available. If destroy() is called while waiting, an
+	 * exception is thrown.
+	 */
 	T pop() {
 	    std::unique_lock<std::mutex> ul(m);
 	    if (q == NULL) {
@@ -56,6 +64,12 @@ public:
 	    return ret;
 	};
 
+	/*
+	 * Destroys the queue, making it unable to accept new input,
+	 * waking all threads that are waiting, and returning a pointer
+	 * to the internal, unscynchronized queue, which the caller is
+	 * responsible for freeing.
+	 */
 	std::queue<T> *destroy() {
 	    std::lock_guard<std::mutex> lg(m);
 	    auto tmp = q;
