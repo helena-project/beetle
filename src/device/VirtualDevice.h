@@ -8,16 +8,12 @@
 #ifndef VIRTUALDEVICE_H_
 #define VIRTUALDEVICE_H_
 
+#include <atomic>
 #include <cstdint>
 #include <functional>
-#include <map>
 #include <mutex>
 #include <queue>
-#include <string>
 
-#include "../Beetle.h"
-#include "../Handle.h"
-#include "../sync/Semaphore.h"
 #include "Device.h"
 
 typedef struct {
@@ -32,6 +28,7 @@ public:
 	virtual ~VirtualDevice();
 
 	void start();
+	void startNd();
 	void stop();
 	bool isStopped() { return stopped; };
 
@@ -66,11 +63,6 @@ private:
 	transaction_t *currentTransaction;
 	std::queue<transaction_t *> pendingTransactions;
 	std::mutex transactionMutex;
-
-	/*
-	 * Client transactions
-	 */
-	Semaphore transactionSemaphore;
 
 	static std::atomic_int idCounter;
 };

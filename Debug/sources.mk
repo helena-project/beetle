@@ -26,4 +26,5 @@ SUBDIRS := \
 src \
 src/device \
 src/hat \
+src/tcp \
 

@@ -8,18 +8,15 @@
 #ifndef DEVICE_H_
 #define DEVICE_H_
 
-#include <atomic>
 #include <cstdint>
 #include <exception>
 #include <functional>
 #include <map>
 #include <mutex>
-#include <queue>
 #include <string>
 
 #include "../Beetle.h"
 #include "../Handle.h"
-#include "../sync/Semaphore.h"
 
 class DeviceException : public std::exception {
   public:
@@ -46,6 +43,9 @@ public:
 	std::map<uint16_t, Handle *> handles;
 	std::recursive_mutex handlesMutex;
 
+	/*
+	 * Unsubscribe from all of this device's handles.
+	 */
 	void unsubscribeAll(device_t d);
 
 	virtual bool writeResponse(uint8_t *buf, int len) = 0;

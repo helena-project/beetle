@@ -14,9 +14,7 @@
 #include <boost/tokenizer.hpp>
 #include <algorithm>
 #include <cassert>
-#include <cctype>
 #include <iostream>
-#include <iterator>
 #include <map>
 #include <utility>
 
@@ -126,10 +124,10 @@ void CLI::doConnect(const std::vector<std::string>& cmd) {
 	VirtualDevice* device = NULL;
 	try {
 		device = new LEPeripheral(beetle, addr, addrType);
-		printMessage("connected to " + device->getName());
 		beetle.addDevice(device);
 
 		device->start();
+		printMessage("connected to " + device->getName());
 		if (debug) {
 			printMessage(device->getName() + " has handle range [0,"
 					+ std::to_string(device->getHighestHandle()) + "]");

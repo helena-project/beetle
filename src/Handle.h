@@ -10,9 +10,8 @@
 
 #include <cstdint>
 #include <ctime>
-#include <mutex>
 #include <set>
-#include <time.h>
+#include <string>
 
 #include "Beetle.h"
 #include "UUID.h"

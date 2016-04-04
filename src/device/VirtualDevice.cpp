@@ -9,34 +9,37 @@
 
 #include <assert.h>
 #include <bluetooth/bluetooth.h>
-#include <boost/thread/pthread/shared_mutex.hpp>
 #include <cstring>
+#include <map>
+#include <string>
 #include <vector>
 
 #include "../ble/att.h"
 #include "../ble/gatt.h"
 #include "../ble/helper.h"
+#include "../Beetle.h"
 #include "../Debug.h"
-#include "../hat/HAT.h"
+#include "../Handle.h"
 #include "../Router.h"
+#include "../sync/Semaphore.h"
 #include "../UUID.h"
 
 std::atomic_int VirtualDevice::idCounter(1);
 
-VirtualDevice::VirtualDevice(Beetle &beetle) : Device(beetle, idCounter++), transactionSemaphore{1} {
+VirtualDevice::VirtualDevice(Beetle &beetle) : Device(beetle, idCounter++) {
 	started = false;
 	stopped = false;
 	currentTransaction = NULL;
 }
 
 VirtualDevice::~VirtualDevice() {
-	transactionSemaphore.wait(); // wait for client transaction to finish
+
 }
 
 static std::string discoverDeviceName(VirtualDevice *d);
 static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d);
 void VirtualDevice::start() {
-	if (debug) pdebug("starting " + getName());
+	if (debug) pdebug("starting");
 
 	assert(started == false);
 	started = true;
@@ -48,6 +51,16 @@ void VirtualDevice::start() {
 	std::lock_guard<std::recursive_mutex> lg(handlesMutex);
 	handles = handlesTmp;
 }
+
+void VirtualDevice::startNd() {
+	if (debug) pdebug("starting");
+
+	assert(started == false);
+	started = true;
+
+	startInternal();
+}
+
 
 void VirtualDevice::stop() {
 	if (debug) pdebug("stopping " + getName());

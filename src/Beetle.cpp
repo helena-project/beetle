@@ -2,15 +2,17 @@
 #include "Beetle.h"
 
 #include <boost/thread/lock_types.hpp>
-#include <boost/thread/pthread/shared_mutex.hpp>
 #include <stddef.h>
+#include <cassert>
 #include <thread>
+#include <utility>
 
 #include "CLI.h"
 #include "device/BeetleDevice.h"
 #include "device/Device.h"
 #include "hat/BlockAllocator.h"
 #include "Router.h"
+#include "tcp/TCPDeviceServer.h"
 
 bool debug = true;
 
@@ -22,6 +24,7 @@ int main() {
 Beetle::Beetle() {
 	router = NULL;
 	hat = NULL;
+	tcpServer = NULL;
 }
 
 Beetle::~Beetle() {
@@ -31,6 +34,7 @@ Beetle::~Beetle() {
 void Beetle::run() {
 	hat = new BlockAllocator(256);
 	router = new Router(*this);
+	tcpServer = new TCPDeviceServer(*this, 5000);
 
 	devices[BEETLE_RESERVED_DEVICE] = new BeetleDevice(*this);
 
@@ -38,11 +42,13 @@ void Beetle::run() {
 	cli.join();
 }
 
-void Beetle::addDevice(Device *d) {
+void Beetle::addDevice(Device *d, bool allocateHandles) {
 	boost::unique_lock<boost::shared_mutex> deviceslk(devicesMutex);
 	boost::unique_lock<boost::shared_mutex> hatLk(hatMutex);
 	devices[d->getId()] = d;
-	hat->reserve(d->getId());
+	if (allocateHandles) {
+		hat->reserve(d->getId());
+	}
 }
 
 void Beetle::removeDevice(device_t id) {

@@ -8,13 +8,14 @@
 #ifndef BEETLE_H_
 #define BEETLE_H_
 
-#include <map>
 #include <mutex>
 #include <boost/thread.hpp>
+#include <map>
 
 class Device;
 class Router;
 class HAT;
+class TCPDeviceServer;
 
 typedef long device_t;
 const device_t BEETLE_RESERVED_DEVICE = 0;
@@ -27,7 +28,7 @@ public:
 
 	void run();
 
-	void addDevice(Device *);
+	void addDevice(Device *, bool allocateHandles = true);
 	void removeDevice(device_t);
 
 	std::map<device_t, Device *> devices;
@@ -35,6 +36,8 @@ public:
 
 	HAT *hat;
 	boost::shared_mutex hatMutex;
+
+	TCPDeviceServer *tcpServer;
 
 	Router *router;
 };

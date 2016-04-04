@@ -63,6 +63,8 @@ LEPeripheral::~LEPeripheral() {
 		}
 		delete q;
 	}
+	
+	shutdown(sockfd, SHUT_RD);
 	if (writeThread.joinable()) writeThread.join();
 	if (readThread.joinable()) readThread.join();
 	close(sockfd);
@@ -87,6 +89,7 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 }
 
 void LEPeripheral::readDaemon() {
+	if (debug) pdebug(getName() + " readDaemon started");
 	uint8_t buf[64];
 	while (!isStopped()) {
 		int n = read(sockfd, buf, sizeof(buf));
@@ -101,7 +104,8 @@ void LEPeripheral::readDaemon() {
 			} else {
 				std::cerr << "socket error: " << strerror(error) << std::endl;
 			}
-			stop();
+			stop(); // TODO not sure if this is the right thing to do
+			break;
 		} else if (n == 0) {
 			continue;
 		} else {
@@ -109,13 +113,15 @@ void LEPeripheral::readDaemon() {
 			readHandler(buf, n);
 		}
 	}
+	if (debug) pdebug(getName() + " readDaemon exited");
 }
 
 void LEPeripheral::writeDaemon() {
+	if (debug) pdebug(getName() + " writeDaemon started");
 	while (!isStopped()) {
 		try {
 			queued_write_t qw = writeQueue.pop();
-			::write(sockfd, qw.buf, qw.len);
+			::write(sockfd, qw.buf, qw.len); // TODO check return values
 			if (debug) {
 				pdebug(getName() + " wrote " + std::to_string(qw.len) + " bytes");
 				pdebug(qw.buf, qw.len);
@@ -125,6 +131,7 @@ void LEPeripheral::writeDaemon() {
 			break;
 		}
 	}
+	if (debug) pdebug(getName() + " writeDaemon exited");
 }
 
 int LEPeripheral::getMTU() {

@@ -7,18 +7,21 @@ CPP_SRCS += \
 ../src/device/BeetleDevice.cpp \
 ../src/device/Device.cpp \
 ../src/device/LEPeripheral.cpp \
+../src/device/TCPConnection.cpp \
 ../src/device/VirtualDevice.cpp 
 
 OBJS += \
 ./src/device/BeetleDevice.o \
 ./src/device/Device.o \
 ./src/device/LEPeripheral.o \
+./src/device/TCPConnection.o \
 ./src/device/VirtualDevice.o 
 
 CPP_DEPS += \
 ./src/device/BeetleDevice.d \
 ./src/device/Device.d \
 ./src/device/LEPeripheral.d \
+./src/device/TCPConnection.d \
 ./src/device/VirtualDevice.d 
 
 
