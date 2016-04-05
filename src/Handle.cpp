@@ -8,9 +8,26 @@
 #include "Handle.h"
 
 #include <sstream>
-#include <string>
 
 #include "ble/gatt.h"
+#include "Debug.h"
+
+void CachedHandle::set(uint8_t *value, int len) {
+	if (this->value != NULL) {
+		delete[] this->value;
+	}
+	this->value = value;
+	this->len = len;
+	::time(&(this->time));
+}
+
+Handle::Handle() {
+
+}
+
+Handle::~Handle() {
+
+}
 
 bool Handle::isCacheInfinite() {
 	return cacheInfinite;
@@ -78,11 +95,35 @@ std::string Handle::str() {
 	return ss.str();
 }
 
-void CachedHandle::set(uint8_t *value, int len) {
-	if (this->value != NULL) {
-		delete[] this->value;
-	}
-	this->value = value;
-	this->len = len;
-	::time(&(this->time));
+PrimaryService::PrimaryService() {
+	uuid = UUID(GATT_PRIM_SVC_UUID);
 }
+
+std::string PrimaryService::str() {
+	std::stringstream ss;
+	ss << handle << "\t" << "PrimaryService" << "\t";
+	if (false) {
+
+	} else {
+		ss << UUID(cache.value, cache.len).str();
+	}
+	return ss.str();
+}
+
+Characteristic::Characteristic() {
+	uuid = UUID(GATT_CHARAC_UUID);
+}
+
+std::string Characteristic::str() {
+	std::stringstream ss;
+	ss << handle << "\t" << "Characteristic" << "\t" << serviceHandle << "\t";
+	if (false) {
+
+	} else {
+		pdebug(cache.value, cache.len);
+		// ss << UUID(cache.value, cache.len).str();
+	}
+	return ss.str();
+}
+
+

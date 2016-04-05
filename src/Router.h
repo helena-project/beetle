@@ -8,7 +8,7 @@
 #ifndef ROUTER_H_
 #define ROUTER_H_
 
-#include "device/Device.h"
+#include "Device.h"
 
 class Router {
 public:

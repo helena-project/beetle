@@ -14,8 +14,11 @@
 
 #include "../ble/att.h"
 #include "../Beetle.h"
-#include "Device.h"
+#include "../Device.h"
 
+/*
+ * Fully synchronous simulated device for this Beetle.
+ */
 class BeetleDevice: public Device {
 public:
 	BeetleDevice(Beetle &beetle);

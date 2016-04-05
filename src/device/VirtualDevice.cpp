@@ -24,9 +24,7 @@
 #include "../sync/Semaphore.h"
 #include "../UUID.h"
 
-std::atomic_int VirtualDevice::idCounter(1);
-
-VirtualDevice::VirtualDevice(Beetle &beetle) : Device(beetle, idCounter++) {
+VirtualDevice::VirtualDevice(Beetle &beetle) : Device(beetle) {
 	started = false;
 	stopped = false;
 	currentTransaction = NULL;
@@ -387,9 +385,8 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 
 	std::vector<group_t> services = discoverServices(d);
 	for (group_t &service : services) {
-		Handle *serviceHandle = new Handle();
+		Handle *serviceHandle = new PrimaryService();
 		serviceHandle->setHandle(service.handle);
-		serviceHandle->setUuid(UUID(GATT_PRIM_SVC_UUID));
 		serviceHandle->setEndGroupHandle(service.endGroup);
 		serviceHandle->setCacheInfinite(true);
 		// let the handle inherit the pointer
@@ -400,9 +397,8 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 				serviceHandle->getHandle(),
 				serviceHandle->getEndGroupHandle());
 		for (handle_value_t &characteristic : characteristics) {
-			Handle *charHandle = new Handle();
+			Handle *charHandle = new Characteristic();
 			charHandle->setHandle(characteristic.handle);
-			charHandle->setUuid(UUID(GATT_CHARAC_UUID));
 			charHandle->setServiceHandle(serviceHandle->getHandle());
 			charHandle->setCacheInfinite(true);
 			// let the handle inherit the pointer
@@ -414,7 +410,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 			for (int i = 0; i < (int)(characteristics.size() - 1); i++) {
 				handle_value_t characteristic = characteristics[i];
 				uint16_t startGroup = characteristic.handle + 1;
-				uint16_t endGroup = characteristics[i + 1].handle;
+				uint16_t endGroup = characteristics[i + 1].handle - 1;
 				handles[characteristic.handle]->setEndGroupHandle(endGroup);
 
 				std::vector<handle_info_t> handleInfos = discoverHandles(d, startGroup, endGroup);

@@ -9,37 +9,30 @@
 
 #include "CLI.h"
 #include "device/BeetleDevice.h"
-#include "device/Device.h"
+#include "Device.h"
 #include "hat/BlockAllocator.h"
 #include "Router.h"
 #include "tcp/TCPDeviceServer.h"
 
+/* Global debug variable */
 bool debug = true;
 
 int main() {
 	Beetle btl;
-	btl.run();
+	TCPDeviceServer(btl, 5000);
+
+	CLI cli(btl);
+	cli.join();
 }
 
 Beetle::Beetle() {
-	router = NULL;
-	hat = NULL;
-	tcpServer = NULL;
+	hat = new BlockAllocator(256);
+	router = new Router(*this);
+	devices[BEETLE_RESERVED_DEVICE] = new BeetleDevice(*this);
 }
 
 Beetle::~Beetle() {
 
-}
-
-void Beetle::run() {
-	hat = new BlockAllocator(256);
-	router = new Router(*this);
-	tcpServer = new TCPDeviceServer(*this, 5000);
-
-	devices[BEETLE_RESERVED_DEVICE] = new BeetleDevice(*this);
-
-	CLI cli(*this);
-	cli.join();
 }
 
 void Beetle::addDevice(Device *d, bool allocateHandles) {

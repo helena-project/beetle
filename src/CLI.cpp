@@ -8,6 +8,7 @@
 #include "CLI.h"
 
 #include <bluetooth/bluetooth.h>
+#include <boost/algorithm/string.hpp>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <boost/token_functions.hpp>
@@ -18,7 +19,7 @@
 #include <map>
 #include <utility>
 
-#include "device/Device.h"
+#include "Device.h"
 #include "device/LEPeripheral.h"
 #include "Debug.h"
 #include "hat/HAT.h"
@@ -72,7 +73,7 @@ void CLI::cmdLineDaemon() {
 			doListOffsets(cmd);
 		} else if (c1 == "debug") {
 			doToggleDebug(cmd);
-		} else if (c1 == "quit") {
+		} else if (c1 == "q" || c1 == "quit") {
 			exit(0);
 		} else {
 			printMessage("unknown command");
@@ -273,7 +274,7 @@ Device *CLI::matchDevice(const std::string &input) {
 		} else {
 			// match by name
 			for (auto &kv : beetle.devices) {
-				if (kv.second->getName() == input) {
+				if (boost::iequals(kv.second->getName(), input)) {
 					device = kv.second;
 				}
 			}

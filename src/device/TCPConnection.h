@@ -17,6 +17,9 @@
 #include "VirtualDevice.h"
 #include "shared.h"
 
+/*
+ * Remote "device" connected using TCP.
+ */
 class TCPConnection: public VirtualDevice {
 public:
 	TCPConnection(Beetle &beetle, int sockfd);

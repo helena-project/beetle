@@ -8,6 +8,7 @@
 #ifndef DEVICE_H_
 #define DEVICE_H_
 
+#include <atomic>
 #include <cstdint>
 #include <exception>
 #include <functional>
@@ -15,8 +16,8 @@
 #include <mutex>
 #include <string>
 
-#include "../Beetle.h"
-#include "../Handle.h"
+#include "Beetle.h"
+#include "Handle.h"
 
 class DeviceException : public std::exception {
   public:
@@ -32,7 +33,6 @@ class Handle;
 
 class Device {
 public:
-	Device(Beetle &beetle, device_t id);
 	virtual ~Device();
 
 	device_t getId() { return id; };
@@ -55,12 +55,20 @@ public:
 
 	virtual int getMTU() = 0;
 protected:
+	/*
+	 * Cannot instantiate a device directly.
+	 */
+	Device(Beetle &beetle);
+	Device(Beetle &beetle, device_t id);
+
 	Beetle &beetle;
 
 	std::string name;
 	std::string type;
 private:
 	device_t id;
+
+	static std::atomic_int idCounter;
 };
 
 #endif /* DEVICE_H_ */

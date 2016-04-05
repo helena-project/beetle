@@ -26,8 +26,6 @@ public:
 	Beetle();
 	virtual ~Beetle();
 
-	void run();
-
 	void addDevice(Device *, bool allocateHandles = true);
 	void removeDevice(device_t);
 
@@ -36,8 +34,6 @@ public:
 
 	HAT *hat;
 	boost::shared_mutex hatMutex;
-
-	TCPDeviceServer *tcpServer;
 
 	Router *router;
 };

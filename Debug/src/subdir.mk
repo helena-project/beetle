@@ -6,6 +6,7 @@
 CPP_SRCS += \
 ../src/Beetle.cpp \
 ../src/CLI.cpp \
+../src/Device.cpp \
 ../src/Discover.cpp \
 ../src/Handle.cpp \
 ../src/Router.cpp \
@@ -14,6 +15,7 @@ CPP_SRCS += \
 OBJS += \
 ./src/Beetle.o \
 ./src/CLI.o \
+./src/Device.o \
 ./src/Discover.o \
 ./src/Handle.o \
 ./src/Router.o \
@@ -22,6 +24,7 @@ OBJS += \
 CPP_DEPS += \
 ./src/Beetle.d \
 ./src/CLI.d \
+./src/Device.d \
 ./src/Discover.d \
 ./src/Handle.d \
 ./src/Router.d \

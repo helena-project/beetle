@@ -8,13 +8,12 @@
 #ifndef VIRTUALDEVICE_H_
 #define VIRTUALDEVICE_H_
 
-#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <mutex>
 #include <queue>
 
-#include "Device.h"
+#include "../Device.h"
 
 typedef struct {
 	uint8_t *buf;
@@ -22,9 +21,11 @@ typedef struct {
 	std::function<void(uint8_t*, int)> cb;
 } transaction_t;
 
+/*
+ * Base class that implements GATT and asynchronous transactions.
+ */
 class VirtualDevice: public Device {
 public:
-	VirtualDevice(Beetle &beetle);
 	virtual ~VirtualDevice();
 
 	void start();
@@ -38,6 +39,11 @@ public:
 	int writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp);
 protected:
 	/*
+	 * Cannot instantiate a VirtualDevice
+	 */
+	VirtualDevice(Beetle &beetle);
+
+	/*
 	 * Called by derived class when a packet is received.
 	 */
 	void readHandler(uint8_t *buf, int len);
@@ -45,12 +51,11 @@ protected:
 	/*
 	 * Called by base class to write packet.
 	 */
-
 	virtual bool write(uint8_t *buf, int len) = 0;
+
 	/*
 	 * Called at the beginning of start() to start the internals (any daemons).
 	 */
-
 	virtual void startInternal() = 0;
 private:
 	bool stopped;
@@ -63,8 +68,6 @@ private:
 	transaction_t *currentTransaction;
 	std::queue<transaction_t *> pendingTransactions;
 	std::mutex transactionMutex;
-
-	static std::atomic_int idCounter;
 };
 
 #endif /* VIRTUALDEVICE_H_ */

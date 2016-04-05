@@ -13,13 +13,19 @@
 #include <cstring>
 #include <vector>
 
-#include "../ble/att.h"
-#include "../ble/gatt.h"
-#include "../ble/helper.h"
-#include "../Debug.h"
-#include "../hat/HAT.h"
-#include "../Router.h"
-#include "../UUID.h"
+#include "ble/att.h"
+#include "ble/gatt.h"
+#include "ble/helper.h"
+#include "Debug.h"
+#include "hat/HAT.h"
+#include "Router.h"
+#include "UUID.h"
+
+std::atomic_int Device::idCounter(1);
+
+Device::Device(Beetle &beetle_) : beetle(beetle_) {
+	id = idCounter++;
+}
 
 Device::Device(Beetle &beetle_, device_t id_) : beetle(beetle_) {
 	id = id_;

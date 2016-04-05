@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <utility>
 
-#include "../device/Device.h"
+#include "../Device.h"
 
 typedef struct {
 	uint16_t start;

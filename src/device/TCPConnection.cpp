@@ -17,7 +17,7 @@
 
 #include "../ble/att.h"
 #include "../Debug.h"
-#include "Device.h"
+#include "../Device.h"
 
 TCPConnection::TCPConnection(Beetle &beetle, int sockfd_) :
 VirtualDevice(beetle), readThread(), writeThread() {

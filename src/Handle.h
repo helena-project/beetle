@@ -26,8 +26,14 @@ public:
 	std::set<device_t> cachedSet;
 };
 
+/*
+ * A generic handle.
+ */
 class Handle {
 public:
+	Handle();
+	virtual ~Handle();
+
 	bool isCacheInfinite();
 	void setCacheInfinite(bool cacheInfinite);
 
@@ -46,17 +52,29 @@ public:
 	UUID& getUuid();
 	void setUuid(UUID uuid);
 
-	std::string str();
+	virtual std::string str();
 
 	CachedHandle cache;
 	std::set<device_t> subscribers;
-private:
+protected:
 	uint16_t handle = 0;
 	UUID uuid;
 	uint16_t serviceHandle = 0;
 	uint16_t charHandle = 0;
 	uint16_t endGroupHandle = 0;
-	bool cacheInfinite;
+	bool cacheInfinite = false;
+};
+
+class PrimaryService: public Handle {
+public:
+	PrimaryService();
+	std::string str();
+};
+
+class Characteristic: public Handle {
+public:
+	Characteristic();
+	std::string str();
 };
 
 #endif /* HANDLE_H_ */
