@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <map>
 #include <sstream>
 
 #include "ble/helper.h"
@@ -42,13 +43,14 @@ void Scanner::stop() {
 	stopped = true;
 }
 
-std::list<discovered_t> Scanner::getDiscovered() {
+std::map<std::string, peripheral_info_t> Scanner::getDiscovered() {
 	std::lock_guard<std::mutex> lg(discoveredMutex);
-	std::list<discovered_t> tmp = discovered;
-	discovered = std::list<discovered_t>();
+	std::map<std::string, peripheral_info_t>  tmp = discovered;
+	discovered = std::map<std::string, peripheral_info_t>();
 	return tmp;
 }
 
+// TODO check return values for calls
 void Scanner::discoverDaemon() {
 	if (debug) {
 		pdebug("discoverDaemon started");
@@ -86,8 +88,9 @@ void Scanner::discoverDaemon() {
   		}
   		le_advertising_info *info = (le_advertising_info *)(meta->data + 1);
 
+  		std::string addr = ba2str_cpp(info->bdaddr);
   		AddrType addrType = (info->bdaddr_type == LE_PUBLIC_ADDRESS) ? PUBLIC : RANDOM;
-  		std::string name = "unknown";
+  		std::string name = "";
   		int i = 0;
   		while (i < info->length) {
   			int len = info->data[i];
@@ -100,8 +103,7 @@ void Scanner::discoverDaemon() {
   			i += len + 1;
   		}
 
-  		if (debug) {
-  			std::string addr = ba2str_cpp(info->bdaddr);
+  		if (debug_scan) {
   			std::stringstream ss;
   			ss << "discovered " << addr << "\t" << ((addrType == PUBLIC) ? "public" : "random")
   					<< "\t" << name;
@@ -109,7 +111,11 @@ void Scanner::discoverDaemon() {
   		}
 
   		std::lock_guard<std::mutex> lg(discoveredMutex);
-  		discovered.push_back(discovered_t{name, info->bdaddr, addrType});
+  		if (discovered.find(addr) != discovered.end() && discovered[addr].name.length() != 0) {
+  			continue; // didn't get anything new
+  		} else {
+  			discovered[addr] = peripheral_info_t{name, info->bdaddr, addrType};
+  		}
   	}
 
   	// teardown

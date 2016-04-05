@@ -21,6 +21,8 @@
 
 /* Global debug variable */
 bool debug = true;
+bool debug_scan = false;
+bool debug_discovery = false;
 bool debug_router = false;
 bool debug_socket = false;
 
@@ -35,7 +37,9 @@ int main(int argc, char *argv[]) {
 			("scan,s", po::value<bool>(&scanningEnabled), "Enable scanning for BLE devices (default: true")
 			("tcp-port", po::value<int>(&tcpPort), "Specify TCP server port (default: 5000)")
 			("debug", po::value<bool>(&debug), "Enable general debugging (default: true)")
-			("debug-socket", po::value<bool>(&debug_socket), "Enable general debugging (default: false)")
+			("debug-discovery", po::value<bool>(&debug_discovery), "Enable debugging for GATT discovery (default: false)")
+			("debug-scan", po::value<bool>(&debug_scan), "Enable debugging for BLE scanning (default: false)")
+			("debug-socket", po::value<bool>(&debug_socket), "Enable debugging for sockets (default: false)")
 			("debug-router", po::value<bool>(&debug_router), "Enable debugging for router (default: false)");
 	po::variables_map vm;
 	try {

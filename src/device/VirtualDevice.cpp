@@ -206,7 +206,9 @@ static std::string discoverDeviceName(VirtualDevice *d) {
 		name = std::string(cName);
 	}
 
-	if (debug) pdebug(name);
+	if (debug_discovery) {
+		pdebug(name);
+	}
 
 	delete[] req;
 	delete[] resp;
@@ -221,7 +223,7 @@ typedef struct {
 } group_t;
 
 static std::vector<group_t> discoverServices(VirtualDevice *d) {
-	if (debug) {
+	if (debug_discovery) {
 		pdebug("discovering services for " + d->getName());
 	}
 
@@ -256,7 +258,9 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 				group.value = new uint8_t[group.len];
 				memcpy(group.value, resp + i + 4, group.len);
 				groups.push_back(group);
-				if (debug) pdebug("found service at handles " + std::to_string(group.handle) + " - " + std::to_string(group.endGroup));
+				if (debug_discovery) {
+					pdebug("found service at handles " + std::to_string(group.handle) + " - " + std::to_string(group.endGroup));
+				}
 			}
 			delete[] resp;
 			currHandle = groups.rbegin()->endGroup + 1;
@@ -280,7 +284,7 @@ typedef struct {
 } handle_value_t;
 
 static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint16_t startHandle, uint16_t endHandle) {
-	if (debug) {
+	if (debug_discovery) {
 		pdebug("discovering characteristics for " + d->getName());
 	}
 
@@ -312,7 +316,9 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 				handleValue.value = new uint8_t[handleValue.len];
 				memcpy(handleValue.value, resp + i + 2, handleValue.len);
 				handles.push_back(handleValue);
-				if (debug) pdebug("found characteristic at handle " + std::to_string(handleValue.handle));
+				if (debug_discovery) {
+					pdebug("found characteristic at handle " + std::to_string(handleValue.handle));
+				}
 			}
 			delete[] resp;
 
@@ -337,7 +343,7 @@ typedef struct {
 } handle_info_t;
 
 static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t startGroup, uint16_t endGroup) {
-	if (debug) {
+	if (debug_discovery) {
 		pdebug("discovering handles for " + d->getName());
 	}
 
@@ -374,7 +380,9 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 					memcpy(handleInfo.uuid.value, resp + i + 2, attDataLen - 2);
 				}
 				handles.push_back(handleInfo);
-				if (debug) pdebug("found handle at " + std::to_string(handleInfo.handle));
+				if (debug_discovery) {
+					pdebug("found handle at " + std::to_string(handleInfo.handle));
+				}
 			}
 			delete[] resp;
 
@@ -487,7 +495,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 		handles[lastCharacteristic->getHandle()]->setEndGroupHandle(handles.rbegin()->second->getHandle());
 	}
 
-	if (debug) {
+	if (debug_discovery) {
 		pdebug("done discovering handles for " + d->getName());
 	}
 	return handles;

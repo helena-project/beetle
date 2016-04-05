@@ -16,25 +16,39 @@
 
 #include "device/LEPeripheral.h"
 
+// Print debug info in scanning module
+extern bool debug_scan;
+
 typedef struct {
 	std::string name;
 	bdaddr_t bdaddr;
 	AddrType bdaddrType;
-} discovered_t;
+} peripheral_info_t;
 
 class Scanner {
 public:
 	Scanner();
 	virtual ~Scanner();
 
+	/*
+	 * Start BLE scanning.
+	 */
 	void start();
+
+	/*
+	 * Stop BLE scanning.
+	 */
 	void stop();
-	std::list<discovered_t> getDiscovered();
+
+	/*
+	 * Return a list of discovered peripherals.
+	 */
+	std::map<std::string, peripheral_info_t> getDiscovered();
 private:
 	bool started;
 	bool stopped;
 
-	std::list<discovered_t> discovered;
+	std::map<std::string, peripheral_info_t> discovered;
 	std::mutex discoveredMutex;
 
 	std::thread t;

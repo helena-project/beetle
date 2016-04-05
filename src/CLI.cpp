@@ -69,8 +69,8 @@ void CLI::cmdLineDaemon() {
 		if (cmd.size() == 0) continue;
 
 		std::string c1 = cmd[0];
-		if (c1 == "discover") {
-			doDiscover(cmd);
+		if (c1 == "scan") {
+			doScan(cmd);
 		} else if (c1 == "connect") {
 			doConnect(cmd);
 		} else if (c1 == "disconnect") {
@@ -112,16 +112,16 @@ bool CLI::getCommand(std::vector<std::string> &ret) {
 	}
 }
 
-void CLI::doDiscover(const std::vector<std::string>& cmd) {
+void CLI::doScan(const std::vector<std::string>& cmd) {
 	if (cmd.size() != 1) {
-		printUsage("discover");
+		printUsage("scan");
 		return;
 	}
-	std::list<discovered_t> discovered = scanner.getDiscovered();
+	std::map<std::string, peripheral_info_t> discovered = scanner.getDiscovered();
 	for (auto &d : discovered) {
 		std::stringstream ss;
-		ss << ba2str_cpp(d.bdaddr) << ((d.bdaddrType == PUBLIC) ? "public" : "random")
-				<< "\t" << d.name;
+		ss << d.first << "\t" << ((d.second.bdaddrType == PUBLIC) ? "public" : "random")
+				<< "\t" << d.second.name;
 		printMessage(ss.str());
 	}
 }

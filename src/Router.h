@@ -10,6 +10,9 @@
 
 #include "Device.h"
 
+// Extra debugging when routing.
+extern bool debug_router;
+
 class Router {
 public:
 	Router(Beetle &beetle);

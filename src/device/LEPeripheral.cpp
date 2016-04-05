@@ -112,7 +112,9 @@ void LEPeripheral::readDaemon() {
 		} else if (n == 0) {
 			continue;
 		} else {
-			if (debug) pdebug(buf, n);
+			if (debug_socket) {
+				pdebug(buf, n);
+			}
 			readHandler(buf, n);
 		}
 	}

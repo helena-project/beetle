@@ -13,19 +13,10 @@
 #include <iostream>
 #include <string>
 
-/*
- * General debugging.
- */
+// General debugging.
 extern bool debug;
 
-/*
- * Extra debugging when routing.
- */
-extern bool debug_router;
-
-/*
- * Print every time a socket is written or read.
- */
+// Print every time a socket is written or read.
 extern bool debug_socket;
 
 inline void pdebug(std::string mesg) {

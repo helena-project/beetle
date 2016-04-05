@@ -15,6 +15,9 @@
 
 #include "../Device.h"
 
+// Debug the GATT handle discovery.
+extern bool debug_discovery;
+
 typedef struct {
 	uint8_t *buf;
 	int len;

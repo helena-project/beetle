@@ -33,7 +33,7 @@ private:
 	std::thread t;
 	void cmdLineDaemon();
 
-	void doDiscover(const std::vector<std::string>& cmd);
+	void doScan(const std::vector<std::string>& cmd);
 	void doConnect(const std::vector<std::string>& cmd);
 	void doDisconnect(const std::vector<std::string>& cmd);
 	void doListDevices(const std::vector<std::string>& cmd);
