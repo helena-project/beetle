@@ -21,7 +21,7 @@ bool debug = true;
 
 int main(int argc, char *argv[]) {
 	Beetle btl;
-	TCPDeviceServer(btl, 5000);
+	TCPDeviceServer tcpServer(btl, 5000);
 
 	CLI cli(btl);
 	cli.join();
