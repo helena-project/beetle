@@ -26,8 +26,6 @@ public:
 	LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType);
 	virtual ~LEPeripheral();
 
-	int getMTU();
-
 	bdaddr_t getBdaddr() { return bdaddr; };
 	AddrType getAddrType() { return bdaddrType; };
 protected:

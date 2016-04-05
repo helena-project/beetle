@@ -137,8 +137,4 @@ void LEPeripheral::writeDaemon() {
 	if (debug) pdebug(getName() + " writeDaemon exited");
 }
 
-int LEPeripheral::getMTU() {
-	return ATT_DEFAULT_LE_MTU;
-}
-
 

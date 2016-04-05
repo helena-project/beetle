@@ -37,6 +37,8 @@ public:
 	bool writeCommand(uint8_t *buf, int len);
 	bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);
 	int writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp);
+
+	int getMTU();
 protected:
 	/*
 	 * Cannot instantiate a VirtualDevice
@@ -60,6 +62,8 @@ protected:
 private:
 	bool stopped;
 	bool started;
+
+	int mtu;
 
 	/*
 	 * Server transactions

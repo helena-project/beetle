@@ -28,6 +28,7 @@ VirtualDevice::VirtualDevice(Beetle &beetle) : Device(beetle) {
 	started = false;
 	stopped = false;
 	currentTransaction = NULL;
+	mtu = ATT_DEFAULT_LE_MTU;
 }
 
 VirtualDevice::~VirtualDevice() {
@@ -144,6 +145,10 @@ int VirtualDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&res
 	}
 }
 
+int VirtualDevice::getMTU() {
+	return mtu;
+}
+
 void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 	std::unique_lock<std::mutex> lk(transactionMutex);
 	if (!currentTransaction) {
@@ -171,7 +176,13 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 }
 
 void VirtualDevice::readHandler(uint8_t *buf, int len) {
-	if (((buf[0] & 1) == 1 && buf[0] != ATT_OP_HANDLE_NOTIFY && buf[0] != ATT_OP_HANDLE_IND)
+	if (buf[0] == ATT_OP_MTU_REQ) {
+		mtu = btohs(*(uint16_t *)(buf + 1));
+		uint8_t resp[3];
+		resp[0] = ATT_OP_MTU_RESP;
+		*(uint16_t *)(resp + 1) = htobs(ATT_DEFAULT_LE_MTU);
+		write(resp, sizeof(resp));
+	} else if (((buf[0] & 1) == 1 && buf[0] != ATT_OP_HANDLE_NOTIFY && buf[0] != ATT_OP_HANDLE_IND)
 			|| buf[0] == ATT_OP_HANDLE_CNF) {
 		handleTransactionResponse(buf, len);
 	} else {
@@ -459,3 +470,4 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 	}
 	return handles;
 }
+
