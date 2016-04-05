@@ -27,7 +27,7 @@ TCPDeviceServer::~TCPDeviceServer() {
 }
 
 void TCPDeviceServer::serverDaemon(int port) {
-	if (debug) pdebug("resource serverDaemon started");
+	if (debug) pdebug("resource serverDaemon started on port " + std::to_string(port));
 
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 

@@ -82,8 +82,8 @@ void TCPConnection::readDaemon() {
 			continue;
 		} else {
 			assert(bytesRead == 1);
-			if (debug) {
-				pdebug("expecting " + std::to_string(len) + " bytes");
+			if (debug_socket) {
+				pdebug("tcp expecting " + std::to_string(len) + " bytes");
 			}
 
 			// read payload ATT message
@@ -111,7 +111,9 @@ void TCPConnection::readDaemon() {
 			if (isStopped()) break;
 
 			assert(bytesRead == len);
-			if (debug) pdebug(buf, bytesRead);
+			if (debug_socket) {
+				pdebug(buf, bytesRead);
+			}
 			readHandler(buf, bytesRead);
 		}
 	}
@@ -126,7 +128,7 @@ void TCPConnection::writeDaemon() {
 			uint8_t len = (uint8_t) qw.len;
 			::write(sockfd, &len, 1); // TODO check return values
 			::write(sockfd, qw.buf, qw.len);
-			if (debug) {
+			if (debug_socket) {
 				pdebug(getName() + " wrote " + std::to_string(qw.len) + " bytes");
 				pdebug(qw.buf, qw.len);
 			}

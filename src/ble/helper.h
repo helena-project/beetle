@@ -31,5 +31,11 @@ inline int pack_read_by_type_req_pdu(uint16_t attType, uint16_t startHandle, uin
 	return 7;
 }
 
+inline std::string ba2str_cpp(bdaddr_t bdaddr) {
+	char addr_c_str[20];
+	ba2str(&bdaddr, addr_c_str);
+	return std::string(addr_c_str);
+}
+
 
 #endif /* BLE_HELPER_H_ */

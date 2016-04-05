@@ -21,12 +21,14 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
+#include <list>
 #include <map>
 #include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
 
+#include "ble/helper.h"
 #include "device/BeetleDevice.h"
 #include "device/LEPeripheral.h"
 #include "Debug.h"
@@ -34,7 +36,7 @@
 #include "hat/HAT.h"
 #include "Handle.h"
 
-CLI::CLI(Beetle &beetle_) : beetle(beetle_), t() {
+CLI::CLI(Beetle &beetle, Scanner &scanner) : beetle(beetle), scanner(scanner), t() {
 	t = std::thread(&CLI::cmdLineDaemon, this);
 }
 
@@ -67,10 +69,8 @@ void CLI::cmdLineDaemon() {
 		if (cmd.size() == 0) continue;
 
 		std::string c1 = cmd[0];
-		if (c1 == "set-interval") {
-
-		} else if (c1 == "discover") {
-
+		if (c1 == "discover") {
+			doDiscover(cmd);
 		} else if (c1 == "connect") {
 			doConnect(cmd);
 		} else if (c1 == "disconnect") {
@@ -109,6 +109,20 @@ bool CLI::getCommand(std::vector<std::string> &ret) {
 			ret.push_back(t);
 		}
 		return true;
+	}
+}
+
+void CLI::doDiscover(const std::vector<std::string>& cmd) {
+	if (cmd.size() != 1) {
+		printUsage("discover");
+		return;
+	}
+	std::list<discovered_t> discovered = scanner.getDiscovered();
+	for (auto &d : discovered) {
+		std::stringstream ss;
+		ss << ba2str_cpp(d.bdaddr) << ((d.bdaddrType == PUBLIC) ? "public" : "random")
+				<< "\t" << d.name;
+		printMessage(ss.str());
 	}
 }
 
@@ -232,9 +246,9 @@ void CLI::doToggleDebug(const std::vector<std::string>& cmd) {
 	if (cmd.size() != 2) {
 		printUsage("debug on|off");
 	} else {
-		if (cmd[2] == "on") {
+		if (cmd[1] == "on") {
 			debug = true;
-		} else if (cmd[2] == "off") {
+		} else if (cmd[1] == "off") {
 			debug = false;
 		} else {
 			printUsageError("invalid debug setting");

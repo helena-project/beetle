@@ -14,10 +14,11 @@
 #include <vector>
 
 #include "Beetle.h"
+#include "Scanner.h"
 
 class CLI {
 public:
-	CLI(Beetle &beetle);
+	CLI(Beetle &beetle, Scanner &scanner);
 	virtual ~CLI();
 	void join();
 private:
@@ -27,9 +28,12 @@ private:
 	bool getCommand(std::vector<std::string> &ret);
 
 	Beetle &beetle;
+	Scanner &scanner;
+
 	std::thread t;
 	void cmdLineDaemon();
 
+	void doDiscover(const std::vector<std::string>& cmd);
 	void doConnect(const std::vector<std::string>& cmd);
 	void doDisconnect(const std::vector<std::string>& cmd);
 	void doListDevices(const std::vector<std::string>& cmd);

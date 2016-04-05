@@ -13,16 +13,17 @@
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <cstdint>
 #include <cstring>
-#include <functional>
 #include <map>
 #include <mutex>
 #include <set>
+#include <string>
 #include <utility>
 
 #include "ble/att.h"
 #include "ble/gatt.h"
 #include "ble/helper.h"
 #include "Beetle.h"
+#include "Debug.h"
 #include "hat/HAT.h"
 #include "Handle.h"
 #include "UUID.h"
@@ -99,12 +100,15 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 		uint16_t currHandle = startHandle;
 		bool done = false;
 		while (currHandle <= endHandle && !done) {
+			if (debug_router) {
+				pdebug("RouteFindInfo @" + std::to_string(currHandle));
+			}
 			device_t dst = beetle.hat->getDeviceForHandle(startHandle);
 			handle_range_t handleRange = beetle.hat->getHandleRange(currHandle);
 			if (dst == NULL_RESERVED_DEVICE) { // -1
-				continue;
+				// do nothing
 			} else if (dst == src) {
-				continue;
+				// do nothing
 			} else if (dst >= 0) {
 				std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
 				for (auto &mapping : beetle.devices[dst]->handles) {
@@ -132,6 +136,10 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 				}
 			}
 			currHandle = handleRange.end + 1;
+			if (currHandle <= handleRange.start) {
+				done = true;
+				break;
+			}
 		}
 
 		if (respHandleCount > 0) {
@@ -189,12 +197,15 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 		uint16_t currHandle = startHandle;
 		bool done = false;
 		while (currHandle <= endHandle && !done) {
+			if (debug_router) {
+				pdebug("RouteFindByTypeValue @" + std::to_string(currHandle));
+			}
 			device_t dst = beetle.hat->getDeviceForHandle(startHandle);
 			handle_range_t handleRange = beetle.hat->getHandleRange(currHandle);
 			if (dst == NULL_RESERVED_DEVICE){ // -1
-				continue;
+				// do nothing
 			} else if (dst == src) {
-				continue;
+				// do nothing
 			} else if (dst >= 0) {
 				std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
 
@@ -232,6 +243,10 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 				}
 			}
 			currHandle = handleRange.end + 1;
+			if (currHandle <= handleRange.start) {
+				done = true;
+				break;
+			}
 		}
 
 		if (respHandleCount > 0) {

@@ -93,7 +93,7 @@ void LEPeripheral::readDaemon() {
 	uint8_t buf[64];
 	while (!isStopped()) {
 		int n = read(sockfd, buf, sizeof(buf));
-		if (debug) {
+		if (debug_socket) {
 			pdebug(getName() + " read " + std::to_string(n) + " bytes");
 		}
 		if (n < 0) {
@@ -125,7 +125,7 @@ void LEPeripheral::writeDaemon() {
 		try {
 			queued_write_t qw = writeQueue.pop();
 			::write(sockfd, qw.buf, qw.len); // TODO check return values
-			if (debug) {
+			if (debug_socket) {
 				pdebug(getName() + " wrote " + std::to_string(qw.len) + " bytes");
 				pdebug(qw.buf, qw.len);
 			}
