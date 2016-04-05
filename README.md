@@ -1,3 +1,17 @@
-# README #
+# Beetle C++ for Linux
 
-Main function is in Beetle.cpp. Currently a project in Eclipse CDT.
+##### Requirements
+- libboost-all-dev, libbluetoothdev
+- Eclipse CDT (Mars)
+
+##### To build and run
+1. clone and import the project into Eclipse
+2. build 
+3. in a terminal, 
+    ```
+    cd Debug
+    sudo ./Beetle
+    ```
+
+##### Notes
+The main function is in Beetle.cpp. 
