@@ -6,12 +6,9 @@
 
 ##### To build and run
 1. clone and import the project into Eclipse
-2. build 
-3. in a terminal, 
-    ```
-    cd Debug
-    sudo ./Beetle
-    ```
+2. build
+3. in a terminal, ``` cd Debug ``` 
+4. ``` sudo ./Beetle ```  
 
 ##### Notes
-The main function is in Beetle.cpp. 
+The main function is in Beetle.cpp.
