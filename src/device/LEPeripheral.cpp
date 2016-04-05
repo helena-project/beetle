@@ -104,7 +104,10 @@ void LEPeripheral::readDaemon() {
 			} else {
 				std::cerr << "socket error: " << strerror(error) << std::endl;
 			}
-			stop(); // TODO not sure if this is the right thing to do
+			if (!isStopped()) {
+				stop(); // TODO not sure if this is the right thing to do
+				beetle.removeDevice(getId());
+			}
 			break;
 		} else if (n == 0) {
 			continue;

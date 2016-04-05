@@ -7,10 +7,10 @@
 
 #include "Handle.h"
 
+#include <bluetooth/bluetooth.h>
 #include <sstream>
 
 #include "ble/gatt.h"
-#include "Debug.h"
 
 void CachedHandle::set(uint8_t *value, int len) {
 	if (this->value != NULL) {
@@ -79,19 +79,14 @@ void Handle::setUuid(UUID uuid_) {
 
 std::string Handle::str() {
 	std::stringstream ss;
-	ss << handle << "\t" << uuid.str() << '\t' << serviceHandle
-			<< '\t' << charHandle << "\tcache: [";
+	ss << handle << "\t" << uuid.str() << "\tsH" << serviceHandle
+			<< "\tcH" << charHandle << "\tcache: [";
+	std::string sep = "";
 	for (int i = 0; i < cache.len; i++) {
-		ss << (unsigned int) cache.value[i];
-		if (i < cache.len - 1) {
-			ss << ',';
-		}
+		ss << sep << (unsigned int) cache.value[i];
+		sep = ",";
 	}
 	ss << ']';
-
-	if (uuid.isShort() && uuid.getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
-		ss << "\tsubscribers:" << subscribers.size();
-	}
 	return ss.str();
 }
 
@@ -101,12 +96,8 @@ PrimaryService::PrimaryService() {
 
 std::string PrimaryService::str() {
 	std::stringstream ss;
-	ss << handle << "\t" << "PrimaryService" << "\t";
-	if (false) {
-
-	} else {
-		ss << UUID(cache.value, cache.len).str();
-	}
+	ss << handle << "\t" << "[PrimaryService]" << "\tuuid=";
+	ss << UUID(cache.value, cache.len).str();
 	return ss.str();
 }
 
@@ -114,15 +105,47 @@ Characteristic::Characteristic() {
 	uuid = UUID(GATT_CHARAC_UUID);
 }
 
+static std::string getPropertiesString(uint8_t properties) {
+	std::stringstream ss;
+	ss << ((properties & GATT_CHARAC_PROP_BCAST) ? 'b' : '-');
+	ss << ((properties & GATT_CHARAC_PROP_READ) ? 'r' : '-');
+	ss << ((properties & GATT_CHARAC_PROP_WRITE_NR) ? 'W' : '-');
+	ss << ((properties & GATT_CHARAC_PROP_WRITE) ? 'w' : '-');
+	ss << ((properties & GATT_CHARAC_PROP_NOTIFY) ? 'n' : '-');
+	ss << ((properties & GATT_CHARAC_PROP_IND) ? 'i' : '-');
+	ss << ((properties & GATT_CHARAC_PROP_AUTH_SIGN_WRITE) ? 's' : '-');
+	ss << ((properties & GATT_CHARAC_PROP_EXT) ? 'e' : '-');
+	return ss.str();
+}
+
 std::string Characteristic::str() {
 	std::stringstream ss;
-	ss << handle << "\t" << "Characteristic" << "\t" << serviceHandle << "\t";
-	if (false) {
-
+	ss << handle << "\t" << "[Characteristic]" << "\tsH=" << serviceHandle << "\t";
+	if (cache.value != NULL && cache.len >= 5) {
+		uint8_t properties = cache.value[0];
+		ss << "vH=" << btohs(*(uint16_t *)(cache.value + 1)) << "\t"
+				<< getPropertiesString(properties);
 	} else {
-		pdebug(cache.value, cache.len);
-		// ss << UUID(cache.value, cache.len).str();
+		ss << "unknown or malformed";
 	}
+	return ss.str();
+}
+
+ClientCharCfg::ClientCharCfg() {
+	uuid = UUID(GATT_CLIENT_CHARAC_CFG_UUID);
+}
+
+std::string ClientCharCfg::str() {
+	std::stringstream ss;
+	std::string sep = "";
+	ss << handle << "\t" << "[CliCharCfg]" << "\tsH" << serviceHandle
+			<< "\tcH" << charHandle << "\tn=" << subscribers.size()
+			<< "\tsub=[";
+	for (device_t d : subscribers) {
+		ss << sep << d;
+		sep = ",";
+	}
+	ss << "]";
 	return ss.str();
 }
 

@@ -8,8 +8,8 @@
 #include "VirtualDevice.h"
 
 #include <assert.h>
-#include <bluetooth/bluetooth.h>
 #include <cstring>
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
@@ -415,9 +415,15 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 
 				std::vector<handle_info_t> handleInfos = discoverHandles(d, startGroup, endGroup);
 				for (handle_info_t &handleInfo : handleInfos) {
-					Handle *handle = new Handle();
+					UUID handleUuid = UUID(handleInfo.uuid);
+					Handle *handle;
+					if (handleUuid.isShort() && handleUuid.getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
+						handle = new ClientCharCfg();
+					} else {
+						handle = new Handle();
+						handle->setUuid(handleUuid);
+					}
 					handle->setHandle(handleInfo.handle);
-					handle->setUuid(UUID(handleInfo.uuid));
 					handle->setCacheInfinite(false);
 					handle->setServiceHandle(serviceHandle->getHandle());
 					handle->setCharHandle(characteristic.handle);
@@ -432,9 +438,15 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 
 			std::vector<handle_info_t> handleInfos = discoverHandles(d, startGroup, endGroup);
 			for (handle_info_t &handleInfo : handleInfos) {
-				Handle *handle = new Handle();
+				UUID handleUuid = UUID(handleInfo.uuid);
+				Handle *handle;
+				if (handleUuid.isShort() && handleUuid.getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
+					handle = new ClientCharCfg();
+				} else {
+					handle = new Handle();
+					handle->setUuid(handleUuid);
+				}
 				handle->setHandle(handleInfo.handle);
-				handle->setUuid(UUID(handleInfo.uuid));
 				handle->setCacheInfinite(false);
 				handle->setServiceHandle(serviceHandle->getHandle());
 				handle->setCharHandle(characteristic.handle);

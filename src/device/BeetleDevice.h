@@ -24,10 +24,6 @@ public:
 	BeetleDevice(Beetle &beetle);
 	virtual ~BeetleDevice();
 
-	void start() {};
-	void stop() {};
-	bool isStopped() { return false; };
-
 	int getMTU() { return ATT_DEFAULT_LE_MTU; };
 
 	bool writeResponse(uint8_t *buf, int len);

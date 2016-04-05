@@ -77,4 +77,10 @@ public:
 	std::string str();
 };
 
+class ClientCharCfg: public Handle {
+public:
+	ClientCharCfg();
+	std::string str();
+};
+
 #endif /* HANDLE_H_ */

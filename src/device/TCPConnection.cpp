@@ -76,6 +76,7 @@ void TCPConnection::readDaemon() {
 				std::cerr << "socket error: " << strerror(error) << std::endl;
 			}
 			stop();
+			beetle.removeDevice(getId());
 			break;
 		} else if (bytesRead == 0) {
 			continue;
@@ -97,7 +98,10 @@ void TCPConnection::readDaemon() {
 					} else {
 						std::cerr << "socket error: " << strerror(error) << std::endl;
 					}
-					stop();
+					if (!isStopped()) {
+						stop();
+						beetle.removeDevice(getId());
+					}
 					break;
 				} else {
 					bytesRead += n;
