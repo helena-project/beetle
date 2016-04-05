@@ -15,6 +15,7 @@
 #include "../ble/att.h"
 #include "../Beetle.h"
 #include "../Device.h"
+#include "../hat/HAT.h"
 
 /*
  * Fully synchronous simulated device for this Beetle.
@@ -34,11 +35,15 @@ public:
 	bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);
 	int writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp);
 
+	void servicesChanged(handle_range_t range, device_t src = NULL_RESERVED_DEVICE);
+
 private:
 	/*
 	 * Setup Beetle's own handle space.
 	 */
 	void init();
+
+	Handle *serviceChangedAttr;
 };
 
 #endif /* DEVICE_BEETLEDEVICE_H_ */

@@ -415,7 +415,11 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 			Handle *charHandle = new Characteristic();
 			charHandle->setHandle(characteristic.handle);
 			charHandle->setServiceHandle(serviceHandle->getHandle());
+
+			// store attrHandle in charHandle
+			charHandle->setCharHandle(btohs(*(uint16_t *)(characteristic.value + 1)));
 			charHandle->setCacheInfinite(true);
+
 			// let the handle inherit the pointer
 			charHandle->cache.set(characteristic.value, characteristic.len);
 			handles[characteristic.handle] = charHandle;

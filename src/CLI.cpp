@@ -8,21 +8,31 @@
 #include "CLI.h"
 
 #include <bluetooth/bluetooth.h>
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <boost/token_functions.hpp>
 #include <boost/tokenizer.hpp>
 #include <algorithm>
 #include <cassert>
+#include <cctype>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
+#include <iterator>
 #include <map>
+#include <mutex>
+#include <sstream>
+#include <stdexcept>
 #include <utility>
 
-#include "Device.h"
+#include "device/BeetleDevice.h"
 #include "device/LEPeripheral.h"
 #include "Debug.h"
+#include "Device.h"
 #include "hat/HAT.h"
+#include "Handle.h"
 
 CLI::CLI(Beetle &beetle_) : beetle(beetle_), t() {
 	t = std::thread(&CLI::cmdLineDaemon, this);
@@ -128,6 +138,15 @@ void CLI::doConnect(const std::vector<std::string>& cmd) {
 		beetle.addDevice(device);
 
 		device->start();
+
+		beetle.hatMutex.lock_shared();
+		handle_range_t handles = beetle.hat->getDeviceRange(device->getId());
+		beetle.hatMutex.unlock_shared();
+
+		if (!HAT::isNullRange(handles)) {
+			beetle.beetleDevice->servicesChanged(handles, device->getId());
+		}
+
 		printMessage("connected to " + device->getName());
 		if (debug) {
 			printMessage(device->getName() + " has handle range [0,"

@@ -47,17 +47,21 @@ public:
 	/*
 	 * Reserve at least a space of size. Returns success.
 	 */
-	virtual bool reserve(device_t, int) = 0;
+	virtual handle_range_t reserve(device_t, int) = 0;
 
 	/*
 	 * Reserve space for device.
 	 */
-	virtual bool reserve(device_t) = 0;
+	virtual handle_range_t reserve(device_t) = 0;
 
 	/*
 	 * Release any handle ranges owned by the device.
 	 */
-	virtual void free(device_t) = 0;
+	virtual handle_range_t free(device_t) = 0;
+
+	static bool isNullRange(handle_range_t r) {
+		return r.start == 0 && r.end == 0;
+	}
 };
 
 #endif /* HAT_H_ */

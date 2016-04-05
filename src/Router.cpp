@@ -365,12 +365,13 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 					&& proxyH->getUuid().getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
 				uint16_t charHandle = proxyH->getCharHandle();
 				Handle *charH = beetle.devices[dst]->handles[charHandle];
+				Handle *charAttrH = beetle.devices[dst]->handles[charH->getCharHandle()];
 				if (buf[3] == 0) {
-					charH->subscribers.erase(src);
+					charAttrH->subscribers.erase(src);
 				} else {
-					charH->subscribers.insert(src);
+					charAttrH->subscribers.insert(src);
 				}
-				int numSubscribers = charH->subscribers.size();
+				int numSubscribers = charAttrH->subscribers.size();
 				if (dst != BEETLE_RESERVED_DEVICE &&
 						((numSubscribers == 0 && buf[3] == 0) || (numSubscribers == 1 && buf[3] == 1))) {
 					*(uint16_t *)(buf + 1) = htobs(remoteHandle);

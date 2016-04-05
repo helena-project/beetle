@@ -54,25 +54,31 @@ handle_range_t BlockAllocator::getHandleRange(uint16_t handle) {
 	return ret;
 }
 
-bool BlockAllocator::reserve(device_t d, int n) {
+handle_range_t BlockAllocator::reserve(device_t d, int n) {
 	assert(n > blockSize);
 	return reserve(d);
 }
 
-bool BlockAllocator::reserve(device_t d) {
+handle_range_t BlockAllocator::reserve(device_t d) {
 	for (int i = 1; i < numBlocks; i++) {
 		if (blocks[i] == NULL_RESERVED_DEVICE) {
 			blocks[i] = d;
-			return true;
+			uint16_t base = i * (uint16_t) blockSize;
+			uint16_t ceil = base + (uint16_t) blockSize - 1;
+			return handle_range_t{base, ceil};
 		}
 	}
-	return false;
+	return handle_range_t{0,0};
 }
 
-void BlockAllocator::free(device_t d) {
+handle_range_t BlockAllocator::free(device_t d) {
 	for (int i = 1; i < numBlocks; i++) {
 		if (blocks[i] == d) {
 			blocks[i] = NULL_RESERVED_DEVICE;
+			uint16_t base = i * (uint16_t) blockSize;
+			uint16_t ceil = base + (uint16_t) blockSize - 1;
+			return handle_range_t{base, ceil};
 		}
 	}
+	return handle_range_t{0,0};
 }

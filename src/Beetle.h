@@ -13,6 +13,7 @@
 #include <map>
 
 class Device;
+class BeetleDevice;
 class Router;
 class HAT;
 class TCPDeviceServer;
@@ -43,6 +44,11 @@ public:
 
 	HAT *hat;
 	boost::shared_mutex hatMutex;
+
+	/*
+	 * Simulated device for Beetle's own services.
+	 */
+	BeetleDevice *beetleDevice;
 
 	Router *router;
 };

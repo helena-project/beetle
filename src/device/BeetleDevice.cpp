@@ -8,10 +8,18 @@
 #include "BeetleDevice.h"
 
 #include <bluetooth/bluetooth.h>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/pthread/shared_mutex.hpp>
+#include <cstring>
+#include <map>
 #include <mutex>
+#include <set>
 
 #include "../ble/gatt.h"
+#include "../ble/helper.h"
+#include "../Debug.h"
 #include "../Handle.h"
+#include "../UUID.h"
 
 BeetleDevice::BeetleDevice(Beetle &beetle, std::string name_) : Device(beetle, BEETLE_RESERVED_DEVICE) {
 	name = name_;
@@ -28,20 +36,55 @@ bool BeetleDevice::writeResponse(uint8_t *buf, int len) {
 }
 
 bool BeetleDevice::writeCommand(uint8_t *buf, int len) {
-	// TODO implement beetle local write
+	if (debug) {
+		pdebug("Beetle received an unanticipated command");
+	}
 	return true;
 }
 
 bool BeetleDevice::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
+	if (debug) {
+		pdebug("Beetle received an unanticipated request");
+	}
 	uint8_t *resp;
 	int respLen = writeTransactionBlocking(buf, len, resp);
 	cb(resp, respLen);
+	delete[] resp;
 	return true;
 }
 
+/*
+ * Should never get called. All reads and writes are serviced by the cache.
+ */
 int BeetleDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp) {
-	// TODO implement beetle local transaction
-	return 0;
+	return pack_error_pdu(buf[0], 0, ATT_ECODE_UNLIKELY, resp); // TODO: probably not the right error code
+}
+
+void BeetleDevice::servicesChanged(handle_range_t range, device_t src) {
+	if (debug) {
+		pdebug("informing devices of service change");
+	}
+
+	boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
+	std::lock_guard<std::recursive_mutex> handlesLg(handlesMutex);
+	if (serviceChangedAttr->subscribers.size() == 0) {
+		return;
+	}
+	uint8_t cmd[7];
+	cmd[0] = ATT_OP_HANDLE_NOTIFY;
+	*(uint16_t *)(cmd + 1) = htobs(serviceChangedAttr->getHandle());
+	*(uint16_t *)(cmd + 3) = htobs(range.start);
+	*(uint16_t *)(cmd + 5) = htobs(range.end);
+
+	for (device_t dst : serviceChangedAttr->subscribers) {
+		if (dst == src) {
+			continue;
+		}
+		if (beetle.devices.find(dst) != beetle.devices.end()) {
+			beetle.devices[dst]->writeCommand(cmd , sizeof(cmd));
+		}
+	}
+
 }
 
 void BeetleDevice::init() {
@@ -80,8 +123,11 @@ void BeetleDevice::init() {
 	gapDeviceNameAttrHandle->setCacheInfinite(true);
 	handles[gapDeviceNameAttrHandle->getHandle()] = gapDeviceNameAttrHandle;
 
-	// end the characteristic
+	// fill in attr handle for characteristic
+	gapDeviceNameCharHandle->setCharHandle(gapDeviceNameAttrHandle->getHandle());
 	*(uint16_t *)(gapDeviceNameCharHandleValue + 1) = htobs(gapDeviceNameAttrHandle->getHandle());
+
+	// end the characteristic
 	gapDeviceNameCharHandle->setEndGroupHandle(gapDeviceNameAttrHandle->getHandle());
 
 	// end the service
@@ -118,6 +164,7 @@ void BeetleDevice::init() {
 	handles[gattServiceChangedAttrHandle->getHandle()] = gattServiceChangedAttrHandle;
 
 	// fill in attr handle for characteristic
+	gattServiceChangedCharHandle->setCharHandle(gattServiceChangedAttrHandle->getHandle());
 	*(uint16_t *)(gattServiceChangedCharHandleValue + 1) = htobs(gattServiceChangedAttrHandle->getHandle());
 
 	Handle *gattServiceChangedCfgHandle = new ClientCharCfg();
@@ -132,5 +179,8 @@ void BeetleDevice::init() {
 	gattServiceChangedCharHandle->setEndGroupHandle(gattServiceChangedCfgHandle->getHandle());
 	// end the service
 	gattServiceHandle->setEndGroupHandle(gattServiceChangedCfgHandle->getHandle());
+
+	// save the service changed attr handle
+	serviceChangedAttr = gattServiceChangedAttrHandle;
 }
 

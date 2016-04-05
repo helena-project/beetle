@@ -85,14 +85,28 @@ void Handle::setUuid(UUID uuid_) {
 
 std::string Handle::str() {
 	std::stringstream ss;
-	ss << handle << "\t" << uuid.str() << "\tsH=" << serviceHandle
-			<< "\tcH=" << charHandle << "\tcache: [";
-	std::string sep = "";
-	for (int i = 0; i < cache.len; i++) {
-		ss << sep << (unsigned int) cache.value[i];
-		sep = ",";
+	ss << handle << "\t" << uuid.str()
+			<< "\tsH=" << serviceHandle
+			<< "\tcH=" << charHandle
+			<< "\tnSub=" << subscribers.size();
+	if (subscribers.size() > 0) {
+		ss << "\tsub=[";
+		std::string sep = "";
+		for (device_t d : subscribers) {
+			ss << sep << d;
+			sep = ",";
+		}
+		ss << "]";
 	}
-	ss << ']';
+	if (cache.value != NULL) {
+		ss << "\tcache: [";
+		std::string sep = "";
+		for (int i = 0; i < cache.len; i++) {
+			ss << sep << (unsigned int) cache.value[i];
+			sep = ",";
+		}
+		ss << ']';
+	}
 	return ss.str();
 }
 
@@ -127,7 +141,8 @@ static std::string getPropertiesString(uint8_t properties) {
 
 std::string Characteristic::str() {
 	std::stringstream ss;
-	ss << handle << "\t" << "[Characteristic]" << "\tsH=" << serviceHandle << "\t";
+	ss << handle << "\t" << "[Characteristic]"
+			<< "\tsH=" << serviceHandle << "\t";
 	if (cache.value != NULL && cache.len >= 5) {
 		uint8_t properties = cache.value[0];
 		ss << "uuid=" << UUID(cache.value + 3, cache.len - 3).str()
@@ -146,15 +161,9 @@ ClientCharCfg::ClientCharCfg() {
 
 std::string ClientCharCfg::str() {
 	std::stringstream ss;
-	std::string sep = "";
-	ss << handle << "\t" << "[ClientCharCfg]" << "\tsH=" << serviceHandle
-			<< "\tcH=" << charHandle << "\tnSub=" << subscribers.size()
-			<< "\tsub=[";
-	for (device_t d : subscribers) {
-		ss << sep << d;
-		sep = ",";
-	}
-	ss << "]";
+	ss << handle << "\t" << "[ClientCharCfg]"
+			<< "\tsH=" << serviceHandle
+			<< "\tcH=" << charHandle;
 	return ss.str();
 }
 

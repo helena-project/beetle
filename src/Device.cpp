@@ -7,19 +7,23 @@
 
 #include "Device.h"
 
-#include <assert.h>
 #include <bluetooth/bluetooth.h>
+#include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
+#include <atomic>
+#include <cstdint>
 #include <cstring>
-#include <vector>
+#include <map>
+#include <mutex>
+#include <set>
+#include <utility>
 
 #include "ble/att.h"
 #include "ble/gatt.h"
-#include "ble/helper.h"
-#include "Debug.h"
+#include "Beetle.h"
+#include "device/BeetleDevice.h"
 #include "hat/HAT.h"
-#include "Router.h"
-#include "UUID.h"
+#include "Handle.h"
 
 std::atomic_int Device::idCounter(1);
 
@@ -37,8 +41,13 @@ Device::~Device() {
 	}
 	handles.clear();
 
-	boost::unique_lock<boost::shared_mutex> lg(beetle.hatMutex);
-	beetle.hat->free(id);
+	boost::unique_lock<boost::shared_mutex> lk(beetle.hatMutex);
+	handle_range_t handles = beetle.hat->free(id);
+	lk.release();
+
+	if (!HAT::isNullRange(handles)) {
+		beetle.beetleDevice->servicesChanged(handles);
+	}
 }
 
 int Device::getHighestHandle() {
