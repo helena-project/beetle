@@ -371,7 +371,8 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 					charH->subscribers.insert(src);
 				}
 				int numSubscribers = charH->subscribers.size();
-				if ((numSubscribers == 0 && buf[3] == 0) || (numSubscribers == 1 && buf[3] == 1)) {
+				if (dst != BEETLE_RESERVED_DEVICE &&
+						((numSubscribers == 0 && buf[3] == 0) || (numSubscribers == 1 && buf[3] == 1))) {
 					*(uint16_t *)(buf + 1) = htobs(remoteHandle);
 					beetle.devices[dst]->writeTransaction(buf, len, [this, handle, src, dst, opCode](uint8_t *resp, int respLen) -> void {
 						boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);

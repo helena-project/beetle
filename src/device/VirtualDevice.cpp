@@ -29,6 +29,7 @@ VirtualDevice::VirtualDevice(Beetle &beetle) : Device(beetle) {
 	stopped = false;
 	currentTransaction = NULL;
 	mtu = ATT_DEFAULT_LE_MTU;
+	unfinishedClientTransactions = 0;
 }
 
 VirtualDevice::~VirtualDevice() {
@@ -394,6 +395,9 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 	std::map<uint16_t, Handle *> handles;
 
+	Handle *lastService = NULL;
+	Handle *lastCharacteristic = NULL;
+
 	std::vector<group_t> services = discoverServices(d);
 	for (group_t &service : services) {
 		Handle *serviceHandle = new PrimaryService();
@@ -415,6 +419,9 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 			// let the handle inherit the pointer
 			charHandle->cache.set(characteristic.value, characteristic.len);
 			handles[characteristic.handle] = charHandle;
+
+			// save in case it is the last
+			lastCharacteristic = charHandle;
 		}
 
 		if (characteristics.size() > 0) {
@@ -464,7 +471,18 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 				handles[handleInfo.handle] = handle;
 			}
 		}
+
+		// save in case it is the last
+		lastService = serviceHandle;
 	}
+
+	if (lastService) {
+		handles[lastService->getHandle()]->setEndGroupHandle(handles.rbegin()->second->getHandle());
+	}
+	if (lastCharacteristic) {
+		handles[lastCharacteristic->getHandle()]->setEndGroupHandle(handles.rbegin()->second->getHandle());
+	}
+
 	if (debug) {
 		pdebug("done discovering handles for " + d->getName());
 	}

@@ -21,6 +21,9 @@ public:
 	virtual ~CLI();
 	void join();
 private:
+	/*
+	 * Reads a line from stdin and parses tokens into ret.
+	 */
 	bool getCommand(std::vector<std::string> &ret);
 
 	Beetle &beetle;

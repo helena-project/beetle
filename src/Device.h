@@ -39,6 +39,9 @@ public:
 	std::string getName() { return name; };
 	std::string getType() { return type; };
 
+	/*
+	 * Return largest, untranslated handle.
+	 */
 	int getHighestHandle();
 	std::map<uint16_t, Handle *> handles;
 	std::recursive_mutex handlesMutex;
@@ -53,6 +56,11 @@ public:
 	virtual bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) = 0;
 	virtual int writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp) = 0;
 
+	/*
+	 * The largest packet this device can receive. Beetle will
+	 * only ever advertise the default ATT_MTU, but larger MTU
+	 * can allow faster handle discovery.
+	 */
 	virtual int getMTU() = 0;
 protected:
 	/*

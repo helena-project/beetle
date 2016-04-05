@@ -18,8 +18,13 @@
 
 class CachedHandle {
 public:
-	virtual ~CachedHandle() {};
+	virtual ~CachedHandle();
+
+	/*
+	 * Transfers ownership of value pointer to cache.
+	 */
 	void set(uint8_t *value, int len);
+
 	uint8_t *value = NULL;
 	int len = 0;
 	time_t time = 0;

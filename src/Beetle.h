@@ -26,7 +26,16 @@ public:
 	Beetle();
 	virtual ~Beetle();
 
+	/*
+	 * Add a device to Beetle's mappings. Threadsafe.
+	 * Do not call while holding devices or hat mutexes.
+	 */
 	void addDevice(Device *, bool allocateHandles = true);
+
+	/*
+	 * Removes a device from Beetle's mappings and unsubscribes
+	 * the device from all characteristics.
+	 */
 	void removeDevice(device_t);
 
 	std::map<device_t, Device *> devices;

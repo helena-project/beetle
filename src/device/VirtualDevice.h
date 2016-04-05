@@ -66,6 +66,13 @@ private:
 	int mtu;
 
 	/*
+	 * Number of unfinished client transactions. Only ever accessed
+	 * by the thread that calls readHandler().
+	 * TODO: use this to detect misbehaving clients
+	 */
+	int unfinishedClientTransactions;
+
+	/*
 	 * Server transactions
 	 */
 	void handleTransactionResponse(uint8_t *buf, int len);

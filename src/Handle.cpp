@@ -12,13 +12,19 @@
 
 #include "ble/gatt.h"
 
-void CachedHandle::set(uint8_t *value, int len) {
-	if (this->value != NULL) {
-		delete[] this->value;
+CachedHandle::~CachedHandle() {
+	if (value != NULL) {
+		delete[] value;
 	}
-	this->value = value;
-	this->len = len;
-	::time(&(this->time));
+}
+
+void CachedHandle::set(uint8_t *value_, int len_) {
+	if (value != NULL) {
+		delete[] value;
+	}
+	value = value_;
+	len = len_;
+	::time(&(time));
 }
 
 Handle::Handle() {
@@ -79,8 +85,8 @@ void Handle::setUuid(UUID uuid_) {
 
 std::string Handle::str() {
 	std::stringstream ss;
-	ss << handle << "\t" << uuid.str() << "\tsH" << serviceHandle
-			<< "\tcH" << charHandle << "\tcache: [";
+	ss << handle << "\t" << uuid.str() << "\tsH=" << serviceHandle
+			<< "\tcH=" << charHandle << "\tcache: [";
 	std::string sep = "";
 	for (int i = 0; i < cache.len; i++) {
 		ss << sep << (unsigned int) cache.value[i];
@@ -96,8 +102,9 @@ PrimaryService::PrimaryService() {
 
 std::string PrimaryService::str() {
 	std::stringstream ss;
-	ss << handle << "\t" << "[PrimaryService]" << "\tuuid=";
-	ss << UUID(cache.value, cache.len).str();
+	ss << handle << "\t" << "[PrimaryService]"
+			<< "\tuuid=" << UUID(cache.value, cache.len).str()
+			<< "\tend=" << endGroupHandle;
 	return ss.str();
 }
 
@@ -123,8 +130,10 @@ std::string Characteristic::str() {
 	ss << handle << "\t" << "[Characteristic]" << "\tsH=" << serviceHandle << "\t";
 	if (cache.value != NULL && cache.len >= 5) {
 		uint8_t properties = cache.value[0];
-		ss << "vH=" << btohs(*(uint16_t *)(cache.value + 1)) << "\t"
-				<< getPropertiesString(properties);
+		ss << "uuid=" << UUID(cache.value + 3, cache.len - 3).str()
+				<< "\tvH=" << btohs(*(uint16_t *)(cache.value + 1))
+				<< "\t" << getPropertiesString(properties)
+				<< "\tend=" << endGroupHandle;
 	} else {
 		ss << "unknown or malformed";
 	}
@@ -138,8 +147,8 @@ ClientCharCfg::ClientCharCfg() {
 std::string ClientCharCfg::str() {
 	std::stringstream ss;
 	std::string sep = "";
-	ss << handle << "\t" << "[CliCharCfg]" << "\tsH" << serviceHandle
-			<< "\tcH" << charHandle << "\tn=" << subscribers.size()
+	ss << handle << "\t" << "[ClientCharCfg]" << "\tsH=" << serviceHandle
+			<< "\tcH=" << charHandle << "\tnSub=" << subscribers.size()
 			<< "\tsub=[";
 	for (device_t d : subscribers) {
 		ss << sep << d;

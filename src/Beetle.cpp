@@ -28,7 +28,7 @@ int main() {
 Beetle::Beetle() {
 	hat = new BlockAllocator(256);
 	router = new Router(*this);
-	devices[BEETLE_RESERVED_DEVICE] = new BeetleDevice(*this);
+	devices[BEETLE_RESERVED_DEVICE] = new BeetleDevice(*this, "Beetle");
 }
 
 Beetle::~Beetle() {

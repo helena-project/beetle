@@ -21,7 +21,10 @@
  */
 class BeetleDevice: public Device {
 public:
-	BeetleDevice(Beetle &beetle);
+	/*
+	 * Initialize Beetle with name in its own handle space.
+	 */
+	BeetleDevice(Beetle &beetle, std::string name);
 	virtual ~BeetleDevice();
 
 	int getMTU() { return ATT_DEFAULT_LE_MTU; };
@@ -30,6 +33,12 @@ public:
 	bool writeCommand(uint8_t *buf, int len);
 	bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);
 	int writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp);
+
+private:
+	/*
+	 * Setup Beetle's own handle space.
+	 */
+	void init();
 };
 
 #endif /* DEVICE_BEETLEDEVICE_H_ */
