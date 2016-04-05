@@ -1,5 +1,5 @@
 /*
- * Discover.cpp
+ * Scanner.cpp
  *
  *  Created on: Mar 24, 2016
  *      Author: james
@@ -36,7 +36,7 @@ Scanner::~Scanner() {
 void Scanner::start() {
 	assert(started == false);
 	started = true;
-	t = std::thread(&Scanner::discoverDaemon, this);
+	t = std::thread(&Scanner::scanDaemon, this);
 }
 
 void Scanner::stop() {
@@ -51,9 +51,9 @@ std::map<std::string, peripheral_info_t> Scanner::getDiscovered() {
 }
 
 // TODO check return values for calls
-void Scanner::discoverDaemon() {
+void Scanner::scanDaemon() {
 	if (debug) {
-		pdebug("discoverDaemon started");
+		pdebug("scanDaemon started");
 	}
 
  	int deviceId = hci_get_route(NULL);
@@ -119,11 +119,11 @@ void Scanner::discoverDaemon() {
   	}
 
   	// teardown
-  	assert(hci_le_set_scan_enable(deviceHandle, 0x00, 1, 1000) >= 0);
-  	assert(setsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &oldFilter, sizeof(oldFilter)) >= 0);
+  	hci_le_set_scan_enable(deviceHandle, 0x00, 1, 1000);
+  	setsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &oldFilter, sizeof(oldFilter));
   	hci_close_dev(deviceHandle);
 
 	if (debug) {
-		pdebug("discoverDaemon exited");
+		pdebug("scanDaemon exited");
 	}
 }

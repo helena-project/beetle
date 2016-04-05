@@ -35,6 +35,10 @@ public:
 	bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);
 	int writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp);
 
+	/*
+	 * Notify every device that is subscribed to the services changed characteristic
+	 * that services have changed. Caller should not hold Beetle's device list lock.
+	 */
 	void servicesChanged(handle_range_t range, device_t src = NULL_RESERVED_DEVICE);
 
 private:

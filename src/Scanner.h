@@ -1,5 +1,5 @@
 /*
- * Discover.h
+ * Scanner.h
  *
  *  Created on: Mar 24, 2016
  *      Author: james
@@ -52,7 +52,7 @@ private:
 	std::mutex discoveredMutex;
 
 	std::thread t;
-	void discoverDaemon();
+	void scanDaemon();
 };
 
 #endif /* SCANNER_H_ */

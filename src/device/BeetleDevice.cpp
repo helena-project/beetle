@@ -92,7 +92,7 @@ void BeetleDevice::init() {
 	uint16_t handleAlloc = 1; // 0 is special
 
 	/*
-	 * Setup GAP service
+	 * Setup GAP service with name characteristic
 	 */
 	Handle *gapServiceHandle = new PrimaryService();
 	gapServiceHandle->setHandle(handleAlloc++);
@@ -134,7 +134,7 @@ void BeetleDevice::init() {
 	gapServiceHandle->setEndGroupHandle(gapDeviceNameAttrHandle->getHandle());
 
 	/*
-	 * Setup GATT service
+	 * Setup GATT service with service changed characteristic
 	 */
 	Handle *gattServiceHandle = new PrimaryService();
 	gattServiceHandle->setHandle(handleAlloc++);

@@ -62,6 +62,7 @@ void TCPDeviceServer::serverDaemon(int port) {
 
 			beetle.addDevice(device, false);
 
+			// TODO
 			device->startNd();
 			pdebug("connected to " + device->getName());
 			if (debug) {
