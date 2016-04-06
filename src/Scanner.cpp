@@ -14,7 +14,6 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
-#include <map>
 #include <sstream>
 
 #include "ble/helper.h"
@@ -30,7 +29,7 @@ Scanner::Scanner() : t() {
 	/*
 	 * Set these intervals high since we are filtering duplicates manually.
 	 */
- 	scanInterval = 0x0f00;
+ 	scanInterval = 0x0f00;	// TODO these should be configurable
  	scanWindow = 0x0010;
 }
 
@@ -114,6 +113,9 @@ void Scanner::scanDaemon() {
 
   		evt_le_meta_event *meta = (evt_le_meta_event *)(buf + (1 + HCI_EVENT_HDR_SIZE));
   		if (meta->subevent != EVT_LE_ADVERTISING_REPORT) {
+  			if (debug_scan) {
+  				pdebug("not le advertising report");
+  			}
   			continue;
   		}
   		le_advertising_info *info = (le_advertising_info *)(meta->data + 1);

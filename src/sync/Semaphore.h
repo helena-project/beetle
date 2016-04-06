@@ -34,6 +34,16 @@ public:
 		}
 		count--;
 	};
+
+	bool try_wait() {
+		std::lock_guard<std::mutex> lg(m);
+		if (count > 0) {
+			count--;
+			return true;
+		} else {
+			return false;
+		}
+	}
 private:
 	int count;
 	std::condition_variable cv;

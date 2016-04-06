@@ -42,7 +42,7 @@ CLI::CLI(Beetle &beetle) : beetle(beetle), t() {
 }
 
 CLI::~CLI() {
-	// TODO Auto-generated destructor stub
+	if (t.joinable()) t.join();
 }
 
 DiscoveryHandler CLI::getDiscoveryHander() {
@@ -51,11 +51,13 @@ DiscoveryHandler CLI::getDiscoveryHander() {
 	 */
 	return [this](std::string addr, peripheral_info_t info) -> void {
 		std::lock_guard<std::mutex> lg(discoveredMutex);
-		if (discovered.find(addr) != discovered.end()) {
+		if (discovered.find(addr) == discovered.end()) {
 			aliases[addr] = "d" + std::to_string(aliasCounter++);
 		}
 		if (discovered.find(addr) != discovered.end() && discovered[addr].name.length() != 0) {
-			// do nothing
+			if (info.name.length() != 0) {
+				discovered[addr] = info; // overwrite previous name
+			}
 		} else {
 			discovered[addr] = info;
 		}
@@ -202,16 +204,15 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 
 		if (discoverHandles) {
 			device->start();
+			beetle.hatMutex.lock_shared();
+			handle_range_t handles = beetle.hat->getDeviceRange(device->getId());
+			beetle.hatMutex.unlock_shared();
+
+			if (!HAT::isNullRange(handles)) {
+				beetle.beetleDevice->servicesChanged(handles, device->getId());
+			}
 		} else {
 			device->startNd();
-		}
-
-		beetle.hatMutex.lock_shared();
-		handle_range_t handles = beetle.hat->getDeviceRange(device->getId());
-		beetle.hatMutex.unlock_shared();
-
-		if (!HAT::isNullRange(handles)) {
-			beetle.beetleDevice->servicesChanged(handles, device->getId());
 		}
 
 		printMessage("connected to " + device->getName());

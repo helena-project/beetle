@@ -158,9 +158,7 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 	std::unique_lock<std::mutex> lk(transactionMutex);
 	if (!currentTransaction) {
 		// TODO what to do here?
-		if (debug) {
-			pdebug("unexpected transaction response when none existed!");
-		}
+		pwarn("unexpected transaction response when none existed!");
 		return;
 	} else {
 		transaction_t *t = currentTransaction;

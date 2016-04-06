@@ -283,7 +283,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 					uint16_t handle = btohs(*(uint16_t *)(resp + i));
 					handle += handleRange.start;
 					*(uint16_t *)(resp + i) = htobs(handle);
-					if (attType->isShort() && attType->getShort() == GATT_CHARAC_UUID) { // TODO: endianness is sketchy here
+					if (attType->isShort() && attType->getShort() == GATT_CHARAC_UUID) {
 						int j = i + 3;
 						uint16_t valueHandle = btohs(*(uint16_t *)(resp + j));
 						valueHandle += handleRange.start;

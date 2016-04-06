@@ -12,6 +12,7 @@
 #include <boost/thread.hpp>
 #include <map>
 
+class AutoConnect;
 class Device;
 class BeetleDevice;
 class Router;
