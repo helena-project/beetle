@@ -17,6 +17,11 @@ class Router {
 public:
 	Router(Beetle &beetle);
 	virtual ~Router();
+
+	/*
+	 * Route the packet. Returns 0 if no further action is needed by the
+	 * caller, or -1 if an unhandled error occurred.
+	 */
 	int route(uint8_t *buf, int len, device_t src);
 private:
 	Beetle &beetle;

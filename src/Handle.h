@@ -42,6 +42,10 @@ public:
 	bool isCacheInfinite();
 	void setCacheInfinite(bool cacheInfinite);
 
+	/*
+	 * Stores the handle of the characteristic, or the handle of the attribute
+	 * value if this handle is a characteristic.
+	 */
 	uint16_t getCharHandle();
 	void setCharHandle(uint16_t charHandle);
 

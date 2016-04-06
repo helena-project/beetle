@@ -47,12 +47,7 @@ public:
 	/*
 	 * Reserve at least a space of size. Returns success.
 	 */
-	virtual handle_range_t reserve(device_t, int) = 0;
-
-	/*
-	 * Reserve space for device.
-	 */
-	virtual handle_range_t reserve(device_t) = 0;
+	virtual handle_range_t reserve(device_t device, int size = 0) = 0;
 
 	/*
 	 * Release any handle ranges owned by the device.

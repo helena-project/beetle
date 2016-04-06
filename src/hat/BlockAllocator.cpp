@@ -55,11 +55,7 @@ handle_range_t BlockAllocator::getHandleRange(uint16_t handle) {
 }
 
 handle_range_t BlockAllocator::reserve(device_t d, int n) {
-	assert(n > blockSize);
-	return reserve(d);
-}
-
-handle_range_t BlockAllocator::reserve(device_t d) {
+	assert(n < blockSize);
 	for (int i = 1; i < numBlocks; i++) {
 		if (blocks[i] == NULL_RESERVED_DEVICE) {
 			blocks[i] = d;

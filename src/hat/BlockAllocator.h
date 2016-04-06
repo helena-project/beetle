@@ -26,8 +26,7 @@ public:
 	handle_range_t getDeviceRange(device_t d);
 	device_t getDeviceForHandle(uint16_t h);
 	handle_range_t getHandleRange(uint16_t h);
-	handle_range_t reserve(device_t d, int n);
-	handle_range_t reserve(device_t d);
+	handle_range_t reserve(device_t d, int n = 0);
 	handle_range_t free(device_t d);
 private:
 	int blockSize;

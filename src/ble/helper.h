@@ -31,6 +31,39 @@ inline int pack_read_by_type_req_pdu(uint16_t attType, uint16_t startHandle, uin
 	return 7;
 }
 
+inline bool parse_find_info_request(uint8_t *buf, int len, uint16_t &startHandle, uint16_t &endHandle) {
+	if (len < 5) {
+		return false; // invalid length
+	}
+	startHandle = btohs(*(uint16_t *)(buf + 1));
+	endHandle = btohs(*(uint16_t *)(buf + 3));
+	return true;
+}
+
+inline bool parse_find_by_type_value_request(uint8_t *buf, int len, uint16_t &startHandle,
+		uint16_t &endHandle, uint16_t &attType, uint8_t *&attValue, int &attValLen) {
+	if (len < 7) {
+		return false;
+	}
+	startHandle = btohs(*(uint16_t *)(buf + 1));
+	endHandle = btohs(*(uint16_t *)(buf + 3));
+	attType = *(uint16_t *)(buf + 5);
+	attValue = buf + 7;
+	attValLen = len - 7;
+	return true;
+}
+
+inline bool parse_read_by_type_value_request(uint8_t *buf, int len, uint16_t &startHandle,
+		uint16_t &endHandle, UUID *&uuid) {
+	if (len != 7 && len != 21) {
+		return false;
+	}
+	startHandle = btohs(*(uint16_t *)(buf + 1));
+	endHandle = btohs(*(uint16_t *)(buf + 3));
+	uuid = new UUID(buf + 5, len - 5);
+	return true;
+}
+
 inline std::string ba2str_cpp(bdaddr_t bdaddr) {
 	char addr_c_str[20];
 	ba2str(&bdaddr, addr_c_str);
