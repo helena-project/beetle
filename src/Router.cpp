@@ -61,7 +61,7 @@ int Router::route(uint8_t *buf, int len, device_t src) {
 		break;
 	default:
 		if (debug_router) {
-			pdebug("unimplemented command " + std::to_string(buf[0]));
+			pwarn("unimplemented command " + std::to_string(buf[0]));
 		}
 		result = -1;
 		break;

@@ -9,21 +9,40 @@
 #define SCANNER_H_
 
 #include <bluetooth/bluetooth.h>
-#include <list>
-#include <mutex>
+#include <exception>
+#include <functional>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "device/LEPeripheral.h"
 
 // Print debug info in scanning module
 extern bool debug_scan;
 
+class ScannerException : public std::exception {
+  public:
+	ScannerException(std::string msg) : msg(msg) {};
+	ScannerException(const char *msg) : msg(msg) {};
+    ~ScannerException() throw() {};
+    const char *what() const throw() { return this->msg.c_str(); };
+  private:
+    std::string msg;
+};
+
+/*
+ * Result from scan and advertisement.
+ */
 typedef struct {
 	std::string name;
 	bdaddr_t bdaddr;
 	AddrType bdaddrType;
 } peripheral_info_t;
+
+/*
+ * Callback upon discovery.
+ */
+typedef std::function<void(std::string addr, peripheral_info_t info)> DiscoveryHandler;
 
 class Scanner {
 public:
@@ -41,15 +60,17 @@ public:
 	void stop();
 
 	/*
-	 * Return a list of discovered peripherals.
+	 * Register a callback to be called upon discovery.
 	 */
-	std::map<std::string, peripheral_info_t> getDiscovered();
+	void registerHandler(DiscoveryHandler);
 private:
 	bool started;
 	bool stopped;
 
-	std::map<std::string, peripheral_info_t> discovered;
-	std::mutex discoveredMutex;
+	uint16_t scanInterval;
+	uint16_t scanWindow;
+
+	std::vector<DiscoveryHandler> handlers;
 
 	std::thread t;
 	void scanDaemon();

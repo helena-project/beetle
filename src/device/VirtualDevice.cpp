@@ -59,6 +59,10 @@ void VirtualDevice::startNd() {
 	started = true;
 
 	startInternal();
+
+	if (name == "") {
+		name = "unknown";
+	}
 }
 
 

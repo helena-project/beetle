@@ -36,12 +36,30 @@
 #include "hat/HAT.h"
 #include "Handle.h"
 
-CLI::CLI(Beetle &beetle, Scanner &scanner) : beetle(beetle), scanner(scanner), t() {
+CLI::CLI(Beetle &beetle) : beetle(beetle), t() {
 	t = std::thread(&CLI::cmdLineDaemon, this);
+	aliasCounter = 0; // start this high to avoid confusion
 }
 
 CLI::~CLI() {
 	// TODO Auto-generated destructor stub
+}
+
+DiscoveryHandler CLI::getDiscoveryHander() {
+	/*
+	 * All this handler does is add the device to the list of discovered devices.
+	 */
+	return [this](std::string addr, peripheral_info_t info) -> void {
+		std::lock_guard<std::mutex> lg(discoveredMutex);
+		if (discovered.find(addr) != discovered.end()) {
+			aliases[addr] = "d" + std::to_string(aliasCounter++);
+		}
+		if (discovered.find(addr) != discovered.end() && discovered[addr].name.length() != 0) {
+			// do nothing
+		} else {
+			discovered[addr] = info;
+		}
+	};
 }
 
 void CLI::join() {
@@ -72,7 +90,9 @@ void CLI::cmdLineDaemon() {
 		if (c1 == "scan") {
 			doScan(cmd);
 		} else if (c1 == "connect") {
-			doConnect(cmd);
+			doConnect(cmd, true);
+		} else if (c1 == "connect-nd") {
+			doConnect(cmd, false);
 		} else if (c1 == "disconnect") {
 			doDisconnect(cmd);
 		} else if (c1 == "devices") {
@@ -117,41 +137,74 @@ void CLI::doScan(const std::vector<std::string>& cmd) {
 		printUsage("scan");
 		return;
 	}
-	std::map<std::string, peripheral_info_t> discovered = scanner.getDiscovered();
+
+	printMessage("alias\taddr\t\t\ttype\tname");
+	std::lock_guard<std::mutex> lg(discoveredMutex);
 	for (auto &d : discovered) {
 		std::stringstream ss;
-		ss << d.first << "\t" << ((d.second.bdaddrType == PUBLIC) ? "public" : "random")
+		ss << aliases[d.first] << "\t" << d.first
+				<< "\t" << ((d.second.bdaddrType == PUBLIC) ? "public" : "random")
 				<< "\t" << d.second.name;
 		printMessage(ss.str());
 	}
 }
 
-void CLI::doConnect(const std::vector<std::string>& cmd) {
-	if (cmd.size() != 3) {
+void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
+	if (cmd.size() != 2 && cmd.size() != 3) {
 		printUsage("connect deviceAddr public|random");
-		return;
-	}
-	bdaddr_t addr;
-	if (str2ba(cmd[1].c_str(), &addr) != 0) {
-		printUsageError("invalid device address");
+		printUsage("connect alias");
 		return;
 	}
 	AddrType addrType;
-	if (cmd[2] == "public") {
-		addrType = PUBLIC;
-	} else if (cmd[2] == "random") {
-		addrType = RANDOM;
+	bdaddr_t addr;
+
+	if (cmd.size() == 3) {
+		/*
+		 * Use address and type supplied by the user
+		 */
+		if (str2ba(cmd[1].c_str(), &addr) != 0) {
+			printUsageError("invalid device address");
+			return;
+		}
+
+		if (cmd[2] == "public") {
+			addrType = PUBLIC;
+		} else if (cmd[2] == "random") {
+			addrType = RANDOM;
+		} else {
+			printUsageError("invalid address type");
+			return;
+		}
 	} else {
-		printUsageError("invalid address type");
-		return;
+		/*
+		 * Look for device in discovered results
+		 */
+		std::lock_guard<std::mutex> lg(discoveredMutex);
+		bool found = false;
+		for (auto &kv : aliases) {
+			if (kv.second == cmd[1]) {
+				addr = discovered[kv.first].bdaddr;
+				addrType = discovered[kv.first].bdaddrType;
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			printUsageError("no device with alias " + cmd[1]);
+			return;
+		}
 	}
 
 	VirtualDevice* device = NULL;
 	try {
 		device = new LEPeripheral(beetle, addr, addrType);
-		beetle.addDevice(device);
+		beetle.addDevice(device, discoverHandles);
 
-		device->start();
+		if (discoverHandles) {
+			device->start();
+		} else {
+			device->startNd();
+		}
 
 		beetle.hatMutex.lock_shared();
 		handle_range_t handles = beetle.hat->getDeviceRange(device->getId());
@@ -168,6 +221,7 @@ void CLI::doConnect(const std::vector<std::string>& cmd) {
 		}
 	} catch (DeviceException& e) {
 		std::cout << "caught exception: " << e.what() << std::endl;
+		printMessage("connection attempt failed: try again perhaps?");
 		if (device) {
 			beetle.removeDevice(device->getId());
 		}

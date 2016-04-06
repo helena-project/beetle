@@ -19,16 +19,17 @@
 #include "Scanner.h"
 #include "tcp/TCPDeviceServer.h"
 
-/* Global debug variable */
-bool debug = true;
-bool debug_scan = false;
-bool debug_discovery = false;
-bool debug_router = false;
-bool debug_socket = false;
+/* Global debug variables */
+bool debug = true;				// Debug.h
+bool debug_scan = false;		// Scan.h
+bool debug_discovery = false;	// VirtualDevice.h
+bool debug_router = false;		// Router.h
+bool debug_socket = false;		// Debug.h
 
 int main(int argc, char *argv[]) {
 	int tcpPort = 5000; // default port
 	bool scanningEnabled = true;
+	bool debug_all = false;
 
 	namespace po = boost::program_options;
 	po::options_description desc("Options");
@@ -40,7 +41,8 @@ int main(int argc, char *argv[]) {
 			("debug-discovery", po::value<bool>(&debug_discovery), "Enable debugging for GATT discovery (default: false)")
 			("debug-scan", po::value<bool>(&debug_scan), "Enable debugging for BLE scanning (default: false)")
 			("debug-socket", po::value<bool>(&debug_socket), "Enable debugging for sockets (default: false)")
-			("debug-router", po::value<bool>(&debug_router), "Enable debugging for router (default: false)");
+			("debug-router", po::value<bool>(&debug_router), "Enable debugging for router (default: false)")
+			("debug-all", po::value<bool>(&debug_all), "Enable ALL debugging (default: false)");
 	po::variables_map vm;
 	try {
 		po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -55,15 +57,27 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
+	if (debug_all) {
+		debug = true;
+		debug_scan = true;
+		debug_router = true;
+		debug_socket = true;
+		debug_discovery = true;
+	}
+
 	try {
 		Beetle btl;
 		TCPDeviceServer tcpServer(btl, tcpPort);
+
+		CLI cli(btl);
+
 		Scanner scanner;
+		scanner.registerHandler(cli.getDiscoveryHander());
+
 		if (scanningEnabled) {
 			scanner.start();
 		}
 
-		CLI cli(btl, scanner);
 		cli.join();
 	} catch(std::exception& e) {
 		std::cerr << "Unhandled Exception reached the top of main: "

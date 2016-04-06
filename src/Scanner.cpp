@@ -26,6 +26,12 @@
 Scanner::Scanner() : t() {
 	stopped = false;
 	started = false;
+
+	/*
+	 * Set these intervals high since we are filtering duplicates manually.
+	 */
+ 	scanInterval = 0x0f00;
+ 	scanWindow = 0x0010;
 }
 
 Scanner::~Scanner() {
@@ -43,37 +49,61 @@ void Scanner::stop() {
 	stopped = true;
 }
 
-std::map<std::string, peripheral_info_t> Scanner::getDiscovered() {
-	std::lock_guard<std::mutex> lg(discoveredMutex);
-	std::map<std::string, peripheral_info_t>  tmp = discovered;
-	discovered = std::map<std::string, peripheral_info_t>();
-	return tmp;
+void Scanner::registerHandler(DiscoveryHandler handler) {
+	handlers.push_back(handler);
 }
 
-// TODO check return values for calls
 void Scanner::scanDaemon() {
 	if (debug) {
 		pdebug("scanDaemon started");
 	}
 
  	int deviceId = hci_get_route(NULL);
- 	assert(deviceId >= 0);
- 	int deviceHandle = hci_open_dev(deviceId);
- 	assert(deviceHandle >= 0);
+ 	if (deviceId < 0) {
+ 		throw ScannerException("could not get hci device");
+ 	}
 
- 	hci_le_set_scan_parameters(deviceHandle, 0x01, htobs(0x0010),
- 			htobs(0x0010), 0x00, 0x00, 1000);
- 	hci_le_set_scan_enable(deviceHandle, 0x01, 1, 1000);
+ 	int deviceHandle = hci_open_dev(deviceId);
+ 	if (deviceHandle < 0) {
+ 		throw ScannerException("could not get handle to hci device");
+ 	}
+
+ 	int result;
+
+ 	result = hci_le_set_scan_parameters(deviceHandle,
+			0x01,					// type
+			htobs(scanInterval),	// interval
+ 			htobs(scanWindow), 		// window
+			0x00, 					// own_type
+			0x00, 					// filter
+			1000);					// to (for timeout)
+ 	if (result < 0) {
+ 		pwarn("failed to set LE scan parameters");
+ 	}
+
+ 	result = hci_le_set_scan_enable(deviceHandle,
+ 			0x01,		// enable
+			0, 			// do not filter duplicates
+			1000);		// to (see above)
+ 	if (result < 0) {
+ 		pwarn("warning: failed to set scan enable");
+ 	}
 
 	struct hci_filter oldFilter = {0};
  	socklen_t oldFilterLen = sizeof(oldFilter);
-  	getsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &oldFilter, &oldFilterLen);
+  	result = getsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &oldFilter, &oldFilterLen);
+  	if (result < 0) {
+  		throw ScannerException("failed to save old hci filter");
+  	}
 
   	struct hci_filter newFilter;
 	hci_filter_clear(&newFilter);
   	hci_filter_set_ptype(HCI_EVENT_PKT, &newFilter);
   	hci_filter_set_event(EVT_LE_META_EVENT, &newFilter);
-  	setsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &newFilter, sizeof(newFilter));
+  	result = setsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &newFilter, sizeof(newFilter));
+  	if (result < 0) {
+  		throw ScannerException("failed to set new hci filter");
+  	}
 
   	uint8_t buf[HCI_MAX_EVENT_SIZE];
   	while (!stopped) {
@@ -110,17 +140,24 @@ void Scanner::scanDaemon() {
   			pdebug(ss.str());
   		}
 
-  		std::lock_guard<std::mutex> lg(discoveredMutex);
-  		if (discovered.find(addr) != discovered.end() && discovered[addr].name.length() != 0) {
-  			continue; // didn't get anything new
-  		} else {
-  			discovered[addr] = peripheral_info_t{name, info->bdaddr, addrType};
+  		for (auto &cb : handlers) {
+  			cb(addr, peripheral_info_t{name, info->bdaddr, addrType});
   		}
   	}
 
-  	// teardown
-  	hci_le_set_scan_enable(deviceHandle, 0x00, 1, 1000);
-  	setsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &oldFilter, sizeof(oldFilter));
+  	result = hci_le_set_scan_enable(deviceHandle,
+  			0x00, 	// disable
+			1, 		// filter_dup
+			1000);	// to
+  	if (result < 0) {
+  		throw ScannerException("failed to disable scan");
+  	}
+
+  	result = setsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &oldFilter, sizeof(oldFilter));
+  	if (result < 0) {
+  		throw ScannerException("failed to replace old hci filter");
+  	}
+
   	hci_close_dev(deviceHandle);
 
 	if (debug) {

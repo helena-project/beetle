@@ -23,6 +23,10 @@ inline void pdebug(std::string mesg) {
 	std::cerr << mesg << std::endl;
 }
 
+inline void pwarn(std::string mesg) {
+	std::cerr << "warning: " << mesg << std::endl;
+}
+
 /*
  * Print bytes as hex.
  */
