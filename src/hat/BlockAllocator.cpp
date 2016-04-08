@@ -31,8 +31,11 @@ BlockAllocator::~BlockAllocator() {
 
 std::set<device_t> BlockAllocator::getDevices() {
 	std::set<device_t> ret;
-	for (int i = 1; i < numBlocks; i++) {
-		ret.insert(numBlocks);
+	for (int i = 0; i < numBlocks; i++) {
+		if (blocks[i] != NULL_RESERVED_DEVICE) {
+			ret.insert(blocks[i]);
+			std::cout << blocks[i] << std::endl;
+		}
 	}
 	return ret;
 }

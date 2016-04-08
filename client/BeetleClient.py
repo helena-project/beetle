@@ -4,21 +4,24 @@
 # =======================
 # Write hex bytes to Beetle, get hex bytes response back.
  
-import sys
+import os
+import signal
 import socket
-import thread
+import threading
 import time
+import re
 import traceback
+import argparse
 
-if len(sys.argv) < 3:
-	print "usage: ./BeetleClient.py host port"
-	sys.exit(1)
-
-host = sys.argv[1]
-port = int(sys.argv[2])
+parser = argparse.ArgumentParser()
+parser.add_argument("--host", default="localhost", 
+	help="hostname of the Beetle server")
+parser.add_argument("--port", "-p", type=int, default=5001, 
+	help="port the server is runnng on")
+args = parser.parse_args()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((host, port))
+s.connect((args.host, args.port))
 
 def outputPrinter(s):
 	"""
@@ -40,9 +43,8 @@ def outputPrinter(s):
 				chunks.append(" ".join(x.encode('hex') for x in chunk))
 			print " ".join(chunks)
 	except Exception, err:
-		print "Exception in output thread: ", err
-		traceback.print_exc()
-		sys.exit(2)
+		print "Exception in output thread:", err
+		os.kill(os.getpid(), signal.SIGTERM)
 
 """
 Send initial connection parameters.
@@ -53,19 +55,54 @@ s.send(paramLength)
 """
 Start the reader thread.
 """
-thread.start_new_thread(outputPrinter, (s,))
+outputThread = threading.Thread(target=outputPrinter, args=(s,))
+outputThread.setDaemon(True)
+outputThread.start()
 
 """
 Consume user input in the main thread.
 """
-while True:
-	line = raw_input("> ")
-	line = line.strip().replace(" ","")
-	message = bytearray.fromhex(line)
-	if len(message) == 0:
-		continue
-	if s.send(chr(len(message))) != 1:
-		raise RuntimeError("failed to write length prefix")
-	if s.send(message) != len(message):
-		raise RuntimeError("failed to write packet")
-	time.sleep(3) # Give beetle some time to respond
+writePattern = re.compile(r"write (?P<handle>\d+) (?P<value>.*)");
+readPattern = re.compile(r"read (?P<handle>\d+)");
+try: 
+	while True:
+		line = raw_input("> ")
+		line = line.strip().lower()
+		
+		try: 
+			writeCommand = writePattern.match(line)
+			readCommand = readPattern.match(line)
+			if writeCommand is not None:
+				message = bytearray()
+				handle = int(writeCommand.groupdict()["handle"])
+				message.append(0x52)
+				message.append(handle & 0xFF)
+				message.append(handle >> 1)
+				value = writeCommand["value"]
+				value = value.replace(" ", "")
+				message += bytearray.fromhex(value)
+
+			elif readCommand is not None: 
+				message = bytearray()
+				message.append(0x0A)
+				handle = int(readCommand.groupdict()["handle"])
+				message.append(handle & 0xFF)
+				message.append(handle >> 1)
+
+			else:
+				line = line.replace(" ","")
+				message = bytearray.fromhex(line)
+		except Exception, err:
+			print "Invalid input:", err
+			continue
+
+		if len(message) == 0:
+			continue
+		if s.send(chr(len(message))) != 1:
+			raise RuntimeError("failed to write length prefix")
+		if s.send(message) != len(message):
+			raise RuntimeError("failed to write packet")
+		time.sleep(1) # Give beetle some time to respond
+except RuntimeError, err:
+	print "Exception in input thread:", err
+	print "Exiting..."

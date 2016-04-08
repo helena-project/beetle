@@ -56,6 +56,7 @@ int Router::route(uint8_t *buf, int len, device_t src) {
 	case ATT_OP_READ_REQ:
 	case ATT_OP_READ_BLOB_REQ:
 	case ATT_OP_WRITE_REQ:
+	case ATT_OP_WRITE_CMD:
 	case ATT_OP_SIGNED_WRITE_CMD:
 		result = routeReadWrite(buf, len, src);
 		break;
@@ -564,8 +565,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 	std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
 
 	uint16_t remoteHandle = handle - handleRange.start;
-	Handle *proxyH = destinationDevice->handles[remoteHandle];
-	if (proxyH == NULL) {
+	if (destinationDevice->handles.find(remoteHandle) == destinationDevice->handles.end()) {
 		uint8_t *err;
 		int len = pack_error_pdu(buf[0], handle, ATT_ECODE_ATTR_NOT_FOUND, err);
 		sourceDevice->writeResponse(err, len);
@@ -573,6 +573,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		return 0;
 	}
 
+	Handle *proxyH = destinationDevice->handles[remoteHandle];
 	if (opCode == ATT_OP_WRITE_REQ && proxyH->getUuid().isShort()
 			&& proxyH->getUuid().getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
 		/*

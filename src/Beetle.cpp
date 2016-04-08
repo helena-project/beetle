@@ -157,7 +157,7 @@ void Beetle::removeDevice(device_t id) {
 		assert(kv.first != id);
 		kv.second->unsubscribeAll(id);
 		if (!kv.second->hat->getDeviceRange(id).isNull()) {
-			beetleDevice->informServicesChanged(kv.second->hat->getDeviceRange(id), kv.first);
+			beetleDevice->informServicesChanged(kv.second->hat->free(id), kv.first);
 		}
 	}
 

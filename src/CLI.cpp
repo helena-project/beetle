@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "ble/helper.h"
 #include "device/LEPeripheral.h"
 #include "Debug.h"
 #include "Device.h"
@@ -98,11 +99,11 @@ void CLI::cmdLineDaemon() {
 			doMap(cmd);
 		} else if (c1 == "unmap") {
 			doUnmap(cmd);
-		} else if (c1 == "devices") {
+		} else if (c1 == "d" || c1 == "devices") {
 			doListDevices(cmd);
-		} else if (c1 == "handles") {
+		} else if (c1 == "h" || c1 == "handles") {
 			doListHandles(cmd);
-		} else if (c1 == "offsets") {
+		} else if (c1 == "o" || c1 == "offsets") {
 			doListOffsets(cmd);
 		} else if (c1 == "debug") {
 			doToggleDebug(cmd);
@@ -165,7 +166,7 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 		/*
 		 * Use address and type supplied by the user
 		 */
-		if (str2ba(cmd[1].c_str(), &addr) != 0) {
+		if (!isBdAddr(cmd[1]) || str2ba(cmd[1].c_str(), &addr) != 0) {
 			printUsageError("invalid device address");
 			return;
 		}
@@ -209,7 +210,8 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 			device->startNd();
 		}
 
-		printMessage("connected to " + device->getName());
+		printMessage("connected to " + std::to_string(device->getId())
+			+ " : " + device->getName());
 		if (debug) {
 			printMessage(device->getName() + " has handle range [0,"
 					+ std::to_string(device->getHighestHandle()) + "]");
@@ -338,7 +340,7 @@ void CLI::doListOffsets(std::vector<std::string>& cmd) {
 		printUsage("offsets device");
 	} else {
 		boost::shared_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
-		Device *device = matchDevice(cmd[2]);
+		Device *device = matchDevice(cmd[1]);
 
 		if (device) {
 			std::lock_guard<std::mutex> hatLg(device->hatMutex);
@@ -346,7 +348,9 @@ void CLI::doListOffsets(std::vector<std::string>& cmd) {
 			std::map<uint16_t, std::pair<uint16_t, Device *>> tmp; // use a map to sort by start handle
 			for (device_t from : device->hat->getDevices()) {
 				handle_range_t handleRange = device->hat->getDeviceRange(from);
-				if (handleRange.start == 0 && handleRange.end == 0) continue;
+				if (handleRange.isNull()) {
+					continue;
+				}
 				tmp[handleRange.start] = std::pair<uint16_t, Device *>(handleRange.end, beetle.devices[from]);
 			}
 
@@ -367,14 +371,16 @@ void CLI::doListOffsets(std::vector<std::string>& cmd) {
 Device *CLI::matchDevice(const std::string &input) {
 	Device *device = NULL;
 
-	bdaddr_t addr;
-	if (str2ba(input.c_str(), &addr) == 0) {
+	if (isBdAddr(input)) {
 		// match by address
-		for (auto &kv : beetle.devices) {
-			LEPeripheral *peripheral = dynamic_cast<LEPeripheral *>(kv.second);
-			if (peripheral && memcmp(peripheral->getBdaddr().b, addr.b, sizeof(bdaddr_t)) == 0) {
-				device = peripheral;
-				break;
+		bdaddr_t addr;
+		if (str2ba(input.c_str(), &addr) == 0) {
+			for (auto &kv : beetle.devices) {
+				LEPeripheral *peripheral = dynamic_cast<LEPeripheral *>(kv.second);
+				if (peripheral && memcmp(peripheral->getBdaddr().b, addr.b, sizeof(bdaddr_t)) == 0) {
+					device = peripheral;
+					break;
+				}
 			}
 		}
 	} else {

@@ -8,9 +8,11 @@
 #ifndef BLE_HELPER_H_
 #define BLE_HELPER_H_
 
-#include <cstdint>
 #include <bluetooth/bluetooth.h>
+#include <cstdint>
+#include <string>
 
+#include "../UUID.h"
 #include "att.h"
 
 inline int pack_error_pdu(uint8_t opCode, uint16_t handle, uint8_t errCode, uint8_t *&buf) {
@@ -68,6 +70,20 @@ inline std::string ba2str_cpp(bdaddr_t bdaddr) {
 	char addr_c_str[20];
 	ba2str(&bdaddr, addr_c_str);
 	return std::string(addr_c_str);
+}
+
+inline bool isBdAddr(const std::string &s) {
+	if (s.length() != 17) return false;
+	for (int i = 0; i < (int)s.length(); i++) {
+		char c = s[i];
+		if (i % 3 == 2) {
+			if (c != ':') return false;
+		} else {
+			if (!((c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')
+					|| (c >= '0' && c <= '9'))) return false;
+		}
+	}
+	return true;
 }
 
 
