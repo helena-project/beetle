@@ -93,6 +93,20 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 		return 0;
 	}
 
+	if (debug_router) {
+		std::stringstream ss;
+		ss << "FindInfo to [" << startHandle << "," << endHandle << "] ";
+		pdebug(ss.str());
+	}
+
+	if (startHandle == 0 || startHandle > endHandle) {
+		uint8_t *err;
+		int len = pack_error_pdu(ATT_OP_FIND_BY_TYPE_RESP, startHandle, ATT_ECODE_INVALID_HANDLE, err);
+		sourceDevice->writeResponse(err, len);
+		delete[] err;
+		return 0;
+	}
+
 	int srcMTU = sourceDevice->getMTU();
 	int respLen = 0;
 	int respHandleCount = 0;
@@ -269,7 +283,6 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 					break;
 				}
 
-				// TODO handle non standard uuids (cb4.2 p2180)
 				Handle *handle = mapping.second;
 				if (handle->getUuid().getShort() == attType) {
 					int cmpLen = (attValLen < handle->cache.len) ? attValLen : handle->cache.len;
@@ -282,8 +295,9 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 						if (respLen + 4 > srcMTU) {
 							done = true;
 							// cutShort = true;
-							resp[respLen - 1] = 0xFF;
-							resp[respLen - 2] = 0xFF;
+							// TODO not convinced that this is in the standard
+//							resp[respLen - 1] = 0xFF;
+//							resp[respLen - 2] = 0xFF;
 							break;
 						}
 					}
@@ -343,6 +357,14 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 		std::stringstream ss;
 		ss << "ReadByTypeRequest [" <<  startHandle << "," << endHandle << "]";
 		pdebug(ss.str());
+	}
+
+	if (startHandle == 0 || startHandle > endHandle) {
+		uint8_t *err;
+		int len = pack_error_pdu(ATT_OP_FIND_BY_TYPE_RESP, startHandle, ATT_ECODE_INVALID_HANDLE, err);
+		sourceDevice->writeResponse(err, len);
+		delete[] err;
+		return 0;
 	}
 
 	/*
