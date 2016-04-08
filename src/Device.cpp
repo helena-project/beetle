@@ -22,17 +22,20 @@
 #include "ble/gatt.h"
 #include "Beetle.h"
 #include "device/BeetleDevice.h"
-#include "hat/HAT.h"
+#include "hat/BlockAllocator.h"
+#include "hat/HandleAllocationTable.h"
 #include "Handle.h"
 
 std::atomic_int Device::idCounter(1);
 
 Device::Device(Beetle &beetle_) : beetle(beetle_) {
 	id = idCounter++;
+	hat = new BlockAllocator(256);
 }
 
 Device::Device(Beetle &beetle_, device_t id_) : beetle(beetle_) {
 	id = id_;
+	hat = new BlockAllocator(256);
 }
 
 Device::~Device() {
@@ -40,14 +43,7 @@ Device::~Device() {
 		delete kv.second;
 	}
 	handles.clear();
-
-	boost::unique_lock<boost::shared_mutex> lk(beetle.hatMutex);
-	handle_range_t handles = beetle.hat->free(id);
-	lk.release();
-
-	if (!HAT::isNullRange(handles)) {
-		beetle.beetleDevice->servicesChanged(handles);
-	}
+	delete hat;
 }
 
 int Device::getHighestHandle() {

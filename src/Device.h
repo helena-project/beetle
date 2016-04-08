@@ -17,6 +17,7 @@
 #include <string>
 
 #include "Beetle.h"
+#include "hat/HandleAllocationTable.h"
 #include "Handle.h"
 
 class DeviceException : public std::exception {
@@ -55,8 +56,18 @@ public:
 	 * Return largest, untranslated handle.
 	 */
 	int getHighestHandle();
+
+	/*
+	 * Handles that this device exposes to other devices as a server.
+	 */
 	std::map<uint16_t, Handle *> handles;
 	std::recursive_mutex handlesMutex;
+
+	/*
+	 * Handle address offsets that this device is a client to.
+	 */
+	HandleAllocationTable *hat;
+	std::mutex hatMutex;
 
 	/*
 	 * Unsubscribe from all of this device's handles.

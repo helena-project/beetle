@@ -21,19 +21,16 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
-#include <list>
 #include <map>
 #include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
 
-#include "ble/helper.h"
-#include "device/BeetleDevice.h"
 #include "device/LEPeripheral.h"
 #include "Debug.h"
 #include "Device.h"
-#include "hat/HAT.h"
+#include "hat/HandleAllocationTable.h"
 #include "Handle.h"
 
 CLI::CLI(Beetle &beetle) : beetle(beetle), t() {
@@ -97,6 +94,10 @@ void CLI::cmdLineDaemon() {
 			doConnect(cmd, false);
 		} else if (c1 == "disconnect") {
 			doDisconnect(cmd);
+		} else if (c1 == "map") {
+			doMap(cmd);
+		} else if (c1 == "unmap") {
+			doUnmap(cmd);
 		} else if (c1 == "devices") {
 			doListDevices(cmd);
 		} else if (c1 == "handles") {
@@ -200,17 +201,10 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 	VirtualDevice* device = NULL;
 	try {
 		device = new LEPeripheral(beetle, addr, addrType);
-		beetle.addDevice(device, discoverHandles);
+		beetle.addDevice(device);
 
 		if (discoverHandles) {
 			device->start();
-			beetle.hatMutex.lock_shared();
-			handle_range_t handles = beetle.hat->getDeviceRange(device->getId());
-			beetle.hatMutex.unlock_shared();
-
-			if (!HAT::isNullRange(handles)) {
-				beetle.beetleDevice->servicesChanged(handles, device->getId());
-			}
 		} else {
 			device->startNd();
 		}
@@ -252,18 +246,56 @@ void CLI::doDisconnect(const std::vector<std::string>& cmd) {
 	}
 }
 
-void CLI::doListDevices(const std::vector<std::string>& cmd) {
-	boost::shared_lock<boost::shared_mutex> lg(beetle.devicesMutex);
-	if (beetle.devices.size() == 0) {
-		printMessage("no devices connected");
+void CLI::doMap(const std::vector<std::string>& cmd) {
+	if (cmd.size() != 3) {
+		printUsage("map fromId toId");
 	} else {
-		for (auto &kv : beetle.devices) {
-			Device *d = kv.second;
-			printMessage(d->getName());
-			printMessage("  id : " + std::to_string(d->getId()));
-			printMessage("  type : " + d->getType());
-			printMessage("  mtu : " + std::to_string(d->getMTU()));
-			printMessage("  highestHandle : " + std::to_string(d->getHighestHandle()));
+		device_t from;
+		device_t to;
+		try {
+			from = std::strtol(cmd[1].c_str(), NULL, 10);
+			to = std::strtol(cmd[2].c_str(), NULL, 10);
+		} catch (std::invalid_argument &e) {
+			std::cout << "caught invalid argument exception: " << e.what() << std::endl;
+			return;
+		}
+		beetle.mapDevices(from, to);
+	}
+}
+
+void CLI::doUnmap(const std::vector<std::string>& cmd) {
+	if (cmd.size() != 3) {
+		printUsage("unmap fromId toId");
+	} else {
+		device_t from;
+		device_t to;
+		try {
+			from = std::strtol(cmd[1].c_str(), NULL, 10);
+			to = std::strtol(cmd[2].c_str(), NULL, 10);
+		} catch (std::invalid_argument &e) {
+			std::cout << "caught invalid argument exception: " << e.what() << std::endl;
+			return;
+		}
+		beetle.unmapDevices(from, to);
+	}
+}
+
+void CLI::doListDevices(const std::vector<std::string>& cmd) {
+	if (cmd.size() != 1) {
+		printUsage("devices");
+	} else {
+		boost::shared_lock<boost::shared_mutex> lg(beetle.devicesMutex);
+		if (beetle.devices.size() == 0) {
+			printMessage("no devices connected");
+		} else {
+			for (auto &kv : beetle.devices) {
+				Device *d = kv.second;
+				printMessage(d->getName());
+				printMessage("  id : " + std::to_string(d->getId()));
+				printMessage("  type : " + d->getType());
+				printMessage("  mtu : " + std::to_string(d->getMTU()));
+				printMessage("  highestHandle : " + std::to_string(d->getHighestHandle()));
+			}
 		}
 	}
 }
@@ -278,19 +310,9 @@ void CLI::doListHandles(const std::vector<std::string>& cmd) {
 	Device *device = matchDevice(cmd[1]);
 
 	if (device != NULL) {
-		boost::shared_lock<boost::shared_mutex> hatLk(beetle.hatMutex);
-		handle_range_t handleRange = beetle.hat->getDeviceRange(device->getId());
-
 		boost::unique_lock<std::recursive_mutex> handleLk(device->handlesMutex);
-		deviceslk.unlock();
-		hatLk.unlock();
-
-		if (handleRange.start == 0 && handleRange.end == 0) {
-			printMessage("warning: " + device->getName() + " is not mapped.");
-		}
-
 		for (auto &kv : device->handles) {
-			printMessage(std::to_string(kv.first + handleRange.start) + " : " + kv.second->str());
+			printMessage(kv.second->str());
 		}
 	} else {
 		printMessage(cmd[1] + " does not exist");
@@ -312,29 +334,36 @@ void CLI::doToggleDebug(const std::vector<std::string>& cmd) {
 }
 
 void CLI::doListOffsets(std::vector<std::string>& cmd) {
-	if (cmd.size() != 1) {
-		printUsage("offsets");
+	if (cmd.size() != 2) {
+		printUsage("offsets device");
 	} else {
 		boost::shared_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
-		boost::shared_lock<boost::shared_mutex> hatLk(beetle.hatMutex);
+		Device *device = matchDevice(cmd[2]);
 
-		std::map<uint16_t, std::pair<uint16_t, Device *>> tmp; // use a map to sort by start handle
-		for (auto &kv : beetle.devices) {
-			handle_range_t handleRange = beetle.hat->getDeviceRange(kv.first);
-			if (handleRange.start == 0 && handleRange.end == 0) continue;
-			tmp[handleRange.start] = std::pair<uint16_t, Device *>(handleRange.end, kv.second);
-		}
+		if (device) {
+			std::lock_guard<std::mutex> hatLk(device->hatMutex);
 
-		printMessage("start\tend\tid\tname");
-		for (auto &kv : tmp) {
-			std::stringstream ss;
-			ss << kv.first << '\t' << kv.second.first << '\t' << kv.second.second->getId()
-					<< '\t' << kv.second.second->getName();
-			printMessage(ss.str());
+			std::map<uint16_t, std::pair<uint16_t, Device *>> tmp; // use a map to sort by start handle
+			for (device_t from : device->hat->getDevices()) {
+				handle_range_t handleRange = device->hat->getDeviceRange(from);
+				if (handleRange.start == 0 && handleRange.end == 0) continue;
+				tmp[handleRange.start] = std::pair<uint16_t, Device *>(handleRange.end, beetle.devices[from]);
+			}
+
+			printMessage("start\tend\tid\tname");
+			for (auto &kv : tmp) {
+				std::stringstream ss;
+				ss << kv.first << '\t' << kv.second.first << '\t' << kv.second.second->getId()
+						<< '\t' << kv.second.second->getName();
+				printMessage(ss.str());
+			}
 		}
 	}
 }
 
+/*
+ * Should be holding devices lock
+ */
 Device *CLI::matchDevice(const std::string &input) {
 	Device *device = NULL;
 
@@ -351,8 +380,12 @@ Device *CLI::matchDevice(const std::string &input) {
 	} else {
 		device_t id = NULL_RESERVED_DEVICE;
 		try {
-			id = std::stoi(input);
-		} catch (std::invalid_argument &e) { };
+			id = std::strtol(input.c_str(), NULL, 10);
+		} catch (std::invalid_argument &e) {
+			if (debug) {
+				pdebug(input + " did not match a device id");
+			}
+		}
 
 		if (id == BEETLE_RESERVED_DEVICE || id > 0) {
 			// match by id

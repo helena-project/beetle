@@ -17,16 +17,27 @@
 typedef struct {
 	uint16_t start;
 	uint16_t end;
+
+	std::string str() {
+		std::stringstream ss;
+		ss << "[" << start << "," << end << "]";
+		return ss.str();
+	}
 } handle_range_t;
 
 /*
  * A Handle allocation table interface, to map devices to their
  * allotted handle ranges.
  */
-class HAT {
+class HandleAllocationTable {
 public:
-	HAT() {};
-	virtual ~HAT() {};
+	HandleAllocationTable() {};
+	virtual ~HandleAllocationTable() {};
+
+	/*
+	 * Returns a set of devices mapped into this hat.
+	 */
+	virtual std::set<device_t> getDevices() = 0;
 
 	/*
 	 * Returns the range allotted to the device or [0,0]

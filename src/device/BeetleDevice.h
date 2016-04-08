@@ -15,7 +15,7 @@
 #include "../ble/att.h"
 #include "../Beetle.h"
 #include "../Device.h"
-#include "../hat/HAT.h"
+#include "../hat/HandleAllocationTable.h"
 
 /*
  * Fully synchronous simulated device for this Beetle.
@@ -37,9 +37,11 @@ public:
 
 	/*
 	 * Notify every device that is subscribed to the services changed characteristic
-	 * that services have changed. Caller should not hold Beetle's device list lock.
+	 * that services have changed.
+	 *
+	 * Caller should be holding Beetle's device list lock.
 	 */
-	void servicesChanged(handle_range_t range, device_t src = NULL_RESERVED_DEVICE);
+	void informServicesChanged(handle_range_t range, device_t dst);
 
 private:
 	/*

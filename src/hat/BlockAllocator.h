@@ -12,17 +12,18 @@
 #include <cstdint>
 
 #include "../Beetle.h"
-#include "HAT.h"
+#include "HandleAllocationTable.h"
 
 /*
  * Implementation of the HAT interface that allocates
  * fixed size blocks to devices. The first block is
  * reserved for Beetle.
  */
-class BlockAllocator: public HAT {
+class BlockAllocator: public HandleAllocationTable {
 public:
 	BlockAllocator(int blockSize);
 	virtual ~BlockAllocator();
+	std::set<device_t> getDevices();
 	handle_range_t getDeviceRange(device_t d);
 	device_t getDeviceForHandle(uint16_t h);
 	handle_range_t getHandleRange(uint16_t h);

@@ -60,12 +60,11 @@ int BeetleDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp
 	return pack_error_pdu(buf[0], 0, ATT_ECODE_UNLIKELY, resp); // TODO: probably not the right error code
 }
 
-void BeetleDevice::servicesChanged(handle_range_t range, device_t src) {
+void BeetleDevice::informServicesChanged(handle_range_t range, device_t dst) {
 	if (debug) {
-		pdebug("informing devices of service change");
+		pdebug("informing " + std::to_string(dst) + " of service change " + range.str());
 	}
 
-	boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 	std::lock_guard<std::recursive_mutex> handlesLg(handlesMutex);
 	if (serviceChangedAttr->subscribers.size() == 0) {
 		return;
@@ -76,15 +75,17 @@ void BeetleDevice::servicesChanged(handle_range_t range, device_t src) {
 	*(uint16_t *)(cmd + 3) = htobs(range.start);
 	*(uint16_t *)(cmd + 5) = htobs(range.end);
 
-	for (device_t dst : serviceChangedAttr->subscribers) {
-		if (dst == src) {
-			continue;
-		}
+	if (serviceChangedAttr->subscribers.find(dst) != serviceChangedAttr->subscribers.end()) {
 		if (beetle.devices.find(dst) != beetle.devices.end()) {
 			beetle.devices[dst]->writeCommand(cmd , sizeof(cmd));
+		} else {
+			pwarn("cannot inform " + std::to_string(dst) + ", does not name a device");
+		}
+	} else {
+		if (debug) {
+			pdebug(std::to_string(dst) + " is not subscribed to service changed characteristic");
 		}
 	}
-
 }
 
 void BeetleDevice::init() {

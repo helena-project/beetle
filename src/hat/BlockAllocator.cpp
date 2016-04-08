@@ -29,6 +29,14 @@ BlockAllocator::~BlockAllocator() {
 	delete[] blocks;
 }
 
+std::set<device_t> BlockAllocator::getDevices() {
+	std::set<device_t> ret;
+	for (int i = 1; i < numBlocks; i++) {
+		ret.insert(numBlocks);
+	}
+	return ret;
+}
+
 handle_range_t BlockAllocator::getDeviceRange(device_t d) {
 	for (int i = 0; i < numBlocks; i++) {
 		if (blocks[i] == d) {

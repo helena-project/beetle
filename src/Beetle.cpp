@@ -19,7 +19,7 @@
 #include "Debug.h"
 #include "Device.h"
 #include "hat/BlockAllocator.h"
-#include "hat/HAT.h"
+#include "hat/HandleAllocationTable.h"
 #include "Router.h"
 #include "Scanner.h"
 #include "tcp/TCPDeviceServer.h"
@@ -113,7 +113,6 @@ int main(int argc, char *argv[]) {
 }
 
 Beetle::Beetle() {
-	hat = new BlockAllocator(256);
 	router = new Router(*this);
 	beetleDevice = new BeetleDevice(*this, "Beetle");
 	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
@@ -123,28 +122,90 @@ Beetle::~Beetle() {
 
 }
 
-void Beetle::addDevice(Device *d, bool allocateHandles) {
+void Beetle::addDevice(Device *d) {
 	boost::unique_lock<boost::shared_mutex> deviceslk(devicesMutex);
-	boost::unique_lock<boost::shared_mutex> hatLk(hatMutex);
 	devices[d->getId()] = d;
-	if (allocateHandles) {
-		handle_range_t range = hat->reserve(d->getId());
-		assert(!HAT::isNullRange(range));
-	}
 }
 
 void Beetle::removeDevice(device_t id) {
 	if (id == BEETLE_RESERVED_DEVICE) {
-		pdebug("not allowed to remove Beetle!");
+		pwarn("not allowed to remove Beetle!");
 		return;
 	}
 	boost::unique_lock<boost::shared_mutex> lk(devicesMutex);
 	Device *d = devices[id];
 	devices.erase(id);
+
 	for (auto &kv : devices) {
+		/*
+		 * Cancel subscriptions and inform that services have changed
+		 */
+		assert(kv.first != id);
 		kv.second->unsubscribeAll(id);
+		if (!HandleAllocationTable::isNullRange(kv.second->hat->getDeviceRange(id))) {
+			beetleDevice->informServicesChanged(kv.second->hat->getDeviceRange(id), kv.first);
+		}
 	}
+
+	/*
+	 * Spin deallocator thread to avoid blocking
+	 */
 	std::thread t([d]() { delete d; });
 	t.detach();
+}
+
+void Beetle::mapDevices(device_t from, device_t to) {
+	if (from == BEETLE_RESERVED_DEVICE || to == BEETLE_RESERVED_DEVICE) {
+		pwarn("not allowed to map Beetle");
+	} else if (from == NULL_RESERVED_DEVICE || to == NULL_RESERVED_DEVICE) {
+		pwarn("not allowed to map null device");
+	} else if (from == to) {
+		pwarn("cannot map device to itself");
+	} else {
+		boost::shared_lock<boost::shared_mutex> devicesLk(devicesMutex);
+		if (devices.find(from) == devices.end()) {
+			pwarn(std::to_string(from) + " does not id a device");
+		} else if (devices.find(to) == devices.end()) {
+			pwarn(std::to_string(to) +" does not id a device");
+		} else {
+			Device *toD = devices[to];
+
+			std::lock_guard<std::mutex> hatLg(toD->hatMutex);
+			if (!HandleAllocationTable::isNullRange(toD->hat->getDeviceRange(from))) {
+				std::stringstream ss;
+				ss << from << " is already mapped into " << to << "'s space";
+				pwarn(ss.str());
+			} else {
+				handle_range_t range = toD->hat->reserve(from);
+				if (debug) {
+					pdebug("reserved " + range.str() + " at device " + std::to_string(to));
+				}
+			}
+		}
+	}
+}
+
+void Beetle::unmapDevices(device_t from, device_t to) {
+	if (from == BEETLE_RESERVED_DEVICE || to == BEETLE_RESERVED_DEVICE) {
+		pwarn("not allowed to unmap Beetle");
+	} else if (from == NULL_RESERVED_DEVICE || to == NULL_RESERVED_DEVICE) {
+		pwarn("unmapping null is a nop");
+	} else if (from == to) {
+		pwarn("cannot unmap self from self");
+	} else {
+		if (devices.find(from) == devices.end()) {
+			pwarn(std::to_string(from) + " does not id a device");
+		} else if (devices.find(to) == devices.end()) {
+			pwarn(std::to_string(to) +" does not id a device");
+		} else {
+			Device *toD = devices[to];
+
+			std::lock_guard<std::mutex> hatLg(toD->hatMutex);
+			handle_range_t range = toD->hat->free(from);
+			if (debug) {
+				pdebug("freed " + range.str() + " at device " + std::to_string(to));
+			}
+		}
+	}
 }
 

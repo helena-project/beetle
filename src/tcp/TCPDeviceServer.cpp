@@ -60,7 +60,7 @@ void TCPDeviceServer::serverDaemon(int port) {
 		try {
 			device = new TCPConnection(beetle, clifd);
 
-			beetle.addDevice(device, false);
+			beetle.addDevice(device);
 
 			// TODO
 			device->startNd();

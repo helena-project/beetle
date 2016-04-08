@@ -16,7 +16,7 @@
 #include "device/LEPeripheral.h"
 #include "Debug.h"
 #include "Device.h"
-#include "hat/HAT.h"
+#include "hat/HandleAllocationTable.h"
 
 
 AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_) : beetle{beetle} {
@@ -70,18 +70,10 @@ void AutoConnect::connect(peripheral_info_t info, autoconnect_config_t config) {
 	VirtualDevice* device = NULL;
 	try {
 		device = new LEPeripheral(beetle, info.bdaddr, info.bdaddrType);
-		beetle.addDevice(device, config.discover);
+		beetle.addDevice(device);
 
 		if (config.discover) {
 			device->start();
-
-			beetle.hatMutex.lock_shared();
-			handle_range_t handles = beetle.hat->getDeviceRange(device->getId());
-			beetle.hatMutex.unlock_shared();
-
-			if (!HAT::isNullRange(handles)) {
-				beetle.beetleDevice->servicesChanged(handles, device->getId());
-			}
 		} else {
 			device->startNd();
 		}

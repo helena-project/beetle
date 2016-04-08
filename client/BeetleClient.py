@@ -8,6 +8,7 @@ import sys
 import socket
 import thread
 import time
+import traceback
 
 if len(sys.argv) < 3:
 	print "usage: ./BeetleClient.py host port"

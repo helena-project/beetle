@@ -24,7 +24,7 @@
 #include "ble/helper.h"
 #include "Beetle.h"
 #include "Debug.h"
-#include "hat/HAT.h"
+#include "hat/HandleAllocationTable.h"
 #include "Handle.h"
 #include "UUID.h"
 
@@ -71,19 +71,29 @@ int Router::route(uint8_t *buf, int len, device_t src) {
 }
 
 int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
-	boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
+	/*
+	 * Lock devices
+	 */
+	boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
+
+	if (beetle.devices.find(src) == beetle.devices.end()) {
+		pwarn(std::to_string(src) + " does not id a device");
+		return -1;
+	}
+
+	Device *sourceDevice = beetle.devices[src];
+
 	uint16_t startHandle;
 	uint16_t endHandle;
 	if (!parse_find_info_request(buf, len, startHandle, endHandle)) {
 		uint8_t *err;
 		int len = pack_error_pdu(ATT_OP_FIND_INFO_REQ, 0, ATT_ECODE_INVALID_PDU, err);
-		beetle.devices[src]->writeResponse(err, len);
+		sourceDevice->writeResponse(err, len);
 		delete[] err;
-		return -1;
+		return 0;
 	}
-	boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
 
-	int srcMTU = beetle.devices[src]->getMTU();
+	int srcMTU = sourceDevice->getMTU();
 	int respLen = 0;
 	int respHandleCount = 0;
 	uint8_t *resp = new uint8_t[srcMTU];
@@ -97,15 +107,31 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 		if (debug_router) {
 			pdebug("RouteFindInfo @" + std::to_string(currHandle));
 		}
-		device_t dst = beetle.hat->getDeviceForHandle(startHandle);
-		handle_range_t handleRange = beetle.hat->getHandleRange(currHandle);
+
+		/*
+		 * Lock hat
+		 */
+		std::lock_guard<std::mutex> hatLg(sourceDevice->hatMutex);
+
+		device_t dst = sourceDevice->hat->getDeviceForHandle(currHandle);
+		handle_range_t handleRange = sourceDevice->hat->getHandleRange(currHandle);
 		if (dst == NULL_RESERVED_DEVICE) { // -1
 			// do nothing
 		} else if (dst == src) {
 			// do nothing
 		} else if (dst >= 0) {
-			std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
-			for (auto &mapping : beetle.devices[dst]->handles) {
+			if (beetle.devices.find(dst) == beetle.devices.end()) {
+				pwarn(std::to_string(dst) + " does not id a device");
+			}
+
+			Device *destinationDevice = beetle.devices[dst];
+
+			/*
+			 * Lock handles
+			 */
+			std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
+
+			for (auto &mapping : destinationDevice->handles) {
 				uint16_t offset = mapping.first + handleRange.start;
 				if (offset < startHandle) {
 					continue;
@@ -137,11 +163,11 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 	}
 
 	if (respHandleCount > 0) {
-		beetle.devices[src]->writeResponse(resp, respLen);
+		sourceDevice->writeResponse(resp, respLen);
 	} else {
 		uint8_t *err;
 		int len = pack_error_pdu(ATT_OP_FIND_INFO_REQ, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
-		beetle.devices[src]->writeResponse(err, len);
+		sourceDevice->writeResponse(err, len);
 		delete[] err;
 	}
 
@@ -150,7 +176,18 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 }
 
 int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
-	boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
+	/*
+	 * Lock devices
+	 */
+	boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
+
+	if (beetle.devices.find(src) == beetle.devices.end()) {
+		pwarn(std::to_string(src)+ " does not id a device");
+		return -1;
+	}
+
+	Device *sourceDevice = beetle.devices[src];
+
 	uint16_t startHandle;
 	uint16_t endHandle;
 	uint16_t attType;
@@ -159,16 +196,29 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 	if (!parse_find_by_type_value_request(buf, len, startHandle, endHandle, attType, attValue, attValLen)) {
 		uint8_t *err;
 		int len = pack_error_pdu(ATT_OP_FIND_BY_TYPE_REQ, 0, ATT_ECODE_INVALID_PDU, err);
-		beetle.devices[src]->writeResponse(err, len);
+		sourceDevice->writeResponse(err, len);
 		delete[] err;
 		return 0;
 	}
 
-	boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
+	if (debug_router) {
+		std::stringstream ss;
+		ss << "FindByTypeValue to [" << startHandle << "," << endHandle << "] ";
+		pdebug(ss.str());
+		pdebug(attValue, attValLen);
+	}
+
+	if (startHandle == 0 || startHandle > endHandle) {
+		uint8_t *err;
+		int len = pack_error_pdu(ATT_OP_FIND_BY_TYPE_RESP, startHandle, ATT_ECODE_INVALID_HANDLE, err);
+		sourceDevice->writeResponse(err, len);
+		delete[] err;
+		return 0;
+	}
 
 	UUID attUUID(attType);
 
-	int srcMTU = beetle.devices[src]->getMTU();
+	int srcMTU = sourceDevice->getMTU();
 	int respLen = 0;
 	int respHandleCount = 0;
 	// bool cutShort = false;
@@ -183,16 +233,34 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 			pdebug("RouteFindByTypeValue @" + std::to_string(currHandle));
 		}
 
-		device_t dst = beetle.hat->getDeviceForHandle(startHandle);
-		handle_range_t handleRange = beetle.hat->getHandleRange(currHandle);
+		/*
+		 * Lock hat
+		 */
+		std::lock_guard<std::mutex> hatLg(sourceDevice->hatMutex);
+
+		device_t dst = sourceDevice->hat->getDeviceForHandle(currHandle);
+		handle_range_t handleRange = sourceDevice->hat->getHandleRange(currHandle);
 		if (dst == NULL_RESERVED_DEVICE){ // -1
 			// do nothing
 		} else if (dst == src) {
 			// do nothing
 		} else if (dst >= 0) {
-			std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
+			/*
+			 * Lock handles
+			 */
+			if (beetle.devices.find(dst) == beetle.devices.end()) {
+				pwarn(std::to_string(dst) + " does not id a device");
+				return -1;
+			}
 
-			for (auto &mapping : beetle.devices[dst]->handles) {
+			Device *destinatonDevice = beetle.devices[dst];
+
+			/*
+			 * Lock handles
+			 */
+			std::lock_guard<std::recursive_mutex> handlesLg(destinatonDevice->handlesMutex);
+
+			for (auto &mapping : destinatonDevice->handles) {
 				uint16_t offset = mapping.first + handleRange.start;
 				if (offset < startHandle) {
 					continue;
@@ -226,19 +294,20 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 			}
 		}
 
-		currHandle = handleRange.end + 1;
-		if (currHandle <= handleRange.start) {
+		uint16_t nextHandle = handleRange.end + 1;
+		if (nextHandle <= currHandle) {
 			done = true;
-			break;
+		} else {
+			currHandle = nextHandle;
 		}
 	}
 
 	if (respHandleCount > 0) {
-		beetle.devices[src]->writeResponse(resp, respLen);
+		sourceDevice->writeResponse(resp, respLen);
 	} else {
 		uint8_t *err;
 		int len = pack_error_pdu(ATT_OP_FIND_BY_TYPE_RESP, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
-		beetle.devices[src]->writeResponse(err, len);
+		sourceDevice->writeResponse(err, len);
 		delete[] err;
 	}
 
@@ -247,37 +316,121 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 }
 
 int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
-	boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
+	/*
+	 * Lock devices
+	 */
+	boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
+
+	if (beetle.devices.find(src) == beetle.devices.end()) {
+		pwarn(std::to_string(src)+ " does not id a device");
+		return -1;
+	}
+
+	Device *sourceDevice = beetle.devices[src];
+
 	uint16_t startHandle;
 	uint16_t endHandle;
 	UUID *attType;
 	if (!parse_read_by_type_value_request(buf, len, startHandle, endHandle, attType)) {
 		uint8_t *err;
 		int len = pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, 0, ATT_ECODE_INVALID_PDU, err);
-		beetle.devices[src]->writeResponse(err, len);
+		sourceDevice->writeResponse(err, len);
 		delete[] err;
 		return 0;
 	}
 
-	boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
-	device_t dst = beetle.hat->getDeviceForHandle(startHandle);
-	if (dst != src) {
-		handle_range_t handleRange = beetle.hat->getHandleRange(startHandle);
-		// TODO forward the request to the device where the range falls, this does not work if you want to read across multiple devices
+	if (debug_router) {
+		std::stringstream ss;
+		ss << "ReadByTypeRequest [" <<  startHandle << "," << endHandle << "]";
+		pdebug(ss.str());
+	}
+
+	/*
+	 * Lock hat
+	 */
+	std::lock_guard<std::mutex> hatLg(sourceDevice->hatMutex);
+
+	// TODO forward the request to the device where the range falls, this does not work if you want to read across multiple devices
+
+	device_t dst = sourceDevice->hat->getDeviceForHandle(startHandle);
+	if (dst == BEETLE_RESERVED_DEVICE) {
+		Device *destinationDevice = beetle.devices[dst];
+		if (debug_router) {
+			pdebug("ReadByTypeRequest to " + destinationDevice->getName());
+		}
+
+		/*
+		 * Lock handles
+		 */
+		std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
+
+		// TODO be less lazy and return more than 1
+		uint8_t resp[destinationDevice->getMTU()];
+		resp[0] = ATT_OP_READ_BY_TYPE_RESP;
+		int respLen = 2;
+		for (auto &kv : destinationDevice->handles) {
+			Handle *handle = kv.second;
+			if (memcmp(handle->getUuid().get().value, attType->get().value, sizeof(uuid_t)) == 0) {
+				*(uint16_t*)(resp + 2) = htobs(handle->getHandle());
+				memcpy(resp + 4, handle->cache.value, handle->cache.len);
+				respLen += 2 + handle->cache.len;
+				resp[1] = 2 + handle->cache.len;
+				break;
+			}
+		}
+
+		if (respLen > 2) {
+			sourceDevice->writeResponse(resp, respLen);
+		} else {
+			uint8_t *err;
+			int len = pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
+			sourceDevice->writeResponse(err, len);
+			delete[] err;
+		}
+	} else if (dst == NULL_RESERVED_DEVICE) {
+		if (debug_router) {
+			pdebug("ReadByTypeRequest to null");
+		}
+		uint8_t *err;
+		int len = pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
+		sourceDevice->writeResponse(err, len);
+		delete[] err;
+	} else {
+		handle_range_t handleRange = sourceDevice->hat->getHandleRange(startHandle);
 		*(uint16_t *)(buf + 1) = htobs(startHandle - handleRange.start);
 		*(uint16_t *)(buf + 3) = htobs(endHandle - handleRange.start);
-		beetle.devices[dst]->writeTransaction(buf, len, [this, src, dst, attType, handleRange, startHandle](uint8_t *resp, int respLen) -> void {
-			boost::shared_lock<boost::shared_mutex> lkDevices(this->beetle.devicesMutex);
+
+		if (beetle.devices.find(dst) == beetle.devices.end()) {
+			pwarn(std::to_string(dst) + " does not id a device");
+			return -1;
+		}
+
+		Device *destinationDevice = beetle.devices[dst];
+		if (debug_router) {
+			pdebug("ReadByTypeRequest to " + destinationDevice->getName());
+		}
+
+		destinationDevice->writeTransaction(buf, len, [this, src, dst, attType, handleRange, startHandle](uint8_t *resp, int respLen) -> void {
+			/*
+			 * Lock devices
+			 */
+			boost::shared_lock<boost::shared_mutex> devicesLk(this->beetle.devicesMutex);
+
+			if (beetle.devices.find(src) == beetle.devices.end()) {
+				pwarn(std::to_string(src) + " does not id a device");
+				return;
+			}
+			Device *sourceDevice = beetle.devices[src];
+
 			if (resp == NULL || respLen <= 2) {
 				uint8_t *err;
 				int len = pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, startHandle, ATT_ECODE_ABORTED, err);
-				beetle.devices[src]->writeResponse(err, len);
+				sourceDevice->writeResponse(err, len);
 				delete[] err;
 			} else if (resp[0] == ATT_OP_ERROR) {
 				*(uint16_t *)(resp + 2) = htobs(startHandle);
-				beetle.devices[src]->writeResponse(resp, respLen);
+				sourceDevice->writeResponse(resp, respLen);
 			} else {
-				boost::shared_lock<boost::shared_mutex> lkDevices(this->beetle.hatMutex);
 				int segLen = resp[1];
 				for (int i = 2; i < respLen; i += segLen) {
 					uint16_t handle = btohs(*(uint16_t *)(resp + i));
@@ -290,65 +443,110 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 						*(uint16_t *)(resp + j) = htobs(valueHandle);
 					}
 				}
-				this->beetle.devices[src]->writeResponse(resp, respLen);
+				sourceDevice->writeResponse(resp, respLen);
 			}
 			delete attType;
 		});
-	} else {
-		uint8_t *err;
-		int len = pack_error_pdu(ATT_OP_FIND_BY_TYPE_RESP, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
-		beetle.devices[src]->writeResponse(err, len);
-		delete[] err;
 	}
 	return 0;
 }
 
 int Router::routeHandleNotification(uint8_t *buf, int len, device_t src) {
-	boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
-	boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
-	std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[src]->handlesMutex);
+	/*
+	 * Lock devices
+	 */
+	boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 
-	uint16_t handle = btohs(*(uint16_t *)(buf + 1));
-	Handle *h = beetle.devices[src]->handles[handle];
-	if (h == NULL) {
-		return -1; // no such handle
+	if (beetle.devices.find(src) == beetle.devices.end()) {
+		pwarn(std::to_string(src) + " does not id a device");
+		return -1;
 	}
 
-	handle_range_t handleRange = beetle.hat->getDeviceRange(src);
+	Device *sourceDevice = beetle.devices[src];
+
+	/*
+	 * Lock hat
+	 */
+	std::lock_guard<std::mutex> hatLk(sourceDevice->hatMutex);
+
+	/*
+	 * Lock handles
+	 */
+	std::lock_guard<std::recursive_mutex> handlesLg(sourceDevice->handlesMutex);
+
+	uint16_t handle = btohs(*(uint16_t *)(buf + 1));
+	Handle *h;
+	if (sourceDevice->handles.find(handle) == sourceDevice->handles.end()) {
+		return -1; // no such handle
+	}
+	h = sourceDevice->handles[handle];
+
+	handle_range_t handleRange = sourceDevice->hat->getDeviceRange(src);
 	if (handleRange.start == 0 && handleRange.start == handleRange.end) {
 		return -1; // this device has no mapped handles
 	} else {
 		handle += handleRange.start;
 		*(uint16_t *)(buf + 1) = htobs(handle);
 		for (device_t dst : h->subscribers) {
-			beetle.devices[dst]->writeCommand(buf, len);
+			if (beetle.devices.find(dst) == beetle.devices.end()) {
+				pwarn(std::to_string(dst) + " does not id a device");
+			} else {
+				beetle.devices[dst]->writeCommand(buf, len);
+			}
 		}
 	}
 	return 0;
 }
 
 int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
-	boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
-	boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
+	/*
+	 * Lock devices
+	 */
+	boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
+
+	if (beetle.devices.find(src) == beetle.devices.end()) {
+		pwarn(std::to_string(src) + " does not id a device");
+		return -1;
+	}
+
+	Device *sourceDevice = beetle.devices[src];
+
 	uint8_t opCode = buf[0];
 	uint16_t handle = btohs(*(uint16_t *)(buf + 1));
-	device_t dst = beetle.hat->getDeviceForHandle(src);
-	handle_range_t handleRange = beetle.hat->getDeviceRange(src);
-	if (dst == src) {
+
+	/*
+	 * Lock hat
+	 */
+	std::lock_guard<std::mutex> hatLg(sourceDevice->hatMutex);
+
+	device_t dst = sourceDevice->hat->getDeviceForHandle(handle);
+	if (dst == NULL_RESERVED_DEVICE) {
 		uint8_t *err;
 		int len = pack_error_pdu(buf[0], handle, ATT_ECODE_ATTR_NOT_FOUND, err);
-		beetle.devices[src]->writeResponse(err, len);
+		sourceDevice->writeResponse(err, len);
 		delete[] err;
 		return 0;
 	}
 
-	std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
+	handle_range_t handleRange = sourceDevice->hat->getDeviceRange(dst);
+
+	if (beetle.devices.find(dst) == beetle.devices.end()) {
+		pwarn(std::to_string(dst) + " does not id a device");
+		return -1;
+	}
+	Device *destinationDevice = beetle.devices[dst];
+
+	/*
+	 * Lock handles
+	 */
+	std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
+
 	uint16_t remoteHandle = handle - handleRange.start;
-	Handle *proxyH = beetle.devices[dst]->handles[remoteHandle];
+	Handle *proxyH = destinationDevice->handles[remoteHandle];
 	if (proxyH == NULL) {
 		uint8_t *err;
 		int len = pack_error_pdu(buf[0], handle, ATT_ECODE_ATTR_NOT_FOUND, err);
-		beetle.devices[src]->writeResponse(err, len);
+		sourceDevice->writeResponse(err, len);
 		delete[] err;
 		return 0;
 	}
@@ -370,9 +568,17 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		if (dst != BEETLE_RESERVED_DEVICE &&
 				((numSubscribers == 0 && buf[3] == 0) || (numSubscribers == 1 && buf[3] == 1))) {
 			*(uint16_t *)(buf + 1) = htobs(remoteHandle);
-			beetle.devices[dst]->writeTransaction(buf, len, [this, handle, src, dst, opCode](uint8_t *resp, int respLen) -> void {
-				boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
-				boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
+			destinationDevice->writeTransaction(buf, len, [this, handle, src, dst, opCode](uint8_t *resp, int respLen) -> void {
+				/*
+				 * Lock devices
+				 */
+				boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
+
+				if (beetle.devices.find(src) == beetle.devices.end()) {
+					pwarn(std::to_string(src) + " does not id a device");
+					return;
+				}
+
 				if (resp == NULL) {
 					uint8_t *err;
 					int len = pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);
@@ -384,7 +590,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 			});
 		} else {
 			uint8_t resp = ATT_OP_WRITE_RESP;
-			beetle.devices[src]->writeResponse(&resp, 1);
+			sourceDevice->writeResponse(&resp, 1);
 		}
 	} else if (opCode == ATT_OP_READ_REQ && proxyH->cache.value != NULL
 			&& proxyH->cache.cachedSet.find(src) == proxyH->cache.cachedSet.end()
@@ -394,23 +600,30 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		 */
 		proxyH->cache.cachedSet.insert(src);
 		int respLen = 1 + proxyH->cache.len;
-		uint8_t *resp = new uint8_t[respLen];
+		uint8_t resp[respLen];
 		resp[0] = ATT_OP_READ_RESP;
 		memcpy(resp + 1, proxyH->cache.value, proxyH->cache.len);
-		beetle.devices[src]->writeResponse(resp, respLen);
-		delete[] resp;
+		sourceDevice->writeResponse(resp, respLen);
 	} else {
 		/*
 		 * Route packet to device
 		 */
 		*(uint16_t *)(buf + 1) = htobs(remoteHandle);
 		if (opCode == ATT_OP_WRITE_CMD || opCode == ATT_OP_SIGNED_WRITE_CMD) {
-			beetle.devices[dst]->writeCommand(buf, len);
+			destinationDevice->writeCommand(buf, len);
 		} else {
-			beetle.devices[dst]->writeTransaction(buf, len,
+			destinationDevice->writeTransaction(buf, len,
 					[this, opCode, src, dst, handle, remoteHandle](uint8_t *resp, int respLen) -> void {
-				boost::shared_lock<boost::shared_mutex> lkDevices(beetle.devicesMutex);
-				boost::shared_lock<boost::shared_mutex> lkHat(beetle.hatMutex);
+				/*
+				 * Lock devices
+				 */
+				boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
+
+				if (beetle.devices.find(src) == beetle.devices.end()) {
+					pwarn(std::to_string(src) + " does not id a device");
+					return;
+				}
+
 				if (resp == NULL) {
 					uint8_t *err;
 					int len = pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);

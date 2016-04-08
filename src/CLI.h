@@ -43,6 +43,8 @@ private:
 	void doScan(const std::vector<std::string>& cmd);
 	void doConnect(const std::vector<std::string>& cmd, bool discoverHandles);
 	void doDisconnect(const std::vector<std::string>& cmd);
+	void doMap(const std::vector<std::string>& cmd);
+	void doUnmap(const std::vector<std::string>& cmd);
 	void doListDevices(const std::vector<std::string>& cmd);
 	void doListHandles(const std::vector<std::string>& cmd);
 	void doListOffsets(std::vector<std::string>& cmd);

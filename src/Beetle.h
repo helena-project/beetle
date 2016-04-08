@@ -16,7 +16,7 @@ class AutoConnect;
 class Device;
 class BeetleDevice;
 class Router;
-class HAT;
+class HandleAllocationTable;
 class TCPDeviceServer;
 
 typedef long device_t;
@@ -32,7 +32,7 @@ public:
 	 * Add a device to Beetle's mappings. Threadsafe.
 	 * Do not call while holding devices or hat mutexes.
 	 */
-	void addDevice(Device *, bool allocateHandles = true);
+	void addDevice(Device *);
 
 	/*
 	 * Removes a device from Beetle's mappings and unsubscribes
@@ -40,11 +40,21 @@ public:
 	 */
 	void removeDevice(device_t);
 
+	/*
+	 * Maps handles from device 1 to device 2.
+	 */
+	void mapDevices(device_t from, device_t to);
+
+	/*
+	 * Unmaps handles from device 1 to device 2.
+	 */
+	void unmapDevices(device_t from, device_t to);
+
 	std::map<device_t, Device *> devices;
 	boost::shared_mutex devicesMutex;
 
-	HAT *hat;
-	boost::shared_mutex hatMutex;
+//	HandleAllocationTable *hat;
+//	boost::shared_mutex hatMutex;
 
 	/*
 	 * Simulated device for Beetle's own services.
