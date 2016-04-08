@@ -341,7 +341,7 @@ void CLI::doListOffsets(std::vector<std::string>& cmd) {
 		Device *device = matchDevice(cmd[2]);
 
 		if (device) {
-			std::lock_guard<std::mutex> hatLk(device->hatMutex);
+			std::lock_guard<std::mutex> hatLg(device->hatMutex);
 
 			std::map<uint16_t, std::pair<uint16_t, Device *>> tmp; // use a map to sort by start handle
 			for (device_t from : device->hat->getDevices()) {

@@ -23,6 +23,9 @@ typedef struct {
 		ss << "[" << start << "," << end << "]";
 		return ss.str();
 	}
+	bool isNull() {
+		return start == 0 && end == 0;
+	}
 } handle_range_t;
 
 /*
@@ -64,10 +67,6 @@ public:
 	 * Release any handle ranges owned by the device.
 	 */
 	virtual handle_range_t free(device_t) = 0;
-
-	static bool isNullRange(handle_range_t r) {
-		return r.start == 0 && r.end == 0;
-	}
 };
 
 #endif /* HAT_H_ */

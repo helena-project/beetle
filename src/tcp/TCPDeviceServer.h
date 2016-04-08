@@ -29,15 +29,18 @@ class ServerException : public std::exception {
  */
 class TCPDeviceServer {
 public:
-	TCPDeviceServer(Beetle &beetle, int port);
+	TCPDeviceServer(Beetle &beetle, int port, bool discover);
 	virtual ~TCPDeviceServer();
 private:
 	Beetle &beetle;
 
 	bool running;
+	bool discover;
 
 	void serverDaemon(int port);
 	std::thread t;
+
+	void startTcpDeviceHelper(int clifd);
 };
 
 #endif /* SYNC_TCPSERVER_H_ */

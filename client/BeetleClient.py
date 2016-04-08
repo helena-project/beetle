@@ -44,7 +44,15 @@ def outputPrinter(s):
 		traceback.print_exc()
 		sys.exit(2)
 
+"""
+Send initial connection parameters.
+"""
+paramLength = bytearray(4)
+s.send(paramLength)
 
+"""
+Start the reader thread.
+"""
 thread.start_new_thread(outputPrinter, (s,))
 
 """

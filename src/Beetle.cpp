@@ -45,7 +45,8 @@ void resetHciHelper() {
 }
 
 int main(int argc, char *argv[]) {
-	int tcpPort = 5000; // default port
+	int tcpPort = 5000; 	// default port with discovery
+	int tcpPortNd = 5001;	// default port without discovery
 	bool scanningEnabled = true;
 	bool debugAll = false;
 	bool autoConnectAll = false;
@@ -55,16 +56,28 @@ int main(int argc, char *argv[]) {
 	po::options_description desc("Options");
 	desc.add_options()
 			("help,h", "")
-			("scan,s", po::value<bool>(&scanningEnabled), "Enable scanning for BLE devices (default: true")
-			("tcp-port", po::value<int>(&tcpPort), "Specify TCP server port (default: 5000)")
-			("auto-connect-all", po::value<bool>(&autoConnectAll), "Connect to all nearby BLE devices (default: false")
-			("reset-hci", po::value<bool>(&resetHci), "Set hci down/up at start-up (default: true")
-			("debug", po::value<bool>(&debug), "Enable general debugging (default: true)")
-			("debug-discovery", po::value<bool>(&debug_discovery), "Enable debugging for GATT discovery (default: false)")
-			("debug-scan", po::value<bool>(&debug_scan), "Enable debugging for BLE scanning (default: false)")
-			("debug-socket", po::value<bool>(&debug_socket), "Enable debugging for sockets (default: false)")
-			("debug-router", po::value<bool>(&debug_router), "Enable debugging for router (default: false)")
-			("debug-all", po::value<bool>(&debugAll), "Enable ALL debugging (default: false)");
+			("scan,s", po::value<bool>(&scanningEnabled),
+					"Enable scanning for BLE devices (default: true")
+			("tcp-port,p", po::value<int>(&tcpPort),
+					"Specify remote TCP server port (default: 5000)")
+			("tcp-port-nd,q", po::value<int>(&tcpPortNd),
+					"Specify remote TCP server port with no discovery (default: 5001)")
+			("debug,d", po::value<bool>(&debug),
+					"Enable general debugging (default: true)")
+			("auto-connect-all", po::value<bool>(&autoConnectAll),
+					"Connect to all nearby BLE devices (default: false")
+			("reset-hci", po::value<bool>(&resetHci),
+					"Set hci down/up at start-up (default: true")
+			("debug-discovery", po::value<bool>(&debug_discovery),
+					"Enable debugging for GATT discovery (default: false)")
+			("debug-scan", po::value<bool>(&debug_scan),
+					"Enable debugging for BLE scanning (default: false)")
+			("debug-socket", po::value<bool>(&debug_socket),
+					"Enable debugging for sockets (default: false)")
+			("debug-router", po::value<bool>(&debug_router),
+					"Enable debugging for router (default: false)")
+			("debug-all", po::value<bool>(&debugAll),
+					"Enable ALL debugging (default: false)");
 	po::variables_map vm;
 	try {
 		po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -91,7 +104,8 @@ int main(int argc, char *argv[]) {
 
 	try {
 		Beetle btl;
-		TCPDeviceServer tcpServer(btl, tcpPort);
+		TCPDeviceServer tcpServer(btl, tcpPort, true);
+		TCPDeviceServer tcpServerNd(btl, tcpPortNd, false);
 		AutoConnect autoConnect(btl, autoConnectAll);
 		CLI cli(btl);
 
@@ -142,7 +156,7 @@ void Beetle::removeDevice(device_t id) {
 		 */
 		assert(kv.first != id);
 		kv.second->unsubscribeAll(id);
-		if (!HandleAllocationTable::isNullRange(kv.second->hat->getDeviceRange(id))) {
+		if (!kv.second->hat->getDeviceRange(id).isNull()) {
 			beetleDevice->informServicesChanged(kv.second->hat->getDeviceRange(id), kv.first);
 		}
 	}
@@ -171,7 +185,7 @@ void Beetle::mapDevices(device_t from, device_t to) {
 			Device *toD = devices[to];
 
 			std::lock_guard<std::mutex> hatLg(toD->hatMutex);
-			if (!HandleAllocationTable::isNullRange(toD->hat->getDeviceRange(from))) {
+			if (!toD->hat->getDeviceRange(from).isNull()) {
 				std::stringstream ss;
 				ss << from << " is already mapped into " << to << "'s space";
 				pwarn(ss.str());
