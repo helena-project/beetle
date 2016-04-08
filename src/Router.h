@@ -31,6 +31,7 @@ private:
 	int routeReadByType(uint8_t *buf, int len, device_t src);
 	int routeHandleNotification(uint8_t *buf, int len, device_t src);
 	int routeReadWrite(uint8_t *buf, int len, device_t src);
+	int routeUnsupported(uint8_t *buf, int len, device_t src);
 };
 
 #endif /* ROUTER_H_ */

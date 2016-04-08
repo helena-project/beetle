@@ -61,14 +61,28 @@ int Router::route(uint8_t *buf, int len, device_t src) {
 		result = routeReadWrite(buf, len, src);
 		break;
 	default:
-		if (debug_router) {
-			pwarn("unimplemented command " + std::to_string(buf[0]));
-		}
-		result = -1;
+		result = routeUnsupported(buf, len, src);
 		break;
 	}
-
 	return result;
+}
+
+int Router::routeUnsupported(uint8_t *buf, int len, device_t src) {
+	if (debug_router) {
+		pwarn("unimplemented command " + std::to_string(buf[0]));
+	}
+
+	boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
+	if (beetle.devices.find(src) == beetle.devices.end()) {
+		pwarn(std::to_string(src) + " does not id a device");
+		return -1;
+	} else {
+		uint8_t *err;
+		int len = pack_error_pdu(buf[0], 0, ATT_ECODE_REQ_NOT_SUPP, err);
+		beetle.devices[src]->writeResponse(err, len);
+		delete[] err;
+		return 0;
+	}
 }
 
 int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
