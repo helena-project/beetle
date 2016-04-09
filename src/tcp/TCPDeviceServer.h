@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef SYNC_TCPSERVER_H_
-#define SYNC_TCPSERVER_H_
+#ifndef TCP_TCPDEVICESERVER_H_
+#define TCP_TCPDEVICESERVER_H_
 
 #include <exception>
 #include <string>
@@ -41,6 +41,8 @@ private:
 	std::thread t;
 
 	void startTcpDeviceHelper(int clifd);
+	bool readParamsHelper(int clifd, int paramsLength,
+			std::map<std::string,std::string> &params);
 };
 
-#endif /* SYNC_TCPSERVER_H_ */
+#endif /* TCP_TCPDEVICESERVER_H_ */

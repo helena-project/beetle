@@ -10,7 +10,7 @@
 
 #include "Device.h"
 
-// Extra debugging when routing.
+/* Extra debugging when routing. */
 extern bool debug_router;
 
 class Router {

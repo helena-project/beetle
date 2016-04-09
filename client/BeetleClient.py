@@ -12,6 +12,7 @@ import time
 import re
 import traceback
 import argparse
+import struct
 
 def getArguments():
 	"""
@@ -52,9 +53,31 @@ def outputPrinter(s):
 		print "Exception in output thread:", err
 		os.kill(os.getpid(), signal.SIGTERM)
 
+def readParams():
+	"""
+	Ask the user for params until done.
+	"""
+	print "Enter connection parameters (\"\" when done): 'param value'"
+	paramPattern = re.compile(r"^[^ ]+ .*$")
+	params = []
+	while True:
+		line = raw_input("# ")
+		line = line.strip()
+		if line == "":
+			break
+		elif paramPattern.match(line) is None:
+			print "not a valid parameter string: 'param value'"
+			continue
+		else:
+			params.append(line)
+	return "\n".join(params)
+
 # Send initial connection parameters. Just 0 for now.
-paramLength = bytearray(4)
-s.send(paramLength)
+params = readParams()
+
+paramsLength = struct.pack("!i", len(params))
+s.send(paramsLength.encode('utf-8'))
+s.send(params.encode('utf-8'))
 
 # Start the printer thread.
 outputThread = threading.Thread(target=outputPrinter, args=(s,))
