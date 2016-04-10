@@ -29,7 +29,8 @@ private:
 	int routeFindInfo(uint8_t *buf, int len, device_t src);
 	int routeFindByTypeValue(uint8_t *buf, int len, device_t src);
 	int routeReadByType(uint8_t *buf, int len, device_t src);
-	int routeHandleNotification(uint8_t *buf, int len, device_t src);
+	int routeReadByGroupType(uint8_t *buf, int len, device_t src);
+	int routeHandleNotifyOrIndicate(uint8_t *buf, int len, device_t src);
 	int routeReadWrite(uint8_t *buf, int len, device_t src);
 	int routeUnsupported(uint8_t *buf, int len, device_t src);
 };

@@ -12,7 +12,7 @@
 #include <thread>
 
 #include "Beetle.h"
-#include "device/BeetleDevice.h"
+#include "device/BeetleMetaDevice.h"
 #include "device/LEPeripheral.h"
 #include "Debug.h"
 #include "Device.h"

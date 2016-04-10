@@ -14,7 +14,7 @@
 
 class AutoConnect;
 class Device;
-class BeetleDevice;
+class BeetleMetaDevice;
 class Router;
 class HandleAllocationTable;
 class TCPDeviceServer;
@@ -59,7 +59,7 @@ public:
 	/*
 	 * Simulated device for Beetle's own services.
 	 */
-	BeetleDevice *beetleDevice;
+	BeetleMetaDevice *beetleDevice;
 
 	Router *router;
 };

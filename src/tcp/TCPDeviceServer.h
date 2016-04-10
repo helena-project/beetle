@@ -29,13 +29,12 @@ class ServerException : public std::exception {
  */
 class TCPDeviceServer {
 public:
-	TCPDeviceServer(Beetle &beetle, int port, bool discover);
+	TCPDeviceServer(Beetle &beetle, int port);
 	virtual ~TCPDeviceServer();
 private:
 	Beetle &beetle;
 
 	bool running;
-	bool discover;
 
 	void serverDaemon(int port);
 	std::thread t;

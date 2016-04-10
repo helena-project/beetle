@@ -22,7 +22,7 @@
  */
 class TCPConnection: public VirtualDevice {
 public:
-	TCPConnection(Beetle &beetle, int sockfd);
+	TCPConnection(Beetle &beetle, int sockfd, std::string name);
 	virtual ~TCPConnection();
 
 	int getMTU();

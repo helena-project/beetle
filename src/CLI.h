@@ -42,6 +42,7 @@ private:
 
 	void doScan(const std::vector<std::string>& cmd);
 	void doConnect(const std::vector<std::string>& cmd, bool discoverHandles);
+	void doRemote(const std::vector<std::string>& cmd);
 	void doDisconnect(const std::vector<std::string>& cmd);
 	void doMap(const std::vector<std::string>& cmd);
 	void doUnmap(const std::vector<std::string>& cmd);

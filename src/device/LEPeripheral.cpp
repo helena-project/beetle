@@ -126,7 +126,12 @@ void LEPeripheral::writeDaemon() {
 	while (!isStopped()) {
 		try {
 			queued_write_t qw = writeQueue.pop();
-			::write(sockfd, qw.buf, qw.len); // TODO check return values
+			if (write_all(sockfd, qw.buf, qw.len) != qw.len) {
+				if (!isStopped()) {
+					stop();
+					beetle.removeDevice(getId());
+				}
+			}
 			if (debug_socket) {
 				pdebug(getName() + " wrote " + std::to_string(qw.len) + " bytes");
 				pdebug(qw.buf, qw.len);

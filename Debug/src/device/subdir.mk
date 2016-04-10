@@ -4,20 +4,26 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/device/BeetleDevice.cpp \
+../src/device/BeetleMetaDevice.cpp \
 ../src/device/LEPeripheral.cpp \
+../src/device/RemoteClientProxy.cpp \
+../src/device/RemoteServerProxy.cpp \
 ../src/device/TCPConnection.cpp \
 ../src/device/VirtualDevice.cpp 
 
 OBJS += \
-./src/device/BeetleDevice.o \
+./src/device/BeetleMetaDevice.o \
 ./src/device/LEPeripheral.o \
+./src/device/RemoteClientProxy.o \
+./src/device/RemoteServerProxy.o \
 ./src/device/TCPConnection.o \
 ./src/device/VirtualDevice.o 
 
 CPP_DEPS += \
-./src/device/BeetleDevice.d \
+./src/device/BeetleMetaDevice.d \
 ./src/device/LEPeripheral.d \
+./src/device/RemoteClientProxy.d \
+./src/device/RemoteServerProxy.d \
 ./src/device/TCPConnection.d \
 ./src/device/VirtualDevice.d 
 

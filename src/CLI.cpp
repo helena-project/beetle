@@ -26,9 +26,12 @@
 #include <sstream>
 #include <stdexcept>
 #include <utility>
+#include <stdio.h>
+#include <unistd.h>
 
 #include "ble/helper.h"
 #include "device/LEPeripheral.h"
+#include "device/RemoteServerProxy.h"
 #include "Debug.h"
 #include "Device.h"
 #include "hat/HandleAllocationTable.h"
@@ -95,6 +98,8 @@ void CLI::cmdLineDaemon() {
 			doConnect(cmd, false);
 		} else if (c1 == "disconnect") {
 			doDisconnect(cmd);
+		} else if (c1 == "remote") {
+			doRemote(cmd);
 		} else if (c1 == "map") {
 			doMap(cmd);
 		} else if (c1 == "unmap") {
@@ -223,6 +228,58 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 			beetle.removeDevice(device->getId());
 		}
 	}
+}
+
+void CLI::doRemote(const std::vector<std::string>& cmd) {
+	if (cmd.size() != 3) {
+		printUsage("remote host:port remoteId");
+		return;
+	}
+
+	size_t colonIndex = cmd[1].find(':');
+	if (colonIndex == std::string::npos) {
+		printUsageError("invalid host:port pair");
+		return;
+	}
+	std::string host = cmd[1].substr(0, colonIndex);
+	int port;
+	try {
+		port = std::stoi(cmd[1].substr(colonIndex + 1, cmd[1].length()), NULL, 10);
+	} catch (std::invalid_argument &e) {
+		printUsageError("invalid port");
+		return;
+	}
+
+	device_t remoteId;
+	try {
+		remoteId = strtol(cmd[2].c_str(), NULL, 10);
+	} catch (std::invalid_argument &e) {
+		printUsageError("invalid remoteId");
+		return;
+	}
+
+	VirtualDevice* device = NULL;
+	try {
+		device = RemoteServerProxy::connectRemote(beetle, host, port, remoteId);
+		beetle.addDevice(device);
+
+		device->start();
+
+		printMessage("connected to " + std::to_string(device->getId())
+			+ " : " + device->getName());
+		if (debug) {
+			printMessage(device->getName() + " has handle range [0,"
+					+ std::to_string(device->getHighestHandle()) + "]");
+		}
+	} catch (DeviceException& e) {
+		std::cout << "caught exception: " << e.what() << std::endl;
+		printMessage("connection attempt failed: try again perhaps?");
+		if (device) {
+			beetle.removeDevice(device->getId());
+		}
+	}
+
+
 }
 
 void CLI::doDisconnect(const std::vector<std::string>& cmd) {

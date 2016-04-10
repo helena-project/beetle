@@ -5,8 +5,8 @@
  *      Author: root
  */
 
-#ifndef DEVICE_BEETLEDEVICE_H_
-#define DEVICE_BEETLEDEVICE_H_
+#ifndef DEVICE_BEETLEMETADEVICE_H_
+#define DEVICE_BEETLEMETADEVICE_H_
 
 #include <cstdint>
 #include <functional>
@@ -20,13 +20,13 @@
 /*
  * Fully synchronous simulated device for this Beetle.
  */
-class BeetleDevice: public Device {
+class BeetleMetaDevice: public Device {
 public:
 	/*
 	 * Initialize Beetle with name in its own handle space.
 	 */
-	BeetleDevice(Beetle &beetle, std::string name);
-	virtual ~BeetleDevice();
+	BeetleMetaDevice(Beetle &beetle, std::string name);
+	virtual ~BeetleMetaDevice();
 
 	int getMTU() { return ATT_DEFAULT_LE_MTU; };
 
@@ -52,4 +52,4 @@ private:
 	Handle *serviceChangedAttr;
 };
 
-#endif /* DEVICE_BEETLEDEVICE_H_ */
+#endif /* DEVICE_BEETLEMETADEVICE_H_ */

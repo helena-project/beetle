@@ -21,7 +21,7 @@
 #include "ble/att.h"
 #include "ble/gatt.h"
 #include "Beetle.h"
-#include "device/BeetleDevice.h"
+#include "device/BeetleMetaDevice.h"
 #include "hat/BlockAllocator.h"
 #include "hat/HandleAllocationTable.h"
 #include "Handle.h"

@@ -5,7 +5,7 @@
  *      Author: root
  */
 
-#include "BeetleDevice.h"
+#include "BeetleMetaDevice.h"
 
 #include <bluetooth/bluetooth.h>
 #include <boost/thread/lock_types.hpp>
@@ -21,28 +21,28 @@
 #include "../Handle.h"
 #include "../UUID.h"
 
-BeetleDevice::BeetleDevice(Beetle &beetle, std::string name_) : Device(beetle, BEETLE_RESERVED_DEVICE) {
+BeetleMetaDevice::BeetleMetaDevice(Beetle &beetle, std::string name_) : Device(beetle, BEETLE_RESERVED_DEVICE) {
 	name = name_;
 	type = "Beetle";
 	init();
 }
 
-BeetleDevice::~BeetleDevice() {
+BeetleMetaDevice::~BeetleMetaDevice() {
 
 }
 
-bool BeetleDevice::writeResponse(uint8_t *buf, int len) {
+bool BeetleMetaDevice::writeResponse(uint8_t *buf, int len) {
 	throw DeviceException(getName() + " does not make requests");
 }
 
-bool BeetleDevice::writeCommand(uint8_t *buf, int len) {
+bool BeetleMetaDevice::writeCommand(uint8_t *buf, int len) {
 	if (debug) {
 		pdebug("Beetle received an unanticipated command");
 	}
 	return true;
 }
 
-bool BeetleDevice::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
+bool BeetleMetaDevice::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
 	if (debug) {
 		pdebug("Beetle received an unanticipated request");
 	}
@@ -56,11 +56,11 @@ bool BeetleDevice::writeTransaction(uint8_t *buf, int len, std::function<void(ui
 /*
  * Should never get called. All reads and writes are serviced by the cache.
  */
-int BeetleDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp) {
+int BeetleMetaDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp) {
 	return pack_error_pdu(buf[0], 0, ATT_ECODE_UNLIKELY, resp); // TODO: probably not the right error code
 }
 
-void BeetleDevice::informServicesChanged(handle_range_t range, device_t dst) {
+void BeetleMetaDevice::informServicesChanged(handle_range_t range, device_t dst) {
 	if (debug) {
 		pdebug("informing " + std::to_string(dst) + " of service change " + range.str());
 	}
@@ -88,7 +88,7 @@ void BeetleDevice::informServicesChanged(handle_range_t range, device_t dst) {
 	}
 }
 
-void BeetleDevice::init() {
+void BeetleMetaDevice::init() {
 	std::lock_guard<std::recursive_mutex> lg(handlesMutex);
 	uint16_t handleAlloc = 1; // 0 is special
 

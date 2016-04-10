@@ -46,7 +46,10 @@ void VirtualDevice::start() {
 
 	startInternal();
 
-	name = discoverDeviceName(this);
+	if (name == "") {
+		name = discoverDeviceName(this);
+	}
+
 	std::map<uint16_t, Handle *> handlesTmp = discoverAllHandles(this);
 	std::lock_guard<std::recursive_mutex> lg(handlesMutex);
 	handles = handlesTmp;
@@ -194,6 +197,9 @@ void VirtualDevice::readHandler(uint8_t *buf, int len) {
 }
 
 static std::string discoverDeviceName(VirtualDevice *d) {
+	if (debug_discovery) {
+		pdebug("discovering name");
+	}
 	uint8_t *req = NULL;
 	uint8_t *resp = NULL;
 	std::string name;
@@ -298,6 +304,8 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 	*(uint16_t *)(req + 3) = htobs(endHandle);
 	*(uint16_t *)(req + 5) = htobs(GATT_CHARAC_UUID);
 
+	std::cout << "HERE 1 - " << startHandle << "," << endHandle << std::endl;
+
 	uint16_t currHandle = startHandle;
 	while (true) {
 		*(uint16_t *)(req + 1) = htobs(currHandle);
@@ -324,8 +332,9 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 			}
 			delete[] resp;
 
-			currHandle = handles.rbegin()->handle + 1;
-			if (currHandle == 0 || currHandle > endHandle) break;
+			uint16_t nextHandle = handles.rbegin()->handle + 1;
+			if (nextHandle <= currHandle || nextHandle >= endHandle) break;
+			currHandle = nextHandle;
 		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_TYPE_REQ
 				&& resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
 			delete[] resp;
@@ -416,6 +425,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 		serviceHandle->setCacheInfinite(true);
 		// let the handle inherit the pointer
 		serviceHandle->cache.set(service.value, service.len);
+		assert(handles.find(service.handle) == handles.end());
 		handles[service.handle] = serviceHandle;
 
 		std::vector<handle_value_t> characteristics = discoverCharacterisics(d,
@@ -432,6 +442,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 
 			// let the handle inherit the pointer
 			charHandle->cache.set(characteristic.value, characteristic.len);
+			assert(handles.find(characteristic.handle) == handles.end());
 			handles[characteristic.handle] = charHandle;
 
 			// save in case it is the last
@@ -459,6 +470,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 					handle->setCacheInfinite(false);
 					handle->setServiceHandle(serviceHandle->getHandle());
 					handle->setCharHandle(characteristic.handle);
+					assert(handles.find(handleInfo.handle) == handles.end());
 					handles[handleInfo.handle] = handle;
 				}
 			}
@@ -482,6 +494,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 				handle->setCacheInfinite(false);
 				handle->setServiceHandle(serviceHandle->getHandle());
 				handle->setCharHandle(characteristic.handle);
+				assert(handles.find(handleInfo.handle) == handles.end());
 				handles[handleInfo.handle] = handle;
 			}
 		}

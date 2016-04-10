@@ -13,12 +13,12 @@
 #include <cstdio>
 #include <cstring>
 
+#include "../device/RemoteClientProxy.h"
 #include "../device/TCPConnection.h"
 #include "../Debug.h"
 
-TCPDeviceServer::TCPDeviceServer(Beetle &beetle, int port, bool discover_) : beetle(beetle) {
+TCPDeviceServer::TCPDeviceServer(Beetle &beetle, int port) : beetle(beetle) {
 	running = true;
-	discover = discover_;
 	t = std::thread(&TCPDeviceServer::serverDaemon, this, port);
 }
 
@@ -28,7 +28,7 @@ TCPDeviceServer::~TCPDeviceServer() {
 }
 
 void TCPDeviceServer::serverDaemon(int port) {
-	if (debug) pdebug("resource serverDaemon started on port " + std::to_string(port));
+	if (debug) pdebug("tcp serverDaemon started on port " + std::to_string(port));
 
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -59,7 +59,7 @@ void TCPDeviceServer::serverDaemon(int port) {
 		startTcpDeviceHelper(clifd);
 	}
 	close(sockfd);
-	if (debug) pdebug("resource serverDaemon exited");
+	if (debug) pdebug("tcp serverDaemon exited");
 }
 
 bool TCPDeviceServer::readParamsHelper(int clifd, int paramsLen,
@@ -159,11 +159,17 @@ void TCPDeviceServer::startTcpDeviceHelper(int clifd) {
 		/*
 		 * Takes over the clifd
 		 */
-		device = new TCPConnection(beetle, clifd);
+		if (params.find("client") == params.end()) {
+			device = new TCPConnection(beetle, clifd, params["name"]);
+		} else {
+			std::string client = params["client"];
+			device_t deviceId = strtol(params["device"].c_str(), NULL, 10);
+			device = new RemoteClientProxy(beetle, clifd, client, deviceId);
+		}
 
 		beetle.addDevice(device);
 
-		if (discover) {
+		if (params["server"] == "true") {
 			device->start();
 		} else {
 			device->startNd();
@@ -174,7 +180,7 @@ void TCPDeviceServer::startTcpDeviceHelper(int clifd) {
 			pdebug(device->getName() + " has handle range [0,"
 					+ std::to_string(device->getHighestHandle()) + "]");
 		}
-	} catch (DeviceException& e) {
+	} catch (std::exception& e) {
 		std::cout << "caught exception: " << e.what() << std::endl;
 		if (device) {
 			beetle.removeDevice(device->getId());

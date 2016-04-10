@@ -19,9 +19,10 @@
 #include "../Debug.h"
 #include "../Device.h"
 
-TCPConnection::TCPConnection(Beetle &beetle, int sockfd_) :
+TCPConnection::TCPConnection(Beetle &beetle, int sockfd_, std::string name_) :
 VirtualDevice(beetle), readThread(), writeThread() {
 	type = "TCPConnection";
+	name = name_;
 	sockfd = sockfd_;
 }
 
@@ -126,8 +127,12 @@ void TCPConnection::writeDaemon() {
 		try {
 			queued_write_t qw = writeQueue.pop();
 			uint8_t len = (uint8_t) qw.len;
-			::write(sockfd, &len, 1); // TODO check return values
-			::write(sockfd, qw.buf, qw.len);
+			if (write_all(sockfd, &len, 1) != 1 || write_all(sockfd, qw.buf, qw.len) != qw.len) {
+				if (!isStopped()) {
+					stop();
+					beetle.removeDevice(getId());
+				}
+			}
 			if (debug_socket) {
 				pdebug(getName() + " wrote " + std::to_string(qw.len) + " bytes");
 				pdebug(qw.buf, qw.len);

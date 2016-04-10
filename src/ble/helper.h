@@ -66,6 +66,17 @@ inline bool parse_read_by_type_value_request(uint8_t *buf, int len, uint16_t &st
 	return true;
 }
 
+inline bool parse_read_by_group_type_request(uint8_t *buf, int len, uint16_t &startHandle,
+		uint16_t &endHandle, UUID *&uuid) {
+	if (len != 7 && len != 21) {
+		return false;
+	}
+	startHandle = btohs(*(uint16_t *)(buf + 1));
+	endHandle = btohs(*(uint16_t *)(buf + 3));
+	uuid = new UUID(buf + 5, len - 5);
+	return true;
+}
+
 inline std::string ba2str_cpp(bdaddr_t bdaddr) {
 	char addr_c_str[20];
 	ba2str(&bdaddr, addr_c_str);

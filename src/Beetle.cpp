@@ -15,7 +15,7 @@
 
 #include "AutoConnect.h"
 #include "CLI.h"
-#include "device/BeetleDevice.h"
+#include "device/BeetleMetaDevice.h"
 #include "Debug.h"
 #include "Device.h"
 #include "hat/BlockAllocator.h"
@@ -45,8 +45,7 @@ void resetHciHelper() {
 }
 
 int main(int argc, char *argv[]) {
-	int tcpPort = 5000; 	// default port with discovery
-	int tcpPortNd = 5001;	// default port without discovery
+	int tcpPort = 5000;
 	bool scanningEnabled = true;
 	bool debugAll = false;
 	bool autoConnectAll = false;
@@ -60,8 +59,6 @@ int main(int argc, char *argv[]) {
 					"Enable scanning for BLE devices (default: true")
 			("tcp-port,p", po::value<int>(&tcpPort),
 					"Specify remote TCP server port (default: 5000)")
-			("tcp-port-nd,q", po::value<int>(&tcpPortNd),
-					"Specify remote TCP server port with no discovery (default: 5001)")
 			("debug,d", po::value<bool>(&debug),
 					"Enable general debugging (default: true)")
 			("auto-connect-all", po::value<bool>(&autoConnectAll),
@@ -104,8 +101,7 @@ int main(int argc, char *argv[]) {
 
 	try {
 		Beetle btl;
-		TCPDeviceServer tcpServer(btl, tcpPort, true);
-		TCPDeviceServer tcpServerNd(btl, tcpPortNd, false);
+		TCPDeviceServer tcpServer(btl, tcpPort);
 		AutoConnect autoConnect(btl, autoConnectAll);
 		CLI cli(btl);
 
@@ -128,7 +124,7 @@ int main(int argc, char *argv[]) {
 
 Beetle::Beetle() {
 	router = new Router(*this);
-	beetleDevice = new BeetleDevice(*this, "Beetle");
+	beetleDevice = new BeetleMetaDevice(*this, "Beetle");
 	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
 }
 
