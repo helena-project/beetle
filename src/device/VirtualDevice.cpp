@@ -309,8 +309,6 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 	*(uint16_t *)(req + 3) = htobs(endHandle);
 	*(uint16_t *)(req + 5) = htobs(GATT_CHARAC_UUID);
 
-	std::cout << "HERE 1 - " << startHandle << "," << endHandle << std::endl;
-
 	uint16_t currHandle = startHandle;
 	while (true) {
 		*(uint16_t *)(req + 1) = htobs(currHandle);
