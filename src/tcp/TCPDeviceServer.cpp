@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <utility>
 
@@ -109,7 +110,7 @@ bool TCPDeviceServer::readParamsHelper(int clifd, int paramsLen,
 	}
 
 	if (lineIndex != 0) {
-		lineBuffer[lineIndex + 1] = '\0';
+		lineBuffer[lineIndex] = '\0';
 		std::string line = std::string(lineBuffer);
 		size_t splitIdx = line.find(' ');
 		if (splitIdx == std::string::npos) {
@@ -160,7 +161,7 @@ void TCPDeviceServer::startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr
 		 * Takes over the clifd
 		 */
 		if (params.find(TCP_PARAM_GATEWAY) == params.end()) {
-			device = new TCPConnection(beetle, clifd, params[TCP_PARAM_CLIENT]);
+			device = new TCPConnection(beetle, clifd, params[TCP_PARAM_CLIENT], cliaddr);
 		} else {
 			// name of the client gateway
 			std::string client = params[TCP_PARAM_GATEWAY];

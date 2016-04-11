@@ -7,12 +7,15 @@
 
 #include "CLI.h"
 
+#include <arpa/inet.h>
 #include <bluetooth/bluetooth.h>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <boost/token_functions.hpp>
 #include <boost/tokenizer.hpp>
+#include <netinet/in.h>
+#include <stddef.h>
 #include <algorithm>
 #include <cassert>
 #include <cctype>
@@ -26,11 +29,10 @@
 #include <sstream>
 #include <stdexcept>
 #include <utility>
-#include <stdio.h>
-#include <unistd.h>
 
 #include "ble/helper.h"
 #include "device/LEPeripheral.h"
+#include "device/RemoteClientProxy.h"
 #include "device/RemoteServerProxy.h"
 #include "Debug.h"
 #include "Device.h"
@@ -114,6 +116,8 @@ void CLI::cmdLineDaemon() {
 			doToggleDebug(cmd);
 		} else if (c1 == "q" || c1 == "quit") {
 			exit(0);
+		} else if (c1 == "name") {
+			printMessage(beetle.name);
 		} else {
 			printMessage("unknown command");
 		}
@@ -341,14 +345,38 @@ void CLI::doListDevices(const std::vector<std::string>& cmd) {
 		boost::shared_lock<boost::shared_mutex> lg(beetle.devicesMutex);
 		if (beetle.devices.size() == 0) {
 			printMessage("no devices connected");
-		} else {
-			for (auto &kv : beetle.devices) {
-				Device *d = kv.second;
-				printMessage(d->getName());
-				printMessage("  id : " + std::to_string(d->getId()));
-				printMessage("  type : " + d->getType());
-				printMessage("  mtu : " + std::to_string(d->getMTU()));
-				printMessage("  highestHandle : " + std::to_string(d->getHighestHandle()));
+			return;
+		}
+
+		for (auto &kv : beetle.devices) {
+			Device *d = kv.second;
+			printMessage(d->getName());
+			printMessage("  id : " + std::to_string(d->getId()));
+			printMessage("  type : " + d->getType());
+			printMessage("  mtu : " + std::to_string(d->getMTU()));
+			printMessage("  highestHandle : " + std::to_string(d->getHighestHandle()));
+
+			LEPeripheral *le =  dynamic_cast<LEPeripheral *>(d);
+			if (le) {
+				printMessage("  deviceAddr : " + ba2str_cpp(le->getBdaddr()));
+				printMessage("  addrType : " + (le->getAddrType() == PUBLIC) ? "public" : "random");
+			}
+
+			TCPConnection *tcp = dynamic_cast<TCPConnection *>(d);
+			if (tcp) {
+				struct sockaddr_in sockaddr = tcp->getSockaddr();
+				printMessage("  addr : " + std::string(inet_ntoa(sockaddr.sin_addr)));
+				printMessage("  port : " + std::to_string(sockaddr.sin_port));
+			}
+
+			RemoteClientProxy *rcp = dynamic_cast<RemoteClientProxy *>(d);
+			if (rcp) {
+				printMessage("  client-gateway : " + rcp->getClientGateway());
+			}
+
+			RemoteServerProxy *rsp = dynamic_cast<RemoteServerProxy *>(d);
+			if (rsp) {
+				printMessage("  server-gateway : " + rsp->getServerGateway());
 			}
 		}
 	}

@@ -21,10 +21,9 @@
 
 RemoteServerProxy::RemoteServerProxy(Beetle &beetle, int sockfd, std::string serverGateway_,
 		struct sockaddr_in serverGatewaySockAddr_, device_t remoteProxyTo_)
-: TCPConnection(beetle, sockfd, "") {
+: TCPConnection(beetle, sockfd, "", serverGatewaySockAddr_) {
 	type = "ServerTCPProxy";
 
-	serverGatewaySockAddr = serverGatewaySockAddr_;
 	serverGateway = serverGateway_;
 
 	/*

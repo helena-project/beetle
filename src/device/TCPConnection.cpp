@@ -19,11 +19,12 @@
 #include "../Debug.h"
 #include "../Device.h"
 
-TCPConnection::TCPConnection(Beetle &beetle, int sockfd_, std::string name_) :
-VirtualDevice(beetle), readThread(), writeThread() {
+TCPConnection::TCPConnection(Beetle &beetle, int sockfd_, std::string name_,
+		struct sockaddr_in sockaddr_) : VirtualDevice(beetle), readThread(), writeThread() {
 	type = "TCPConnection";
 	name = name_;
 	sockfd = sockfd_;
+	sockaddr = sockaddr_;
 }
 
 TCPConnection::~TCPConnection() {
@@ -149,4 +150,7 @@ int TCPConnection::getMTU() {
 	return ATT_DEFAULT_LE_MTU;
 }
 
+struct sockaddr_in TCPConnection::getSockaddr() {
+	return sockaddr;
+}
 

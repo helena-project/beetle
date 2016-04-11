@@ -8,7 +8,6 @@
 #ifndef DEVICE_REMOTECLIENTPROXY_H_
 #define DEVICE_REMOTECLIENTPROXY_H_
 
-#include <netinet/in.h>
 #include <string>
 
 #include "../Beetle.h"
@@ -25,12 +24,10 @@ public:
 
 	device_t getLocalDeviceId() { return localProxyFor; };
 	std::string getClientGateway() { return	clientGateway; };
-	struct sockaddr_in getServerGatewaySockAddr() {	return clientGatewaySockAddr; };
 
 private:
 	device_t localProxyFor;
 	std::string clientGateway;
-	struct sockaddr_in clientGatewaySockAddr;
 };
 
 #endif /* DEVICE_REMOTECLIENTPROXY_H_ */

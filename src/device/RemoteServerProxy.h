@@ -8,7 +8,6 @@
 #ifndef BLE_REMOTESERVERPROXY_H_
 #define BLE_REMOTESERVERPROXY_H_
 
-#include <netinet/in.h>
 #include <string>
 
 #include "../Beetle.h"
@@ -25,14 +24,12 @@ public:
 
 	device_t getRemoteDeviceId() { return remoteProxyTo; };
 	std::string getServerGateway() { return	serverGateway; };
-	struct sockaddr_in getServerGatewaySockAddr() {	return serverGatewaySockAddr; };
 
 	static RemoteServerProxy *connectRemote(Beetle &beetle, std::string server,
 			int port, device_t remoteProxyTo_);
 private:
 	device_t remoteProxyTo;
 	std::string serverGateway;
-	struct sockaddr_in serverGatewaySockAddr;
 };
 
 

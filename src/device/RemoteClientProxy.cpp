@@ -9,6 +9,7 @@
 
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
+#include <netinet/in.h>
 #include <map>
 
 #include "../Device.h"
@@ -16,7 +17,7 @@
 
 RemoteClientProxy::RemoteClientProxy(Beetle &beetle, int sockfd, std::string clientGateway_,
 		struct sockaddr_in clientGatewaySockAddr_, device_t localProxyFor_)
-: TCPConnection(beetle, sockfd, "") {
+: TCPConnection(beetle, sockfd, "", clientGatewaySockAddr_) {
 	/*
 	 * Make sure the device exists locally.
 	 */
@@ -28,7 +29,6 @@ RemoteClientProxy::RemoteClientProxy(Beetle &beetle, int sockfd, std::string cli
 	name = "Proxy for " +  std::to_string(localProxyFor_) + " to " + clientGateway_;
 	type = "ClientTCPProxy";
 	clientGateway = clientGateway_;
-	clientGatewaySockAddr = clientGatewaySockAddr_;
 
 	/*
 	 * TODO: Not happy about this. Base class makes a hat...

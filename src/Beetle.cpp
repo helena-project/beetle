@@ -44,13 +44,19 @@ void resetHciHelper() {
 	assert(system(command.c_str()) == 0);
 }
 
+std::string getDefaultName() {
+	char name[100];
+	assert(gethostname(name, sizeof(name)) == 0);
+	return "beetle@" + std::string(name);
+}
+
 int main(int argc, char *argv[]) {
 	int tcpPort = 5000;
 	bool scanningEnabled = true;
 	bool debugAll = false;
 	bool autoConnectAll = false;
 	bool resetHci = true;
-	std::string name = "Beetle";
+	std::string name = "";
 
 	namespace po = boost::program_options;
 	po::options_description desc("Options");
@@ -101,6 +107,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (resetHci) resetHciHelper();
+	if (name == "") {
+		name = getDefaultName();
+	}
 
 	try {
 		Beetle btl(name);
