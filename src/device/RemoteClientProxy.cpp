@@ -7,18 +7,36 @@
 
 #include "RemoteClientProxy.h"
 
-#include <string>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/pthread/shared_mutex.hpp>
+#include <map>
 
-#include "../Beetle.h"
+#include "../Device.h"
 #include "../hat/SingleAllocator.h"
 
-RemoteClientProxy::RemoteClientProxy(Beetle &beetle, int sockfd, std::string client,
-		device_t proxyFor_) : TCPConnection(beetle, sockfd, "") {
-	name = client + "-" + std::to_string(proxyFor_);
+RemoteClientProxy::RemoteClientProxy(Beetle &beetle, int sockfd, std::string clientGateway_,
+		struct sockaddr_in clientGatewaySockAddr_, device_t localProxyFor_)
+: TCPConnection(beetle, sockfd, "") {
+	/*
+	 * Make sure the device exists locally.
+	 */
+	boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
+	if (beetle.devices.find(localProxyFor_) == beetle.devices.end()) {
+		throw new DeviceException("no device for " + std::to_string(localProxyFor_));
+	}
+
+	name = "Proxy for " +  std::to_string(localProxyFor_) + " to " + clientGateway_;
 	type = "ClientTCPProxy";
+	clientGateway = clientGateway_;
+	clientGatewaySockAddr = clientGatewaySockAddr_;
+
+	/*
+	 * TODO: Not happy about this. Base class makes a hat...
+	 */
 	delete hat;
-	hat = new SingleAllocator(proxyFor_);
-	proxyFor = proxyFor_;
+	hat = new SingleAllocator(localProxyFor_);
+
+	localProxyFor = localProxyFor_;
 }
 
 RemoteClientProxy::~RemoteClientProxy() {

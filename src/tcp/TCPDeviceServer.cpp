@@ -8,14 +8,17 @@
 #include "TCPDeviceServer.h"
 
 #include <netinet/in.h>
+#include <stddef.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <cstdio>
-#include <cstring>
+#include <cstdint>
+#include <iostream>
+#include <utility>
 
 #include "../device/RemoteClientProxy.h"
-#include "../device/TCPConnection.h"
 #include "../Debug.h"
+#include "../Device.h"
+#include "ConnParams.h"
 
 TCPDeviceServer::TCPDeviceServer(Beetle &beetle, int port) : beetle(beetle) {
 	running = true;
@@ -56,7 +59,7 @@ void TCPDeviceServer::serverDaemon(int port) {
 			continue;
 		}
 
-		startTcpDeviceHelper(clifd);
+		startTcpDeviceHelper(clifd, client_addr);
 	}
 	close(sockfd);
 	if (debug) pdebug("tcp serverDaemon exited");
@@ -122,7 +125,7 @@ bool TCPDeviceServer::readParamsHelper(int clifd, int paramsLen,
 	return true;
 }
 
-void TCPDeviceServer::startTcpDeviceHelper(int clifd) {
+void TCPDeviceServer::startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr) {
 	uint32_t paramsLen;
 	if (read(clifd, &paramsLen, sizeof(uint32_t)) != sizeof(uint32_t)) {
 		if (debug) {
@@ -144,9 +147,6 @@ void TCPDeviceServer::startTcpDeviceHelper(int clifd) {
 		return;
 	}
 
-	/*
-	 * TODO: do something with the params
-	 */
 	if (debug) {
 		for (auto &kv : params) {
 			pdebug("parsed param (" + kv.first + "," + kv.second + ")");
@@ -159,17 +159,19 @@ void TCPDeviceServer::startTcpDeviceHelper(int clifd) {
 		/*
 		 * Takes over the clifd
 		 */
-		if (params.find("client") == params.end()) {
-			device = new TCPConnection(beetle, clifd, params["name"]);
+		if (params.find(TCP_PARAM_GATEWAY) == params.end()) {
+			device = new TCPConnection(beetle, clifd, params[TCP_PARAM_CLIENT]);
 		} else {
-			std::string client = params["client"];
-			device_t deviceId = strtol(params["device"].c_str(), NULL, 10);
-			device = new RemoteClientProxy(beetle, clifd, client, deviceId);
+			// name of the client gateway
+			std::string client = params[TCP_PARAM_GATEWAY];
+			// device that the client is requesting
+			device_t deviceId = std::stol(params[TCP_PARAM_DEVICE]);
+			device = new RemoteClientProxy(beetle, clifd, client, cliaddr, deviceId);
 		}
 
 		beetle.addDevice(device);
 
-		if (params["server"] == "true") {
+		if (params[TCP_PARAM_SERVER] == "true") {
 			device->start();
 		} else {
 			device->startNd();

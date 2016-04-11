@@ -42,6 +42,6 @@ handle_range_t SingleAllocator::reserve(device_t d, int n) {
 }
 
 handle_range_t SingleAllocator::free(device_t d) {
-	id = NULL_RESERVED_DEVICE;
+	if (d == id) id = NULL_RESERVED_DEVICE;
 	return handle_range_t{0,0};
 }

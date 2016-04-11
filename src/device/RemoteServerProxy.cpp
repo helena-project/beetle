@@ -8,26 +8,32 @@
 #include "RemoteServerProxy.h"
 
 #include <netdb.h>
-#include <netinet/in.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cstdint>
 #include <sstream>
-#include <string>
 
-#include "../Beetle.h"
 #include "../Device.h"
 #include "../hat/SingleAllocator.h"
+#include "../tcp/ConnParams.h"
 #include "shared.h"
 
-RemoteServerProxy::RemoteServerProxy(Beetle &beetle, int sockfd, std::string server,
-		device_t proxyTo_) : TCPConnection(beetle, sockfd, "") {
-	name = server + "-" + std::to_string(proxyTo_);
+RemoteServerProxy::RemoteServerProxy(Beetle &beetle, int sockfd, std::string serverGateway_,
+		struct sockaddr_in serverGatewaySockAddr_, device_t remoteProxyTo_)
+: TCPConnection(beetle, sockfd, "") {
 	type = "ServerTCPProxy";
+
+	serverGatewaySockAddr = serverGatewaySockAddr_;
+	serverGateway = serverGateway_;
+
+	/*
+	 * TODO: Not happy about this. Base class makes a hat...
+	 */
 	delete hat;
-	hat = new SingleAllocator(proxyTo_);
-	proxyTo = proxyTo_;
+	hat = new SingleAllocator(NULL_RESERVED_DEVICE);
+
+	remoteProxyTo = remoteProxyTo_;
 }
 
 RemoteServerProxy::~RemoteServerProxy() {
@@ -35,7 +41,7 @@ RemoteServerProxy::~RemoteServerProxy() {
 }
 
 RemoteServerProxy *RemoteServerProxy::connectRemote(Beetle &beetle, std::string host,
-		int port, device_t proxyTo) {
+		int port, device_t remoteProxyTo) {
 	struct hostent *server;
 	server = gethostbyname(host.c_str());
 	if (server == NULL) {
@@ -59,8 +65,12 @@ RemoteServerProxy *RemoteServerProxy::connectRemote(Beetle &beetle, std::string 
     	throw DeviceException("error connecting");
     }
 
+    /*
+     * Format the plaintext parameters.
+     */
     std::stringstream ss;
-    ss << "client " << "beetle" << "\n" << "device " << proxyTo;
+    ss << TCP_PARAM_GATEWAY << " " << beetle.name << "\n"
+    		<< TCP_PARAM_DEVICE << " " << std::to_string(remoteProxyTo);
 
     std::string params = ss.str();
     uint32_t paramsLength = htonl(params.length());
@@ -71,9 +81,9 @@ RemoteServerProxy *RemoteServerProxy::connectRemote(Beetle &beetle, std::string 
 
     if (write_all(sockfd, (uint8_t *)params.c_str(), params.length()) == false) {
     	close(sockfd);
-    	throw DeviceException("could not write params length");
+    	throw DeviceException("could not write all the params");
     }
 
-    return new RemoteServerProxy(beetle, sockfd, host, proxyTo);
+    return new RemoteServerProxy(beetle, sockfd, host, serv_addr, remoteProxyTo);
 }
 

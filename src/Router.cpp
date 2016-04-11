@@ -418,7 +418,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 			}
 
 			Handle *handle = kv.second;
-			if (memcmp(handle->getUuid().get().value, attType->get().value, sizeof(uuid_t)) == 0) {
+			if (handle->getUuid().compareTo(*attType)) {
 				*(uint16_t*)(resp + 2) = htobs(handle->getHandle());
 				memcpy(resp + 4, handle->cache.value, handle->cache.len);
 				respLen += 2 + handle->cache.len;
@@ -589,7 +589,7 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 				// TODO this allows 16bit handles only
 				Handle *handle = mapping.second;
 
-				if (memcmp(handle->getUuid().get().value, attType->get().value, sizeof(uuid_t)) == 0) {
+				if (handle->getUuid().compareTo(*attType)) {
 					if (respHandleCount == 0) { // set the length
 						resp[1] = 4 + handle->cache.len;
 					} else {
@@ -795,7 +795,8 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 			sourceDevice->writeResponse(&resp, 1);
 		}
 	} else if (opCode == ATT_OP_READ_REQ && proxyH->cache.value != NULL
-			&& proxyH->cache.cachedSet.find(src) == proxyH->cache.cachedSet.end()
+			&& (dst == BEETLE_RESERVED_DEVICE
+					|| proxyH->cache.cachedSet.find(src) == proxyH->cache.cachedSet.end())
 			&& proxyH->isCacheInfinite()) {
 		/*
 		 * Serve read from cache
@@ -833,13 +834,22 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 					delete[] err;
 				} else {
 					if (resp[0] == ATT_OP_READ_RESP) {
-						std::lock_guard<std::recursive_mutex> handlesLg(beetle.devices[dst]->handlesMutex);
-						Handle *proxyH = beetle.devices[dst]->handles[remoteHandle];
-						proxyH->cache.cachedSet.clear();
-						int tmpLen = respLen - 1;
-						uint8_t *tmpVal = new uint8_t[respLen - 1];
-						memcpy(proxyH->cache.value, resp, respLen - 1);
-						proxyH->cache.set(tmpVal, tmpLen);
+						if (beetle.devices.find(dst) == beetle.devices.end()) {
+							pwarn(std::to_string(dst) + " does not id a device");
+						} else {
+							Device *destinationDevice = beetle.devices[dst];
+							std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
+							Handle *proxyH = destinationDevice->handles[remoteHandle];
+							proxyH->cache.cachedSet.clear();
+							int tmpLen = respLen - 1;
+							uint8_t *tmpVal = new uint8_t[respLen - 1];
+							memcpy(tmpVal, resp, respLen - 1);
+							/*
+							 * Cache takes over the pointer
+							 */
+							proxyH->cache.set(tmpVal, tmpLen);
+							proxyH->cache.cachedSet.insert(src);
+						}
 					}
 					beetle.devices[src]->writeResponse(resp, respLen);
 				}

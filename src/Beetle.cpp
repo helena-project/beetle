@@ -50,11 +50,14 @@ int main(int argc, char *argv[]) {
 	bool debugAll = false;
 	bool autoConnectAll = false;
 	bool resetHci = true;
+	std::string name = "Beetle";
 
 	namespace po = boost::program_options;
 	po::options_description desc("Options");
 	desc.add_options()
 			("help,h", "")
+			("name,n", po::value<std::string>(&name),
+					"Name this Beetle gateway (default: Beetle)")
 			("scan,s", po::value<bool>(&scanningEnabled),
 					"Enable scanning for BLE devices (default: true")
 			("tcp-port,p", po::value<int>(&tcpPort),
@@ -100,7 +103,7 @@ int main(int argc, char *argv[]) {
 	if (resetHci) resetHciHelper();
 
 	try {
-		Beetle btl;
+		Beetle btl(name);
 		TCPDeviceServer tcpServer(btl, tcpPort);
 		AutoConnect autoConnect(btl, autoConnectAll);
 		CLI cli(btl);
@@ -122,10 +125,11 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-Beetle::Beetle() {
+Beetle::Beetle(std::string name_) {
 	router = new Router(*this);
-	beetleDevice = new BeetleMetaDevice(*this, "Beetle");
+	beetleDevice = new BeetleMetaDevice(*this, name_);
 	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
+	name = name_;
 }
 
 Beetle::~Beetle() {

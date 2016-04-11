@@ -78,3 +78,7 @@ std::string UUID::str() {
 	}
 	return ss.str();
 }
+
+bool UUID::compareTo(UUID &other) {
+	return memcmp(uuid.value, other.get().value, sizeof(uuid_t)) == 0;
+}

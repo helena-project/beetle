@@ -55,6 +55,11 @@ public:
 	 */
 	bool isShort();
 
+	/*
+	 * Are they the same uuid?
+	 */
+	bool compareTo(UUID &other);
+
 	std::string str();
 private:
 	uuid_t uuid;

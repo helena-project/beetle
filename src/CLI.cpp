@@ -242,19 +242,14 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 		return;
 	}
 	std::string host = cmd[1].substr(0, colonIndex);
-	int port;
-	try {
-		port = std::stoi(cmd[1].substr(colonIndex + 1, cmd[1].length()), NULL, 10);
-	} catch (std::invalid_argument &e) {
-		printUsageError("invalid port");
-		return;
-	}
 
+	int port;
 	device_t remoteId;
 	try {
-		remoteId = strtol(cmd[2].c_str(), NULL, 10);
+		port = std::stoi(cmd[1].substr(colonIndex + 1, cmd[1].length()));
+		remoteId = std::stol(cmd[2]);
 	} catch (std::invalid_argument &e) {
-		printUsageError("invalid remoteId");
+		printUsageError("invalid port or remoteId");
 		return;
 	}
 
@@ -265,7 +260,7 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 
 		device->start();
 
-		printMessage("connected to " + std::to_string(device->getId())
+		printMessage("connected to remote " + std::to_string(device->getId())
 			+ " : " + device->getName());
 		if (debug) {
 			printMessage(device->getName() + " has handle range [0,"
@@ -273,7 +268,7 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 		}
 	} catch (DeviceException& e) {
 		std::cout << "caught exception: " << e.what() << std::endl;
-		printMessage("connection attempt failed: try again perhaps?");
+		printMessage("remote connection attempt failed: try again perhaps?");
 		if (device) {
 			beetle.removeDevice(device->getId());
 		}

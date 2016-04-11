@@ -25,7 +25,7 @@ const device_t NULL_RESERVED_DEVICE = -1;
 
 class Beetle {
 public:
-	Beetle();
+	Beetle(std::string name);
 	virtual ~Beetle();
 
 	/*
@@ -53,8 +53,10 @@ public:
 	std::map<device_t, Device *> devices;
 	boost::shared_mutex devicesMutex;
 
-//	HandleAllocationTable *hat;
-//	boost::shared_mutex hatMutex;
+	/*
+	 * Name this Beetle instance
+	 */
+	std::string name;
 
 	/*
 	 * Simulated device for Beetle's own services.
@@ -62,6 +64,8 @@ public:
 	BeetleMetaDevice *beetleDevice;
 
 	Router *router;
+
+
 };
 
 #endif /* BEETLE_H_ */

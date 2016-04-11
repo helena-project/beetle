@@ -8,8 +8,6 @@
 #include "BeetleMetaDevice.h"
 
 #include <bluetooth/bluetooth.h>
-#include <boost/thread/lock_types.hpp>
-#include <boost/thread/pthread/shared_mutex.hpp>
 #include <cstring>
 #include <map>
 #include <mutex>
@@ -18,6 +16,7 @@
 #include "../ble/gatt.h"
 #include "../ble/helper.h"
 #include "../Debug.h"
+#include "../hat/SingleAllocator.h"
 #include "../Handle.h"
 #include "../UUID.h"
 
@@ -25,6 +24,12 @@ BeetleMetaDevice::BeetleMetaDevice(Beetle &beetle, std::string name_) : Device(b
 	name = name_;
 	type = "Beetle";
 	init();
+
+	/*
+	 * TODO: Again, not pretty. BeetleMetaDevice is a client to none.
+	 */
+	delete hat;
+	hat = new SingleAllocator(NULL_RESERVED_DEVICE);
 }
 
 BeetleMetaDevice::~BeetleMetaDevice() {
@@ -37,14 +42,14 @@ bool BeetleMetaDevice::writeResponse(uint8_t *buf, int len) {
 
 bool BeetleMetaDevice::writeCommand(uint8_t *buf, int len) {
 	if (debug) {
-		pdebug("Beetle received an unanticipated command");
+		pwarn("Beetle received an unanticipated command");
 	}
 	return true;
 }
 
 bool BeetleMetaDevice::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
 	if (debug) {
-		pdebug("Beetle received an unanticipated request");
+		pwarn("Beetle received an unanticipated request");
 	}
 	uint8_t *resp;
 	int respLen = writeTransactionBlocking(buf, len, resp);
@@ -57,6 +62,9 @@ bool BeetleMetaDevice::writeTransaction(uint8_t *buf, int len, std::function<voi
  * Should never get called. All reads and writes are serviced by the cache.
  */
 int BeetleMetaDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp) {
+	if (debug) {
+		pwarn("Beetle received an unanticipated request");
+	}
 	return pack_error_pdu(buf[0], 0, ATT_ECODE_UNLIKELY, resp); // TODO: probably not the right error code
 }
 

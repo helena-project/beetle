@@ -9,6 +9,7 @@
 #define TCP_TCPDEVICESERVER_H_
 
 #include <exception>
+#include <map>
 #include <string>
 #include <thread>
 
@@ -39,7 +40,7 @@ private:
 	void serverDaemon(int port);
 	std::thread t;
 
-	void startTcpDeviceHelper(int clifd);
+	void startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr);
 	bool readParamsHelper(int clifd, int paramsLength,
 			std::map<std::string,std::string> &params);
 };
