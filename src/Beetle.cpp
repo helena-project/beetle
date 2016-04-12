@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 	desc.add_options()
 			("help,h", "")
 			("name,n", po::value<std::string>(&name),
-					"Name this Beetle gateway (default: Beetle)")
+					"Name this Beetle gateway (default: beetle@hostname)")
 			("scan,s", po::value<bool>(&scanningEnabled),
 					"Enable scanning for BLE devices (default: true")
 			("tcp-port,p", po::value<int>(&tcpPort),
