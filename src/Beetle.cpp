@@ -37,10 +37,10 @@ void resetHciHelper() {
 	assert(hciDevice >= 0);
 	std::string hciName = "hci" + std::to_string(hciDevice);
 	std::string command = "hciconfig " + hciName + " down";
-	pdebug("running: " + command);
+	pdebug("System: " + command);
 	assert(system(command.c_str()) == 0);
 	command = "hciconfig " + hciName + " up";
-	pdebug("running: " + command);
+	pdebug("System: " + command);
 	assert(system(command.c_str()) == 0);
 }
 
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 		Beetle btl(name);
 		TCPDeviceServer tcpServer(btl, tcpPort);
 		AutoConnect autoConnect(btl, autoConnectAll);
-		CLI cli(btl);
+		CLI cli(btl, tcpPort);
 
 		Scanner scanner;
 		scanner.registerHandler(cli.getDiscoveryHander());

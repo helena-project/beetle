@@ -39,9 +39,10 @@
 #include "hat/HandleAllocationTable.h"
 #include "Handle.h"
 
-CLI::CLI(Beetle &beetle) : beetle(beetle), t() {
+CLI::CLI(Beetle &beetle, int port_) : beetle(beetle), t() {
+	port = port_;
 	t = std::thread(&CLI::cmdLineDaemon, this);
-	aliasCounter = 0; // start this high to avoid confusion
+	aliasCounter = 0;
 }
 
 CLI::~CLI() {
@@ -86,13 +87,16 @@ static void printMessage(std::string message) {
 
 
 void CLI::cmdLineDaemon() {
+	printMessage("Welcome to Beetle CLI. Use 'help' for a list of commands.");
 	while (true) {
 		std::vector<std::string> cmd;
 		if (!getCommand(cmd)) return;
 		if (cmd.size() == 0) continue;
 
 		std::string c1 = cmd[0];
-		if (c1 == "scan") {
+		if (c1 == "help") {
+			doHelp(cmd);
+		} else if (c1 == "scan") {
 			doScan(cmd);
 		} else if (c1 == "connect") {
 			doConnect(cmd, true);
@@ -118,6 +122,8 @@ void CLI::cmdLineDaemon() {
 			exit(0);
 		} else if (c1 == "name") {
 			printMessage(beetle.name);
+		} else if (c1 == "port") {
+			printMessage(std::to_string(port));
 		} else {
 			printMessage("unknown command");
 		}
@@ -143,6 +149,24 @@ bool CLI::getCommand(std::vector<std::string> &ret) {
 		}
 		return true;
 	}
+}
+
+void CLI::doHelp(const std::vector<std::string>& cmd) {
+	printMessage("Supported commands:");
+	printMessage("  help");
+	printMessage("  name\t\tPrint the name of this instance.");
+	printMessage("  port\t\tPrint the tcp port for remote connections.");
+	printMessage("  scan\t\tPrint results from background scan.");
+	printMessage("  connect\t\tConnect to a peripheral.");
+	printMessage("  connect-nd\t\tConnect without handle discovery.");
+	printMessage("  remote\t\tConnect to a device at a remote gateway.");
+	printMessage("  disconnect");
+	printMessage("  map\t\t\tMap handles from one virtual device to another.");
+	printMessage("  unmap");
+	printMessage("  devices,d\t\tPrint connected devices.");
+	printMessage("  handles,h\t\tPrint a device's handles.");
+	printMessage("  offsets,o\t\tPrint mappings for a device.");
+	printMessage("  quit,q");
 }
 
 void CLI::doScan(const std::vector<std::string>& cmd) {

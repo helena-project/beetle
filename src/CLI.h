@@ -18,7 +18,7 @@
 
 class CLI {
 public:
-	CLI(Beetle &beetle);
+	CLI(Beetle &beetle, int port);
 	virtual ~CLI();
 	/*
 	 * Block program exit with CLI.
@@ -37,9 +37,12 @@ private:
 
 	Beetle &beetle;
 
+	int port;
+
 	std::thread t;
 	void cmdLineDaemon();
 
+	void doHelp(const std::vector<std::string>& cmd);
 	void doScan(const std::vector<std::string>& cmd);
 	void doConnect(const std::vector<std::string>& cmd, bool discoverHandles);
 	void doRemote(const std::vector<std::string>& cmd);

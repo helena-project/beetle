@@ -22,7 +22,7 @@
 
 BeetleMetaDevice::BeetleMetaDevice(Beetle &beetle, std::string name_) : Device(beetle, BEETLE_RESERVED_DEVICE) {
 	name = name_;
-	type = "Beetle";
+	type = "ThisBeetleInstance";
 	init();
 
 	/*
