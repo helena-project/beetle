@@ -328,8 +328,8 @@ void CLI::doUnmap(const std::vector<std::string>& cmd) {
 		device_t from;
 		device_t to;
 		try {
-			from = std::strtol(cmd[1].c_str(), NULL, 10);
-			to = std::strtol(cmd[2].c_str(), NULL, 10);
+			from = std::stol(cmd[1].c_str());
+			to = std::stol(cmd[2].c_str());
 		} catch (std::invalid_argument &e) {
 			std::cout << "caught invalid argument exception: " << e.what() << std::endl;
 			return;

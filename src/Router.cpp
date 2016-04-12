@@ -842,8 +842,8 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 							Handle *proxyH = destinationDevice->handles[remoteHandle];
 							proxyH->cache.cachedSet.clear();
 							int tmpLen = respLen - 1;
-							uint8_t *tmpVal = new uint8_t[respLen - 1];
-							memcpy(tmpVal, resp, respLen - 1);
+							uint8_t *tmpVal = new uint8_t[tmpLen];
+							memcpy(tmpVal, resp + 1, tmpLen);
 							/*
 							 * Cache takes over the pointer
 							 */
