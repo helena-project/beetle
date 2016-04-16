@@ -34,6 +34,17 @@ class Handle;
 
 class Device {
 public:
+
+	enum DeviceType {
+		UNKNOWN = -1,
+		BEETLE_META = 0,
+		LE_PERIPHERAL = 1,
+		TCP_CONNECTION = 2,
+		IPC_APPLICATION = 3,
+		TCP_CLIENT_PROXY = 4,
+		TCP_SERVER_PROXY = 5,
+	};
+
 	virtual ~Device();
 
 	/*
@@ -48,9 +59,14 @@ public:
 	std::string getName() { return name; };
 
 	/*
-	 * Returns a human readable device type.
+	 * Returns a enum device type.
 	 */
-	std::string getType() { return type; };
+	DeviceType getType() { return type; };
+
+	/*
+	 * Returns a enum device type.
+	 */
+	std::string getTypeStr() { return deviceType2Str[type]; };
 
 	/*
 	 * Return largest, untranslated handle.
@@ -113,11 +129,12 @@ protected:
 	Beetle &beetle;
 
 	std::string name;
-	std::string type;
+	DeviceType type;
 private:
 	device_t id;
 
 	static std::atomic_int idCounter;
+	static const std::string deviceType2Str[];
 };
 
 #endif /* DEVICE_H_ */

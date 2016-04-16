@@ -10,18 +10,24 @@
 
 #include <mutex>
 #include <boost/thread.hpp>
+#include <functional>
 #include <map>
+#include <string>
+#include <vector>
+
+#include "sync/ThreadPool.h"
 
 class AutoConnect;
 class Device;
 class BeetleMetaDevice;
 class Router;
-class HandleAllocationTable;
-class TCPDeviceServer;
 
 typedef long device_t;
 const device_t BEETLE_RESERVED_DEVICE = 0;
 const device_t NULL_RESERVED_DEVICE = -1;
+
+typedef std::function<void(device_t d)> AddDeviceHandler;
+typedef std::function<void(device_t d)> RemoveDeviceHandler;
 
 class Beetle {
 public:
@@ -50,6 +56,18 @@ public:
 	 */
 	void unmapDevices(device_t from, device_t to);
 
+	/*
+	 * Register handler to be called after a device is added.
+	 */
+	void registerAddDeviceHandler(AddDeviceHandler h);
+	std::vector<AddDeviceHandler> addHandlers;
+
+	/*
+	 * Register handler to be called after a device is removed.
+	 */
+	void registerRemoveDeviceHandler(RemoveDeviceHandler h);
+	std::vector<RemoveDeviceHandler> removeHandlers;
+
 	std::map<device_t, Device *> devices;
 	boost::shared_mutex devicesMutex;
 
@@ -63,9 +81,20 @@ public:
 	 */
 	BeetleMetaDevice *beetleDevice;
 
+	/*
+	 *
+	 */
 	Router *router;
 
+	/*
+	 * Workers for callbacks.
+	 */
+	ThreadPool workers;
 
+	/*
+	 * Threads used for writing.
+	 */
+	OrderedThreadPool writers;
 };
 
 #endif /* BEETLE_H_ */

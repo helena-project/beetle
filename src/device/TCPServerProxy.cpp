@@ -1,11 +1,11 @@
 /*
- * RemoteServerProxy.cpp
+ * TCPServerProxy.cpp
  *
  *  Created on: Apr 10, 2016
  *      Author: james
  */
 
-#include "RemoteServerProxy.h"
+#include "TCPServerProxy.h"
 
 #include <netdb.h>
 #include <string.h>
@@ -19,10 +19,10 @@
 #include "../tcp/ConnParams.h"
 #include "shared.h"
 
-RemoteServerProxy::RemoteServerProxy(Beetle &beetle, int sockfd, std::string serverGateway_,
+TCPServerProxy::TCPServerProxy(Beetle &beetle, int sockfd, std::string serverGateway_,
 		struct sockaddr_in serverGatewaySockAddr_, device_t remoteProxyTo_)
 : TCPConnection(beetle, sockfd, "", serverGatewaySockAddr_) {
-	type = "ServerTCPProxy";
+	type = TCP_SERVER_PROXY;
 
 	serverGateway = serverGateway_;
 
@@ -35,11 +35,11 @@ RemoteServerProxy::RemoteServerProxy(Beetle &beetle, int sockfd, std::string ser
 	remoteProxyTo = remoteProxyTo_;
 }
 
-RemoteServerProxy::~RemoteServerProxy() {
+TCPServerProxy::~TCPServerProxy() {
 	// TODO Auto-generated destructor stub
 }
 
-RemoteServerProxy *RemoteServerProxy::connectRemote(Beetle &beetle, std::string host,
+TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host,
 		int port, device_t remoteProxyTo) {
 	struct hostent *server;
 	server = gethostbyname(host.c_str());
@@ -83,6 +83,6 @@ RemoteServerProxy *RemoteServerProxy::connectRemote(Beetle &beetle, std::string 
     	throw DeviceException("could not write all the params");
     }
 
-    return new RemoteServerProxy(beetle, sockfd, host, serv_addr, remoteProxyTo);
+    return new TCPServerProxy(beetle, sockfd, host, serv_addr, remoteProxyTo);
 }
 

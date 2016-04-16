@@ -21,7 +21,7 @@
 
 TCPConnection::TCPConnection(Beetle &beetle, int sockfd_, std::string name_,
 		struct sockaddr_in sockaddr_) : VirtualDevice(beetle), readThread(), writeThread() {
-	type = "TCPConnection";
+	type = TCP_CONNECTION;
 	name = name_;
 	sockfd = sockfd_;
 	sockaddr = sockaddr_;

@@ -16,7 +16,7 @@
 #include <iostream>
 #include <utility>
 
-#include "../device/RemoteClientProxy.h"
+#include "../device/TCPClientProxy.h"
 #include "../Debug.h"
 #include "../Device.h"
 #include "ConnParams.h"
@@ -32,7 +32,7 @@ TCPDeviceServer::~TCPDeviceServer() {
 }
 
 void TCPDeviceServer::serverDaemon(int port) {
-	if (debug) pdebug("tcp serverDaemon started on port " + std::to_string(port));
+	if (debug) pdebug("tcp serverDaemon started on port: " + std::to_string(port));
 
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -56,7 +56,7 @@ void TCPDeviceServer::serverDaemon(int port) {
 
 		int clifd = accept(sockfd, (struct sockaddr *)&client_addr, &clilen);
 		if (clifd < 0) {
-			pdebug("error on accept");
+			pwarn("error on accept");
 			continue;
 		}
 
@@ -167,7 +167,7 @@ void TCPDeviceServer::startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr
 			std::string client = params[TCP_PARAM_GATEWAY];
 			// device that the client is requesting
 			device_t deviceId = std::stol(params[TCP_PARAM_DEVICE]);
-			device = new RemoteClientProxy(beetle, clifd, client, cliaddr, deviceId);
+			device = new TCPClientProxy(beetle, clifd, client, cliaddr, deviceId);
 		}
 
 		beetle.addDevice(device);

@@ -18,11 +18,10 @@
 #include "device/BeetleMetaDevice.h"
 #include "Debug.h"
 #include "Device.h"
-#include "hat/BlockAllocator.h"
-#include "hat/HandleAllocationTable.h"
 #include "Router.h"
 #include "Scanner.h"
 #include "tcp/TCPDeviceServer.h"
+#include "ipc/UnixDomainSocketServer.h"
 
 /* Global debug variables */
 bool debug = true;				// Debug.h
@@ -51,39 +50,46 @@ std::string getDefaultName() {
 }
 
 int main(int argc, char *argv[]) {
-	int tcpPort = 5000;
-	bool scanningEnabled = true;
-	bool debugAll = false;
-	bool autoConnectAll = false;
-	bool resetHci = true;
-	std::string name = "";
+	int tcpPort;
+	bool scanningEnabled;
+	bool debugAll;
+	bool autoConnectAll;
+	bool resetHci;
+	std::string name;
+	std::string path;
+
+	std::string beetleConrollerHostPort = "localhost:80";
 
 	namespace po = boost::program_options;
 	po::options_description desc("Options");
 	desc.add_options()
 			("help,h", "")
-			("name,n", po::value<std::string>(&name),
-					"Name this Beetle gateway (default: beetle@hostname)")
-			("scan,s", po::value<bool>(&scanningEnabled),
-					"Enable scanning for BLE devices (default: true")
-			("tcp-port,p", po::value<int>(&tcpPort),
-					"Specify remote TCP server port (default: 5000)")
-			("debug,d", po::value<bool>(&debug),
+			("name,n", po::value<std::string>(&name)->default_value(getDefaultName()),
+					"Name this Beetle gateway")
+			("scan,s", po::value<bool>(&scanningEnabled)->implicit_value(true),
+					"Enable scanning for BLE devices")
+			("tcp-port,p", po::value<int>(&tcpPort)->default_value(5000),
+					"Specify remote TCP server port")
+			("ipc,u", po::value<std::string>(&path)->default_value("/tmp/beetle"),
+					"Unix domain socket path")
+			("master,c", po::value<std::string>(&beetleConrollerHostPort)->default_value("localhost:80"),
+					"Host and port of the Beetle control")
+			("debug,d", po::value<bool>(&debug)->implicit_value(true),
 					"Enable general debugging (default: true)")
-			("auto-connect-all", po::value<bool>(&autoConnectAll),
-					"Connect to all nearby BLE devices (default: false")
-			("reset-hci", po::value<bool>(&resetHci),
-					"Set hci down/up at start-up (default: true")
-			("debug-discovery", po::value<bool>(&debug_discovery),
-					"Enable debugging for GATT discovery (default: false)")
-			("debug-scan", po::value<bool>(&debug_scan),
-					"Enable debugging for BLE scanning (default: false)")
-			("debug-socket", po::value<bool>(&debug_socket),
-					"Enable debugging for sockets (default: false)")
-			("debug-router", po::value<bool>(&debug_router),
-					"Enable debugging for router (default: false)")
-			("debug-all", po::value<bool>(&debugAll),
-					"Enable ALL debugging (default: false)");
+			("auto-connect-all", po::value<bool>(&autoConnectAll)->default_value(false),
+					"Connect to all nearby BLE devices")
+			("reset-hci", po::value<bool>(&resetHci)->default_value(true),
+					"Set hci down/up at start-up")
+			("debug-discovery", po::value<bool>(&debug_discovery)->implicit_value(true),
+					"Enable debugging for GATT discovery")
+			("debug-scan", po::value<bool>(&debug_scan)->implicit_value(true),
+					"Enable debugging for BLE scanning")
+			("debug-socket", po::value<bool>(&debug_socket)->implicit_value(true),
+					"Enable debugging for sockets")
+			("debug-router", po::value<bool>(&debug_router)->implicit_value(true),
+					"Enable debugging for router")
+			("debug-all", po::value<bool>(&debugAll)->implicit_value(true),
+					"Enable ALL debugging");
 	po::variables_map vm;
 	try {
 		po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -107,15 +113,14 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (resetHci) resetHciHelper();
-	if (name == "") {
-		name = getDefaultName();
-	}
 
 	try {
 		Beetle btl(name);
 		TCPDeviceServer tcpServer(btl, tcpPort);
+		UnixDomainSocketServer ipcServer(btl, path);
 		AutoConnect autoConnect(btl, autoConnectAll);
-		CLI cli(btl, tcpPort);
+
+		CLI cli(btl, tcpPort, path);
 
 		Scanner scanner;
 		scanner.registerHandler(cli.getDiscoveryHander());
@@ -134,7 +139,7 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-Beetle::Beetle(std::string name_) {
+Beetle::Beetle(std::string name_) : workers(1), writers(4) {
 	router = new Router(*this);
 	beetleDevice = new BeetleMetaDevice(*this, name_);
 	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
@@ -147,7 +152,13 @@ Beetle::~Beetle() {
 
 void Beetle::addDevice(Device *d) {
 	boost::unique_lock<boost::shared_mutex> deviceslk(devicesMutex);
-	devices[d->getId()] = d;
+	device_t id = d->getId();
+	devices[id] = d;
+	deviceslk.unlock();
+
+	for (auto &h : addHandlers) {
+		workers.schedule([&h,id]() -> void { h(id); });
+	}
 }
 
 void Beetle::removeDevice(device_t id) {
@@ -155,7 +166,12 @@ void Beetle::removeDevice(device_t id) {
 		pwarn("not allowed to remove Beetle!");
 		return;
 	}
-	boost::unique_lock<boost::shared_mutex> lk(devicesMutex);
+	boost::unique_lock<boost::shared_mutex> devicesLk(devicesMutex);
+	if (devices.find(id) == devices.end()) {
+		pwarn("removing non existant device!");
+		return;
+	}
+
 	Device *d = devices[id];
 	devices.erase(id);
 
@@ -170,11 +186,11 @@ void Beetle::removeDevice(device_t id) {
 		}
 	}
 
-	/*
-	 * Spin deallocator thread to avoid blocking
-	 */
-	std::thread t([d]() { delete d; });
-	t.detach();
+	workers.schedule([d]() -> void { delete d; });
+
+	for (auto &h : removeHandlers) {
+		workers.schedule([&h,id]() -> void { h(id); });
+	}
 }
 
 void Beetle::mapDevices(device_t from, device_t to) {
@@ -231,4 +247,13 @@ void Beetle::unmapDevices(device_t from, device_t to) {
 		}
 	}
 }
+
+void Beetle::registerAddDeviceHandler(AddDeviceHandler h) {
+	addHandlers.push_back(h);
+}
+
+void Beetle::registerRemoveDeviceHandler(RemoveDeviceHandler h) {
+	removeHandlers.push_back(h);
+}
+
 

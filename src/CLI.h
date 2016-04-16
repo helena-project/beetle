@@ -18,7 +18,7 @@
 
 class CLI {
 public:
-	CLI(Beetle &beetle, int port);
+	CLI(Beetle &beetle, int port, std::string path);
 	virtual ~CLI();
 	/*
 	 * Block program exit with CLI.
@@ -38,6 +38,7 @@ private:
 	Beetle &beetle;
 
 	int port;
+	std::string path;
 
 	std::thread t;
 	void cmdLineDaemon();
@@ -52,7 +53,6 @@ private:
 	void doListDevices(const std::vector<std::string>& cmd);
 	void doListHandles(const std::vector<std::string>& cmd);
 	void doListOffsets(std::vector<std::string>& cmd);
-	void doToggleDebug(const std::vector<std::string>& cmd);
 
 	/*
 	 * Matches a device string, which may be an address, device id, or name (case-insensitive).

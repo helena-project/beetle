@@ -1,18 +1,19 @@
 /*
- * HAT.h
+ * HandleAllocationTable.h
  *
  *  Created on: Mar 29, 2016
  *      Author: james
  */
 
-#ifndef HAT_H_
-#define HAT_H_
+#ifndef HAT_HANDLEALLOCATIONTABLE_H_
+#define HAT_HANDLEALLOCATIONTABLE_H_
 
-#include <cstdbool>
 #include <cstdint>
-#include <utility>
+#include <set>
+#include <sstream>
+#include <string>
 
-#include "../Device.h"
+#include "../Beetle.h"
 
 typedef struct {
 	uint16_t start;
@@ -69,4 +70,4 @@ public:
 	virtual handle_range_t free(device_t) = 0;
 };
 
-#endif /* HAT_H_ */
+#endif /* HAT_HANDLEALLOCATIONTABLE_H_ */

@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef LEPERIPHERAL_H_
-#define LEPERIPHERAL_H_
+#ifndef DEVICE_LEPERIPHERAL_H_
+#define DEVICE_LEPERIPHERAL_H_
 
 #include <bluetooth/bluetooth.h>
 #include <cstdint>
@@ -46,4 +46,4 @@ private:
 	void writeDaemon();
 };
 
-#endif /* LEPERIPHERAL_H_ */
+#endif /* DEVICE_LEPERIPHERAL_H_ */

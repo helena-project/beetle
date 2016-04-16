@@ -32,15 +32,16 @@
 
 #include "ble/helper.h"
 #include "device/LEPeripheral.h"
-#include "device/RemoteClientProxy.h"
-#include "device/RemoteServerProxy.h"
+#include "device/TCPClientProxy.h"
+#include "device/TCPServerProxy.h"
 #include "Debug.h"
 #include "Device.h"
 #include "hat/HandleAllocationTable.h"
 #include "Handle.h"
 
-CLI::CLI(Beetle &beetle, int port_) : beetle(beetle), t() {
+CLI::CLI(Beetle &beetle, int port_, std::string path_) : beetle(beetle), t() {
 	port = port_;
+	path = path_;
 	t = std::thread(&CLI::cmdLineDaemon, this);
 	aliasCounter = 0;
 }
@@ -116,14 +117,14 @@ void CLI::cmdLineDaemon() {
 			doListHandles(cmd);
 		} else if (c1 == "o" || c1 == "offsets") {
 			doListOffsets(cmd);
-		} else if (c1 == "debug") {
-			doToggleDebug(cmd);
 		} else if (c1 == "q" || c1 == "quit") {
 			exit(0);
 		} else if (c1 == "name") {
 			printMessage(beetle.name);
 		} else if (c1 == "port") {
 			printMessage(std::to_string(port));
+		} else if (c1 == "path") {
+			printMessage(path);
 		} else {
 			printMessage("unknown command");
 		}
@@ -156,6 +157,7 @@ void CLI::doHelp(const std::vector<std::string>& cmd) {
 	printMessage("  help");
 	printMessage("  name\t\tPrint the name of this instance.");
 	printMessage("  port\t\tPrint the tcp port for remote connections.");
+	printMessage("  path\t\tPrint the unix domain socket path.");
 	printMessage("  scan\t\tPrint results from background scan.");
 	printMessage("  connect\t\tConnect to a peripheral.");
 	printMessage("  connect-nd\t\tConnect without handle discovery.");
@@ -283,7 +285,7 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 
 	VirtualDevice* device = NULL;
 	try {
-		device = RemoteServerProxy::connectRemote(beetle, host, port, remoteId);
+		device = TCPServerProxy::connectRemote(beetle, host, port, remoteId);
 		beetle.addDevice(device);
 
 		device->start();
@@ -376,7 +378,7 @@ void CLI::doListDevices(const std::vector<std::string>& cmd) {
 			Device *d = kv.second;
 			printMessage(d->getName());
 			printMessage("  id : " + std::to_string(d->getId()));
-			printMessage("  type : " + d->getType());
+			printMessage("  type : " + d->getTypeStr());
 			printMessage("  mtu : " + std::to_string(d->getMTU()));
 			printMessage("  highestHandle : " + std::to_string(d->getHighestHandle()));
 
@@ -393,12 +395,12 @@ void CLI::doListDevices(const std::vector<std::string>& cmd) {
 				printMessage("  port : " + std::to_string(sockaddr.sin_port));
 			}
 
-			RemoteClientProxy *rcp = dynamic_cast<RemoteClientProxy *>(d);
+			TCPClientProxy *rcp = dynamic_cast<TCPClientProxy *>(d);
 			if (rcp) {
 				printMessage("  client-gateway : " + rcp->getClientGateway());
 			}
 
-			RemoteServerProxy *rsp = dynamic_cast<RemoteServerProxy *>(d);
+			TCPServerProxy *rsp = dynamic_cast<TCPServerProxy *>(d);
 			if (rsp) {
 				printMessage("  server-gateway : " + rsp->getServerGateway());
 			}
@@ -422,20 +424,6 @@ void CLI::doListHandles(const std::vector<std::string>& cmd) {
 		}
 	} else {
 		printMessage(cmd[1] + " does not exist");
-	}
-}
-
-void CLI::doToggleDebug(const std::vector<std::string>& cmd) {
-	if (cmd.size() != 2) {
-		printUsage("debug on|off");
-	} else {
-		if (cmd[1] == "on") {
-			debug = true;
-		} else if (cmd[1] == "off") {
-			debug = false;
-		} else {
-			printUsageError("invalid debug setting");
-		}
 	}
 }
 

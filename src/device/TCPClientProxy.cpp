@@ -1,11 +1,11 @@
 /*
- * RemoteClientProxy.cpp
+ * TCPClientProxy.cpp
  *
  *  Created on: Apr 10, 2016
  *      Author: james
  */
 
-#include "RemoteClientProxy.h"
+#include "TCPClientProxy.h"
 
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
@@ -15,7 +15,7 @@
 #include "../Device.h"
 #include "../hat/SingleAllocator.h"
 
-RemoteClientProxy::RemoteClientProxy(Beetle &beetle, int sockfd, std::string clientGateway_,
+TCPClientProxy::TCPClientProxy(Beetle &beetle, int sockfd, std::string clientGateway_,
 		struct sockaddr_in clientGatewaySockAddr_, device_t localProxyFor_)
 : TCPConnection(beetle, sockfd, "", clientGatewaySockAddr_) {
 	/*
@@ -27,7 +27,7 @@ RemoteClientProxy::RemoteClientProxy(Beetle &beetle, int sockfd, std::string cli
 	}
 
 	name = "Proxy for " +  std::to_string(localProxyFor_) + " to " + clientGateway_;
-	type = "ClientTCPProxy";
+	type = TCP_CLIENT_PROXY;
 	clientGateway = clientGateway_;
 
 	/*
@@ -39,7 +39,7 @@ RemoteClientProxy::RemoteClientProxy(Beetle &beetle, int sockfd, std::string cli
 	localProxyFor = localProxyFor_;
 }
 
-RemoteClientProxy::~RemoteClientProxy() {
+TCPClientProxy::~TCPClientProxy() {
 	// TODO Auto-generated destructor stub
 }
 

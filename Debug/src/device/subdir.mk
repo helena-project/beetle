@@ -5,26 +5,29 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/device/BeetleMetaDevice.cpp \
+../src/device/IPCApplication.cpp \
 ../src/device/LEPeripheral.cpp \
-../src/device/RemoteClientProxy.cpp \
-../src/device/RemoteServerProxy.cpp \
+../src/device/TCPClientProxy.cpp \
 ../src/device/TCPConnection.cpp \
+../src/device/TCPServerProxy.cpp \
 ../src/device/VirtualDevice.cpp 
 
 OBJS += \
 ./src/device/BeetleMetaDevice.o \
+./src/device/IPCApplication.o \
 ./src/device/LEPeripheral.o \
-./src/device/RemoteClientProxy.o \
-./src/device/RemoteServerProxy.o \
+./src/device/TCPClientProxy.o \
 ./src/device/TCPConnection.o \
+./src/device/TCPServerProxy.o \
 ./src/device/VirtualDevice.o 
 
 CPP_DEPS += \
 ./src/device/BeetleMetaDevice.d \
+./src/device/IPCApplication.d \
 ./src/device/LEPeripheral.d \
-./src/device/RemoteClientProxy.d \
-./src/device/RemoteServerProxy.d \
+./src/device/TCPClientProxy.d \
 ./src/device/TCPConnection.d \
+./src/device/TCPServerProxy.d \
 ./src/device/VirtualDevice.d 
 
 

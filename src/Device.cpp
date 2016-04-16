@@ -28,14 +28,26 @@
 
 std::atomic_int Device::idCounter(1);
 
+const std::string Device::deviceType2Str[] = {
+		"ThisBeetleInstance", 	// 0
+		"LePeripheral", 		// 1
+		"TcpConnection",		// 2
+		"IpcApplication",		// 3
+		"TcpClientProxy",		// 4
+		"TcpServerProxy",		// 5
+};
+
+
 Device::Device(Beetle &beetle_) : beetle(beetle_) {
 	id = idCounter++;
 	hat = new BlockAllocator(256);
+	type = UNKNOWN;
 }
 
 Device::Device(Beetle &beetle_, device_t id_) : beetle(beetle_) {
 	id = id_;
 	hat = new BlockAllocator(256);
+	type = UNKNOWN;
 }
 
 Device::~Device() {

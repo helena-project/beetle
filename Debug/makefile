@@ -9,8 +9,11 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include src/tcp/subdir.mk
+-include src/sync/subdir.mk
+-include src/ipc/subdir.mk
 -include src/hat/subdir.mk
 -include src/device/subdir.mk
+-include src/control/subdir.mk
 -include src/subdir.mk
 -include subdir.mk
 -include objects.mk

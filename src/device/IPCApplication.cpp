@@ -1,59 +1,39 @@
 /*
- * LEPeripheral.cpp
+ * IPCApplication.cpp
  *
  *  Created on: Mar 28, 2016
  *      Author: james
  */
 
-#include "LEPeripheral.h"
+#include "IPCApplication.h"
 
-#include <bluetooth/l2cap.h>
-#include <stdlib.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <unistd.h>
+#include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <queue>
+#include <string>
+#include <thread>
 
-#include "../ble/att.h"
+#include "../Beetle.h"
 #include "../Debug.h"
+#include "../Device.h"
+#include "../sync/BlockingQueue.h"
+#include "shared.h"
+#include "VirtualDevice.h"
 
-LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType
-		) : VirtualDevice(beetle), readThread(), writeThread() {
-	type = LE_PERIPHERAL;
-
-	bdaddr = addr;
-	bdaddrType = addrType;
-
-    struct sockaddr_l2 loc_addr = {0};
-    loc_addr.l2_family = AF_BLUETOOTH;
-    bdaddr_t tmp = {0, 0, 0, 0, 0, 0}; // BDADDR_ANY
-    bacpy(&loc_addr.l2_bdaddr, &tmp);
-    loc_addr.l2_psm = 0;
-    loc_addr.l2_cid = htobs(ATT_CID);
-    loc_addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
-
-    struct sockaddr_l2 rem_addr = {0};
-    rem_addr.l2_family = AF_BLUETOOTH;
-    bacpy(&rem_addr.l2_bdaddr, &bdaddr);
-    rem_addr.l2_psm = 0;
-    rem_addr.l2_cid = htobs(ATT_CID);
-    rem_addr.l2_bdaddr_type = (addrType == PUBLIC) ? BDADDR_LE_PUBLIC : BDADDR_LE_RANDOM;
-
-    sockfd = socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
-    if (sockfd < 0) {
-        throw DeviceException("could not create socket");
-    }
-    if (bind(sockfd, (struct sockaddr *)&loc_addr, sizeof(loc_addr)) < 0) {
-        close(sockfd);
-        throw DeviceException("could not bind");
-    }
-    if (connect(sockfd, (struct sockaddr *)&rem_addr, sizeof(rem_addr)) < 0) {
-        close(sockfd);
-        throw DeviceException("could not connect");
-    }
+IPCApplication::IPCApplication(Beetle &beetle, int sockfd_, std::string name_,
+		struct sockaddr_un sockaddr_, struct ucred ucred_) : VirtualDevice(beetle), readThread(), writeThread() {
+	type = IPC_APPLICATION;
+	name = name_;
+	sockfd = sockfd_;
+	sockaddr = sockaddr_;
+	ucred = ucred_;
 }
 
-LEPeripheral::~LEPeripheral() {
+IPCApplication::~IPCApplication() {
 	std::queue<queued_write_t> *q = writeQueue.destroy();
 	if (q != NULL) {
 		while (q->size() > 0) {
@@ -70,12 +50,12 @@ LEPeripheral::~LEPeripheral() {
 	close(sockfd);
 }
 
-void LEPeripheral::startInternal() {
-    writeThread = std::thread(&LEPeripheral::writeDaemon, this);
-    readThread = std::thread(&LEPeripheral::readDaemon, this);
+void IPCApplication::startInternal() {
+    writeThread = std::thread(&IPCApplication::writeDaemon, this);
+    readThread = std::thread(&IPCApplication::readDaemon, this);
 }
 
-bool LEPeripheral::write(uint8_t *buf, int len) {
+bool IPCApplication::write(uint8_t *buf, int len) {
 	queued_write_t qw;
 	qw.buf = new uint8_t[len];
 	memcpy(qw.buf, buf, len);
@@ -88,7 +68,7 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 	return true;
 }
 
-void LEPeripheral::readDaemon() {
+void IPCApplication::readDaemon() {
 	if (debug) pdebug(getName() + " readDaemon started");
 	uint8_t buf[64];
 	while (!isStopped()) {
@@ -121,7 +101,7 @@ void LEPeripheral::readDaemon() {
 	if (debug) pdebug(getName() + " readDaemon exited");
 }
 
-void LEPeripheral::writeDaemon() {
+void IPCApplication::writeDaemon() {
 	if (debug) pdebug(getName() + " writeDaemon started");
 	while (!isStopped()) {
 		try {
