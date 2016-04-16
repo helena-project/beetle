@@ -13,7 +13,7 @@
 #include <utility>
 #include <cstdint>
 
-#include "AutoConnect.h"
+#include "connect/AutoConnect.h"
 #include "CLI.h"
 #include "device/BeetleMetaDevice.h"
 #include "Debug.h"

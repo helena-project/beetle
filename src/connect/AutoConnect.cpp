@@ -11,12 +11,12 @@
 #include <iostream>
 #include <thread>
 
-#include "Beetle.h"
-#include "device/BeetleMetaDevice.h"
-#include "device/LEPeripheral.h"
-#include "Debug.h"
-#include "Device.h"
-#include "hat/HandleAllocationTable.h"
+#include "../Beetle.h"
+#include "../device/BeetleMetaDevice.h"
+#include "../device/LEPeripheral.h"
+#include "../Debug.h"
+#include "../Device.h"
+#include "../hat/HandleAllocationTable.h"
 
 
 AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_) : beetle{beetle} {

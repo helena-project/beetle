@@ -13,8 +13,8 @@
 #include <mutex>
 #include <string>
 
-#include "sync/Semaphore.h"
-#include "Scanner.h"
+#include "../sync/Semaphore.h"
+#include "../Scanner.h"
 
 typedef struct {
 	std::string addr;

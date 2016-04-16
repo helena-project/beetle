@@ -14,6 +14,7 @@ RM := rm -rf
 -include src/hat/subdir.mk
 -include src/device/subdir.mk
 -include src/control/subdir.mk
+-include src/connect/subdir.mk
 -include src/subdir.mk
 -include subdir.mk
 -include objects.mk
