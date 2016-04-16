@@ -34,7 +34,7 @@ public:
 	void start();
 	void startNd();
 	void stop();
-	bool isStopped() { return stopped; };
+	bool isStopped();
 
 	bool writeResponse(uint8_t *buf, int len);
 	bool writeCommand(uint8_t *buf, int len);

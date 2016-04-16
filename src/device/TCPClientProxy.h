@@ -22,8 +22,8 @@ public:
 			struct sockaddr_in clientGatewaySockAddr, device_t localProxyFor);
 	virtual ~TCPClientProxy();
 
-	device_t getLocalDeviceId() { return localProxyFor; };
-	std::string getClientGateway() { return	clientGateway; };
+	device_t getLocalDeviceId();
+	std::string getClientGateway();
 
 private:
 	device_t localProxyFor;

@@ -51,22 +51,22 @@ public:
 	 * Get the device's unique identifier for this connection
 	 * instance.
 	 */
-	device_t getId() { return id; };
+	device_t getId();
 
 	/*
 	 * Returns the device name if it has been set.
 	 */
-	std::string getName() { return name; };
+	std::string getName();
 
 	/*
 	 * Returns a enum device type.
 	 */
-	DeviceType getType() { return type; };
+	DeviceType getType();
 
 	/*
 	 * Returns a enum device type.
 	 */
-	std::string getTypeStr() { return deviceType2Str[type]; };
+	std::string getTypeStr();
 
 	/*
 	 * Return largest, untranslated handle.

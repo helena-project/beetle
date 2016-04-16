@@ -36,6 +36,10 @@ VirtualDevice::~VirtualDevice() {
 
 }
 
+bool VirtualDevice::isStopped() {
+	return stopped;
+}
+
 static std::string discoverDeviceName(VirtualDevice *d);
 static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d);
 void VirtualDevice::start() {

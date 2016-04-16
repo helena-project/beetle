@@ -58,6 +58,28 @@ Device::~Device() {
 	delete hat;
 }
 
+device_t Device::getId() {
+	return id;
+};
+
+/*
+ * Returns the device name if it has been set.
+ */
+std::string Device::getName() {
+	return name;
+};
+
+/*
+ * Returns a enum device type.
+ */
+Device::DeviceType Device::getType() {
+	return type;
+};
+
+std::string Device::getTypeStr() {
+	return deviceType2Str[type];
+};
+
 int Device::getHighestHandle() {
 	std::lock_guard<std::recursive_mutex> lg(handlesMutex);
 	if (handles.size() > 0) {

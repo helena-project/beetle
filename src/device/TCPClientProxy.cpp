@@ -43,3 +43,10 @@ TCPClientProxy::~TCPClientProxy() {
 	// TODO Auto-generated destructor stub
 }
 
+device_t TCPClientProxy::getLocalDeviceId() {
+	return localProxyFor;
+};
+
+std::string TCPClientProxy::getClientGateway() {
+	return clientGateway;
+};

@@ -33,6 +33,10 @@ private:
 	void workerDaemon();
 };
 
+/*
+ * This thread pool ensures that tasks scheduled with the same id are executed
+ * in order.
+ */
 class OrderedThreadPool {
 public:
 	OrderedThreadPool(int n);
