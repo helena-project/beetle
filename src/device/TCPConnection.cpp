@@ -20,7 +20,7 @@
 #include "../Device.h"
 
 TCPConnection::TCPConnection(Beetle &beetle, int sockfd_, std::string name_,
-		struct sockaddr_in sockaddr_) : VirtualDevice(beetle), readThread(), writeThread() {
+		struct sockaddr_in sockaddr_) : VirtualDevice(beetle), readThread() {
 	type = TCP_CONNECTION;
 	name = name_;
 	sockfd = sockfd_;
@@ -28,37 +28,35 @@ TCPConnection::TCPConnection(Beetle &beetle, int sockfd_, std::string name_,
 }
 
 TCPConnection::~TCPConnection() {
-	std::queue<queued_write_t> *q = writeQueue.destroy();
-	if (q != NULL) {
-		while (q->size() > 0) {
-			queued_write_t qw = q->front();
-			delete[] qw.buf;
-			q->pop();
-		}
-		delete q;
-	}
+	pendingWrites.wait();
 
 	shutdown(sockfd, SHUT_RD);
-	if (writeThread.joinable()) writeThread.join();
 	if (readThread.joinable()) readThread.join();
 	close(sockfd);
 }
 
 void TCPConnection::startInternal() {
-    writeThread = std::thread(&TCPConnection::writeDaemon, this);
     readThread = std::thread(&TCPConnection::readDaemon, this);
 }
 
 bool TCPConnection::write(uint8_t *buf, int len) {
-	queued_write_t qw;
-	qw.buf = new uint8_t[len];
-	memcpy(qw.buf, buf, len);
-	qw.len = len;
-	try {
-		writeQueue.push(qw);
-	} catch (QueueDestroyedException &e) {
-		return false;
-	}
+	uint8_t *bufCpy = new uint8_t[len];
+	memcpy(bufCpy, buf, len);
+	pendingWrites.increment();
+	beetle.writers.schedule(getId(), [this, bufCpy, len]() -> void {
+		uint8_t bufLen = len;
+		if (write_all(sockfd, &bufLen, 1) != 1 || write_all(sockfd, bufCpy, len) != len) {
+			if (!isStopped()) {
+				stop();
+				beetle.removeDevice(getId());
+			}
+		}
+		if (debug_socket) {
+			pdebug(getName() + " wrote " + std::to_string(len) + " bytes");
+			pdebug(bufCpy, len);
+		}
+		delete[] bufCpy;
+	});
 	return true;
 }
 
@@ -120,30 +118,6 @@ void TCPConnection::readDaemon() {
 		}
 	}
 	if (debug) pdebug(getName() + " readDaemon exited");
-}
-
-void TCPConnection::writeDaemon() {
-	if (debug) pdebug(getName() + " writeDaemon started");
-	while (!isStopped()) {
-		try {
-			queued_write_t qw = writeQueue.pop();
-			uint8_t len = (uint8_t) qw.len;
-			if (write_all(sockfd, &len, 1) != 1 || write_all(sockfd, qw.buf, qw.len) != qw.len) {
-				if (!isStopped()) {
-					stop();
-					beetle.removeDevice(getId());
-				}
-			}
-			if (debug_socket) {
-				pdebug(getName() + " wrote " + std::to_string(qw.len) + " bytes");
-				pdebug(qw.buf, qw.len);
-			}
-			delete[] qw.buf;
-		} catch (QueueDestroyedException &e) {
-			break;
-		}
-	}
-	if (debug) pdebug(getName() + " writeDaemon exited");
 }
 
 int TCPConnection::getMTU() {

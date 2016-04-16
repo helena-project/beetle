@@ -8,11 +8,6 @@
 #ifndef DEVICE_SHARED_H_
 #define DEVICE_SHARED_H_
 
-typedef struct {
-	uint8_t *buf;
-	int len;
-} queued_write_t;
-
 inline int write_all(int fd, uint8_t *buf, int len) {
 	int written = 0;
 	while (written < len) {

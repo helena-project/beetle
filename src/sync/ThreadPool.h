@@ -37,7 +37,7 @@ class OrderedThreadPool {
 public:
 	OrderedThreadPool(int n);
 	virtual ~OrderedThreadPool();
-	void schedule(std::function<void()> task, long id);
+	void schedule(long id, std::function<void()> task);
 private:
 	bool running;
 	std::vector<std::thread> workers;

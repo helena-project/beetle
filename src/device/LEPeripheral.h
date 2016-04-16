@@ -10,12 +10,11 @@
 
 #include <bluetooth/bluetooth.h>
 #include <cstdint>
-#include <string>
 #include <thread>
 
-#include "../sync/BlockingQueue.h"
+#include "../Beetle.h"
+#include "../sync/Countdown.h"
 #include "VirtualDevice.h"
-#include "shared.h"
 
 enum AddrType {
 	PUBLIC, RANDOM,
@@ -38,12 +37,9 @@ private:
 	int sockfd;
 
 	std::thread readThread;
-	std::thread writeThread;
-
-	BlockingQueue<queued_write_t> writeQueue;
-
 	void readDaemon();
-	void writeDaemon();
+
+	Countdown pendingWrites;
 };
 
 #endif /* DEVICE_LEPERIPHERAL_H_ */

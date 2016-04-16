@@ -16,9 +16,10 @@
 
 #include "../ble/att.h"
 #include "../Debug.h"
+#include "shared.h"
 
 LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType
-		) : VirtualDevice(beetle), readThread(), writeThread() {
+		) : VirtualDevice(beetle), readThread() {
 	type = LE_PERIPHERAL;
 
 	bdaddr = addr;
@@ -54,37 +55,35 @@ LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType
 }
 
 LEPeripheral::~LEPeripheral() {
-	std::queue<queued_write_t> *q = writeQueue.destroy();
-	if (q != NULL) {
-		while (q->size() > 0) {
-			queued_write_t qw = q->front();
-			delete[] qw.buf;
-			q->pop();
-		}
-		delete q;
-	}
+	pendingWrites.wait();
 	
 	shutdown(sockfd, SHUT_RD);
-	if (writeThread.joinable()) writeThread.join();
 	if (readThread.joinable()) readThread.join();
 	close(sockfd);
 }
 
 void LEPeripheral::startInternal() {
-    writeThread = std::thread(&LEPeripheral::writeDaemon, this);
     readThread = std::thread(&LEPeripheral::readDaemon, this);
 }
 
 bool LEPeripheral::write(uint8_t *buf, int len) {
-	queued_write_t qw;
-	qw.buf = new uint8_t[len];
-	memcpy(qw.buf, buf, len);
-	qw.len = len;
-	try {
-		writeQueue.push(qw);
-	} catch (QueueDestroyedException &e) {
-		return false;
-	}
+	uint8_t *bufCpy = new uint8_t[len];
+	memcpy(bufCpy, buf, len);
+	pendingWrites.increment();
+	beetle.writers.schedule(getId(), [this, bufCpy, len]() -> void {
+		if (write_all(sockfd, bufCpy, len) != len) {
+			if (!isStopped()) {
+				stop();
+				beetle.removeDevice(getId());
+			}
+		}
+		if (debug_socket) {
+			pdebug(getName() + " wrote " + std::to_string(len) + " bytes");
+			pdebug(bufCpy, len);
+		}
+		delete[] bufCpy;
+		pendingWrites.decrement();
+	});
 	return true;
 }
 
@@ -120,28 +119,4 @@ void LEPeripheral::readDaemon() {
 	}
 	if (debug) pdebug(getName() + " readDaemon exited");
 }
-
-void LEPeripheral::writeDaemon() {
-	if (debug) pdebug(getName() + " writeDaemon started");
-	while (!isStopped()) {
-		try {
-			queued_write_t qw = writeQueue.pop();
-			if (write_all(sockfd, qw.buf, qw.len) != qw.len) {
-				if (!isStopped()) {
-					stop();
-					beetle.removeDevice(getId());
-				}
-			}
-			if (debug_socket) {
-				pdebug(getName() + " wrote " + std::to_string(qw.len) + " bytes");
-				pdebug(qw.buf, qw.len);
-			}
-			delete[] qw.buf;
-		} catch (QueueDestroyedException &e) {
-			break;
-		}
-	}
-	if (debug) pdebug(getName() + " writeDaemon exited");
-}
-
 

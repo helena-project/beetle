@@ -14,8 +14,7 @@
 #include <thread>
 
 #include "../Beetle.h"
-#include "../sync/BlockingQueue.h"
-#include "shared.h"
+#include "../sync/Countdown.h"
 #include "VirtualDevice.h"
 
 enum AddrType {
@@ -37,12 +36,9 @@ private:
 	struct ucred ucred;
 
 	std::thread readThread;
-	std::thread writeThread;
-
-	BlockingQueue<queued_write_t> writeQueue;
-
 	void readDaemon();
-	void writeDaemon();
+
+	Countdown pendingWrites;
 };
 
 #endif /* DEVICE_IPCAPPLICATION_H_ */

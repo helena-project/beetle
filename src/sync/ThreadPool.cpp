@@ -70,7 +70,7 @@ OrderedThreadPool::~OrderedThreadPool() {
 	}
 }
 
-void OrderedThreadPool::schedule(std::function<void()> task, long id) {
+void OrderedThreadPool::schedule(long id, std::function<void()> task) {
 	std::lock_guard<std::mutex> lg(m);
 	queue.push_back({id, task});
 	if (locked.find(id) == locked.end()) s.notify();

@@ -14,7 +14,7 @@
 #include <thread>
 
 #include "../Beetle.h"
-#include "../sync/BlockingQueue.h"
+#include "../sync/Countdown.h"
 #include "shared.h"
 #include "VirtualDevice.h"
 
@@ -35,15 +35,12 @@ protected:
 private:
 	int sockfd;
 
-	std::thread readThread;
-	std::thread writeThread;
-
 	struct sockaddr_in sockaddr;
 
-	BlockingQueue<queued_write_t> writeQueue;
-
+	std::thread readThread;
 	void readDaemon();
-	void writeDaemon();
+
+	Countdown pendingWrites;
 };
 
 #endif /* TCPCONNECTION_H_ */
