@@ -114,6 +114,10 @@ PrimaryService::PrimaryService() {
 	uuid = UUID(GATT_PRIM_SVC_UUID);
 }
 
+UUID PrimaryService::getServiceUuid() {
+	return UUID(cache.value, cache.len);
+}
+
 std::string PrimaryService::str() {
 	std::stringstream ss;
 	ss << handle << "\t" << "[PrimaryService]"

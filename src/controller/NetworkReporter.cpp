@@ -133,7 +133,7 @@ static std::string serializeHandles(Device *d) {
 				arr.push_back(j);
 			}
 			currCharUuids.clear();
-			currServiceUuid = pSvc->getUuid().str();
+			currServiceUuid = pSvc->getServiceUuid().str();
 		}
 		Characteristic *chr = dynamic_cast<Characteristic *>(h.second);
 		if (chr) {

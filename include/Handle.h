@@ -77,6 +77,7 @@ protected:
 class PrimaryService: public Handle {
 public:
 	PrimaryService();
+	UUID getServiceUuid();
 	std::string str();
 };
 
