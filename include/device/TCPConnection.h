@@ -13,10 +13,9 @@
 #include <string>
 #include <thread>
 
+#include "../../include/device/VirtualDevice.h"
 #include "../Beetle.h"
 #include "../sync/Countdown.h"
-#include "shared.h"
-#include "VirtualDevice.h"
 
 /*
  * Remote "device" connected using TCP.

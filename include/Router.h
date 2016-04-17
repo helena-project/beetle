@@ -8,7 +8,7 @@
 #ifndef ROUTER_H_
 #define ROUTER_H_
 
-#include "Device.h"
+#include "../include/Device.h"
 
 /* Extra debugging when routing. */
 extern bool debug_router;

@@ -5,24 +5,17 @@
  *      Author: james
  */
 
-#include "IPCApplication.h"
+#include "../../include/device/IPCApplication.h"
 
-#include <sys/socket.h>
-#include <sys/un.h>
 #include <unistd.h>
-#include <cstdint>
 #include <cstring>
 #include <iostream>
-#include <queue>
 #include <string>
-#include <thread>
 
-#include "../Beetle.h"
-#include "../Debug.h"
-#include "../Device.h"
-#include "../sync/BlockingQueue.h"
+#include "../../include/Debug.h"
+#include "../../include/sync/Countdown.h"
+#include "../../include/sync/ThreadPool.h"
 #include "shared.h"
-#include "VirtualDevice.h"
 
 IPCApplication::IPCApplication(Beetle &beetle, int sockfd_, std::string name_,
 		struct sockaddr_un sockaddr_, struct ucred ucred_) : VirtualDevice(beetle), readThread() {

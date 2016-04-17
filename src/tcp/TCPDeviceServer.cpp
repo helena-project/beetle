@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "TCPDeviceServer.h"
+#include "../../include/tcp/TCPDeviceServer.h"
 
 #include <netinet/in.h>
 #include <stddef.h>
@@ -16,10 +16,10 @@
 #include <iostream>
 #include <utility>
 
-#include "../device/TCPClientProxy.h"
-#include "../Debug.h"
-#include "../Device.h"
-#include "ConnParams.h"
+#include "../../include/device/TCPClientProxy.h"
+#include "../../include/Debug.h"
+#include "../../include/Device.h"
+#include "../../include/tcp/ConnParams.h"
 
 TCPDeviceServer::TCPDeviceServer(Beetle &beetle, int port) : beetle(beetle) {
 	running = true;

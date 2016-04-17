@@ -13,8 +13,8 @@
 #include <set>
 #include <string>
 
-#include "Beetle.h"
-#include "UUID.h"
+#include "../include/Beetle.h"
+#include "../include/UUID.h"
 
 class CachedHandle {
 public:

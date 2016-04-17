@@ -16,9 +16,9 @@
 #include <mutex>
 #include <string>
 
-#include "Beetle.h"
+#include "../include/Beetle.h"
+#include "../include/Handle.h"
 #include "hat/HandleAllocationTable.h"
-#include "Handle.h"
 
 class DeviceException : public std::exception {
   public:

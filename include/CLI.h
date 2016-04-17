@@ -13,8 +13,8 @@
 #include <thread>
 #include <vector>
 
-#include "Beetle.h"
-#include "Scanner.h"
+#include "../include/Beetle.h"
+#include "../include/Scanner.h"
 
 class CLI {
 public:

@@ -8,6 +8,10 @@
 #ifndef SYNC_COUNTDOWN_H_
 #define SYNC_COUNTDOWN_H_
 
+#include <condition_variable>
+#include <mutex>
+#include <cassert>
+
 class Countdown {
 public:
 	Countdown(int init = 0) {

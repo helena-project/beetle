@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "CLI.h"
+#include "../include/CLI.h"
 
 #include <arpa/inet.h>
 #include <bluetooth/bluetooth.h>
@@ -30,14 +30,14 @@
 #include <stdexcept>
 #include <utility>
 
-#include "ble/helper.h"
-#include "device/LEPeripheral.h"
-#include "device/TCPClientProxy.h"
-#include "device/TCPServerProxy.h"
-#include "Debug.h"
-#include "Device.h"
-#include "hat/HandleAllocationTable.h"
-#include "Handle.h"
+#include "../include/ble/helper.h"
+#include "../include/device/LEPeripheral.h"
+#include "../include/device/TCPClientProxy.h"
+#include "../include/device/TCPServerProxy.h"
+#include "../include/Debug.h"
+#include "../include/Device.h"
+#include "../include/hat/HandleAllocationTable.h"
+#include "../include/Handle.h"
 
 CLI::CLI(Beetle &beetle, int port_, std::string path_) : beetle(beetle), t() {
 	port = port_;

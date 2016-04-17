@@ -5,12 +5,12 @@
  *      Author: root
  */
 
-#include "Handle.h"
+#include "../include/Handle.h"
 
 #include <bluetooth/bluetooth.h>
 #include <sstream>
 
-#include "ble/gatt.h"
+#include "../include/ble/gatt.h"
 
 CachedHandle::~CachedHandle() {
 	if (value != NULL) {

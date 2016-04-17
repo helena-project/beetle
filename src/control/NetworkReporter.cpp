@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "NetworkReporter.h"
+#include "../../include/control/NetworkReporter.h"
 
 NetworkReporter::NetworkReporter(Beetle &beetle, std::string hostAndPort_) : beetle(beetle) {
 	hostAndPort = hostAndPort_;

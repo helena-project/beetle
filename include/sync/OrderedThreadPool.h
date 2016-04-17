@@ -1,12 +1,12 @@
 /*
- * ThreadPool.h
+ * OrderedThreadPool.h
  *
- *  Created on: Apr 15, 2016
+ *  Created on: Apr 16, 2016
  *      Author: james
  */
 
-#ifndef SYNC_THREADPOOL_H_
-#define SYNC_THREADPOOL_H_
+#ifndef SYNC_ORDEREDTHREADPOOL_H_
+#define SYNC_ORDEREDTHREADPOOL_H_
 
 #include <functional>
 #include <list>
@@ -15,23 +15,7 @@
 #include <thread>
 #include <vector>
 
-#include "BlockingQueue.h"
 #include "Semaphore.h"
-
-/*
- * This thread pool makes no ordering guarantees.
- */
-class ThreadPool {
-public:
-	ThreadPool(int n);
-	virtual ~ThreadPool();
-	void schedule(std::function<void()> task);
-private:
-	bool running;
-	std::vector<std::thread> workers;
-	BlockingQueue<std::function<void()>> queue;
-	void workerDaemon();
-};
 
 /*
  * This thread pool ensures that tasks scheduled with the same id are executed
@@ -58,5 +42,4 @@ private:
 	void workerDaemon();
 };
 
-
-#endif /* SYNC_THREADPOOL_H_ */
+#endif /* SYNC_ORDEREDTHREADPOOL_H_ */

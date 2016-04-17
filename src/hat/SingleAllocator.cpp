@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "SingleAllocator.h"
+#include "../../include/hat/SingleAllocator.h"
 
 SingleAllocator::SingleAllocator(device_t device_) {
 	id = device_;

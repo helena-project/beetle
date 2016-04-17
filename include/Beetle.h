@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "sync/OrderedThreadPool.h"
 #include "sync/ThreadPool.h"
 
 class AutoConnect;

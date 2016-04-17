@@ -5,7 +5,7 @@
  *      Author: root
  */
 
-#include "BeetleMetaDevice.h"
+#include "../../include/device/BeetleMetaDevice.h"
 
 #include <bluetooth/bluetooth.h>
 #include <cstring>
@@ -13,12 +13,12 @@
 #include <mutex>
 #include <set>
 
-#include "../ble/gatt.h"
-#include "../ble/helper.h"
-#include "../Debug.h"
-#include "../hat/SingleAllocator.h"
-#include "../Handle.h"
-#include "../UUID.h"
+#include "../../include/ble/gatt.h"
+#include "../../include/ble/helper.h"
+#include "../../include/Debug.h"
+#include "../../include/hat/SingleAllocator.h"
+#include "../../include/Handle.h"
+#include "../../include/UUID.h"
 
 BeetleMetaDevice::BeetleMetaDevice(Beetle &beetle, std::string name_) : Device(beetle, BEETLE_RESERVED_DEVICE) {
 	name = name_;

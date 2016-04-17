@@ -15,7 +15,7 @@
 #include <thread>
 #include <vector>
 
-#include "device/LEPeripheral.h"
+#include "../include/device/LEPeripheral.h"
 
 // Print debug info in scanning module
 extern bool debug_scan;

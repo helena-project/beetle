@@ -11,8 +11,8 @@
 #include <cstdbool>
 #include <cstdint>
 
+#include "../../include/hat/HandleAllocationTable.h"
 #include "../Beetle.h"
-#include "HandleAllocationTable.h"
 
 /*
  * Implementation of the HAT interface that allocates

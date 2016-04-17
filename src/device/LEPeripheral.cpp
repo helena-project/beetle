@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "LEPeripheral.h"
+#include "../../include/device/LEPeripheral.h"
 
 #include <bluetooth/l2cap.h>
 #include <stdlib.h>
@@ -14,8 +14,8 @@
 #include <cstring>
 #include <queue>
 
-#include "../ble/att.h"
-#include "../Debug.h"
+#include "../../include/ble/att.h"
+#include "../../include/Debug.h"
 #include "shared.h"
 
 LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType

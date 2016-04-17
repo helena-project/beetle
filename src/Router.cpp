@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "Router.h"
+#include "../include/Router.h"
 
 #include <assert.h>
 #include <bluetooth/bluetooth.h>
@@ -19,14 +19,14 @@
 #include <string>
 #include <utility>
 
-#include "ble/att.h"
-#include "ble/gatt.h"
-#include "ble/helper.h"
-#include "Beetle.h"
-#include "Debug.h"
-#include "hat/HandleAllocationTable.h"
-#include "Handle.h"
-#include "UUID.h"
+#include "../include/ble/att.h"
+#include "../include/ble/gatt.h"
+#include "../include/ble/helper.h"
+#include "../include/Beetle.h"
+#include "../include/Debug.h"
+#include "../include/hat/HandleAllocationTable.h"
+#include "../include/Handle.h"
+#include "../include/UUID.h"
 
 Router::Router(Beetle &beetle_) : beetle(beetle_) {
 

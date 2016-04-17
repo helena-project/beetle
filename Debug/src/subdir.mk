@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/AutoConnect.cpp \
 ../src/Beetle.cpp \
 ../src/CLI.cpp \
 ../src/Device.cpp \
@@ -13,6 +14,7 @@ CPP_SRCS += \
 ../src/UUID.cpp 
 
 OBJS += \
+./src/AutoConnect.o \
 ./src/Beetle.o \
 ./src/CLI.o \
 ./src/Device.o \
@@ -22,6 +24,7 @@ OBJS += \
 ./src/UUID.o 
 
 CPP_DEPS += \
+./src/AutoConnect.d \
 ./src/Beetle.d \
 ./src/CLI.d \
 ./src/Device.d \

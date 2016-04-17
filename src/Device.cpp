@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "Device.h"
+#include "../include/Device.h"
 
 #include <bluetooth/bluetooth.h>
 #include <boost/thread/lock_types.hpp>
@@ -18,13 +18,13 @@
 #include <set>
 #include <utility>
 
-#include "ble/att.h"
-#include "ble/gatt.h"
-#include "Beetle.h"
-#include "device/BeetleMetaDevice.h"
-#include "hat/BlockAllocator.h"
-#include "hat/HandleAllocationTable.h"
-#include "Handle.h"
+#include "../include/ble/att.h"
+#include "../include/ble/gatt.h"
+#include "../include/Beetle.h"
+#include "../include/device/BeetleMetaDevice.h"
+#include "../include/hat/BlockAllocator.h"
+#include "../include/hat/HandleAllocationTable.h"
+#include "../include/Handle.h"
 
 std::atomic_int Device::idCounter(1);
 
@@ -62,16 +62,10 @@ device_t Device::getId() {
 	return id;
 };
 
-/*
- * Returns the device name if it has been set.
- */
 std::string Device::getName() {
 	return name;
 };
 
-/*
- * Returns a enum device type.
- */
 Device::DeviceType Device::getType() {
 	return type;
 };

@@ -8,7 +8,7 @@
 #ifndef HAT_SINGLEALLOCATOR_H_
 #define HAT_SINGLEALLOCATOR_H_
 
-#include "HandleAllocationTable.h"
+#include "../../include/hat/HandleAllocationTable.h"
 
 /*
  * Maps only one device.

@@ -5,14 +5,14 @@
  *      Author: james
  */
 
-#include "UUID.h"
+#include "../include/UUID.h"
 
 #include <assert.h>
 #include <boost/format.hpp>
 #include <cstring>
 #include <sstream>
 
-#include "ble/gatt.h"
+#include "../include/ble/gatt.h"
 
 const int UUID_LEN = 16;
 const int SHORT_UUID_LEN = 2;

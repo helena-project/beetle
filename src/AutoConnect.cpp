@@ -5,18 +5,17 @@
  *      Author: james
  */
 
-#include "AutoConnect.h"
+#include "../include/AutoConnect.h"
 
-#include <boost/thread/pthread/shared_mutex.hpp>
+#include <cassert>
 #include <iostream>
 #include <thread>
 
-#include "../Beetle.h"
-#include "../device/BeetleMetaDevice.h"
-#include "../device/LEPeripheral.h"
-#include "../Debug.h"
-#include "../Device.h"
-#include "../hat/HandleAllocationTable.h"
+#include "../include/Beetle.h"
+#include "../include/Device.h"
+#include "../include/device/LEPeripheral.h"
+#include "../include/Debug.h"
+#include "../include/Device.h"
 
 
 AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_) : beetle{beetle} {

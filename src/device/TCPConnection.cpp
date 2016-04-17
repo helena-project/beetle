@@ -5,9 +5,8 @@
  *      Author: james
  */
 
-#include "TCPConnection.h"
+#include "../../include/device/TCPConnection.h"
 
-#include <asm-generic/socket.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cassert>
@@ -15,9 +14,10 @@
 #include <iostream>
 #include <queue>
 
-#include "../ble/att.h"
-#include "../Debug.h"
-#include "../Device.h"
+#include "../../include/ble/att.h"
+#include "../../include/Device.h"
+#include "../../include/Debug.h"
+#include "shared.h"
 
 TCPConnection::TCPConnection(Beetle &beetle, int sockfd_, std::string name_,
 		struct sockaddr_in sockaddr_) : VirtualDevice(beetle), readThread() {

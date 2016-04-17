@@ -5,11 +5,12 @@
  *      Author: james
  */
 
-#include "BlockAllocator.h"
+#include "../../include/hat/BlockAllocator.h"
 
 #include <assert.h>
-
-#include "../Beetle.h"
+#include <iostream>
+#include <set>
+#include <utility>
 
 #define MAX_HANDLE 0xFFFF
 

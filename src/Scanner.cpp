@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "Scanner.h"
+#include "../include/Scanner.h"
 
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
@@ -16,8 +16,8 @@
 #include <cstring>
 #include <sstream>
 
-#include "ble/helper.h"
-#include "Debug.h"
+#include "../include/ble/helper.h"
+#include "../include/Debug.h"
 
 #define EIR_NAME_SHORT		0x08
 #define EIR_NAME_COMPLETE  	0x09
