@@ -1,7 +1,7 @@
 # Beetle for Linux
 
 ##### Requirements
-- libboost-all-dev, libbluetoothdev
+- libboost-all-dev, libbluetoothdev, libcppnetlib-dev, libasio-dev
 - Eclipse CDT (Mars)
 
 ##### To build and run

@@ -83,6 +83,7 @@ public:
 class Characteristic: public Handle {
 public:
 	Characteristic();
+	uint16_t getAttrHandle();
 	std::string str();
 };
 

@@ -81,7 +81,7 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 	uint8_t *bufCpy = new uint8_t[len];
 	memcpy(bufCpy, buf, len);
 	pendingWrites.increment();
-	beetle.writers.schedule(getId(), [this, bufCpy, len]() -> void {
+	beetle.writers.schedule(getId(), [this, bufCpy, len] {
 		if (write_all(sockfd, bufCpy, len) != len) {
 			if (!isStopped()) {
 				stop();

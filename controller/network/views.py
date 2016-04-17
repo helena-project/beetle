@@ -99,6 +99,7 @@ def connect_entity(request, gateway, entity, remote_id):
 
 	try:
 		entity_conn = ConnectedEntity.objects.get(entity=entity, gateway=gateway_conn)
+		entity_conn.remote_id = remote_id
 		entity_conn.last_seen = datetime.now()
 	except ConnectedEntity.DoesNotExist:
 		entity_conn = ConnectedEntity(
@@ -109,8 +110,8 @@ def connect_entity(request, gateway, entity, remote_id):
 	gateway_conn.last_seen = datetime.now()
 	gateway_conn.save()
 	entity_conn.save()
+
 	services = json.loads(request.body)
-	
 	response = _load_services_and_characteristics(services, entity_conn)
 	if response is None:
 		return HttpResponse("connected")
@@ -122,14 +123,14 @@ def disconnect_entity(request, gateway, remote_id):
 	"""
 	Disconnect an application or peripheral
 	"""
-	if gateway == "*" or entity == "*":
+	if gateway == "*":
 		return HttpResponse(status=400)
 	remote_id = int(remote_id)
 
-	entity_conn = ConnectedEntity.objects.filter(
+	entity_conns = ConnectedEntity.objects.filter(
 		gateway__gateway__name=gateway, 
 		remote_id__lte=remote_id)
-	entity_conn.delete()
+	entity_conns.delete()
 
 	return HttpResponse("disconnected")
 

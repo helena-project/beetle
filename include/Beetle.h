@@ -18,11 +18,13 @@
 #include "sync/OrderedThreadPool.h"
 #include "sync/ThreadPool.h"
 
-class AutoConnect;
 class Device;
 class BeetleInternal;
 class Router;
 
+/*
+ * Id representing a local virtual device instance.
+ */
 typedef long device_t;
 const device_t BEETLE_RESERVED_DEVICE = 0;
 const device_t NULL_RESERVED_DEVICE = -1;
@@ -69,6 +71,9 @@ public:
 	void registerRemoveDeviceHandler(RemoveDeviceHandler h);
 	std::vector<RemoveDeviceHandler> removeHandlers;
 
+	/*
+	 * Global map of all devices at this instance.
+	 */
 	std::map<device_t, Device *> devices;
 	boost::shared_mutex devicesMutex;
 
@@ -83,7 +88,7 @@ public:
 	BeetleInternal *beetleDevice;
 
 	/*
-	 *
+	 * Router object to route ATT packets
 	 */
 	Router *router;
 

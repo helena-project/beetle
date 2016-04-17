@@ -146,7 +146,7 @@ int VirtualDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&res
 
 	Semaphore sema(0);
 	int respLen;
-	bool success = writeTransaction(buf, len, [&sema, &resp, &respLen](uint8_t *resp_, int respLen_) -> void {
+	bool success = writeTransaction(buf, len, [&sema, &resp, &respLen](uint8_t *resp_, int respLen_) {
 		resp = new uint8_t[respLen_];
 		memcpy(resp, resp_, respLen_);
 		respLen = respLen_;

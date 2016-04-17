@@ -4,6 +4,7 @@
 ./manage.py makemigrations beetle
 ./manage.py makemigrations gatt
 ./manage.py makemigrations policy
+./manage.py makemigrations network
 ./manage.py migrate
 
 ./manage.py loaddata initial_data

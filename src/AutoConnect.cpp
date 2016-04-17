@@ -25,7 +25,7 @@ AutoConnect::~AutoConnect() {
 }
 
 DiscoveryHandler AutoConnect::getDiscoveryHandler() {
-	return [this](std::string addr, peripheral_info_t info) -> void {
+	return [this](std::string addr, peripheral_info_t info) {
 		if (maxConcurrentAttempts.try_wait()) {
 			std::lock_guard<std::mutex> lg(m);
 			time_t now = time(NULL);

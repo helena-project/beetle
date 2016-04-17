@@ -85,7 +85,7 @@ void Device::unsubscribeAll(device_t d) {
 				memset(req, 0, reqLen);
 				req[0] = ATT_OP_WRITE_REQ;
 				*(uint16_t *)(req + 1) = htobs(handle->getHandle());
-				writeTransaction(req, reqLen, [](uint8_t *resp, int respLen) -> void {});
+				writeTransaction(req, reqLen, [](uint8_t *resp, int respLen) {});
 			}
 		}
 	}

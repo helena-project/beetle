@@ -28,7 +28,7 @@ class Characteristic(models.Model):
 	""" 
 	A GATT characteristic 
 	"""
-	name = models.CharField(max_length=200, unique=True)
+	name = models.CharField(max_length=200)
 	uuid = models.CharField(
 		max_length=36, 
 		blank=True, 

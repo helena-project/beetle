@@ -458,7 +458,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 			pdebug("ReadByTypeRequest to " + destinationDevice->getName());
 		}
 
-		destinationDevice->writeTransaction(buf, len, [this, src, dst, attType, handleRange, startHandle](uint8_t *resp, int respLen) -> void {
+		destinationDevice->writeTransaction(buf, len, [this, src, dst, attType, handleRange, startHandle](uint8_t *resp, int respLen) {
 			/*
 			 * Lock devices
 			 */
@@ -683,7 +683,7 @@ int Router::routeHandleNotifyOrIndicate(uint8_t *buf, int len, device_t src) {
 			if (buf[0] == ATT_OP_HANDLE_NOTIFY) {
 				destinationDevice->writeCommand(buf, len);
 			} else if (buf[0] == ATT_OP_HANDLE_IND) {
-				destinationDevice->writeTransaction(buf, len, [dst](uint8_t *a, int b) -> void {
+				destinationDevice->writeTransaction(buf, len, [dst](uint8_t *a, int b) {
 					if (debug_router) {
 						pdebug("got confirmation from " + std::to_string(dst));
 					}
@@ -770,7 +770,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		if (dst != BEETLE_RESERVED_DEVICE &&
 				((numSubscribers == 0 && buf[3] == 0) || (numSubscribers == 1 && buf[3] == 1))) {
 			*(uint16_t *)(buf + 1) = htobs(remoteHandle);
-			destinationDevice->writeTransaction(buf, len, [this, handle, src, dst, opCode](uint8_t *resp, int respLen) -> void {
+			destinationDevice->writeTransaction(buf, len, [this, handle, src, dst, opCode](uint8_t *resp, int respLen) {
 				/*
 				 * Lock devices
 				 */
@@ -816,7 +816,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 			destinationDevice->writeCommand(buf, len);
 		} else {
 			destinationDevice->writeTransaction(buf, len,
-					[this, opCode, src, dst, handle, remoteHandle](uint8_t *resp, int respLen) -> void {
+					[this, opCode, src, dst, handle, remoteHandle](uint8_t *resp, int respLen) {
 				/*
 				 * Lock devices
 				 */

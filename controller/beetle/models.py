@@ -29,9 +29,9 @@ class Entity(models.Model):
 
 	def __unicode__(self):
 		if self.etype == self.DEVICE:
-			prefix = "d_"
+			prefix = "(d) "
 		elif self.etype == self.APP: 
-			prefix = "a_"
+			prefix = "(a) "
 		else:
 			prefix = ""
 		return prefix + self.name
@@ -56,4 +56,4 @@ class Gateway(models.Model):
 	trusted = models.BooleanField(default=False)
 
 	def __unicode__(self):
-		return "gw_" + self.name
+		return "(gw) " + self.name
