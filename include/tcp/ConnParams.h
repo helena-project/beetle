@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef TCP_CONNPARAMS_H_
-#define TCP_CONNPARAMS_H_
+#ifndef INCLUDE_TCP_CONNPARAMS_H_
+#define INCLUDE_TCP_CONNPARAMS_H_
 
 /*
  * Indicate that the client is a gateway. Value is the gateway's name.
@@ -29,4 +29,4 @@ const std::string TCP_PARAM_CLIENT = "client";
  */
 const std::string TCP_PARAM_SERVER = "server";
 
-#endif /* TCP_CONNPARAMS_H_ */
+#endif /* INCLUDE_TCP_CONNPARAMS_H_ */

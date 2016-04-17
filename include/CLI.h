@@ -5,16 +5,17 @@
  *      Author: james
  */
 
-#ifndef CLI_H_
-#define CLI_H_
+#ifndef INCLUDE_CLI_H_
+#define INCLUDE_CLI_H_
 
-#include <cstdbool>
+#include <map>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
 
-#include "../include/Beetle.h"
-#include "../include/Scanner.h"
+#include "Beetle.h"
+#include "Scanner.h"
 
 class CLI {
 public:
@@ -65,4 +66,4 @@ private:
 	int aliasCounter;
 };
 
-#endif /* CLI_H_ */
+#endif /* INCLUDE_CLI_H_ */

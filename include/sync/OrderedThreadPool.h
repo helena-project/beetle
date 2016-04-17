@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef SYNC_ORDEREDTHREADPOOL_H_
-#define SYNC_ORDEREDTHREADPOOL_H_
+#ifndef INCLUDE_SYNC_ORDEREDTHREADPOOL_H_
+#define INCLUDE_SYNC_ORDEREDTHREADPOOL_H_
 
 #include <functional>
 #include <list>
@@ -42,4 +42,4 @@ private:
 	void workerDaemon();
 };
 
-#endif /* SYNC_ORDEREDTHREADPOOL_H_ */
+#endif /* INCLUDE_SYNC_ORDEREDTHREADPOOL_H_ */

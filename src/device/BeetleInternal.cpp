@@ -2,10 +2,10 @@
  * BeetleDevice.cpp
  *
  *  Created on: Apr 3, 2016
- *      Author: root
+ *      Author: james
  */
 
-#include "../../include/device/BeetleMetaDevice.h"
+#include "../../include/device/BeetleInternal.h"
 
 #include <bluetooth/bluetooth.h>
 #include <cstring>
@@ -20,34 +20,29 @@
 #include "../../include/Handle.h"
 #include "../../include/UUID.h"
 
-BeetleMetaDevice::BeetleMetaDevice(Beetle &beetle, std::string name_) : Device(beetle, BEETLE_RESERVED_DEVICE) {
+BeetleInternal::BeetleInternal(Beetle &beetle, std::string name_) : Device(beetle,
+		BEETLE_RESERVED_DEVICE, new SingleAllocator(NULL_RESERVED_DEVICE)) {
 	name = name_;
-	type = BEETLE_META;
+	type = BEETLE_INTERNAL;
 	init();
-
-	/*
-	 * TODO: Again, not pretty. BeetleMetaDevice is a client to none.
-	 */
-	delete hat;
-	hat = new SingleAllocator(NULL_RESERVED_DEVICE);
 }
 
-BeetleMetaDevice::~BeetleMetaDevice() {
+BeetleInternal::~BeetleInternal() {
 
 }
 
-bool BeetleMetaDevice::writeResponse(uint8_t *buf, int len) {
+bool BeetleInternal::writeResponse(uint8_t *buf, int len) {
 	throw DeviceException(getName() + " does not make requests");
 }
 
-bool BeetleMetaDevice::writeCommand(uint8_t *buf, int len) {
+bool BeetleInternal::writeCommand(uint8_t *buf, int len) {
 	if (debug) {
 		pwarn("Beetle received an unanticipated command");
 	}
 	return true;
 }
 
-bool BeetleMetaDevice::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
+bool BeetleInternal::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
 	if (debug) {
 		pwarn("Beetle received an unanticipated request");
 	}
@@ -61,14 +56,14 @@ bool BeetleMetaDevice::writeTransaction(uint8_t *buf, int len, std::function<voi
 /*
  * Should never get called. All reads and writes are serviced by the cache.
  */
-int BeetleMetaDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp) {
+int BeetleInternal::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp) {
 	if (debug) {
 		pwarn("Beetle received an unanticipated request");
 	}
 	return pack_error_pdu(buf[0], 0, ATT_ECODE_UNLIKELY, resp); // TODO: probably not the right error code
 }
 
-void BeetleMetaDevice::informServicesChanged(handle_range_t range, device_t dst) {
+void BeetleInternal::informServicesChanged(handle_range_t range, device_t dst) {
 	if (debug) {
 		pdebug("informing " + std::to_string(dst) + " of service change " + range.str());
 	}
@@ -96,7 +91,7 @@ void BeetleMetaDevice::informServicesChanged(handle_range_t range, device_t dst)
 	}
 }
 
-void BeetleMetaDevice::init() {
+void BeetleInternal::init() {
 	std::lock_guard<std::recursive_mutex> lg(handlesMutex);
 	uint16_t handleAlloc = 1; // 0 is special
 

@@ -5,18 +5,14 @@
  *      Author: james
  */
 
-#ifndef SYNC_THREADPOOL_H_
-#define SYNC_THREADPOOL_H_
+#ifndef INCLUDE_SYNC_THREADPOOL_H_
+#define INCLUDE_SYNC_THREADPOOL_H_
 
 #include <functional>
-#include <list>
-#include <mutex>
-#include <set>
 #include <thread>
 #include <vector>
 
-#include "../../include/sync/BlockingQueue.h"
-#include "../../include/sync/Semaphore.h"
+#include "BlockingQueue.h"
 
 /*
  * This thread pool makes no ordering guarantees.
@@ -33,4 +29,4 @@ private:
 	void workerDaemon();
 };
 
-#endif /* SYNC_THREADPOOL_H_ */
+#endif /* INCLUDE_SYNC_THREADPOOL_H_ */

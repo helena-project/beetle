@@ -15,9 +15,8 @@
 #include <iostream>
 #include <thread>
 
-#include "../../include/device/IPCApplication.h"
+#include "../../include/device/socket/IPCApplication.h"
 #include "../../include/Debug.h"
-#include "../../include/Device.h"
 
 UnixDomainSocketServer::UnixDomainSocketServer(Beetle &beetle, std::string path_) : beetle(beetle), t() {
 	path = path_;

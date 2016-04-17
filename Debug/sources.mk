@@ -26,6 +26,8 @@ SUBDIRS := \
 src \
 src/control \
 src/device \
+src/device/socket \
+src/device/socket/tcp \
 src/hat \
 src/ipc \
 src/sync \

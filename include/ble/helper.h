@@ -5,15 +5,15 @@
  *      Author: james
  */
 
-#ifndef BLE_HELPER_H_
-#define BLE_HELPER_H_
+#ifndef INCLUDE_BLE_HELPER_H_
+#define INCLUDE_BLE_HELPER_H_
 
 #include <bluetooth/bluetooth.h>
 #include <cstdint>
 #include <string>
 
-#include "../../include/ble/att.h"
 #include "../UUID.h"
+#include "att.h"
 
 inline int pack_error_pdu(uint8_t opCode, uint16_t handle, uint8_t errCode, uint8_t *&buf) {
 	buf = new uint8_t[5];
@@ -98,4 +98,4 @@ inline bool isBdAddr(const std::string &s) {
 }
 
 
-#endif /* BLE_HELPER_H_ */
+#endif /* INCLUDE_BLE_HELPER_H_ */

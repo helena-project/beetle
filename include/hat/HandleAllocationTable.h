@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef HAT_HANDLEALLOCATIONTABLE_H_
-#define HAT_HANDLEALLOCATIONTABLE_H_
+#ifndef INCLUDE_HAT_HANDLEALLOCATIONTABLE_H_
+#define INCLUDE_HAT_HANDLEALLOCATIONTABLE_H_
 
 #include <cstdint>
 #include <set>
@@ -70,4 +70,4 @@ public:
 	virtual handle_range_t free(device_t) = 0;
 };
 
-#endif /* HAT_HANDLEALLOCATIONTABLE_H_ */
+#endif /* INCLUDE_HAT_HANDLEALLOCATIONTABLE_H_ */

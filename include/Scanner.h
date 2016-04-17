@@ -5,17 +5,18 @@
  *      Author: james
  */
 
-#ifndef SCANNER_H_
-#define SCANNER_H_
+#ifndef INCLUDE_SCANNER_H_
+#define INCLUDE_SCANNER_H_
 
 #include <bluetooth/bluetooth.h>
+#include <cstdint>
 #include <exception>
 #include <functional>
 #include <string>
 #include <thread>
 #include <vector>
 
-#include "../include/device/LEPeripheral.h"
+#include "device/socket/LEPeripheral.h"
 
 // Print debug info in scanning module
 extern bool debug_scan;
@@ -76,4 +77,4 @@ private:
 	void scanDaemon();
 };
 
-#endif /* SCANNER_H_ */
+#endif /* INCLUDE_SCANNER_H_ */

@@ -5,10 +5,12 @@
  *      Author: james
  */
 
-#ifndef ROUTER_H_
-#define ROUTER_H_
+#ifndef INCLUDE_ROUTER_H_
+#define INCLUDE_ROUTER_H_
 
-#include "../include/Device.h"
+#include <cstdint>
+
+#include "Beetle.h"
 
 /* Extra debugging when routing. */
 extern bool debug_router;
@@ -35,4 +37,4 @@ private:
 	int routeUnsupported(uint8_t *buf, int len, device_t src);
 };
 
-#endif /* ROUTER_H_ */
+#endif /* INCLUDE_ROUTER_H_ */

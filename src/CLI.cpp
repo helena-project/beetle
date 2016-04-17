@@ -24,16 +24,14 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
-#include <map>
-#include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
 
 #include "../include/ble/helper.h"
-#include "../include/device/LEPeripheral.h"
-#include "../include/device/TCPClientProxy.h"
-#include "../include/device/TCPServerProxy.h"
+#include "../include/device/socket/LEPeripheral.h"
+#include "../include/device/socket/tcp/TCPClientProxy.h"
+#include "../include/device/socket/tcp/TCPServerProxy.h"
 #include "../include/Debug.h"
 #include "../include/Device.h"
 #include "../include/hat/HandleAllocationTable.h"

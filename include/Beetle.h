@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef BEETLE_H_
-#define BEETLE_H_
+#ifndef INCLUDE_BEETLE_H_
+#define INCLUDE_BEETLE_H_
 
 #include <mutex>
 #include <boost/thread.hpp>
@@ -20,7 +20,7 @@
 
 class AutoConnect;
 class Device;
-class BeetleMetaDevice;
+class BeetleInternal;
 class Router;
 
 typedef long device_t;
@@ -80,7 +80,7 @@ public:
 	/*
 	 * Simulated device for Beetle's own services.
 	 */
-	BeetleMetaDevice *beetleDevice;
+	BeetleInternal *beetleDevice;
 
 	/*
 	 *
@@ -98,4 +98,4 @@ public:
 	OrderedThreadPool writers;
 };
 
-#endif /* BEETLE_H_ */
+#endif /* INCLUDE_BEETLE_H_ */

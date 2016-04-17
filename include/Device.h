@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef DEVICE_H_
-#define DEVICE_H_
+#ifndef INCLUDE_DEVICE_H_
+#define INCLUDE_DEVICE_H_
 
 #include <atomic>
 #include <cstdint>
@@ -16,9 +16,10 @@
 #include <mutex>
 #include <string>
 
-#include "../include/Beetle.h"
-#include "../include/Handle.h"
-#include "hat/HandleAllocationTable.h"
+#include "Beetle.h"
+#include "Handle.h"
+
+class HandleAllocationTable;
 
 class DeviceException : public std::exception {
   public:
@@ -37,7 +38,7 @@ public:
 
 	enum DeviceType {
 		UNKNOWN = -1,
-		BEETLE_META = 0,
+		BEETLE_INTERNAL = 0,
 		LE_PERIPHERAL = 1,
 		TCP_CONNECTION = 2,
 		IPC_APPLICATION = 3,
@@ -123,8 +124,8 @@ protected:
 	/*
 	 * Cannot instantiate a device directly.
 	 */
-	Device(Beetle &beetle);
-	Device(Beetle &beetle, device_t id);
+	Device(Beetle &beetle, HandleAllocationTable *hat = NULL);
+	Device(Beetle &beetle, device_t id, HandleAllocationTable *hat = NULL);
 
 	Beetle &beetle;
 
@@ -137,4 +138,4 @@ private:
 	static const std::string deviceType2Str[];
 };
 
-#endif /* DEVICE_H_ */
+#endif /* INCLUDE_DEVICE_H_ */

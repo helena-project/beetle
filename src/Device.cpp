@@ -8,45 +8,33 @@
 #include "../include/Device.h"
 
 #include <bluetooth/bluetooth.h>
-#include <boost/thread/lock_types.hpp>
-#include <boost/thread/pthread/shared_mutex.hpp>
-#include <atomic>
-#include <cstdint>
 #include <cstring>
-#include <map>
-#include <mutex>
 #include <set>
 #include <utility>
 
 #include "../include/ble/att.h"
 #include "../include/ble/gatt.h"
-#include "../include/Beetle.h"
-#include "../include/device/BeetleMetaDevice.h"
 #include "../include/hat/BlockAllocator.h"
-#include "../include/hat/HandleAllocationTable.h"
-#include "../include/Handle.h"
 
 std::atomic_int Device::idCounter(1);
 
 const std::string Device::deviceType2Str[] = {
-		"ThisBeetleInstance", 	// 0
-		"LePeripheral", 		// 1
-		"TcpConnection",		// 2
-		"IpcApplication",		// 3
-		"TcpClientProxy",		// 4
-		"TcpServerProxy",		// 5
+		"BeetleInternal", 	// 0
+		"LePeripheral", 	// 1
+		"TcpConnection",	// 2
+		"IpcApplication",	// 3
+		"TcpClientProxy",	// 4
+		"TcpServerProxy",	// 5
 };
 
+Device::Device(Beetle &beetle_, HandleAllocationTable *hat_) : Device(beetle_, idCounter++, hat_) {};
 
-Device::Device(Beetle &beetle_) : beetle(beetle_) {
-	id = idCounter++;
-	hat = new BlockAllocator(256);
-	type = UNKNOWN;
-}
-
-Device::Device(Beetle &beetle_, device_t id_) : beetle(beetle_) {
+Device::Device(Beetle &beetle_, device_t id_, HandleAllocationTable *hat_) : beetle(beetle_) {
 	id = id_;
-	hat = new BlockAllocator(256);
+	hat = hat_;
+	if (!hat) {
+		hat = new BlockAllocator(256);
+	}
 	type = UNKNOWN;
 }
 

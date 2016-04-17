@@ -5,13 +5,13 @@
  *      Author: james
  */
 
-#ifndef DEVICE_TCPCLIENTPROXY_H_
-#define DEVICE_TCPCLIENTPROXY_H_
+#ifndef INCLUDE_DEVICE_SOCKET_TCP_TCPCLIENTPROXY_H_
+#define INCLUDE_DEVICE_SOCKET_TCP_TCPCLIENTPROXY_H_
 
 #include <string>
 
-#include "../../include/device/TCPConnection.h"
-#include "../Beetle.h"
+#include "../../../Beetle.h"
+#include "../TCPConnection.h"
 
 /*
  * Dummy device representing a client at a different Beetle gateway.
@@ -30,4 +30,4 @@ private:
 	std::string clientGateway;
 };
 
-#endif /* DEVICE_TCPCLIENTPROXY_H_ */
+#endif /* INCLUDE_DEVICE_SOCKET_TCP_TCPCLIENTPROXY_H_ */

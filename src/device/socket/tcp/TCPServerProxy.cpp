@@ -5,33 +5,27 @@
  *      Author: james
  */
 
-#include "../../include/device/TCPServerProxy.h"
+#include "../../../../include/device/socket/tcp/TCPServerProxy.h"
 
 #include <netdb.h>
+#include <netinet/in.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cstdint>
 #include <sstream>
 
-#include "../../include/Device.h"
-#include "../../include/hat/SingleAllocator.h"
-#include "../../include/tcp/ConnParams.h"
-#include "shared.h"
+#include "../../../../include/Device.h"
+#include "../../../../include/hat/SingleAllocator.h"
+#include "../../../../include/tcp/ConnParams.h"
+#include "../shared.h"
 
 TCPServerProxy::TCPServerProxy(Beetle &beetle, int sockfd, std::string serverGateway_,
 		struct sockaddr_in serverGatewaySockAddr_, device_t remoteProxyTo_)
-: TCPConnection(beetle, sockfd, "", serverGatewaySockAddr_) {
+: TCPConnection(beetle, sockfd, "", serverGatewaySockAddr_, new SingleAllocator(NULL_RESERVED_DEVICE)) {
 	type = TCP_SERVER_PROXY;
 
 	serverGateway = serverGateway_;
-
-	/*
-	 * TODO: Not happy about this. Base class makes a hat...
-	 */
-	delete hat;
-	hat = new SingleAllocator(NULL_RESERVED_DEVICE);
-
 	remoteProxyTo = remoteProxyTo_;
 }
 

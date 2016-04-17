@@ -12,13 +12,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cstdint>
-#include <cstring>
 #include <iostream>
 #include <utility>
 
-#include "../../include/device/TCPClientProxy.h"
+#include "../../include/device/socket/tcp/TCPClientProxy.h"
 #include "../../include/Debug.h"
-#include "../../include/Device.h"
 #include "../../include/tcp/ConnParams.h"
 
 TCPDeviceServer::TCPDeviceServer(Beetle &beetle, int port) : beetle(beetle) {

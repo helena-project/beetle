@@ -2,11 +2,11 @@
  * BeetleDevice.h
  *
  *  Created on: Apr 3, 2016
- *      Author: root
+ *      Author: james
  */
 
-#ifndef DEVICE_BEETLEMETADEVICE_H_
-#define DEVICE_BEETLEMETADEVICE_H_
+#ifndef INCLUDE_DEVICE_BEETLEINTERNAL_H_
+#define INCLUDE_DEVICE_BEETLEINTERNAL_H_
 
 #include <cstdint>
 #include <functional>
@@ -20,13 +20,13 @@
 /*
  * Fully synchronous simulated device for this Beetle.
  */
-class BeetleMetaDevice: public Device {
+class BeetleInternal: public Device {
 public:
 	/*
 	 * Initialize Beetle with name in its own handle space.
 	 */
-	BeetleMetaDevice(Beetle &beetle, std::string name);
-	virtual ~BeetleMetaDevice();
+	BeetleInternal(Beetle &beetle, std::string name);
+	virtual ~BeetleInternal();
 
 	int getMTU() { return ATT_DEFAULT_LE_MTU; };
 
@@ -52,4 +52,4 @@ private:
 	Handle *serviceChangedAttr;
 };
 
-#endif /* DEVICE_BEETLEMETADEVICE_H_ */
+#endif /* INCLUDE_DEVICE_BEETLEINTERNAL_H_ */

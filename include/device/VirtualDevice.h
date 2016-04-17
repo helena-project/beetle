@@ -8,11 +8,13 @@
 #ifndef VIRTUALDEVICE_H_
 #define VIRTUALDEVICE_H_
 
+#include <stddef.h>
 #include <cstdint>
 #include <functional>
 #include <mutex>
 #include <queue>
 
+#include "../Beetle.h"
 #include "../Device.h"
 
 // Debug the GATT handle discovery.
@@ -46,7 +48,7 @@ protected:
 	/*
 	 * Cannot instantiate a VirtualDevice
 	 */
-	VirtualDevice(Beetle &beetle);
+	VirtualDevice(Beetle &beetle, HandleAllocationTable *hat = NULL);
 
 	/*
 	 * Called by derived class when a packet is received.

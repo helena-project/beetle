@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef BLE_GATT_H_
-#define BLE_GATT_H_
+#ifndef INCLUDE_BLE_GATT_H_
+#define INCLUDE_BLE_GATT_H_
 
 /* GATT Profile Attribute types */
 #define GATT_PRIM_SVC_UUID		0x2800
@@ -60,4 +60,4 @@
 /* Base UUID */
 const uint8_t BLUETOOTH_BASE_UUID[16] = {0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB};
 
-#endif /* BLE_GATT_H_ */
+#endif /* INCLUDE_BLE_GATT_H_ */

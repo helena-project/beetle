@@ -17,14 +17,13 @@
 #include "../../include/ble/att.h"
 #include "../../include/ble/gatt.h"
 #include "../../include/ble/helper.h"
-#include "../../include/Beetle.h"
 #include "../../include/Debug.h"
 #include "../../include/Handle.h"
 #include "../../include/Router.h"
 #include "../../include/sync/Semaphore.h"
 #include "../../include/UUID.h"
 
-VirtualDevice::VirtualDevice(Beetle &beetle) : Device(beetle) {
+VirtualDevice::VirtualDevice(Beetle &beetle, HandleAllocationTable *hat) : Device(beetle, hat) {
 	started = false;
 	stopped = false;
 	currentTransaction = NULL;

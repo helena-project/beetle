@@ -5,14 +5,14 @@
  *      Author: james
  */
 
-#ifndef HAT_BLOCKALLOCATOR_H_
-#define HAT_BLOCKALLOCATOR_H_
+#ifndef INCLUDE_HAT_BLOCKALLOCATOR_H_
+#define INCLUDE_HAT_BLOCKALLOCATOR_H_
 
-#include <cstdbool>
 #include <cstdint>
+#include <set>
 
-#include "../../include/hat/HandleAllocationTable.h"
 #include "../Beetle.h"
+#include "HandleAllocationTable.h"
 
 /*
  * Implementation of the HAT interface that allocates
@@ -35,4 +35,4 @@ private:
 	device_t *blocks;
 };
 
-#endif /* HAT_BLOCKALLOCATOR_H_ */
+#endif /* INCLUDE_HAT_BLOCKALLOCATOR_H_ */

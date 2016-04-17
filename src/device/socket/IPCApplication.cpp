@@ -5,16 +5,16 @@
  *      Author: james
  */
 
-#include "../../include/device/IPCApplication.h"
+#include "../../../include/device/socket/IPCApplication.h"
 
+#include <asm-generic/socket.h>
 #include <unistd.h>
 #include <cstring>
 #include <iostream>
 #include <string>
 
-#include "../../include/Debug.h"
-#include "../../include/sync/Countdown.h"
-#include "../../include/sync/ThreadPool.h"
+#include "../../../include/Debug.h"
+#include "../../../include/sync/OrderedThreadPool.h"
 #include "shared.h"
 
 IPCApplication::IPCApplication(Beetle &beetle, int sockfd_, std::string name_,

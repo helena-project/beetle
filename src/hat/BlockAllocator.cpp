@@ -9,7 +9,6 @@
 
 #include <assert.h>
 #include <iostream>
-#include <set>
 #include <utility>
 
 #define MAX_HANDLE 0xFFFF

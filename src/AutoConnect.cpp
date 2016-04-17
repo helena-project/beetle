@@ -11,9 +11,7 @@
 #include <iostream>
 #include <thread>
 
-#include "../include/Beetle.h"
-#include "../include/Device.h"
-#include "../include/device/LEPeripheral.h"
+#include "../include/device/socket/LEPeripheral.h"
 #include "../include/Debug.h"
 #include "../include/Device.h"
 

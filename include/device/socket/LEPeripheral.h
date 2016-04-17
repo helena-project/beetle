@@ -5,16 +5,16 @@
  *      Author: james
  */
 
-#ifndef DEVICE_LEPERIPHERAL_H_
-#define DEVICE_LEPERIPHERAL_H_
+#ifndef INCLUDE_DEVICE_SOCKET_LEPERIPHERAL_H_
+#define INCLUDE_DEVICE_SOCKET_LEPERIPHERAL_H_
 
 #include <bluetooth/bluetooth.h>
 #include <cstdint>
 #include <thread>
 
-#include "../../include/device/VirtualDevice.h"
-#include "../Beetle.h"
-#include "../sync/Countdown.h"
+#include "../../Beetle.h"
+#include "../../sync/Countdown.h"
+#include "../VirtualDevice.h"
 
 enum AddrType {
 	PUBLIC, RANDOM,
@@ -42,4 +42,4 @@ private:
 	Countdown pendingWrites;
 };
 
-#endif /* DEVICE_LEPERIPHERAL_H_ */
+#endif /* INCLUDE_DEVICE_SOCKET_LEPERIPHERAL_H_ */

@@ -5,12 +5,12 @@
  *      Author: james
  */
 
-#ifndef CONTROL_NETWORKREPORTER_H_
-#define CONTROL_NETWORKREPORTER_H_
+#ifndef INCLUDE_CONTROL_NETWORKREPORTER_H_
+#define INCLUDE_CONTROL_NETWORKREPORTER_H_
 
 #include <string>
 
-#include "../../include/Beetle.h"
+#include "../Beetle.h"
 
 /*
  * Reports devices connected and disconnected.
@@ -28,4 +28,4 @@ private:
 	std::string hostAndPort;
 };
 
-#endif /* CONTROL_NETWORKREPORTER_H_ */
+#endif /* INCLUDE_CONTROL_NETWORKREPORTER_H_ */

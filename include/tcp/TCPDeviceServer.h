@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef TCP_TCPDEVICESERVER_H_
-#define TCP_TCPDEVICESERVER_H_
+#ifndef INCLUDE_TCP_TCPDEVICESERVER_H_
+#define INCLUDE_TCP_TCPDEVICESERVER_H_
 
 #include <exception>
 #include <map>
@@ -45,4 +45,4 @@ private:
 			std::map<std::string,std::string> &params);
 };
 
-#endif /* TCP_TCPDEVICESERVER_H_ */
+#endif /* INCLUDE_TCP_TCPDEVICESERVER_H_ */

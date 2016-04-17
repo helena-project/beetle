@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef UUID_H_
-#define UUID_H_
+#ifndef INCLUDE_UUID_H_
+#define INCLUDE_UUID_H_
 
 #include <stddef.h>
 #include <cstdint>
@@ -65,4 +65,4 @@ private:
 	uuid_t uuid;
 };
 
-#endif /* UUID_H_ */
+#endif /* INCLUDE_UUID_H_ */

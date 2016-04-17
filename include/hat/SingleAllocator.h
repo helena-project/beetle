@@ -5,13 +5,17 @@
  *      Author: james
  */
 
-#ifndef HAT_SINGLEALLOCATOR_H_
-#define HAT_SINGLEALLOCATOR_H_
+#ifndef INCLUDE_HAT_SINGLEALLOCATOR_H_
+#define INCLUDE_HAT_SINGLEALLOCATOR_H_
 
-#include "../../include/hat/HandleAllocationTable.h"
+#include <cstdint>
+#include <set>
+
+#include "../Beetle.h"
+#include "HandleAllocationTable.h"
 
 /*
- * Maps only one device.
+ * Immutably maps only one device.
  */
 class SingleAllocator: public HandleAllocationTable {
 public:
@@ -27,4 +31,4 @@ private:
 	device_t id;
 };
 
-#endif /* HAT_SINGLEALLOCATOR_H_ */
+#endif /* INCLUDE_HAT_SINGLEALLOCATOR_H_ */

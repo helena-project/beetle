@@ -8,21 +8,23 @@
 #ifndef TCPCONNECTION_H_
 #define TCPCONNECTION_H_
 
+
 #include <cstdint>
 #include <netinet/in.h>
 #include <string>
 #include <thread>
 
-#include "../../include/device/VirtualDevice.h"
-#include "../Beetle.h"
-#include "../sync/Countdown.h"
+#include "../../Beetle.h"
+#include "../../sync/Countdown.h"
+#include "../VirtualDevice.h"
 
 /*
  * Remote "device" connected using TCP.
  */
 class TCPConnection: public VirtualDevice {
 public:
-	TCPConnection(Beetle &beetle, int sockfd, std::string name, struct sockaddr_in sockaddr);
+	TCPConnection(Beetle &beetle, int sockfd, std::string name,
+			struct sockaddr_in sockaddr, HandleAllocationTable *hat = NULL);
 	virtual ~TCPConnection();
 
 	int getMTU();

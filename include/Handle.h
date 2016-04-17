@@ -5,16 +5,16 @@
  *      Author: james
  */
 
-#ifndef HANDLE_H_
-#define HANDLE_H_
+#ifndef INCLUDE_HANDLE_H_
+#define INCLUDE_HANDLE_H_
 
 #include <cstdint>
 #include <ctime>
 #include <set>
 #include <string>
 
-#include "../include/Beetle.h"
-#include "../include/UUID.h"
+#include "Beetle.h"
+#include "UUID.h"
 
 class CachedHandle {
 public:
@@ -92,4 +92,4 @@ public:
 	std::string str();
 };
 
-#endif /* HANDLE_H_ */
+#endif /* INCLUDE_HANDLE_H_ */

@@ -5,18 +5,21 @@
  *      Author: james
  */
 
-#include "../../include/device/LEPeripheral.h"
+#include "../../../include/device/socket/LEPeripheral.h"
 
 #include <bluetooth/l2cap.h>
-#include <stdlib.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cstring>
-#include <queue>
+#include <iostream>
+#include <string>
 
-#include "../../include/ble/att.h"
-#include "../../include/Debug.h"
+#include "../../../include/ble/att.h"
+#include "../../../include/Debug.h"
+#include "../../../include/Device.h"
+#include "../../../include/sync/OrderedThreadPool.h"
 #include "shared.h"
+
 
 LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType
 		) : VirtualDevice(beetle), readThread() {

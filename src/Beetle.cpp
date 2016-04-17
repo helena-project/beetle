@@ -15,9 +15,9 @@
 
 #include "../include/AutoConnect.h"
 #include "../include/CLI.h"
-#include "../include/device/BeetleMetaDevice.h"
+#include "../include/device/BeetleInternal.h"
 #include "../include/Debug.h"
-#include "../include/Device.h"
+#include "../include/hat/HandleAllocationTable.h"
 #include "../include/ipc/UnixDomainSocketServer.h"
 #include "../include/Router.h"
 #include "../include/Scanner.h"
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
 
 Beetle::Beetle(std::string name_) : workers(1), writers(4) {
 	router = new Router(*this);
-	beetleDevice = new BeetleMetaDevice(*this, name_);
+	beetleDevice = new BeetleInternal(*this, name_);
 	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
 	name = name_;
 }

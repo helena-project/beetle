@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef DEVICE_SHARED_H_
-#define DEVICE_SHARED_H_
+#ifndef DEVICE_SOCKET_SHARED_H_
+#define DEVICE_SOCKET_SHARED_H_
 
 inline int write_all(int fd, uint8_t *buf, int len) {
 	int written = 0;
@@ -21,4 +21,4 @@ inline int write_all(int fd, uint8_t *buf, int len) {
 }
 
 
-#endif /* DEVICE_SHARED_H_ */
+#endif /* DEVICE_SOCKET_SHARED_H_ */

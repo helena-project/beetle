@@ -7,16 +7,10 @@
 
 #include "../../include/sync/ThreadPool.h"
 
-#include <cassert>
 #include <stddef.h>
-#include <list>
-#include <map>
-#include <mutex>
+#include <cassert>
 #include <queue>
-#include <set>
-#include <utility>
 
-#include "../../include/sync/Semaphore.h"
 
 ThreadPool::ThreadPool(int n) {
 	running = true;

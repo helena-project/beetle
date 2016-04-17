@@ -11,19 +11,19 @@
 #include <bluetooth/bluetooth.h>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
-#include <cstdint>
 #include <cstring>
 #include <map>
 #include <mutex>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 
 #include "../include/ble/att.h"
 #include "../include/ble/gatt.h"
 #include "../include/ble/helper.h"
-#include "../include/Beetle.h"
 #include "../include/Debug.h"
+#include "../include/Device.h"
 #include "../include/hat/HandleAllocationTable.h"
 #include "../include/Handle.h"
 #include "../include/UUID.h"

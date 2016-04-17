@@ -12,6 +12,8 @@ RM := rm -rf
 -include src/sync/subdir.mk
 -include src/ipc/subdir.mk
 -include src/hat/subdir.mk
+-include src/device/socket/tcp/subdir.mk
+-include src/device/socket/subdir.mk
 -include src/device/subdir.mk
 -include src/control/subdir.mk
 -include src/subdir.mk

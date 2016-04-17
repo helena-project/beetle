@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef AUTOCONNECT_H_
-#define AUTOCONNECT_H_
+#ifndef INCLUDE_AUTOCONNECT_H_
+#define INCLUDE_AUTOCONNECT_H_
 
 #include <ctime>
 #include <map>
@@ -50,4 +50,4 @@ private:
 	double minAttemptInterval = 60;
 };
 
-#endif /* AUTOCONNECT_H_ */
+#endif /* INCLUDE_AUTOCONNECT_H_ */

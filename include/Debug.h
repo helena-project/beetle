@@ -2,11 +2,11 @@
  * Debug.h
  *
  *  Created on: Apr 2, 2016
- *      Author: root
+ *      Author: james
  */
 
-#ifndef DEBUG_H_
-#define DEBUG_H_
+#ifndef INCLUDE_DEBUG_H_
+#define INCLUDE_DEBUG_H_
 
 #include <cstdint>
 #include <cstdio>
@@ -38,4 +38,4 @@ inline void pdebug(uint8_t *buf, int len) {
 	fprintf(stderr, " ]\n");
 }
 
-#endif /* DEBUG_H_ */
+#endif /* INCLUDE_DEBUG_H_ */

@@ -5,12 +5,11 @@
  *      Author: james
  */
 
-#ifndef IPC_UNIXDOMAINSOCKETSERVER_H_
-#define IPC_UNIXDOMAINSOCKETSERVER_H_
+#ifndef INCLUDE_IPC_UNIXDOMAINSOCKETSERVER_H_
+#define INCLUDE_IPC_UNIXDOMAINSOCKETSERVER_H_
 
-#include <map>
-#include <mutex>
 #include <string>
+#include <thread>
 
 #include "../Beetle.h"
 
@@ -32,4 +31,4 @@ private:
 	void startIPCDeviceHelper(int clifd, struct sockaddr_un cliaddr, struct ucred clicred);
 };
 
-#endif /* IPC_UNIXDOMAINSOCKETSERVER_H_ */
+#endif /* INCLUDE_IPC_UNIXDOMAINSOCKETSERVER_H_ */

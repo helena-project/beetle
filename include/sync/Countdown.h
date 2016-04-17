@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef SYNC_COUNTDOWN_H_
-#define SYNC_COUNTDOWN_H_
+#ifndef INCLUDE_SYNC_COUNTDOWN_H_
+#define INCLUDE_SYNC_COUNTDOWN_H_
 
 #include <condition_variable>
 #include <mutex>
@@ -49,4 +49,4 @@ private:
 	std::mutex m;
 };
 
-#endif /* SYNC_COUNTDOWN_H_ */
+#endif /* INCLUDE_SYNC_COUNTDOWN_H_ */

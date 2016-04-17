@@ -5,22 +5,21 @@
  *      Author: james
  */
 
-#include "../../include/device/TCPConnection.h"
+#include "../../../include/device/socket/TCPConnection.h"
 
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cassert>
 #include <cstring>
 #include <iostream>
-#include <queue>
 
-#include "../../include/ble/att.h"
-#include "../../include/Device.h"
-#include "../../include/Debug.h"
+#include "../../../include/ble/att.h"
+#include "../../../include/Debug.h"
+#include "../../../include/sync/OrderedThreadPool.h"
 #include "shared.h"
 
 TCPConnection::TCPConnection(Beetle &beetle, int sockfd_, std::string name_,
-		struct sockaddr_in sockaddr_) : VirtualDevice(beetle), readThread() {
+		struct sockaddr_in sockaddr_, HandleAllocationTable *hat) : VirtualDevice(beetle, hat), readThread() {
 	type = TCP_CONNECTION;
 	name = name_;
 	sockfd = sockfd_;
