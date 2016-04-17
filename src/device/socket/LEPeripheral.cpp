@@ -65,6 +65,14 @@ LEPeripheral::~LEPeripheral() {
 	close(sockfd);
 }
 
+bdaddr_t LEPeripheral::getBdaddr() {
+	return bdaddr;
+};
+
+AddrType LEPeripheral::getAddrType() {
+	return bdaddrType;
+};
+
 void LEPeripheral::startInternal() {
     readThread = std::thread(&LEPeripheral::readDaemon, this);
 }

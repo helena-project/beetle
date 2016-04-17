@@ -25,8 +25,8 @@ public:
 	LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType);
 	virtual ~LEPeripheral();
 
-	bdaddr_t getBdaddr() { return bdaddr; };
-	AddrType getAddrType() { return bdaddrType; };
+	bdaddr_t getBdaddr();
+	AddrType getAddrType();
 protected:
 	bool write(uint8_t *buf, int len);
 	void startInternal();

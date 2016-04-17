@@ -28,8 +28,11 @@ public:
 	BeetleInternal(Beetle &beetle, std::string name);
 	virtual ~BeetleInternal();
 
-	int getMTU() { return ATT_DEFAULT_LE_MTU; };
+	int getMTU();
 
+	/*
+	 * Should never get called. All reads and writes are serviced by the cache.
+	 */
 	bool writeResponse(uint8_t *buf, int len);
 	bool writeCommand(uint8_t *buf, int len);
 	bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);

@@ -31,10 +31,16 @@ BeetleInternal::~BeetleInternal() {
 
 }
 
+/*
+ * Should never get called. All reads and writes are serviced by the cache.
+ */
 bool BeetleInternal::writeResponse(uint8_t *buf, int len) {
 	throw DeviceException(getName() + " does not make requests");
 }
 
+/*
+ * Should never get called. All reads and writes are serviced by the cache.
+ */
 bool BeetleInternal::writeCommand(uint8_t *buf, int len) {
 	if (debug) {
 		pwarn("Beetle received an unanticipated command");
@@ -42,6 +48,9 @@ bool BeetleInternal::writeCommand(uint8_t *buf, int len) {
 	return true;
 }
 
+/*
+ * Should never get called. All reads and writes are serviced by the cache.
+ */
 bool BeetleInternal::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
 	if (debug) {
 		pwarn("Beetle received an unanticipated request");
@@ -62,6 +71,10 @@ int BeetleInternal::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&re
 	}
 	return pack_error_pdu(buf[0], 0, ATT_ECODE_UNLIKELY, resp); // TODO: probably not the right error code
 }
+
+int BeetleInternal::getMTU() {
+	return ATT_DEFAULT_LE_MTU;
+};
 
 void BeetleInternal::informServicesChanged(handle_range_t range, device_t dst) {
 	if (debug) {
