@@ -1,0 +1,18 @@
+[
+  {
+    "model": "beetle.Entity",
+    "fields": {
+      "name": "*",
+      "etype": "unknown",
+      "verified": true
+    }
+  },
+  {
+    "model": "beetle.Gateway",
+    "fields": {
+      "name": "*",
+      "os": "unknown",
+      "trusted": false
+    }
+  }
+]

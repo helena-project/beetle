@@ -1,0 +1,18 @@
+[
+  {
+    "model": "gatt.Service",
+    "fields": {
+      "name": "*",
+      "uuid": "*",
+      "verified": true
+    }
+  },
+  {
+    "model": "gatt.Characteristic",
+    "fields": {
+      "name": "*",
+      "uuid": "*",
+      "verified": true
+    }
+  }
+]
