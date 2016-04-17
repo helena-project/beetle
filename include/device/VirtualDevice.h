@@ -14,8 +14,8 @@
 #include <mutex>
 #include <queue>
 
-#include "../Beetle.h"
-#include "../Device.h"
+#include "Beetle.h"
+#include "Device.h"
 
 // Debug the GATT handle discovery.
 extern bool debug_discovery;

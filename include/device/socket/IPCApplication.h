@@ -13,9 +13,9 @@
 #include <cstdint>
 #include <thread>
 
-#include "../../Beetle.h"
-#include "../../sync/Countdown.h"
-#include "../VirtualDevice.h"
+#include "Beetle.h"
+#include "sync/Countdown.h"
+#include "device/VirtualDevice.h"
 
 enum AddrType {
 	PUBLIC, RANDOM,

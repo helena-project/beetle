@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "../../../Beetle.h"
-#include "../TCPConnection.h"
+#include "Beetle.h"
+#include "device/socket/TCPConnection.h"
 
 /*
  * Dummy device representing a server at a different Beetle gateway.

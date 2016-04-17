@@ -12,10 +12,10 @@
 #include <functional>
 #include <string>
 
-#include "../ble/att.h"
-#include "../Beetle.h"
-#include "../Device.h"
-#include "../hat/HandleAllocationTable.h"
+#include "ble/att.h"
+#include "Beetle.h"
+#include "Device.h"
+#include "hat/HandleAllocationTable.h"
 
 /*
  * Fully synchronous simulated device for this Beetle.

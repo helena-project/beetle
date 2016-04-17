@@ -1,4 +1,4 @@
-# Beetle C++ for Linux
+# Beetle for Linux
 
 ##### Requirements
 - libboost-all-dev, libbluetoothdev
@@ -7,21 +7,20 @@
 ##### To build and run
 1. clone and import the project into Eclipse
 2. build
-3. in a terminal, ``` cd Debug ``` 
+3. in a terminal, ``` cd Debug ```
 4. ``` sudo ./Beetle ```  
 
 ##### Python tcp client
-By default, the tcp server runs on port 5000. Passing ```--tcp-port``` sets a different port. ```BeetleClient.py``` in the ```client``` directory reads input provided by the user in hex, and prints responses from the server.
+In ```client``` subdirectory. 
 
-##### Params for tcp connection
+##### Python controller
+In ```controller``` subdirectory. 
+
+##### TCP connection protocol
 Parameters are key value pairs sent at the beginning of the connection in ASCII text. 
-
 * client name *(connect with the client protocol, where name is the name of the client)*
-
 * server bool *(where bool is whether the client is running a GATT server)*
-
 * gateway name *(connect with the gateway protocol, where name is the name of the gateway)*
-
 * device id *(where id is the id of the device at the gateway)*
 
 ##### Notes

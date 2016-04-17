@@ -10,7 +10,7 @@
 
 #include <string>
 
-#include "../Beetle.h"
+#include "Beetle.h"
 
 /*
  * Reports devices connected and disconnected.

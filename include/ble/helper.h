@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <string>
 
-#include "../UUID.h"
+#include "UUID.h"
 #include "att.h"
 
 inline int pack_error_pdu(uint8_t opCode, uint16_t handle, uint8_t errCode, uint8_t *&buf) {
