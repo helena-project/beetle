@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "../../include/sync/OrderedThreadPool.h"
+#include "sync/OrderedThreadPool.h"
 
 #include <cassert>
 #include <map>

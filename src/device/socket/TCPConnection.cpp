@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "../../../include/device/socket/TCPConnection.h"
+#include "device/socket/TCPConnection.h"
 
 #include <sys/socket.h>
 #include <unistd.h>
@@ -13,9 +13,9 @@
 #include <cstring>
 #include <iostream>
 
-#include "../../../include/ble/att.h"
-#include "../../../include/Debug.h"
-#include "../../../include/sync/OrderedThreadPool.h"
+#include "ble/att.h"
+#include "Debug.h"
+#include "sync/OrderedThreadPool.h"
 #include "shared.h"
 
 TCPConnection::TCPConnection(Beetle &beetle, int sockfd_, std::string name_,

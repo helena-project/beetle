@@ -5,13 +5,13 @@
  *      Author: james
  */
 
-#include "../../include/hat/SingleAllocator.h"
+#include "hat/SingleAllocator.h"
 
 #include <cstdint>
 #include <set>
 #include <utility>
 
-#include "../../include/Beetle.h"
+#include "Beetle.h"
 
 SingleAllocator::SingleAllocator(device_t device_) {
 	id = device_;

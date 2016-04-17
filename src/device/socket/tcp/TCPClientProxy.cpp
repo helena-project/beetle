@@ -5,14 +5,14 @@
  *      Author: james
  */
 
-#include "../../../../include/device/socket/tcp/TCPClientProxy.h"
+#include "device/socket/tcp/TCPClientProxy.h"
 
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <netinet/in.h>
 #include <map>
 
-#include "../../../../include/hat/SingleAllocator.h"
+#include "hat/SingleAllocator.h"
 
 TCPClientProxy::TCPClientProxy(Beetle &beetle, int sockfd, std::string clientGateway_,
 		struct sockaddr_in clientGatewaySockAddr_, device_t localProxyFor_)

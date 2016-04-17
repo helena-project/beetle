@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "../../../../include/device/socket/tcp/TCPServerProxy.h"
+#include "device/socket/tcp/TCPServerProxy.h"
 
 #include <netdb.h>
 #include <netinet/in.h>
@@ -15,9 +15,9 @@
 #include <cstdint>
 #include <sstream>
 
-#include "../../../../include/Device.h"
-#include "../../../../include/hat/SingleAllocator.h"
-#include "../../../../include/tcp/ConnParams.h"
+#include "Device.h"
+#include "hat/SingleAllocator.h"
+#include "tcp/ConnParams.h"
 #include "../shared.h"
 
 TCPServerProxy::TCPServerProxy(Beetle &beetle, int sockfd, std::string serverGateway_,

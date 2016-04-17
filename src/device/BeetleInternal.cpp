@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "../../include/device/BeetleInternal.h"
+#include "device/BeetleInternal.h"
 
 #include <bluetooth/bluetooth.h>
 #include <cstring>
@@ -13,12 +13,12 @@
 #include <mutex>
 #include <set>
 
-#include "../../include/ble/gatt.h"
-#include "../../include/ble/helper.h"
-#include "../../include/Debug.h"
-#include "../../include/hat/SingleAllocator.h"
-#include "../../include/Handle.h"
-#include "../../include/UUID.h"
+#include "ble/gatt.h"
+#include "ble/helper.h"
+#include "Debug.h"
+#include "hat/SingleAllocator.h"
+#include "Handle.h"
+#include "UUID.h"
 
 BeetleInternal::BeetleInternal(Beetle &beetle, std::string name_) : Device(beetle,
 		BEETLE_RESERVED_DEVICE, new SingleAllocator(NULL_RESERVED_DEVICE)) {

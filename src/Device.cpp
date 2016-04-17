@@ -5,16 +5,16 @@
  *      Author: james
  */
 
-#include "../include/Device.h"
+#include "Device.h"
 
 #include <bluetooth/bluetooth.h>
 #include <cstring>
 #include <set>
 #include <utility>
 
-#include "../include/ble/att.h"
-#include "../include/ble/gatt.h"
-#include "../include/hat/BlockAllocator.h"
+#include "ble/att.h"
+#include "ble/gatt.h"
+#include "hat/BlockAllocator.h"
 
 std::atomic_int Device::idCounter(1);
 

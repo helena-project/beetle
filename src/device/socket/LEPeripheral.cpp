@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "../../../include/device/socket/LEPeripheral.h"
+#include "device/socket/LEPeripheral.h"
 
 #include <bluetooth/l2cap.h>
 #include <sys/socket.h>
@@ -14,10 +14,10 @@
 #include <iostream>
 #include <string>
 
-#include "../../../include/ble/att.h"
-#include "../../../include/Debug.h"
-#include "../../../include/Device.h"
-#include "../../../include/sync/OrderedThreadPool.h"
+#include "ble/att.h"
+#include "Debug.h"
+#include "Device.h"
+#include "sync/OrderedThreadPool.h"
 #include "shared.h"
 
 

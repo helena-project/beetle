@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "../../include/sync/ThreadPool.h"
+#include "sync/ThreadPool.h"
 
 #include <stddef.h>
 #include <cassert>

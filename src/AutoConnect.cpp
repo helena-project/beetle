@@ -5,15 +5,15 @@
  *      Author: james
  */
 
-#include "../include/AutoConnect.h"
+#include "AutoConnect.h"
 
 #include <cassert>
 #include <iostream>
 #include <thread>
 
-#include "../include/device/socket/LEPeripheral.h"
-#include "../include/Debug.h"
-#include "../include/Device.h"
+#include "device/socket/LEPeripheral.h"
+#include "Debug.h"
+#include "Device.h"
 
 
 AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_) : beetle{beetle} {

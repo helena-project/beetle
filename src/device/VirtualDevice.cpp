@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "../../include/device/VirtualDevice.h"
+#include "device/VirtualDevice.h"
 
 #include <assert.h>
 #include <bluetooth/bluetooth.h>
@@ -14,14 +14,14 @@
 #include <string>
 #include <vector>
 
-#include "../../include/ble/att.h"
-#include "../../include/ble/gatt.h"
-#include "../../include/ble/helper.h"
-#include "../../include/Debug.h"
-#include "../../include/Handle.h"
-#include "../../include/Router.h"
-#include "../../include/sync/Semaphore.h"
-#include "../../include/UUID.h"
+#include "ble/att.h"
+#include "ble/gatt.h"
+#include "ble/helper.h"
+#include "Debug.h"
+#include "Handle.h"
+#include "Router.h"
+#include "sync/Semaphore.h"
+#include "UUID.h"
 
 VirtualDevice::VirtualDevice(Beetle &beetle, HandleAllocationTable *hat) : Device(beetle, hat) {
 	started = false;

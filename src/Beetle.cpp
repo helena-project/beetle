@@ -1,5 +1,5 @@
 
-#include "../include/Beetle.h"
+#include "Beetle.h"
 
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
@@ -13,15 +13,15 @@
 #include <utility>
 #include <cstdint>
 
-#include "../include/AutoConnect.h"
-#include "../include/CLI.h"
-#include "../include/device/BeetleInternal.h"
-#include "../include/Debug.h"
-#include "../include/hat/HandleAllocationTable.h"
-#include "../include/ipc/UnixDomainSocketServer.h"
-#include "../include/Router.h"
-#include "../include/Scanner.h"
-#include "../include/tcp/TCPDeviceServer.h"
+#include "AutoConnect.h"
+#include "CLI.h"
+#include "device/BeetleInternal.h"
+#include "Debug.h"
+#include "hat/HandleAllocationTable.h"
+#include "ipc/UnixDomainSocketServer.h"
+#include "Router.h"
+#include "Scanner.h"
+#include "tcp/TCPDeviceServer.h"
 
 /* Global debug variables */
 bool debug = true;				// Debug.h

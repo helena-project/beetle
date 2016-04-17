@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "../../include/ipc/UnixDomainSocketServer.h"
+#include "ipc/UnixDomainSocketServer.h"
 
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -15,8 +15,8 @@
 #include <iostream>
 #include <thread>
 
-#include "../../include/device/socket/IPCApplication.h"
-#include "../../include/Debug.h"
+#include "device/socket/IPCApplication.h"
+#include "Debug.h"
 
 UnixDomainSocketServer::UnixDomainSocketServer(Beetle &beetle, std::string path_) : beetle(beetle), t() {
 	path = path_;

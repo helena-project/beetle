@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "../../include/hat/BlockAllocator.h"
+#include "hat/BlockAllocator.h"
 
 #include <assert.h>
 #include <iostream>

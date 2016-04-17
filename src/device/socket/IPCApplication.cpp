@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "../../../include/device/socket/IPCApplication.h"
+#include "device/socket/IPCApplication.h"
 
 #include <asm-generic/socket.h>
 #include <unistd.h>
@@ -13,8 +13,8 @@
 #include <iostream>
 #include <string>
 
-#include "../../../include/Debug.h"
-#include "../../../include/sync/OrderedThreadPool.h"
+#include "Debug.h"
+#include "sync/OrderedThreadPool.h"
 #include "shared.h"
 
 IPCApplication::IPCApplication(Beetle &beetle, int sockfd_, std::string name_,
