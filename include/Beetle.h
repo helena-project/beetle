@@ -8,8 +8,7 @@
 #ifndef INCLUDE_BEETLE_H_
 #define INCLUDE_BEETLE_H_
 
-#include <mutex>
-#include <boost/thread.hpp>
+#include <boost/thread/pthread/shared_mutex.hpp>
 #include <functional>
 #include <map>
 #include <string>
@@ -18,8 +17,9 @@
 #include "sync/OrderedThreadPool.h"
 #include "sync/ThreadPool.h"
 
-class Device;
+class AccessControl;
 class BeetleInternal;
+class Device;
 class Router;
 
 /*
@@ -91,6 +91,12 @@ public:
 	 * Router object to route ATT packets
 	 */
 	Router *router;
+
+	/*
+	 * Set the access control mechanism.
+	 */
+	void setAccessControl(AccessControl *ac);
+	AccessControl *accessControl;
 
 	/*
 	 * Workers for callbacks.

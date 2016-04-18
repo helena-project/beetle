@@ -5,10 +5,9 @@
  *      Author: james
  */
 
-#include "controller/NetworkReporter.h"
+#include "controller/ConnectionReporter.h"
 
 #include <boost/network/message/directives/header.hpp>
-#include <boost/network/message/directives.hpp>
 #include <boost/network/protocol/http/client/facade.hpp>
 #include <boost/network/protocol/http/message/async_message.hpp>
 #include <boost/network/protocol/http/message/wrappers/body.hpp>
@@ -16,7 +15,7 @@
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <iostream>
-#include <json.hpp>
+#include <json/json.hpp>
 #include <list>
 #include <map>
 #include <mutex>
@@ -24,19 +23,15 @@
 #include <sstream>
 #include <utility>
 
+#include <controller/shared.h>
 #include "Debug.h"
 #include "Device.h"
 #include "Handle.h"
+#include "UUID.h"
 
 using json = nlohmann::json;
 
-static std::string getUrl(std::string hostAndPort, std::string resource) {
-	std::stringstream ss;
-	ss << "http://" << hostAndPort << "/" << resource;
-	return ss.str();
-}
-
-NetworkReporter::NetworkReporter(Beetle &beetle, std::string hostAndPort_) : beetle(beetle) {
+ConnectionReporter::ConnectionReporter(Beetle &beetle, std::string hostAndPort_) : beetle(beetle) {
 	hostAndPort = hostAndPort_;
 
 //	client::options options;
@@ -60,7 +55,7 @@ NetworkReporter::NetworkReporter(Beetle &beetle, std::string hostAndPort_) : bee
 	}
 }
 
-NetworkReporter::~NetworkReporter() {
+ConnectionReporter::~ConnectionReporter() {
 	using namespace boost::network;
 	http::client::request request(getUrl(hostAndPort, "network/disconnect/" + beetle.name));
 	http::client::response response = client.post(request);
@@ -74,7 +69,7 @@ NetworkReporter::~NetworkReporter() {
 	}
 }
 
-AddDeviceHandler NetworkReporter::getAddDeviceHandler() {
+AddDeviceHandler ConnectionReporter::getAddDeviceHandler() {
 	return [this](device_t d) {
 		boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 		if (beetle.devices.find(d) == beetle.devices.end()) {
@@ -106,7 +101,7 @@ AddDeviceHandler NetworkReporter::getAddDeviceHandler() {
 	};
 }
 
-RemoveDeviceHandler NetworkReporter::getRemoveDeviceHandler() {
+RemoveDeviceHandler ConnectionReporter::getRemoveDeviceHandler() {
 	return [this](device_t d){
 		try {
 			removeDeviceHelper(d);
@@ -154,7 +149,7 @@ static std::string serializeHandles(Device *d) {
 	return json(arr).dump();
 }
 
-void NetworkReporter::addDeviceHelper(Device *d) {
+void ConnectionReporter::addDeviceHelper(Device *d) {
 	using namespace boost::network;
 	http::client::request request(getUrl(hostAndPort, "network/connect/" + beetle.name
 			+ "/" + d->getName() + "/" + std::to_string(d->getId())));
@@ -171,7 +166,7 @@ void NetworkReporter::addDeviceHelper(Device *d) {
 	}
 }
 
-void NetworkReporter::removeDeviceHelper(device_t d) {
+void ConnectionReporter::removeDeviceHelper(device_t d) {
 	using namespace boost::network;
 	http::client::request request(getUrl(hostAndPort, "network/disconnect/" + beetle.name
 			+ "/" + std::to_string(d)));

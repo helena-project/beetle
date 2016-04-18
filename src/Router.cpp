@@ -7,10 +7,10 @@
 
 #include "Router.h"
 
-#include <assert.h>
 #include <bluetooth/bluetooth.h>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
+#include <cassert>
 #include <cstring>
 #include <map>
 #include <mutex>
@@ -188,6 +188,10 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 				break;
 			}
 		}
+
+		/*
+		 * Advance range
+		 */
 		currHandle = handleRange.end + 1;
 		if (currHandle <= handleRange.start) {
 			done = true;
@@ -327,6 +331,9 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 			}
 		}
 
+		/*
+		 * Advance range
+		 */
 		uint16_t nextHandle = handleRange.end + 1;
 		if (nextHandle <= currHandle) {
 			done = true;
@@ -614,6 +621,10 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 				break;
 			}
 		}
+
+		/*
+		 * Advance range
+		 */
 		currHandle = handleRange.end + 1;
 		if (currHandle <= handleRange.start) {
 			done = true;

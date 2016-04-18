@@ -4,15 +4,15 @@
 # =======================
 # Write hex bytes to Beetle, get hex bytes response back.
  
+import argparse
 import os
+import re
 import signal
 import socket
+import struct
 import threading
 import time
-import re
 import traceback
-import argparse
-import struct
 
 def getArguments():
 	"""

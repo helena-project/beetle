@@ -19,6 +19,9 @@ extern bool debug;
 // Print every time a socket is written or read.
 extern bool debug_socket;
 
+// Print debug information about the control-plane
+extern bool debug_network;
+
 inline void pdebug(std::string mesg) {
 	std::cerr << mesg << std::endl;
 }

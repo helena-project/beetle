@@ -11,30 +11,16 @@
 #include <string>
 
 #include <boost/network/protocol/http/client.hpp>
-#include <exception>
 
 #include "Beetle.h"
-
-// Print debug information about the control-plane
-extern bool debug_network;
-
-class NetworkException : public std::exception {
-  public:
-	NetworkException(std::string msg) : msg(msg) {};
-	NetworkException(const char *msg) : msg(msg) {};
-    ~NetworkException() throw() {};
-    const char *what() const throw() { return this->msg.c_str(); };
-  private:
-    std::string msg;
-};
 
 /*
  * Reports devices connected and disconnected.
  */
-class NetworkReporter {
+class ConnectionReporter {
 public:
-	NetworkReporter(Beetle &beetle, std::string hostAndPort);
-	virtual ~NetworkReporter();
+	ConnectionReporter(Beetle &beetle, std::string hostAndPort);
+	virtual ~ConnectionReporter();
 
 	AddDeviceHandler getAddDeviceHandler();
 	RemoveDeviceHandler getRemoveDeviceHandler();

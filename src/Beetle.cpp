@@ -8,16 +8,17 @@
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <cassert>
+#include <cstdint>
 #include <iostream>
 #include <thread>
 #include <utility>
-#include <cstdint>
 
 #include "AutoConnect.h"
 #include "CLI.h"
-#include "controller/NetworkReporter.h"
-#include "device/BeetleInternal.h"
+#include "controller/AccessControl.h"
+#include "controller/ConnectionReporter.h"
 #include "Debug.h"
+#include "device/BeetleInternal.h"
 #include "hat/HandleAllocationTable.h"
 #include "ipc/UnixDomainSocketServer.h"
 #include "Router.h"
@@ -31,6 +32,15 @@ bool debug_discovery;	// VirtualDevice.h
 bool debug_router;		// Router.h
 bool debug_socket;		// Debug.h
 bool debug_network;		// NetworkReporter.h
+
+void setDebugAll() {
+	debug = true;
+	debug_scan = true;
+	debug_router = true;
+	debug_socket = true;
+	debug_discovery = true;
+	debug_network = true;
+}
 
 void resetHciHelper() {
 	assert(system(NULL) != 0);
@@ -107,15 +117,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	if (debugAll) {
-		debug = true;
-		debug_scan = true;
-		debug_router = true;
-		debug_socket = true;
-		debug_discovery = true;
-		debug_network = true;
-	}
-
+	if (debugAll) setDebugAll();
 	if (resetHci) resetHciHelper();
 
 	try {
@@ -124,9 +126,12 @@ int main(int argc, char *argv[]) {
 		UnixDomainSocketServer ipcServer(btl, path);
 		AutoConnect autoConnect(btl, autoConnectAll);
 
-		NetworkReporter networkReporter(btl, beetleConrollerHostPort);
+		ConnectionReporter networkReporter(btl, beetleConrollerHostPort);
 		btl.registerAddDeviceHandler(networkReporter.getAddDeviceHandler());
 		btl.registerRemoveDeviceHandler(networkReporter.getRemoveDeviceHandler());
+
+		AccessControl accessControl(btl, beetleConrollerHostPort);
+		btl.setAccessControl(&accessControl);
 
 		CLI cli(btl, tcpPort, path);
 
@@ -140,7 +145,7 @@ int main(int argc, char *argv[]) {
 
 		cli.join();
 	} catch(std::exception& e) {
-		std::cerr << "Unhandled Exception reached the top of main: "
+		std::cerr << "Unhandled exception reached the top of main: "
 				<< e.what() << ", application will now exit" << std::endl;
 		return 2;
 	}
@@ -151,6 +156,7 @@ Beetle::Beetle(std::string name_) : workers(2), writers(4) {
 	router = new Router(*this);
 	beetleDevice = new BeetleInternal(*this, name_);
 	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
+	accessControl = NULL;
 	name = name_;
 }
 
@@ -204,30 +210,42 @@ void Beetle::removeDevice(device_t id) {
 void Beetle::mapDevices(device_t from, device_t to) {
 	if (from == BEETLE_RESERVED_DEVICE || to == BEETLE_RESERVED_DEVICE) {
 		pwarn("not allowed to map Beetle");
+		return;
 	} else if (from == NULL_RESERVED_DEVICE || to == NULL_RESERVED_DEVICE) {
 		pwarn("not allowed to map null device");
+		return;
 	} else if (from == to) {
 		pwarn("cannot map device to itself");
-	} else {
-		boost::shared_lock<boost::shared_mutex> devicesLk(devicesMutex);
-		if (devices.find(from) == devices.end()) {
-			pwarn(std::to_string(from) + " does not id a device");
-		} else if (devices.find(to) == devices.end()) {
-			pwarn(std::to_string(to) +" does not id a device");
-		} else {
-			Device *toD = devices[to];
+		return;
+	}
 
-			std::lock_guard<std::mutex> hatLg(toD->hatMutex);
-			if (!toD->hat->getDeviceRange(from).isNull()) {
-				std::stringstream ss;
-				ss << from << " is already mapped into " << to << "'s space";
-				pwarn(ss.str());
-			} else {
-				handle_range_t range = toD->hat->reserve(from);
-				if (debug) {
-					pdebug("reserved " + range.str() + " at device " + std::to_string(to));
-				}
-			}
+	boost::shared_lock<boost::shared_mutex> devicesLk(devicesMutex);
+	if (devices.find(from) == devices.end()) {
+		pwarn(std::to_string(from) + " does not id a device");
+		return;
+	} else if (devices.find(to) == devices.end()) {
+		pwarn(std::to_string(to) +" does not id a device");
+		return;
+	}
+
+	Device *fromD = devices[from];
+	Device *toD = devices[to];
+	if (accessControl->canMap(fromD, toD) == false) {
+		if (debug) {
+			pwarn("permission denied");
+		}
+		return;
+	}
+
+	std::lock_guard<std::mutex> hatLg(toD->hatMutex);
+	if (!toD->hat->getDeviceRange(from).isNull()) {
+		std::stringstream ss;
+		ss << from << " is already mapped into " << to << "'s space";
+		pwarn(ss.str());
+	} else {
+		handle_range_t range = toD->hat->reserve(from);
+		if (debug) {
+			pdebug("reserved " + range.str() + " at device " + std::to_string(to));
 		}
 	}
 }
@@ -235,24 +253,29 @@ void Beetle::mapDevices(device_t from, device_t to) {
 void Beetle::unmapDevices(device_t from, device_t to) {
 	if (from == BEETLE_RESERVED_DEVICE || to == BEETLE_RESERVED_DEVICE) {
 		pwarn("not allowed to unmap Beetle");
+		return;
 	} else if (from == NULL_RESERVED_DEVICE || to == NULL_RESERVED_DEVICE) {
 		pwarn("unmapping null is a nop");
+		return;
 	} else if (from == to) {
 		pwarn("cannot unmap self from self");
-	} else {
-		if (devices.find(from) == devices.end()) {
-			pwarn(std::to_string(from) + " does not id a device");
-		} else if (devices.find(to) == devices.end()) {
-			pwarn(std::to_string(to) +" does not id a device");
-		} else {
-			Device *toD = devices[to];
+		return;
+	}
 
-			std::lock_guard<std::mutex> hatLg(toD->hatMutex);
-			handle_range_t range = toD->hat->free(from);
-			if (debug) {
-				pdebug("freed " + range.str() + " at device " + std::to_string(to));
-			}
-		}
+	if (devices.find(from) == devices.end()) {
+		pwarn(std::to_string(from) + " does not id a device");
+		return;
+	} else if (devices.find(to) == devices.end()) {
+		pwarn(std::to_string(to) +" does not id a device");
+		return;
+	}
+
+	Device *toD = devices[to];
+
+	std::lock_guard<std::mutex> hatLg(toD->hatMutex);
+	handle_range_t range = toD->hat->free(from);
+	if (debug) {
+		pdebug("freed " + range.str() + " at device " + std::to_string(to));
 	}
 }
 
@@ -262,6 +285,11 @@ void Beetle::registerAddDeviceHandler(AddDeviceHandler h) {
 
 void Beetle::registerRemoveDeviceHandler(RemoveDeviceHandler h) {
 	removeHandlers.push_back(h);
+}
+
+void Beetle::setAccessControl(AccessControl *ac) {
+	assert(accessControl == NULL);
+	accessControl = ac;
 }
 
 
