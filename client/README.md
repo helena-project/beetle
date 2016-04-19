@@ -1,6 +1,6 @@
 # Beetle TCP client
 
-By default, the tcp server runs on port 5000. Passing ```--tcp-port``` sets a different port. ```BeetleClient.py``` reads input provided by the user, and prints responses from the server.
+By default, the tcp server runs on port 5000. Passing ```--tcp-port``` sets a different port. ```Beetleclient->py``` reads input provided by the user, and prints responses from the server.
 
 ##### Usage
 

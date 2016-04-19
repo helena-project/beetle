@@ -35,11 +35,15 @@ ConnectionReporter::ConnectionReporter(Beetle &beetle, std::string hostAndPort_)
 			cpr::Url{getUrl(hostAndPort, "network/connect/" + beetle.name)},
 			cpr::Header{{"User-Agent", "linux"}});
 	if (response.status_code != 200) {
-		throw NetworkException("error connecting to controller");
+		std::stringstream ss;
+		ss << "error connecting to controller (" << response.status_code << "): "
+				<< response.text;
+		throw NetworkException(ss.str());
 	} else {
 		if (debug_network) {
-			pdebug("connected to controller");
-			std::cerr << response.text << std::endl;
+			std::stringstream ss;
+			ss << "connected to controller: " << response.text;
+			pdebug(ss.str());
 		}
 	}
 }

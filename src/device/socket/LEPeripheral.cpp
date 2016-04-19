@@ -60,7 +60,7 @@ LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType
 LEPeripheral::~LEPeripheral() {
 	pendingWrites.wait();
 	
-	shutdown(sockfd, SHUT_RD);
+	shutdown(sockfd, SHUT_RDWR);
 	if (readThread.joinable()) readThread.join();
 	close(sockfd);
 }

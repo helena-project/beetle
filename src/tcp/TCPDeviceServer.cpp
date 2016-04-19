@@ -21,18 +21,20 @@
 
 TCPDeviceServer::TCPDeviceServer(Beetle &beetle, int port) : beetle(beetle) {
 	running = true;
+	sockfd = -1;
 	t = std::thread(&TCPDeviceServer::serverDaemon, this, port);
 }
 
 TCPDeviceServer::~TCPDeviceServer() {
 	running = false;
+	shutdown(sockfd, SHUT_RDWR);
 	t.join();
 }
 
 void TCPDeviceServer::serverDaemon(int port) {
 	if (debug) pdebug("tcp serverDaemon started on port: " + std::to_string(port));
 
-	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (sockfd < 0) {
 		throw ServerException("error creating socket");

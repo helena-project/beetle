@@ -45,11 +45,11 @@ class Rule(models.Model):
 	to_entity = models.ForeignKey(
 		"beetle.Entity", 
 		related_name="rule_to",
-		help_text="Application or peripheral acting as client.")
+		help_text="Application or peripheral acting as client->")
 	to_gateway = models.ForeignKey(
 		"beetle.Gateway", 
 		related_name="rule_to_gateway",
-		help_text="Gateway connected to client.")
+		help_text="Gateway connected to client->")
 
 	service = models.ForeignKey("gatt.Service")
 	characteristic = models.ForeignKey("gatt.Characteristic")

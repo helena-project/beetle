@@ -29,7 +29,7 @@ IPCApplication::IPCApplication(Beetle &beetle, int sockfd_, std::string name_,
 IPCApplication::~IPCApplication() {
 	pendingWrites.wait();
 
-	shutdown(sockfd, SHUT_RD);
+	shutdown(sockfd, SHUT_RDWR);
 	if (readThread.joinable()) readThread.join();
 	close(sockfd);
 }

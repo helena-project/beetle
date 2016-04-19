@@ -145,9 +145,9 @@ int main(int argc, char *argv[]) {
 		}
 
 		cli.join();
-	} catch(std::exception& e) {
-		std::cerr << "Unhandled exception reached the top of main: "
-				<< e.what() << ", application will now exit" << std::endl;
+	} catch (std::exception& e) {
+		std::cerr << "Unhandled exception reached the top of main: " << std::endl
+				<< "  " << e.what() << std::endl;
 		return 2;
 	}
 	return 0;

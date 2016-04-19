@@ -22,6 +22,12 @@ ThreadPool::ThreadPool(int n) {
 
 ThreadPool::~ThreadPool() {
 	running = false;
+	auto qInternal = queue.destroy();
+	while (qInternal != NULL && qInternal->size() > 0) {
+		qInternal->front()();
+		qInternal->pop();
+	}
+	delete qInternal;
 	for (auto &w : workers) {
 		w.join();
 	}
@@ -34,14 +40,12 @@ void ThreadPool::schedule(std::function<void()> task) {
 
 void ThreadPool::workerDaemon() {
 	while (running) {
-		auto f = queue.pop();
-		f();
+		try {
+			auto f = queue.pop();
+			f();
+		} catch (QueueDestroyedException &e) {
+			break;
+		}
 	}
-	auto qInternal = queue.destroy();
-	while (qInternal != NULL && qInternal->size() > 0) {
-		qInternal->front()();
-		qInternal->pop();
-	}
-	delete qInternal;
 }
 
