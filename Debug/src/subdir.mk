@@ -11,7 +11,8 @@ CPP_SRCS += \
 ../src/Handle.cpp \
 ../src/Router.cpp \
 ../src/Scanner.cpp \
-../src/UUID.cpp 
+../src/UUID.cpp \
+../src/main.cpp 
 
 OBJS += \
 ./src/AutoConnect.o \
@@ -21,7 +22,8 @@ OBJS += \
 ./src/Handle.o \
 ./src/Router.o \
 ./src/Scanner.o \
-./src/UUID.o 
+./src/UUID.o \
+./src/main.o 
 
 CPP_DEPS += \
 ./src/AutoConnect.d \
@@ -31,14 +33,15 @@ CPP_DEPS += \
 ./src/Handle.d \
 ./src/Router.d \
 ./src/Scanner.d \
-./src/UUID.d 
+./src/UUID.d \
+./src/main.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 src/%.o: ../src/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -D__cplusplus=201103L -I"/home/james/workspace/Beetle/include" -O0 -g3 -Wall -c -fmessage-length=0 -std=c++11 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
+	g++ -D__cplusplus=201103L -I../lib -I../include -O0 -g3 -Wall -c -fmessage-length=0 -std=c++11 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

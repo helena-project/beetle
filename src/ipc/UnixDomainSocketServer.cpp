@@ -21,11 +21,13 @@
 UnixDomainSocketServer::UnixDomainSocketServer(Beetle &beetle, std::string path_) : beetle(beetle), t() {
 	path = path_;
 	running = true;
+	fd = -1;
 	t = std::thread(&UnixDomainSocketServer::serverDaemon, this);
 }
 
 UnixDomainSocketServer::~UnixDomainSocketServer() {
 	running = false;
+	shutdown(fd, SHUT_RDWR);
 	t.join();
 }
 
@@ -34,7 +36,7 @@ void UnixDomainSocketServer::serverDaemon() {
 
 	unlink(path.c_str());
 
-	int fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+	fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
 	if (fd < 0) {
 		if (debug) pdebug("failed to get ipc socket");
 		return;

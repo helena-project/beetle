@@ -23,7 +23,10 @@ def connect_gateway(request, gateway):
 	if gateway == "*":
 		return HttpResponse(status=400)
 
-	gateway = Gateway.objects.get(name=gateway)
+	try:
+		gateway = Gateway.objects.get(name=gateway)
+	except Gateway.DoesNotExist:
+		return HttpResponse("no gateway found", status=400)
 	gateway_conn, created = ConnectedGateway.objects.get_or_create(gateway=gateway)
 	if not created:
 		gateway_conn.last_seen = datetime.now()

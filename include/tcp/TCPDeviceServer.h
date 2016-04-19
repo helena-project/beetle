@@ -40,6 +40,8 @@ private:
 	void serverDaemon(int port);
 	std::thread t;
 
+	int sockfd;
+
 	void startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr);
 	bool readParamsHelper(int clifd, int paramsLength,
 			std::map<std::string,std::string> &params);

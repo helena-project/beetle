@@ -10,8 +10,6 @@
 
 #include <string>
 
-#include <boost/network/protocol/http/client.hpp>
-
 #include "Beetle.h"
 
 /*
@@ -28,8 +26,6 @@ private:
 	Beetle &beetle;
 
 	std::string hostAndPort;
-
-	boost::network::http::client client;
 
 	void addDeviceHelper(Device *device);
 	void removeDeviceHelper(device_t d);

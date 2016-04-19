@@ -7,9 +7,7 @@
 
 #include <controller/AccessControl.h>
 
-#include <boost/network/protocol/http/client/facade.hpp>
-#include <boost/network/protocol/http/message/async_message.hpp>
-#include <boost/network/protocol/http/message/wrappers/body.hpp>
+#include <cpr/cpr.h>
 #include <iostream>
 #include <json/json.hpp>
 #include <sstream>
@@ -24,15 +22,12 @@ using json = nlohmann::json;
 
 AccessControl::AccessControl(Beetle &beetle, std::string hostAndPort_) : beetle(beetle) {
 	hostAndPort = hostAndPort_;
-
 }
 
 AccessControl::~AccessControl() {
-	// TODO Auto-generated destructor stub
 }
 
 bool AccessControl::canMap(Device *from, Device *to) {
-	using namespace boost::network;
 
 	std::string fromGateway;
 	device_t fromId;
@@ -82,26 +77,23 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	resource << "access/canMap/" << fromGateway << "/" << std::fixed << fromId
 			<< "/" << toGateway << "/" << std::fixed << toId;
 
-	http::client::request request(getUrl(hostAndPort, resource.str()));
-	request << header("User-Agent", "linux");
+	auto response = cpr::Post(
+			cpr::Url{getUrl(hostAndPort, resource.str())},
+			cpr::Header{{"User-Agent", "linux"}});
 
-	http::client::response response = client.get(request);
-
-	switch (response.status()) {
+	switch (response.status_code) {
 	case 200: {
 		if (debug_network) {
 			pdebug("controller request ok");
 		}
-		std::stringstream ss;
-		ss << body(response);
-		return handleCanMapResponse(from, to, ss.str());
+		return handleCanMapResponse(from, to, response.text);
 	}
 	case 500:
 		pwarn("internal server error");
 		return false;
 	default:
 		if (debug_network) {
-			pdebug("controller request failed " + std::to_string(response.status()));
+			pdebug("controller request failed " + std::to_string(response.status_code));
 		}
 		return false;
 	}

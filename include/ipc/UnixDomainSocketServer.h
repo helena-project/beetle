@@ -25,6 +25,8 @@ private:
 
 	std::string path;
 
+	int fd;
+
 	std::thread t;
 	void serverDaemon();
 

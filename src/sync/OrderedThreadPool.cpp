@@ -22,11 +22,14 @@ OrderedThreadPool::OrderedThreadPool(int n) : s(0) {
 
 OrderedThreadPool::~OrderedThreadPool() {
 	running = false;
+	std::unique_lock<std::mutex> lk(m);
+	queue.clear();
+	lk.unlock();
+	for (int i = 0; i < (int) workers.size(); i++) {
+		s.notify();
+	}
 	for (auto &w : workers) {
 		w.join();
-	}
-	for (auto &t : queue) {
-		t.f();
 	}
 }
 

@@ -19,7 +19,7 @@ const std::string TCP_PARAM_GATEWAY = "gateway";
 const std::string TCP_PARAM_DEVICE = "device";
 
 /*
- * Declare a client. Value is the name.
+ * Declare a client-> Value is the name.
  */
 const std::string TCP_PARAM_CLIENT = "client";
 
