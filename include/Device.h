@@ -18,8 +18,7 @@
 
 #include "Beetle.h"
 #include "Handle.h"
-
-class HandleAllocationTable;
+#include "hat/HandleAllocationTable.h"
 
 class DeviceException : public std::exception {
   public:
@@ -30,8 +29,6 @@ class DeviceException : public std::exception {
   private:
     std::string msg;
 };
-
-class Handle;
 
 class Device {
 public:

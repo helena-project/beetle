@@ -53,6 +53,11 @@ def _load_services_and_characteristics(services, entity_conn):
 	"""
 	Parse the services and characteristics
 	"""
+	# first clear any existing
+	ServiceInstance.objects.filter(entity=entity_conn).delete()
+	CharInstance.objects.filter(entity=entity_conn).delete()
+
+	# parse and setup service/char heirarchy
 	for service_obj in services:
 		service_uuid = service_obj["uuid"]
 		if not check_uuid(service_uuid):

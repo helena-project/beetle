@@ -20,7 +20,7 @@ from django.http import HttpResponseRedirect
 urlpatterns = [
     url(r'^gatt/', include('gatt.urls')),
     url(r'^beetle/', include('beetle.urls')),
-    url(r'^policy/', include('policy.urls')),
+    url(r'^access/', include('access.urls')),
     url(r'^network/', include('network.urls')),
     url(r'^admin/', admin.site.urls),
     url(r'^$', lambda r: HttpResponseRedirect('admin/')),

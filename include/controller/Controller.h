@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef CONTROLLER_SHARED_H_
-#define CONTROLLER_SHARED_H_
+#ifndef CONTROLLER_CONTROLLER_H_
+#define CONTROLLER_CONTROLLER_H_
 
 #include <exception>
 #include <sstream>
@@ -28,4 +28,4 @@ inline std::string getUrl(std::string hostAndPort, std::string resource) {
 	return ss.str();
 }
 
-#endif /* CONTROLLER_SHARED_H_ */
+#endif /* CONTROLLER_CONTROLLER_H_ */

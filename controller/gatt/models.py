@@ -22,7 +22,7 @@ class Service(models.Model):
 		if self.name != "":
 			return self.name
 		else:
-			return self.uuid
+			return "<unk serv>." + self.uuid
 
 class Characteristic(models.Model):
 	""" 
@@ -43,4 +43,4 @@ class Characteristic(models.Model):
 		if self.name != "":
 			return self.name
 		else:
-			return self.uuid
+			return "<unk char>." + self.uuid

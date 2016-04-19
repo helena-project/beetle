@@ -3,7 +3,7 @@
 ./manage.py migrate
 ./manage.py makemigrations beetle
 ./manage.py makemigrations gatt
-./manage.py makemigrations policy
+./manage.py makemigrations access
 ./manage.py makemigrations network
 ./manage.py migrate
 

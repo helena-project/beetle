@@ -7,8 +7,10 @@
 
 #include "controller/ConnectionReporter.h"
 
+#include <boost/asio/io_service.hpp>
 #include <boost/network/message/directives/header.hpp>
 #include <boost/network/protocol/http/client/facade.hpp>
+#include <boost/network/protocol/http/client/options.hpp>
 #include <boost/network/protocol/http/message/async_message.hpp>
 #include <boost/network/protocol/http/message/wrappers/body.hpp>
 #include <boost/network/protocol/http/request.hpp>
@@ -18,12 +20,13 @@
 #include <json/json.hpp>
 #include <list>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <set>
 #include <sstream>
 #include <utility>
 
-#include <controller/shared.h>
+#include "controller/Controller.h"
 #include "Debug.h"
 #include "Device.h"
 #include "Handle.h"
@@ -31,19 +34,22 @@
 
 using json = nlohmann::json;
 
-ConnectionReporter::ConnectionReporter(Beetle &beetle, std::string hostAndPort_) : beetle(beetle) {
+ConnectionReporter::ConnectionReporter(Beetle &beetle, std::string hostAndPort_)
+: beetle(beetle) {
 	hostAndPort = hostAndPort_;
 
-//	client::options options;
-//	options.follow_redirects(true)
-//	       .cache_resolved(true)
-//	       .io_service(boost::make_shared<boost::asio::io_service>())
+	using namespace boost::network;
+	http::client::options options;
+	options.follow_redirects(false)
+			.cache_resolved(true)
+//			.io_service(boost::make_shared<boost::asio::io_service>())
+			.timeout(30);
 //	       .openssl_certificate("/tmp/my-cert")
 //	       .openssl_verify_path("/tmp/ca-certs");
-//	client(options);
+	client = http::client(options);
 
-	using namespace boost::network;
 	http::client::request request(getUrl(hostAndPort, "network/connect/" + beetle.name));
+	request << header("User-Agent", "linux");
 	http::client::response response = client.post(request);
 	if (response.status() != 200) {
 		throw NetworkException("error connecting to controller");
@@ -58,6 +64,7 @@ ConnectionReporter::ConnectionReporter(Beetle &beetle, std::string hostAndPort_)
 ConnectionReporter::~ConnectionReporter() {
 	using namespace boost::network;
 	http::client::request request(getUrl(hostAndPort, "network/disconnect/" + beetle.name));
+	request << header("User-Agent", "linux");
 	http::client::response response = client.post(request);
 	if (response.status() != 200) {
 		throw NetworkException("error disconnecting from controller");
@@ -154,7 +161,9 @@ void ConnectionReporter::addDeviceHelper(Device *d) {
 	http::client::request request(getUrl(hostAndPort, "network/connect/" + beetle.name
 			+ "/" + d->getName() + "/" + std::to_string(d->getId())));
 	request << header("Content-Type", "application/json");
-	http::client::response response = client.post(request, serializeHandles(d));
+	request << header("User-Agent", "linux");
+	request << body(serializeHandles(d));
+	http::client::response response = client.post(request);
 	if (response.status() != 200) {
 		throw NetworkException("error informing server of connection " + std::to_string(d->getId()));
 	} else {
@@ -170,6 +179,7 @@ void ConnectionReporter::removeDeviceHelper(device_t d) {
 	using namespace boost::network;
 	http::client::request request(getUrl(hostAndPort, "network/disconnect/" + beetle.name
 			+ "/" + std::to_string(d)));
+	request << header("User-Agent", "linux");
 	http::client::response response = client.post(request);
 	if (response.status() != 200) {
 		throw NetworkException("error informing server of disconnection " + std::to_string(d));

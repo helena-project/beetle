@@ -14,7 +14,7 @@
 #include <json/json.hpp>
 #include <sstream>
 
-#include <controller/shared.h>
+#include <controller/Controller.h>
 #include <Debug.h>
 #include <device/socket/tcp/TCPServerProxy.h>
 #include <Device.h>
@@ -24,7 +24,6 @@ using json = nlohmann::json;
 
 AccessControl::AccessControl(Beetle &beetle, std::string hostAndPort_) : beetle(beetle) {
 	hostAndPort = hostAndPort_;
-
 
 }
 
@@ -80,10 +79,12 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	}
 
 	std::stringstream resource;
-	resource << "policy/canMap/" << fromGateway << "/" << std::fixed << fromId
+	resource << "access/canMap/" << fromGateway << "/" << std::fixed << fromId
 			<< "/" << toGateway << "/" << std::fixed << toId;
 
 	http::client::request request(getUrl(hostAndPort, resource.str()));
+	request << header("User-Agent", "linux");
+
 	http::client::response response = client.get(request);
 
 	switch (response.status()) {
@@ -112,8 +113,8 @@ bool AccessControl::canMap(Device *from, Device *to) {
 bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::string body) {
 	json j = json::parse(body);
 	bool result = j["result"];
-	/*
-	 * TODO cache rest of the response
-	 */
+
+	std::cout << j << std::endl;
+
 	return result;
 }

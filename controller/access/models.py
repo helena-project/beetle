@@ -34,21 +34,21 @@ class Rule(models.Model):
 	"""
 	
 	# fields queried using SQL
-	server = models.ForeignKey(
+	from_entity = models.ForeignKey(
 		"beetle.Entity", 
-		related_name="rule_server",
-		help_text="Application or perihperal acting as server.")
-	server_gateway = models.ForeignKey(
+		related_name="rule_from",
+		help_text="Application or peripheral acting as server.")
+	from_gateway = models.ForeignKey(
 		"beetle.Gateway", 
-		related_name="rule_server_gateway",
+		related_name="rule_from_gateway",
 		help_text="Gateway connected to server.")
-	client = models.ForeignKey(
+	to_entity = models.ForeignKey(
 		"beetle.Entity", 
-		related_name="rule_client",
-		help_text="Application or perihperal acting as client.")
-	client_gateway = models.ForeignKey(
+		related_name="rule_to",
+		help_text="Application or peripheral acting as client.")
+	to_gateway = models.ForeignKey(
 		"beetle.Gateway", 
-		related_name="rule_client_gateway",
+		related_name="rule_to_gateway",
 		help_text="Gateway connected to client.")
 
 	service = models.ForeignKey("gatt.Service")

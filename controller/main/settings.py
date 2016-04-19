@@ -16,9 +16,9 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Load inital data such as special values.
-# FIXTURE_DIRS = (
-#    'gatt/fixtures/',
-# )
+FIXTURE_DIRS = (
+
+)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'beetle.apps.BeetleConfig',
     'gatt.apps.GattConfig',
     'network.apps.NetworkConfig',
-    'policy.apps.PolicyConfig',
+    'access.apps.AccessConfig',
     'sslserver',
     'django.contrib.admin',
     'django.contrib.auth',

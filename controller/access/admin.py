@@ -30,10 +30,10 @@ class RuleAdmin(admin.ModelAdmin):
 	form = RuleAdminForm
 	list_display = (
 		"active",
-		"server", 
-		"server_gateway", 
-		"client", 
-		"client_gateway",
+		"from_entity", 
+		"from_gateway", 
+		"to_entity", 
+		"to_gateway",
 		"service",
 		"characteristic",
 		"properties",
@@ -45,10 +45,10 @@ class RuleAdmin(admin.ModelAdmin):
 		"expire")
 	actions = [make_active, make_inactive]
 	search_fields = (
-		"client", 
-		"client_gateway", 
-		"server", 
-		"server_gateway",
+		"to_entity", 
+		"to_gateway", 
+		"from_entity", 
+		"from_gateway",
 		"service",
 		"characteristic")
 	list_filter = ("active", "integrity", "encryption")
