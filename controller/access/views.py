@@ -23,16 +23,18 @@ def _get_gateway_and_entity_helper(gateway, remote_id):
 	conn_gateway = ConnectedGateway.objects.get(gateway=gateway)
 	conn_entity = ConnectedEntity.objects.get(gateway=conn_gateway, 
 		remote_id=remote_id)
-	entity = conn_from_entity.entity
+	entity = conn_entity.entity
 	return gateway, entity, conn_gateway, conn_entity
 
-def query_can_map(from_gateway, from_id, to_gateway, to_id, timestamp=None):
+def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=None):
 	"""
 	Return whether fromId at fromGateway can connect to toId at toGateway
 	"""
 
 	if timestamp is None and "timestamp" in request.GET:
 		timestamp = dateutil.parser.parse(request.GET["timestamp"])
+	else:
+		timestamp = datetime.now()
 
 	from_id = int(from_id)
 	from_gateway, from_entity, conn_from_gateway, conn_from_entity = \
@@ -51,10 +53,10 @@ def query_can_map(from_gateway, from_id, to_gateway, to_id, timestamp=None):
 
 	if timestamp is not None:
 		rules = rules.filter(start__lte=timestamp, expire__gte=timestamp) \
-			| rules.filter(expire__gte=None)
+			| rules.filter(expire__isnull=True)
 	
 	response = {}
-	if not rules.esists():
+	if not rules.exists():
 		response["result"] = False
 		return JsonResponse(response)
 	else:
@@ -77,7 +79,7 @@ def query_can_map(from_gateway, from_id, to_gateway, to_id, timestamp=None):
 	# }
 
 	access = {}
-	for service_instance in ServiceInstance.objects.filter(entity=from_entity):
+	for service_instance in ServiceInstance.objects.filter(entity=conn_from_entity):
 		service_rules = rules.filter(
 			Q(service=service_instance.service) | Q(service__name="*"))
 		service = service_instance.service
@@ -94,9 +96,9 @@ def query_can_map(from_gateway, from_id, to_gateway, to_id, timestamp=None):
 				Q(characteristic=char_instance.char) | Q(characteristic__name="*"))
 			for char_rule in char_rules:
 				char_prop.union(char_rule.properties)
-				char_int |= char_rule.int
-				char_enc |= char_rule.enc
-				char_lease = max(char_lease, timestamp + char_rule.lease)
+				char_int |= char_rule.integrity
+				char_enc |= char_rule.encryption
+				char_lease = max(char_lease, timestamp + char_rule.lease_duration)
 
 			if char_prop:
 				if not access[service.uuid]:
