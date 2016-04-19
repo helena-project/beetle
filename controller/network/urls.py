@@ -7,7 +7,7 @@ urlpatterns = [
 		views.connect_gateway,
 	 	name='connect a gateway'),
 	url(r'^disconnect/(?P<gateway>[\w\-@\']+)$', 
-		views.connect_gateway,
+		views.disconnect_gateway,
 	 	name='disconnect a gateway'),
 	url(r'^connect/(?P<gateway>[\w\-@\']+)/(?P<entity>[\w\-@\']+)/(?P<remote_id>\d+)$', 
 		views.connect_entity, 

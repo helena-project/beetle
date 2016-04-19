@@ -127,9 +127,9 @@ int main(int argc, char *argv[]) {
 		UnixDomainSocketServer ipcServer(btl, path);
 		AutoConnect autoConnect(btl, autoConnectAll);
 
-		ConnectionReporter networkReporter(btl, beetleConrollerHostPort);
-		btl.registerAddDeviceHandler(networkReporter.getAddDeviceHandler());
-		btl.registerRemoveDeviceHandler(networkReporter.getRemoveDeviceHandler());
+		ConnectionReporter connectionReporter(btl, beetleConrollerHostPort);
+		btl.registerAddDeviceHandler(connectionReporter.getAddDeviceHandler());
+		btl.registerRemoveDeviceHandler(connectionReporter.getRemoveDeviceHandler());
 
 		AccessControl accessControl(btl, beetleConrollerHostPort);
 		btl.setAccessControl(&accessControl);

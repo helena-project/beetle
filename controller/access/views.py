@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from django.core import serializers
+from django.utils import timezone
+from django.views.decorators.gzip import gzip_page
 
 from .models import Rule
 
@@ -9,7 +11,6 @@ from beetle.models import Entity, Gateway
 from gatt.models import Service, Characteristic
 from network.models import ConnectedGateway, ConnectedEntity, ServiceInstance, CharInstance
 
-from datetime import datetime
 import dateutil.parser
 import cronex
 
@@ -26,6 +27,7 @@ def _get_gateway_and_entity_helper(gateway, remote_id):
 	entity = conn_entity.entity
 	return gateway, entity, conn_gateway, conn_entity
 
+@gzip_page
 def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=None):
 	"""
 	Return whether fromId at fromGateway can connect to toId at toGateway
@@ -34,7 +36,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 	if timestamp is None and "timestamp" in request.GET:
 		timestamp = dateutil.parser.parse(request.GET["timestamp"])
 	else:
-		timestamp = datetime.now()
+		timestamp = timezone.now()
 
 	from_id = int(from_id)
 	from_gateway, from_entity, conn_from_gateway, conn_from_entity = \
@@ -86,7 +88,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 
 		for char_instance in CharInstance.objects.filter(service=service_instance):
 			char = char_instance.char
-			
+
 			char_prop = set()
 			char_int = False
 			char_enc = False
@@ -95,13 +97,13 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 			char_rules = service_rules.filter(
 				Q(characteristic=char_instance.char) | Q(characteristic__name="*"))
 			for char_rule in char_rules:
-				char_prop.union(char_rule.properties)
+				char_prop = char_prop.union(char_rule.properties)
 				char_int |= char_rule.integrity
 				char_enc |= char_rule.encryption
 				char_lease = max(char_lease, timestamp + char_rule.lease_duration)
 
 			if char_prop:
-				if not access[service.uuid]:
+				if service.uuid not in access:
 					access[service.uuid] = {}
 				access[service.uuid][char.uuid] = {
 					"prop" : "".join(char_prop),

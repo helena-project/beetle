@@ -1,11 +1,11 @@
 from django.shortcuts import render
 from django.db import transaction
 from django.http import JsonResponse, HttpResponse
+from django.utils import timezone
 
 from ipware.ip import get_ip
 
 import json
-from datetime import datetime
 
 from .models import ConnectedGateway, ConnectedEntity, CharInstance, ServiceInstance
 from beetle.models import Gateway, Entity
@@ -27,9 +27,12 @@ def connect_gateway(request, gateway):
 		gateway = Gateway.objects.get(name=gateway)
 	except Gateway.DoesNotExist:
 		return HttpResponse("no gateway found", status=400)
+
 	gateway_conn, created = ConnectedGateway.objects.get_or_create(gateway=gateway)
 	if not created:
-		gateway_conn.last_seen = datetime.now()
+		gateway_conn.last_seen = timezone.now()
+		ConnectedEntity.objects.filter(gateway=gateway_conn).delete()
+
 	ip_address = get_ip(request)
 	if ip_address is None:
 		return HttpResponse(status=400)
@@ -46,8 +49,7 @@ def disconnect_gateway(request, gateway):
 	if gateway == "*":
 		return HttpResponse(status=400)
 
-	gateway = Gateway.objects.get(gateway)
-	gateway_conn = ConnectedGateway.get(gateway=gateway)
+	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
 	gateway_conn.delete()
 
 	return HttpResponse("disconnected")
@@ -108,14 +110,14 @@ def connect_entity(request, gateway, entity, remote_id):
 	try:
 		entity_conn = ConnectedEntity.objects.get(entity=entity, gateway=gateway_conn)
 		entity_conn.remote_id = remote_id
-		entity_conn.last_seen = datetime.now()
+		entity_conn.last_seen = timezone.now()
 	except ConnectedEntity.DoesNotExist:
 		entity_conn = ConnectedEntity(
 			entity=entity, 
 			gateway=gateway_conn, 
 			remote_id=remote_id)
 
-	gateway_conn.last_seen = datetime.now()
+	gateway_conn.last_seen = timezone.now()
 	gateway_conn.save()
 	entity_conn.save()
 

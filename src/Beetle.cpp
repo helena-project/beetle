@@ -92,9 +92,7 @@ void Beetle::mapDevices(device_t from, device_t to) {
 	Device *fromD = devices[from];
 	Device *toD = devices[to];
 	if (accessControl->canMap(fromD, toD) == false) {
-		if (debug) {
-			pwarn("permission denied");
-		}
+		pwarn("permission denied");
 		return;
 	}
 

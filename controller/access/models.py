@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
 
 from django.db import models
-from datetime import datetime, timedelta
+from django.utils import timezone
+from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from django.core import serializers
 
@@ -26,7 +27,7 @@ class WifiAuth(DynamicAuth):
 	pass
 
 def default_expire():
-	return datetime.now() + relativedelta(years=1)
+	return timezone.now() + relativedelta(years=1)
 
 class Rule(models.Model):
 	""" 
@@ -76,7 +77,7 @@ class Rule(models.Model):
 
 	# administrative fields
 	start = models.DateTimeField(
-		default=datetime.now)
+		default=timezone.now)
 	expire = models.DateTimeField(
 		default=default_expire)
 	active = models.BooleanField(default=True, 

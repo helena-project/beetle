@@ -34,13 +34,13 @@ Scanner::Scanner() : t() {
 
 Scanner::~Scanner() {
 	stopped = true;
-	if (t.joinable()) t.join();
 }
 
 void Scanner::start() {
 	assert(started == false);
 	started = true;
 	t = std::thread(&Scanner::scanDaemon, this);
+	t.detach();
 }
 
 void Scanner::stop() {

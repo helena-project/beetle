@@ -40,8 +40,8 @@
 CLI::CLI(Beetle &beetle, int port_, std::string path_) : beetle(beetle), t() {
 	port = port_;
 	path = path_;
-	t = std::thread(&CLI::cmdLineDaemon, this);
 	aliasCounter = 0;
+	t = std::thread(&CLI::cmdLineDaemon, this);
 }
 
 CLI::~CLI() {
@@ -116,7 +116,7 @@ void CLI::cmdLineDaemon() {
 		} else if (c1 == "o" || c1 == "offsets") {
 			doListOffsets(cmd);
 		} else if (c1 == "q" || c1 == "quit") {
-			exit(0);
+			break;
 		} else if (c1 == "name") {
 			printMessage(beetle.name);
 		} else if (c1 == "port") {

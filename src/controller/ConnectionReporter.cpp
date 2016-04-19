@@ -8,8 +8,6 @@
 #include "controller/ConnectionReporter.h"
 
 #include <cpr/cpr.h>
-#include <boost/thread/lock_types.hpp>
-#include <boost/thread/pthread/shared_mutex.hpp>
 #include <iostream>
 #include <json/json.hpp>
 #include <list>
@@ -53,11 +51,15 @@ ConnectionReporter::~ConnectionReporter() {
 				cpr::Url{getUrl(hostAndPort, "network/disconnect/" + beetle.name)},
 				cpr::Header{{"User-Agent", "linux"}});
 	if (response.status_code != 200) {
-		throw NetworkException("error disconnecting from controller");
+		std::stringstream ss;
+				ss << "error disconnecting from controller (" << response.status_code << "): "
+						<< response.text;
+		pwarn(ss.str());
 	} else {
 		if (debug_network) {
-			pdebug("disconnected from controller");
-			std::cerr <<response.text << std::endl;
+			std::stringstream ss;
+			ss << "disconnected from controller: " << response.text;
+			pdebug(ss.str());
 		}
 	}
 }
