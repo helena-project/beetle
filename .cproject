@@ -28,8 +28,8 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.1427675632" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.other.other.554480537" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.include.paths.492841921" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="../lib/include"/>
 									<listOptionValue builtIn="false" value="../include"/>
-									<listOptionValue builtIn="false" value="../lib"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1143028777" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__cplusplus=201103L"/>
@@ -65,7 +65,7 @@
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="curl"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.927737482" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Beetle/bin}&quot;"/>
+									<listOptionValue builtIn="false" value="../lib/bin"/>
 								</option>
 								<option id="gnu.cpp.link.option.userobjs.1968605976" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1627533520" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -119,7 +119,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.873028959" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.include.paths.2041037213" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="../lib"/>
+									<listOptionValue builtIn="false" value="../lib/include"/>
 									<listOptionValue builtIn="false" value="../include"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.639360127" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" value="gnu.cpp.compiler.dialect.c++1y" valueType="enumerated"/>
@@ -141,7 +141,9 @@
 									<listOptionValue builtIn="false" value="ssl"/>
 									<listOptionValue builtIn="false" value="crypto"/>
 								</option>
-								<option id="gnu.cpp.link.option.paths.40058592" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths"/>
+								<option id="gnu.cpp.link.option.paths.40058592" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="../lib/bin"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1966758060" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
