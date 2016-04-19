@@ -8,7 +8,6 @@
 #ifndef CONTROLLER_ACCESSCONTROL_H_
 #define CONTROLLER_ACCESSCONTROL_H_
 
-#include <boost/network/protocol/http/client.hpp>
 #include <string>
 
 #include <Beetle.h>
@@ -26,8 +25,6 @@ private:
 	Beetle &beetle;
 
 	std::string hostAndPort;
-
-	boost::network::http::client client;
 
 	bool handleCanMapResponse(Device *from, Device *to, std::string body);
 };
