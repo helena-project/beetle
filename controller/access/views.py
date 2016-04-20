@@ -46,7 +46,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 	to_gateway, to_entity, conn_to_gateway, conn_to_entity = \
 		_get_gateway_and_entity_helper(to_gateway, to_id)
 
-	rules = Rule.objects.filter(
+	applicable_rules = Rule.objects.filter(
 		Q(from_entity=from_entity) | Q(from_entity__name="*"),
 		Q(from_gateway=from_gateway) | Q(from_gateway__name="*"),
 		Q(to_entity=to_entity) | Q(to_entity__name="*"),
@@ -54,11 +54,12 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 		active=True)
 
 	if timestamp is not None:
-		rules = rules.filter(start__lte=timestamp, expire__gte=timestamp) \
-			| rules.filter(expire__isnull=True)
+		applicable_rules = applicable_rules.filter(
+			start__lte=timestamp, expire__gte=timestamp) \
+			| applicable_rules.filter(expire__isnull=True)
 	
 	response = {}
-	if not rules.exists():
+	if not applicable_rules.exists():
 		response["result"] = False
 		return JsonResponse(response)
 	else:
@@ -69,20 +70,26 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 	# {
 	# 	"result" : True,
 	# 	"access" : {
-	# 		"service_uuid" : {
-	# 			"char_uuid" : {
+	# 		"rules" : {
+	# 			1 : {					# Spec of the rule
 	# 				"prop" : "rwni",
 	# 				"int" : True,
 	# 				"enc" : False,
 	# 				"lease" : 1000,
-	# 			}
-	# 		}
+	# 			}, 
+	# 		},
+	# 		"services": {
+	# 			"2A00" : {				# Service
+	# 				"2A01" : [1]		# Char to applicable rules
+	#			},
+	# 		},
 	# 	}
 	# }
 
-	access = {}
+	services = {}
+	rules = {}
 	for service_instance in ServiceInstance.objects.filter(entity=conn_from_entity):
-		service_rules = rules.filter(
+		service_rules = applicable_rules.filter(
 			Q(service=service_instance.service) | Q(service__name="*"))
 		service = service_instance.service
 
@@ -97,20 +104,22 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 			char_rules = service_rules.filter(
 				Q(characteristic=char_instance.char) | Q(characteristic__name="*"))
 			for char_rule in char_rules:
-				char_prop = char_prop.union(char_rule.properties)
-				char_int |= char_rule.integrity
-				char_enc |= char_rule.encryption
-				char_lease = max(char_lease, timestamp + char_rule.lease_duration)
-
-			if char_prop:
-				if service.uuid not in access:
-					access[service.uuid] = {}
-				access[service.uuid][char.uuid] = {
-					"prop" : "".join(char_prop),
-					"int" : char_int,
-					"enc" : char_enc,
-					"lease" : char_lease.isoformat(),
-				}
+				if service.uuid not in services:
+					services[service.uuid] = {}
+				if char.uuid not in services[service.uuid]:
+					services[service.uuid][char.uuid] = []
+				if char_rule.id not in rules:
+					# Put the rule in the result
+					rules[char_rule.id] = {
+						"prop" : char_rule.properties,
+						"int" : char_rule.integrity,
+						"enc" : char_rule.encryption,
+						"lease" : (timestamp + char_rule.lease_duration).isoformat(),
+					}
+				services[service.uuid][char.uuid].append(char_rule.id)
 				
-	response["access"] = access
+	response["access"] = {
+		"rules" : rules,
+		"services" : services,
+	}
 	return JsonResponse(response)

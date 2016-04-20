@@ -7,7 +7,10 @@
 
 #include <controller/AccessControl.h>
 
-#include <cpr/cpr.h>
+#include <boost/thread/lock_types.hpp>
+#include <cpr/api.h>
+#include <cpr/cprtypes.h>
+#include <cpr/response.h>
 #include <iostream>
 #include <json/json.hpp>
 #include <sstream>
@@ -77,7 +80,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	resource << "access/canMap/" << fromGateway << "/" << std::fixed << fromId
 			<< "/" << toGateway << "/" << std::fixed << toId;
 
-	auto response = cpr::Post(
+	auto response = cpr::Get(
 			cpr::Url{getUrl(hostAndPort, resource.str())},
 			cpr::Header{{"User-Agent", "linux"}});
 
@@ -86,7 +89,14 @@ bool AccessControl::canMap(Device *from, Device *to) {
 		if (debug_network) {
 			pdebug("controller request ok");
 		}
-		return handleCanMapResponse(from, to, response.text);
+		try {
+			return handleCanMapResponse(from, to, response.text);
+		} catch (std::exception &e) {
+			std::stringstream ss;
+			ss << "Error parsing access control server response: " << e.what();
+			pwarn(ss.str());
+			return false;
+		}
 	}
 	case 500:
 		pwarn("internal server error");
@@ -103,10 +113,64 @@ bool AccessControl::canMap(Device *from, Device *to) {
  * Unpacks the controller response and returns whether the mapping is allowed.
  */
 bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::string body) {
+	if (debug_network) {
+		pdebug(body);
+	}
+
 	json j = json::parse(body);
 	bool result = j["result"];
 
-	std::cout << j << std::endl;
+	json access = j["access"];
+	json rules = access["rules"];
+	json services = access["services"];
+
+	cached_mapping_info_t cacheEntry;
+	for (json::iterator it = rules.begin(); it != rules.end(); ++it) {
+
+		std::string key = it.key();
+		json value = it.value();
+
+		rule_t ruleId = std::stoi(key);
+
+		Rule rule;
+		rule.properties = value["prop"];
+		rule.encryption = value["enc"];
+		rule.integrity = value["int"];
+		std::string lease = value["lease"];
+		time_t t;
+		time(&t);
+//		strptime(lease.c_str(), "%Y-%m-%d %H:%M:%S", &t); // TODO: parse the time
+		rule.lease = t;
+
+		cacheEntry.rules[ruleId] = rule;
+	}
+
+	for (json::iterator it = services.begin(); it != services.end(); ++it) {
+		std::string serviceUuid = it.key();
+		json chars = it.value();
+		if (debug_network) {
+			pdebug(serviceUuid);
+		}
+
+		for (json::iterator it2 = chars.begin(); it2 != chars.end(); ++it2) {
+			std::string charUuid = it2.key();
+			json value = it2.value();
+			if (debug_network) {
+				pdebug(charUuid);
+			}
+
+			std::set<rule_t> charRulesSet;
+			for (json::iterator it = value.begin(); it != value.end(); ++it) {
+				rule_t ruleId = *it;
+				charRulesSet.insert(ruleId);
+			}
+
+			cacheEntry.service_char_rules[serviceUuid][charUuid] = charRulesSet;
+		}
+	}
+
+	boost::unique_lock<boost::shared_mutex> lk(cacheMutex);
+	cache[std::make_pair(from->getId(), to->getId())] = cacheEntry;
 
 	return result;
 }

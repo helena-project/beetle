@@ -47,8 +47,8 @@ ConnectionReporter::ConnectionReporter(Beetle &beetle, std::string hostAndPort_)
 }
 
 ConnectionReporter::~ConnectionReporter() {
-	auto response = cpr::Post(
-				cpr::Url{getUrl(hostAndPort, "network/disconnect/" + beetle.name)},
+	auto response = cpr::Delete(
+				cpr::Url{getUrl(hostAndPort, "network/connect/" + beetle.name)},
 				cpr::Header{{"User-Agent", "linux"}});
 	if (response.status_code != 200) {
 		std::stringstream ss;
@@ -161,8 +161,8 @@ void ConnectionReporter::addDeviceHelper(Device *d) {
 }
 
 void ConnectionReporter::removeDeviceHelper(device_t d) {
-	auto response = cpr::Post(
-				cpr::Url{getUrl(hostAndPort, "network/disconnect/" + beetle.name + "/" + std::to_string(d))},
+	auto response = cpr::Delete(
+				cpr::Url{getUrl(hostAndPort, "network/connect/" + beetle.name + "/" + std::to_string(d))},
 				cpr::Header{{"User-Agent", "linux"}});
 	if (response.status_code != 200) {
 		throw NetworkException("error informing server of disconnection " + std::to_string(d));

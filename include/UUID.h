@@ -34,6 +34,11 @@ public:
 	UUID(uint8_t *buf, size_t len);
 
 	/*
+	 * Load uuid from string.
+	 */
+	UUID(std::string s);
+
+	/*
 	 * An uuid from an existing uuid
 	 */
 	UUID(uuid_t uuid_);

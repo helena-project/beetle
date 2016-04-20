@@ -12,6 +12,9 @@ from beetle.models import Entity, Gateway
 # Create your models here.
 
 class DynamicAuth(models.Model):
+	session = models.DurationField(
+		default=timedelta(hours=1), 
+		help_text="Time before reauthenticaton. Hint: HH:mm:ss")
 	pass
 
 class AdminAuth(DynamicAuth):
@@ -21,10 +24,11 @@ class UserAuth(DynamicAuth):
 	pass
 
 class PasscodeAuth(DynamicAuth):
-	code = models.CharField(max_length=200)
+	code = models.CharField(max_length=512)
 
 class WifiAuth(DynamicAuth):
-	pass
+	ip_prefix = models.CharField(max_length=45)
+	prefix_length = models.IntegerField()
 
 def default_expire():
 	return timezone.now() + relativedelta(years=1)

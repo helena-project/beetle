@@ -18,41 +18,44 @@ from gatt.shared import convert_uuid, check_uuid
 @transaction.atomic
 def connect_gateway(request, gateway):
 	"""
-	Connect a gateway to Beetle network
+	Connect or disconnect a gateway to Beetle network
 	"""
 	if gateway == "*":
 		return HttpResponse(status=400)
 
-	try:
-		gateway = Gateway.objects.get(name=gateway)
-	except Gateway.DoesNotExist:
-		return HttpResponse("no gateway found", status=400)
+	print request.method
+	if request.method == "POST":
+		##############
+		# Connection #
+		##############
+		try:
+			gateway = Gateway.objects.get(name=gateway)
+		except Gateway.DoesNotExist:
+			return HttpResponse("no gateway found", status=400)
 
-	gateway_conn, created = ConnectedGateway.objects.get_or_create(gateway=gateway)
-	if not created:
-		gateway_conn.last_seen = timezone.now()
-		ConnectedEntity.objects.filter(gateway=gateway_conn).delete()
+		gateway_conn, created = ConnectedGateway.objects.get_or_create(
+			gateway=gateway)
+		if not created:
+			gateway_conn.last_seen = timezone.now()
+			ConnectedEntity.objects.filter(gateway=gateway_conn).delete()
 
-	ip_address = get_ip(request)
-	if ip_address is None:
-		return HttpResponse(status=400)
-	gateway_conn.ip_address = ip_address
-	gateway_conn.save()
+		ip_address = get_ip(request)
+		if ip_address is None:
+			return HttpResponse(status=400)
+		gateway_conn.ip_address = ip_address
+		gateway_conn.save()
 
-	return HttpResponse("connected")
+		return HttpResponse("connected")
+	elif request.method == "DELETE":
+		#################
+		# Disconnection #
+		#################
+		gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
+		gateway_conn.delete()
 
-@transaction.atomic
-def disconnect_gateway(request, gateway):
-	"""
-	Disconnect a gateway to Beetle network
-	"""
-	if gateway == "*":
-		return HttpResponse(status=400)
-
-	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
-	gateway_conn.delete()
-
-	return HttpResponse("disconnected")
+		return HttpResponse("disconnected")
+	else:
+		return HttpResponse(status=405)
 
 def _load_services_and_characteristics(services, entity_conn):
 	"""
@@ -102,47 +105,46 @@ def connect_entity(request, gateway, entity, remote_id):
 		return HttpResponse(status=400)
 	remote_id = int(remote_id)
 
-	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
-	entity, created = Entity.objects.get_or_create(name=entity)
-	if created:
-		pass
+	if request.method == "POST":
+		##############
+		# Connection #
+		##############
+		gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
+		entity, created = Entity.objects.get_or_create(name=entity)
+		if created:
+			pass
 
-	try:
-		entity_conn = ConnectedEntity.objects.get(entity=entity, gateway=gateway_conn)
-		entity_conn.remote_id = remote_id
-		entity_conn.last_seen = timezone.now()
-	except ConnectedEntity.DoesNotExist:
-		entity_conn = ConnectedEntity(
-			entity=entity, 
-			gateway=gateway_conn, 
-			remote_id=remote_id)
+		try:
+			entity_conn = ConnectedEntity.objects.get(entity=entity, gateway=gateway_conn)
+			entity_conn.remote_id = remote_id
+			entity_conn.last_seen = timezone.now()
+		except ConnectedEntity.DoesNotExist:
+			entity_conn = ConnectedEntity(
+				entity=entity, 
+				gateway=gateway_conn, 
+				remote_id=remote_id)
 
-	gateway_conn.last_seen = timezone.now()
-	gateway_conn.save()
-	entity_conn.save()
+		gateway_conn.last_seen = timezone.now()
+		gateway_conn.save()
+		entity_conn.save()
 
-	services = json.loads(request.body)
-	response = _load_services_and_characteristics(services, entity_conn)
-	if response is None:
-		return HttpResponse("connected")
+		services = json.loads(request.body)
+		response = _load_services_and_characteristics(services, entity_conn)
+		if response is None:
+			return HttpResponse("connected")
+		else:
+			return response
+	elif request.method == "DELETE":
+		#################
+		# Disconnection #
+		#################
+		entity_conns = ConnectedEntity.objects.filter(
+			gateway__gateway__name=gateway, 
+			remote_id__lte=remote_id)
+		entity_conns.delete()
+		return HttpResponse("disconnected")
 	else:
-		return response
-
-@transaction.atomic
-def disconnect_entity(request, gateway, remote_id):
-	"""
-	Disconnect an application or peripheral
-	"""
-	if gateway == "*":
-		return HttpResponse(status=400)
-	remote_id = int(remote_id)
-
-	entity_conns = ConnectedEntity.objects.filter(
-		gateway__gateway__name=gateway, 
-		remote_id__lte=remote_id)
-	entity_conns.delete()
-
-	return HttpResponse("disconnected")
+		return HttpResponse(status=405)
 
 def view_entity(request, entity, detailed=True):
 	"""

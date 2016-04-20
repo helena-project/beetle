@@ -8,9 +8,30 @@
 #ifndef CONTROLLER_ACCESSCONTROL_H_
 #define CONTROLLER_ACCESSCONTROL_H_
 
+#include <boost/thread/pthread/shared_mutex.hpp>
+#include <ctime>
+#include <map>
+#include <set>
 #include <string>
+#include <utility>
 
 #include <Beetle.h>
+#include <UUID.h>
+
+typedef int rule_t;
+
+class Rule {
+public:
+	std::string properties;
+	bool integrity;
+	bool encryption;
+	time_t lease;
+};
+
+typedef struct {
+	std::map<rule_t, Rule> rules;
+	std::map<std::string, std::map<std::string, std::set<rule_t>>> service_char_rules;
+} cached_mapping_info_t;
 
 class AccessControl {
 public:
@@ -25,6 +46,9 @@ private:
 	Beetle &beetle;
 
 	std::string hostAndPort;
+
+	std::map<std::pair<device_t, device_t>, cached_mapping_info_t> cache;
+	boost::shared_mutex cacheMutex;
 
 	bool handleCanMapResponse(Device *from, Device *to, std::string body);
 };
