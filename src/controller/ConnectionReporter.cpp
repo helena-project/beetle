@@ -7,14 +7,16 @@
 
 #include "controller/ConnectionReporter.h"
 
-#include <cpr/cpr.h>
+#include <boost/network/protocol/http/client.hpp>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/pthread/shared_mutex.hpp>
 #include <iostream>
 #include <json/json.hpp>
 #include <list>
 #include <map>
 #include <set>
+#include <mutex>
 #include <sstream>
-#include <string>
 #include <utility>
 
 #include "controller/Controller.h"
@@ -29,39 +31,51 @@ ConnectionReporter::ConnectionReporter(Beetle &beetle, std::string hostAndPort_)
 : beetle(beetle) {
 	hostAndPort = hostAndPort_;
 
-	auto response = cpr::Post(
-			cpr::Url{getUrl(hostAndPort, "network/connect/" + beetle.name)},
-			cpr::Header{{"User-Agent", "linux"}});
-	if (response.status_code != 200) {
+	using namespace boost::network;
+	http::client::options options;
+	options.follow_redirects(false)
+	       .cache_resolved(true)
+//	       .openssl_certificate("/tmp/my-cert")
+//	       .openssl_verify_path("/tmp/ca-certs")
+	       .timeout(10);
+
+	client = new http::client(options);
+	http::client::request request(getUrl(hostAndPort, "network/connect/" + beetle.name));
+	request << header("User-Agent", "linux");
+
+	http::client::response response = client->post(request);
+	if (response.status() != 200) {
 		std::stringstream ss;
-		ss << "error connecting to controller (" << response.status_code << "): "
-				<< response.text;
+		ss << "error connecting to controller (" << response.status() << "): "
+				<< body(response);
 		throw NetworkException(ss.str());
 	} else {
 		if (debug_network) {
 			std::stringstream ss;
-			ss << "connected to controller: " << response.text;
+			ss << "connected to controller: " <<  body(response);
 			pdebug(ss.str());
 		}
 	}
 }
 
 ConnectionReporter::~ConnectionReporter() {
-	auto response = cpr::Delete(
-				cpr::Url{getUrl(hostAndPort, "network/connect/" + beetle.name)},
-				cpr::Header{{"User-Agent", "linux"}});
-	if (response.status_code != 200) {
+	using namespace boost::network;
+	http::client::request request(getUrl(hostAndPort, "network/connect/" + beetle.name));
+		request << header("User-Agent", "linux");
+	http::client::response response = client->delete_(request);
+	if (response.status() != 200) {
 		std::stringstream ss;
-				ss << "error disconnecting from controller (" << response.status_code << "): "
-						<< response.text;
+				ss << "error disconnecting from controller (" << response.status() << "): "
+						<< body(response);
 		pwarn(ss.str());
 	} else {
 		if (debug_network) {
 			std::stringstream ss;
-			ss << "disconnected from controller: " << response.text;
+			ss << "disconnected from controller: " << body(response);
 			pdebug(ss.str());
 		}
 	}
+//	delete client;
 }
 
 AddDeviceHandler ConnectionReporter::getAddDeviceHandler() {
@@ -145,31 +159,35 @@ static std::string serializeHandles(Device *d) {
 }
 
 void ConnectionReporter::addDeviceHelper(Device *d) {
-	auto response = cpr::Post(
-			cpr::Url{getUrl(hostAndPort, "network/connect/" + beetle.name + "/" + d->getName() + "/" + std::to_string(d->getId()))},
-			cpr::Header{{"User-Agent", "linux"}},
-			cpr::Body{serializeHandles(d)});
-	if (response.status_code != 200) {
+	using namespace boost::network;
+	http::client::request request(getUrl(hostAndPort,
+			"network/connect/" + beetle.name + "/" + d->getName() + "/" + std::to_string(d->getId())));
+	request << header("User-Agent", "linux");
+
+	auto response = client->post(request, serializeHandles(d));
+	if (response.status() != 200) {
 		throw NetworkException("error informing server of connection " + std::to_string(d->getId()));
 	} else {
 		if (debug_network) {
 			std::stringstream ss;
-			ss << "controller responded for " << std::to_string(d->getId()) << ": " << response.text;
+			ss << "controller responded for " << std::to_string(d->getId()) << ": " << body(response);
 			pdebug(ss.str());
 		}
 	}
 }
 
 void ConnectionReporter::removeDeviceHelper(device_t d) {
-	auto response = cpr::Delete(
-				cpr::Url{getUrl(hostAndPort, "network/connect/" + beetle.name + "/" + std::to_string(d))},
-				cpr::Header{{"User-Agent", "linux"}});
-	if (response.status_code != 200) {
+	using namespace boost::network;
+	http::client::request request(getUrl(hostAndPort, "network/connect/" + beetle.name + "/" + std::to_string(d)));
+	request << header("User-Agent", "linux");
+
+	auto response = client->delete_(request);
+	if (response.status() != 200) {
 		throw NetworkException("error informing server of disconnection " + std::to_string(d));
 	} else {
 		if (debug_network) {
 			std::stringstream ss;
-			ss << "controller responded for " << std::to_string(d) << ": " << response.text;
+			ss << "controller responded for " << std::to_string(d) << ": " << body(response);
 			pdebug(ss.str());
 		}
 	}

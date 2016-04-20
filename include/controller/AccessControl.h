@@ -8,6 +8,7 @@
 #ifndef CONTROLLER_ACCESSCONTROL_H_
 #define CONTROLLER_ACCESSCONTROL_H_
 
+#include <boost/network/protocol/http/client.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <ctime>
 #include <map>
@@ -16,7 +17,6 @@
 #include <utility>
 
 #include <Beetle.h>
-#include <UUID.h>
 
 typedef int rule_t;
 
@@ -46,6 +46,8 @@ private:
 	Beetle &beetle;
 
 	std::string hostAndPort;
+
+	boost::network::http::client *client;
 
 	std::map<std::pair<device_t, device_t>, cached_mapping_info_t> cache;
 	boost::shared_mutex cacheMutex;

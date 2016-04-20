@@ -8,6 +8,7 @@
 #ifndef INCLUDE_CONTROLLER_NETWORKREPORTER_H_
 #define INCLUDE_CONTROLLER_NETWORKREPORTER_H_
 
+#include <boost/network/protocol/http/client.hpp>
 #include <string>
 
 #include "Beetle.h"
@@ -26,6 +27,8 @@ private:
 	Beetle &beetle;
 
 	std::string hostAndPort;
+
+	boost::network::http::client *client;
 
 	void addDeviceHelper(Device *device);
 	void removeDeviceHelper(device_t d);

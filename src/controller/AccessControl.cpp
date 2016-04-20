@@ -7,10 +7,10 @@
 
 #include <controller/AccessControl.h>
 
+#include <boost/network/protocol/http/client.hpp>
+#include <boost/network/protocol/http/request.hpp>
 #include <boost/thread/lock_types.hpp>
-#include <cpr/api.h>
-#include <cpr/cprtypes.h>
-#include <cpr/response.h>
+#include <exception>
 #include <iostream>
 #include <json/json.hpp>
 #include <sstream>
@@ -20,14 +20,24 @@
 #include <device/socket/tcp/TCPServerProxy.h>
 #include <Device.h>
 
-
 using json = nlohmann::json;
 
 AccessControl::AccessControl(Beetle &beetle, std::string hostAndPort_) : beetle(beetle) {
 	hostAndPort = hostAndPort_;
+
+	using namespace boost::network;
+	http::client::options options;
+	options.follow_redirects(false)
+	       .cache_resolved(true)
+//	       .openssl_certificate("/tmp/my-cert")
+//	       .openssl_verify_path("/tmp/ca-certs")
+	       .timeout(10);
+
+	client = new http::client(options);
 }
 
 AccessControl::~AccessControl() {
+//	delete client;
 }
 
 bool AccessControl::canMap(Device *from, Device *to) {
@@ -80,17 +90,20 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	resource << "access/canMap/" << fromGateway << "/" << std::fixed << fromId
 			<< "/" << toGateway << "/" << std::fixed << toId;
 
-	auto response = cpr::Get(
-			cpr::Url{getUrl(hostAndPort, resource.str())},
-			cpr::Header{{"User-Agent", "linux"}});
+	using namespace boost::network;
+	http::client::request request(getUrl(hostAndPort, resource.str()));
+		request << header("User-Agent", "linux");
+	auto response = client->delete_(request);
 
-	switch (response.status_code) {
+	switch (response.status()) {
 	case 200: {
 		if (debug_network) {
 			pdebug("controller request ok");
 		}
 		try {
-			return handleCanMapResponse(from, to, response.text);
+			std::stringstream ss;
+			ss << body(response);
+			return handleCanMapResponse(from, to, ss.str());
 		} catch (std::exception &e) {
 			std::stringstream ss;
 			ss << "Error parsing access control server response: " << e.what();
@@ -103,7 +116,9 @@ bool AccessControl::canMap(Device *from, Device *to) {
 		return false;
 	default:
 		if (debug_network) {
-			pdebug("controller request failed " + std::to_string(response.status_code));
+			std::stringstream ss;
+			ss << "controller request failed " << response.status();
+			pdebug(ss.str());
 		}
 		return false;
 	}
@@ -137,10 +152,8 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::string b
 		rule.encryption = value["enc"];
 		rule.integrity = value["int"];
 		std::string lease = value["lease"];
-		time_t t;
-		time(&t);
-//		strptime(lease.c_str(), "%Y-%m-%d %H:%M:%S", &t); // TODO: parse the time
-		rule.lease = t;
+		std::string tStr = value["lease"];
+		rule.lease = static_cast<time_t>(std::stod(tStr));
 
 		cacheEntry.rules[ruleId] = rule;
 	}
@@ -149,14 +162,14 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::string b
 		std::string serviceUuid = it.key();
 		json chars = it.value();
 		if (debug_network) {
-			pdebug(serviceUuid);
+			pdebug("service: " + serviceUuid);
 		}
 
 		for (json::iterator it2 = chars.begin(); it2 != chars.end(); ++it2) {
 			std::string charUuid = it2.key();
 			json value = it2.value();
 			if (debug_network) {
-				pdebug(charUuid);
+				pdebug("char: " + charUuid);
 			}
 
 			std::set<rule_t> charRulesSet;

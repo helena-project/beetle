@@ -4,6 +4,7 @@ from django.db.models import Q
 from django.core import serializers
 from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
+from django.views.decorators.http import require_GET
 
 from .models import Rule
 
@@ -28,6 +29,7 @@ def _get_gateway_and_entity_helper(gateway, remote_id):
 	return gateway, entity, conn_gateway, conn_entity
 
 @gzip_page
+@require_GET
 def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=None):
 	"""
 	Return whether fromId at fromGateway can connect to toId at toGateway
@@ -114,7 +116,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 						"prop" : char_rule.properties,
 						"int" : char_rule.integrity,
 						"enc" : char_rule.encryption,
-						"lease" : (timestamp + char_rule.lease_duration).isoformat(),
+						"lease" : (timestamp + char_rule.lease_duration).strftime("%s"),
 					}
 				services[service.uuid][char.uuid].append(char_rule.id)
 				

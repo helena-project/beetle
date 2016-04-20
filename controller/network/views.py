@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.db import transaction
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
+from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
 from ipware.ip import get_ip
 
@@ -16,6 +17,7 @@ from gatt.shared import convert_uuid, check_uuid
 # Create your views here.
 
 @transaction.atomic
+@require_http_methods(["POST", "DELETE"])
 def connect_gateway(request, gateway):
 	"""
 	Connect or disconnect a gateway to Beetle network
@@ -23,7 +25,6 @@ def connect_gateway(request, gateway):
 	if gateway == "*":
 		return HttpResponse(status=400)
 
-	print request.method
 	if request.method == "POST":
 		##############
 		# Connection #
@@ -97,6 +98,7 @@ def _load_services_and_characteristics(services, entity_conn):
 			char_ins.save()
 
 @transaction.atomic
+@require_POST
 def connect_entity(request, gateway, entity, remote_id):
 	"""
 	Connect an application or peripheral
@@ -105,47 +107,50 @@ def connect_entity(request, gateway, entity, remote_id):
 		return HttpResponse(status=400)
 	remote_id = int(remote_id)
 
-	if request.method == "POST":
-		##############
-		# Connection #
-		##############
-		gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
-		entity, created = Entity.objects.get_or_create(name=entity)
-		if created:
-			pass
+	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
+	entity, created = Entity.objects.get_or_create(name=entity)
+	if created:
+		pass
 
-		try:
-			entity_conn = ConnectedEntity.objects.get(entity=entity, gateway=gateway_conn)
-			entity_conn.remote_id = remote_id
-			entity_conn.last_seen = timezone.now()
-		except ConnectedEntity.DoesNotExist:
-			entity_conn = ConnectedEntity(
-				entity=entity, 
-				gateway=gateway_conn, 
-				remote_id=remote_id)
+	try:
+		entity_conn = ConnectedEntity.objects.get(entity=entity, gateway=gateway_conn)
+		entity_conn.remote_id = remote_id
+		entity_conn.last_seen = timezone.now()
+	except ConnectedEntity.DoesNotExist:
+		entity_conn = ConnectedEntity(
+			entity=entity, 
+			gateway=gateway_conn, 
+			remote_id=remote_id)
 
-		gateway_conn.last_seen = timezone.now()
-		gateway_conn.save()
-		entity_conn.save()
+	gateway_conn.last_seen = timezone.now()
+	gateway_conn.save()
+	entity_conn.save()
 
-		services = json.loads(request.body)
-		response = _load_services_and_characteristics(services, entity_conn)
-		if response is None:
-			return HttpResponse("connected")
-		else:
-			return response
-	elif request.method == "DELETE":
-		#################
-		# Disconnection #
-		#################
-		entity_conns = ConnectedEntity.objects.filter(
-			gateway__gateway__name=gateway, 
-			remote_id__lte=remote_id)
-		entity_conns.delete()
-		return HttpResponse("disconnected")
+	services = json.loads(request.body)
+	response = _load_services_and_characteristics(services, entity_conn)
+	if response is None:
+		return HttpResponse("connected")
 	else:
-		return HttpResponse(status=405)
+		return response
 
+@transaction.atomic
+@require_http_methods(["DELETE"])
+def disconnect_entity(request, gateway, remote_id):
+	"""
+	Disconnect an application or peripheral
+	"""
+	if gateway == "*":
+		return HttpResponse(status=400)
+	remote_id = int(remote_id)
+
+	entity_conns = ConnectedEntity.objects.filter(
+		gateway__gateway__name=gateway, 
+		remote_id__lte=remote_id)
+	entity_conns.delete()
+
+	return HttpResponse("disconnected")
+
+@require_GET
 def view_entity(request, entity, detailed=True):
 	"""
 	Returns in json, the entity's service anc characteristic uuids
@@ -174,6 +179,7 @@ def view_entity(request, entity, detailed=True):
 	
 	return JsonResponse(response, safe=False)
 
+@require_GET
 def discover_with_uuid(request, uuid, is_service=True):
 	"""
 	Get devices with characteristic 
