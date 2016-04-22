@@ -3,6 +3,7 @@ from django.db import transaction
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
+from django.views.decorators.gzip import gzip_page
 
 from ipware.ip import get_ip
 
@@ -151,6 +152,7 @@ def disconnect_entity(request, gateway, remote_id):
 	return HttpResponse("disconnected")
 
 @require_GET
+@gzip_page
 def view_entity(request, entity, detailed=True):
 	"""
 	Returns in json, the entity's service anc characteristic uuids
@@ -180,6 +182,28 @@ def view_entity(request, entity, detailed=True):
 	return JsonResponse(response, safe=False)
 
 @require_GET
+@gzip_page
+def discover_entities(request):
+	"""
+	Get list of connnected entities
+	"""
+	response = []
+	for conn_entity in ConnectedEntity.objects.all():
+		response.append({
+			"entity" : {
+				"name" : conn_entity.entity.name,
+				"id" : conn_entity.remote_id,
+			},
+			"gateway" : {
+				"name" : conn_entity.gateway.gateway.name,
+				"ip" : conn_entity.gateway.ip_address,
+				"port" : conn_entity.gateway.port,
+			},
+		});
+	return JsonResponse(response, safe=False)
+
+@require_GET
+@gzip_page
 def discover_with_uuid(request, uuid, is_service=True):
 	"""
 	Get devices with characteristic 
@@ -187,6 +211,8 @@ def discover_with_uuid(request, uuid, is_service=True):
 	if check_uuid(uuid) == False:
 		return HttpResponse("invalid uuid %s" % uuid, status=400)
 	uuid = convert_uuid(uuid)
+
+	print uuid
 
 	response = []
 	if is_service:

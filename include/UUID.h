@@ -11,9 +11,13 @@
 #include <stddef.h>
 #include <cstdint>
 #include <string>
+#include <cstring>
+
+const int UUID_LEN = 16;
+const int SHORT_UUID_LEN = 2;
 
 typedef struct {
-	unsigned char value[16];
+	unsigned char value[UUID_LEN];
 } uuid_t;
 
 class UUID {
@@ -64,6 +68,14 @@ public:
 	 * Are they the same uuid?
 	 */
 	bool compareTo(UUID &other);
+
+	bool operator <(const UUID &rhs) const {
+	    return memcmp(uuid.value, rhs.uuid.value, UUID_LEN);
+	}
+
+	bool operator ==(const UUID &rhs) const {
+	    return memcmp(uuid.value, rhs.uuid.value, UUID_LEN) == 0;
+	}
 
 	std::string str();
 private:

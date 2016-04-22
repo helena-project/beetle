@@ -37,7 +37,8 @@
 #include "hat/HandleAllocationTable.h"
 #include "Handle.h"
 
-CLI::CLI(Beetle &beetle, int port_, std::string path_) : beetle(beetle), t() {
+CLI::CLI(Beetle &beetle, int port_, std::string path_, NetworkDiscovery &discovery)
+: beetle(beetle), networkDiscovery(discovery), t() {
 	port = port_;
 	path = path_;
 	aliasCounter = 0;
@@ -93,7 +94,7 @@ void CLI::cmdLineDaemon() {
 		if (cmd.size() == 0) continue;
 
 		std::string c1 = cmd[0];
-		if (c1 == "help") {
+		if (c1 == "h" || c1 == "help") {
 			doHelp(cmd);
 		} else if (c1 == "scan") {
 			doScan(cmd);
@@ -105,15 +106,17 @@ void CLI::cmdLineDaemon() {
 			doDisconnect(cmd);
 		} else if (c1 == "remote") {
 			doRemote(cmd);
+		} else if (c1 == "discover") {
+			doDiscover(cmd);
 		} else if (c1 == "map") {
 			doMap(cmd);
 		} else if (c1 == "unmap") {
 			doUnmap(cmd);
-		} else if (c1 == "d" || c1 == "devices") {
+		} else if (c1 == "devices") {
 			doListDevices(cmd);
-		} else if (c1 == "h" || c1 == "handles") {
+		} else if (c1 == "handles") {
 			doListHandles(cmd);
-		} else if (c1 == "o" || c1 == "offsets") {
+		} else if (c1 == "offsets") {
 			doListOffsets(cmd);
 		} else if (c1 == "q" || c1 == "quit") {
 			break;
@@ -152,20 +155,21 @@ bool CLI::getCommand(std::vector<std::string> &ret) {
 
 void CLI::doHelp(const std::vector<std::string>& cmd) {
 	printMessage("Supported commands:");
-	printMessage("  help");
+	printMessage("  help,h");
 	printMessage("  name\t\tPrint the name of this instance.");
 	printMessage("  port\t\tPrint the tcp port for remote connections.");
 	printMessage("  path\t\tPrint the unix domain socket path.");
 	printMessage("  scan\t\tPrint results from background scan.");
+	printMessage("  discover\t\tPerform network-wide discovery.");
 	printMessage("  connect\t\tConnect to a peripheral.");
 	printMessage("  connect-nd\t\tConnect without handle discovery.");
 	printMessage("  remote\t\tConnect to a device at a remote gateway.");
 	printMessage("  disconnect");
 	printMessage("  map\t\t\tMap handles from one virtual device to another.");
 	printMessage("  unmap");
-	printMessage("  devices,d\t\tPrint connected devices.");
-	printMessage("  handles,h\t\tPrint a device's handles.");
-	printMessage("  offsets,o\t\tPrint mappings for a device.");
+	printMessage("  devices\t\tPrint connected devices.");
+	printMessage("  handles\t\tPrint a device's handles.");
+	printMessage("  offsets\t\tPrint mappings for a device.");
 	printMessage("  quit,q");
 }
 
@@ -302,8 +306,52 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 			beetle.removeDevice(device->getId());
 		}
 	}
+}
 
+void CLI::doDiscover(const std::vector<std::string>& cmd) {
+	if (cmd.size() != 2 && cmd.size() != 3) {
+		printUsage("discover d");
+		printUsage("discover s uuid");
+		printUsage("discover c uuid");
+		return;
+	}
 
+	std::list<discovery_result_t> discovered;
+	if (cmd[1] == "d") {
+		discovered = networkDiscovery.discoverDevices();
+	} else if (cmd[1] == "s"){
+		if (cmd.size() != 3) {
+			printUsageError("no uuid specified");
+			return;
+		}
+		try {
+			discovered = networkDiscovery.discoverByUuid(UUID(cmd[2]), true);
+		} catch (std::invalid_argument &e) {
+			printUsageError("could not parse uuid");
+			return;
+		}
+	} else if (cmd[1] == "c") {
+		if (cmd.size() != 3) {
+			printUsageError("no uuid specified");
+			return;
+		}
+		try {
+			discovered = networkDiscovery.discoverByUuid(UUID(cmd[2]), false);
+		} catch (std::invalid_argument &e) {
+			printUsageError("could not parse uuid");
+			return;
+		}
+	} else {
+		printUsageError("invalid argument: " + cmd[1]);
+	}
+
+	for (auto &d : discovered) {
+		printMessage("device : " + d.name);
+		printMessage("  gateway : " + d.gateway);
+		printMessage("  remote id : " + std::to_string(d.id));
+		printMessage("  ip : " + d.ip);
+		printMessage("  port : " + std::to_string(d.port));
+	}
 }
 
 void CLI::doDisconnect(const std::vector<std::string>& cmd) {

@@ -8,6 +8,7 @@
 #ifndef CONTROLLER_CONTROLLER_H_
 #define CONTROLLER_CONTROLLER_H_
 
+#include <boost/algorithm/string/replace.hpp>
 #include <exception>
 #include <sstream>
 #include <string>
@@ -23,6 +24,7 @@ class NetworkException : public std::exception {
 };
 
 inline std::string getUrl(std::string hostAndPort, std::string resource) {
+	boost::replace_all(resource, " ", "%20");
 	std::stringstream ss;
 	ss << "http://" << hostAndPort << "/" << resource;
 	return ss.str();

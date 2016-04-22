@@ -15,6 +15,7 @@
 #include <json/json.hpp>
 #include <sstream>
 
+#include <ble/att.h>
 #include <controller/Controller.h>
 #include <Debug.h>
 #include <device/socket/tcp/TCPServerProxy.h>
@@ -37,7 +38,7 @@ AccessControl::AccessControl(Beetle &beetle, std::string hostAndPort_) : beetle(
 }
 
 AccessControl::~AccessControl() {
-//	delete client;
+	delete client; // teardown race
 }
 
 bool AccessControl::canMap(Device *from, Device *to) {
@@ -103,7 +104,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
 		try {
 			std::stringstream ss;
 			ss << body(response);
-			return handleCanMapResponse(from, to, ss.str());
+			return handleCanMapResponse(from, to, ss);
 		} catch (std::exception &e) {
 			std::stringstream ss;
 			ss << "Error parsing access control server response: " << e.what();
@@ -127,12 +128,14 @@ bool AccessControl::canMap(Device *from, Device *to) {
 /*
  * Unpacks the controller response and returns whether the mapping is allowed.
  */
-bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::string body) {
+bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringstream &response) {
+	json j;
+	response >> j;
+
 	if (debug_network) {
-		pdebug(body);
+		pdebug(j);
 	}
 
-	json j = json::parse(body);
 	bool result = j["result"];
 
 	json access = j["access"];
@@ -159,22 +162,22 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::string b
 	}
 
 	for (json::iterator it = services.begin(); it != services.end(); ++it) {
-		std::string serviceUuid = it.key();
+		UUID serviceUuid = UUID(it.key());
 		json chars = it.value();
 		if (debug_network) {
-			pdebug("service: " + serviceUuid);
+			pdebug("service: " + serviceUuid.str());
 		}
 
 		for (json::iterator it2 = chars.begin(); it2 != chars.end(); ++it2) {
-			std::string charUuid = it2.key();
-			json value = it2.value();
+			UUID charUuid = UUID(it2.key());
+			json ruleIds = it2.value();
 			if (debug_network) {
-				pdebug("char: " + charUuid);
+				pdebug("char: " + charUuid.str());
 			}
 
 			std::set<rule_t> charRulesSet;
-			for (json::iterator it = value.begin(); it != value.end(); ++it) {
-				rule_t ruleId = *it;
+			for (auto rId : ruleIds) {
+				rule_t ruleId = rId;
 				charRulesSet.insert(ruleId);
 			}
 
@@ -186,4 +189,128 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::string b
 	cache[std::make_pair(from->getId(), to->getId())] = cacheEntry;
 
 	return result;
+}
+
+static inline bool isReadReq(uint8_t op) {
+	return op == ATT_OP_READ_BY_TYPE_REQ || op == ATT_OP_READ_REQ || op == ATT_OP_READ_BLOB_REQ
+			|| op == ATT_OP_READ_MULTI_REQ || op == ATT_OP_READ_BY_GROUP_REQ;
+}
+
+static inline bool isWriteReq(uint8_t op) {
+	return op == ATT_OP_WRITE_REQ || op == ATT_OP_WRITE_CMD || op == ATT_OP_PREP_WRITE_REQ
+			|| op == ATT_OP_EXEC_WRITE_REQ;
+}
+
+bool AccessControl::canAccessHandle(Device *client, Device *server, Handle *handle,
+		uint8_t op, uint8_t &attErr) {
+	/*
+	 * Default reason to deny op.
+	 */
+	attErr = ATT_ECODE_ATTR_NOT_FOUND;
+
+	boost::shared_lock<boost::shared_mutex> lk(cacheMutex);
+	auto key = std::make_pair(server->getId(), client->getId());
+	if (cache.find(key) == cache.end()) {
+		pwarn("no cached access control rules exist for client-server");
+		return false;
+	}
+	cached_mapping_info_t &ruleMapping = cache[key];
+
+	/*
+	 * Case 1: This handle is a service.
+	 */
+	PrimaryService *ps = dynamic_cast<PrimaryService *>(handle);
+	if (ps) {
+		if (ruleMapping.service_char_rules.find(ps->getServiceUuid()) == ruleMapping.service_char_rules.end()) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	/*
+	 * Case 2: This handle is a characteristic.
+	 */
+	Characteristic *ch = dynamic_cast<Characteristic *>(handle);
+	if (ch) {
+		ps = dynamic_cast<PrimaryService *>(server->handles[ch->getServiceHandle()]);
+		if (!ps) {
+			return false;
+		}
+		auto serviceMap = ruleMapping.service_char_rules.find(ps->getServiceUuid());
+		if (serviceMap == ruleMapping.service_char_rules.end()) {
+			return false;
+		}
+		auto charMap = serviceMap->second.find(ch->getCharUuid());
+		if (charMap == serviceMap->second.end()) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	/*
+	 * Case 3: This is a handle that is part of a service.
+	 */
+	ps = dynamic_cast<PrimaryService *>(server->handles[handle->getServiceHandle()]);
+	ch = dynamic_cast<Characteristic *>(server->handles[ch->getCharHandle()]);
+	if (!ps || !ch) {
+		return false;
+	}
+	auto serviceMap = ruleMapping.service_char_rules.find(ps->getServiceUuid());
+	if (serviceMap == ruleMapping.service_char_rules.end()) {
+		return false;
+	}
+	auto charMap = serviceMap->second.find(ch->getCharUuid());
+	if (charMap == serviceMap->second.end()) {
+		return false;
+	}
+
+	/*
+	 * SubCase: char config
+	 */
+	ClientCharCfg *ccc = dynamic_cast<ClientCharCfg *>(handle);
+	if (ccc) {
+		if(!isWriteReq(op)) {
+			return true;
+		} else {
+			for (rule_t rId : charMap->second) {
+				Rule rule = ruleMapping.rules[rId];
+				if ((rule.properties & (GATT_CHARAC_PROP_IND | GATT_CHARAC_PROP_IND)) != 0) {
+					return true;
+				}
+			}
+			attErr = ATT_ECODE_WRITE_NOT_PERM;
+			return false;
+		}
+	}
+
+	/*
+	 * Subcase: characteristic value
+	 */
+	if (ch->getAttrHandle() == handle->getHandle()) {
+		bool isRead = isReadReq(op);
+		bool isWrite = isWriteReq(op);
+		if (!isRead && !isWrite) {
+			return true;
+		}
+		for (rule_t rId : charMap->second) {
+			Rule rule = ruleMapping.rules[rId];
+			if (isRead && (rule.properties & GATT_CHARAC_PROP_READ)) {
+				return true;
+			}
+			if (isWrite && (rule.properties & GATT_CHARAC_PROP_WRITE)) {
+				return true;
+			}
+		}
+		if (isRead) {
+			attErr = ATT_ECODE_READ_NOT_PERM;
+		}
+		if (isWrite) {
+			attErr = ATT_ECODE_WRITE_NOT_PERM;
+		}
+		return false;
+	} else {
+		return true;
+	}
 }

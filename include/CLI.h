@@ -15,11 +15,12 @@
 #include <vector>
 
 #include "Beetle.h"
+#include "controller/NetworkDiscovery.h"
 #include "Scanner.h"
 
 class CLI {
 public:
-	CLI(Beetle &beetle, int port, std::string path);
+	CLI(Beetle &beetle, int port, std::string path, NetworkDiscovery &discovery);
 	virtual ~CLI();
 	/*
 	 * Block program exit with CLI.
@@ -38,6 +39,8 @@ private:
 
 	Beetle &beetle;
 
+	NetworkDiscovery &networkDiscovery;
+
 	int port;
 	std::string path;
 
@@ -48,6 +51,7 @@ private:
 	void doScan(const std::vector<std::string>& cmd);
 	void doConnect(const std::vector<std::string>& cmd, bool discoverHandles);
 	void doRemote(const std::vector<std::string>& cmd);
+	void doDiscover(const std::vector<std::string>& cmd);
 	void doDisconnect(const std::vector<std::string>& cmd);
 	void doMap(const std::vector<std::string>& cmd);
 	void doUnmap(const std::vector<std::string>& cmd);

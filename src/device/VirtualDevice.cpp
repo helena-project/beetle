@@ -460,7 +460,8 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 				handle_value_t characteristic = characteristics[i];
 				uint16_t startGroup = characteristic.handle + 1;
 				uint16_t endGroup = characteristics[i + 1].handle - 1;
-				handles[characteristic.handle]->setEndGroupHandle(endGroup);
+				Characteristic *charHandle = dynamic_cast<Characteristic *>(handles[characteristic.handle]);
+				charHandle->setEndGroupHandle(endGroup);
 
 				std::vector<handle_info_t> handleInfos = discoverHandles(d, startGroup, endGroup);
 				for (handle_info_t &handleInfo : handleInfos) {
@@ -468,6 +469,9 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 					Handle *handle;
 					if (handleUuid.isShort() && handleUuid.getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
 						handle = new ClientCharCfg();
+					} else if (handleInfo.handle == charHandle->getAttrHandle()) {
+						handle = new CharacteristicValue();
+						handle->setUuid(handleUuid);
 					} else {
 						handle = new Handle();
 						handle->setUuid(handleUuid);
@@ -484,7 +488,8 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 			handle_value_t characteristic = characteristics[characteristics.size() - 1];
 			uint16_t startGroup = characteristic.handle + 1;
 			uint16_t endGroup = serviceHandle->getEndGroupHandle();
-			handles[characteristic.handle]->setEndGroupHandle(endGroup);
+			Characteristic *charHandle = dynamic_cast<Characteristic *>(handles[characteristic.handle]);
+			charHandle->setEndGroupHandle(endGroup);
 
 			std::vector<handle_info_t> handleInfos = discoverHandles(d, startGroup, endGroup);
 			for (handle_info_t &handleInfo : handleInfos) {
@@ -492,6 +497,9 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 				Handle *handle;
 				if (handleUuid.isShort() && handleUuid.getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
 					handle = new ClientCharCfg();
+				} else if (handleInfo.handle == charHandle->getAttrHandle()) {
+					handle = new CharacteristicValue();
+					handle->setUuid(handleUuid);
 				} else {
 					handle = new Handle();
 					handle->setUuid(handleUuid);

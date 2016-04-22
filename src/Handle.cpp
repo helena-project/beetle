@@ -134,6 +134,10 @@ uint16_t Characteristic::getAttrHandle() {
 	return charHandle;
 }
 
+UUID Characteristic::getCharUuid() {
+	return UUID(cache.value + 3, cache.len - 3);
+}
+
 static std::string getPropertiesString(uint8_t properties) {
 	std::stringstream ss;
 	ss << ((properties & GATT_CHARAC_PROP_BCAST) ? 'b' : '-');

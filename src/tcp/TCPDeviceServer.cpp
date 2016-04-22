@@ -170,13 +170,13 @@ void TCPDeviceServer::startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr
 			device = new TCPClientProxy(beetle, clifd, client, cliaddr, deviceId);
 		}
 
-		beetle.addDevice(device);
-
 		if (params[TCP_PARAM_SERVER] == "true") {
 			device->start();
 		} else {
 			device->startNd();
 		}
+
+		beetle.addDevice(device);
 
 		pdebug("connected to " + device->getName());
 		if (debug) {

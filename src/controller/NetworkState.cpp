@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "controller/ConnectionReporter.h"
+#include <controller/NetworkState.h>
 
 #include <boost/network/protocol/http/client.hpp>
 #include <boost/thread/lock_types.hpp>
@@ -27,7 +27,7 @@
 
 using json = nlohmann::json;
 
-ConnectionReporter::ConnectionReporter(Beetle &beetle, std::string hostAndPort_)
+NetworkState::NetworkState(Beetle &beetle, std::string hostAndPort_)
 : beetle(beetle) {
 	hostAndPort = hostAndPort_;
 
@@ -52,13 +52,13 @@ ConnectionReporter::ConnectionReporter(Beetle &beetle, std::string hostAndPort_)
 	} else {
 		if (debug_network) {
 			std::stringstream ss;
-			ss << "connected to controller: " <<  body(response);
+			ss << "beetle controller: " <<  body(response);
 			pdebug(ss.str());
 		}
 	}
 }
 
-ConnectionReporter::~ConnectionReporter() {
+NetworkState::~NetworkState() {
 	using namespace boost::network;
 	http::client::request request(getUrl(hostAndPort, "network/connect/" + beetle.name));
 		request << header("User-Agent", "linux");
@@ -71,14 +71,14 @@ ConnectionReporter::~ConnectionReporter() {
 	} else {
 		if (debug_network) {
 			std::stringstream ss;
-			ss << "disconnected from controller: " << body(response);
+			ss << "beetle controller: " << body(response);
 			pdebug(ss.str());
 		}
 	}
-//	delete client;
+	delete client; // teardown race
 }
 
-AddDeviceHandler ConnectionReporter::getAddDeviceHandler() {
+AddDeviceHandler NetworkState::getAddDeviceHandler() {
 	return [this](device_t d) {
 		boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 		if (beetle.devices.find(d) == beetle.devices.end()) {
@@ -110,7 +110,7 @@ AddDeviceHandler ConnectionReporter::getAddDeviceHandler() {
 	};
 }
 
-RemoveDeviceHandler ConnectionReporter::getRemoveDeviceHandler() {
+RemoveDeviceHandler NetworkState::getRemoveDeviceHandler() {
 	return [this](device_t d){
 		try {
 			removeDeviceHelper(d);
@@ -158,13 +158,22 @@ static std::string serializeHandles(Device *d) {
 	return json(arr).dump();
 }
 
-void ConnectionReporter::addDeviceHelper(Device *d) {
-	using namespace boost::network;
-	http::client::request request(getUrl(hostAndPort,
-			"network/connect/" + beetle.name + "/" + d->getName() + "/" + std::to_string(d->getId())));
-	request << header("User-Agent", "linux");
+void NetworkState::addDeviceHelper(Device *d) {
+	std::string url = getUrl(hostAndPort,
+			"network/connect/" + beetle.name + "/" + d->getName() + "/" + std::to_string(d->getId()));
+	if (debug_network) {
+		pdebug("post: " + url);
+	}
 
-	auto response = client->post(request, serializeHandles(d));
+	std::string requestBody = serializeHandles(d);
+
+	using namespace boost::network;
+	http::client::request request(url);
+	request << header("User-Agent", "linux");
+	request << header("Content-Length", std::to_string(requestBody.length()));
+	request << body(requestBody);
+
+	auto response = client->post(request);
 	if (response.status() != 200) {
 		throw NetworkException("error informing server of connection " + std::to_string(d->getId()));
 	} else {
@@ -176,9 +185,14 @@ void ConnectionReporter::addDeviceHelper(Device *d) {
 	}
 }
 
-void ConnectionReporter::removeDeviceHelper(device_t d) {
+void NetworkState::removeDeviceHelper(device_t d) {
+	std::string url = getUrl(hostAndPort, "network/connect/" + beetle.name + "/" + std::to_string(d));
+	if (debug_network) {
+		pdebug("delete: " + url);
+	}
+
 	using namespace boost::network;
-	http::client::request request(getUrl(hostAndPort, "network/connect/" + beetle.name + "/" + std::to_string(d)));
+	http::client::request request(url);
 	request << header("User-Agent", "linux");
 
 	auto response = client->delete_(request);

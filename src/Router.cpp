@@ -22,6 +22,7 @@
 #include "ble/att.h"
 #include "ble/gatt.h"
 #include "ble/helper.h"
+#include "controller/AccessControl.h"
 #include "Debug.h"
 #include "Device.h"
 #include "hat/HandleAllocationTable.h"
@@ -764,6 +765,20 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 	}
 
 	Handle *proxyH = destinationDevice->handles[remoteHandle];
+
+	/*
+	 * Query access control.
+	 */
+	uint8_t ecode;
+	if (dst != BEETLE_RESERVED_DEVICE && beetle.accessControl->canAccessHandle(sourceDevice,
+			destinationDevice, proxyH, buf[0], ecode) == false) {
+		uint8_t *err;
+		int len = pack_error_pdu(buf[0], handle, ecode, err);
+		sourceDevice->writeResponse(err, len);
+		delete[] err;
+		return 0;
+	}
+
 	if (opCode == ATT_OP_WRITE_REQ && proxyH->getUuid().isShort()
 			&& proxyH->getUuid().getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
 		/*

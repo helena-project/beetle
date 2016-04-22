@@ -16,10 +16,10 @@
 /*
  * Reports devices connected and disconnected.
  */
-class ConnectionReporter {
+class NetworkState {
 public:
-	ConnectionReporter(Beetle &beetle, std::string hostAndPort);
-	virtual ~ConnectionReporter();
+	NetworkState(Beetle &beetle, std::string hostAndPort);
+	virtual ~NetworkState();
 
 	AddDeviceHandler getAddDeviceHandler();
 	RemoveDeviceHandler getRemoveDeviceHandler();

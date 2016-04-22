@@ -18,7 +18,8 @@
 #include <AutoConnect.h>
 #include <Beetle.h>
 #include <controller/AccessControl.h>
-#include <controller/ConnectionReporter.h>
+#include <controller/NetworkState.h>
+#include <controller/NetworkDiscovery.h>
 #include <controller/Controller.h>
 #include <CLI.h>
 #include <Debug.h>
@@ -127,14 +128,16 @@ int main(int argc, char *argv[]) {
 		UnixDomainSocketServer ipcServer(btl, path);
 		AutoConnect autoConnect(btl, autoConnectAll);
 
-		ConnectionReporter connectionReporter(btl, beetleConrollerHostPort);
-		btl.registerAddDeviceHandler(connectionReporter.getAddDeviceHandler());
-		btl.registerRemoveDeviceHandler(connectionReporter.getRemoveDeviceHandler());
+		NetworkState networkState(btl, beetleConrollerHostPort);
+		btl.registerAddDeviceHandler(networkState.getAddDeviceHandler());
+		btl.registerRemoveDeviceHandler(networkState.getRemoveDeviceHandler());
+
+		NetworkDiscovery networkDiscovery(beetleConrollerHostPort);
 
 		AccessControl accessControl(btl, beetleConrollerHostPort);
 		btl.setAccessControl(&accessControl);
 
-		CLI cli(btl, tcpPort, path);
+		CLI cli(btl, tcpPort, path, networkDiscovery);
 
 		Scanner scanner;
 		scanner.registerHandler(cli.getDiscoveryHander());
