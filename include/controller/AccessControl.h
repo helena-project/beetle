@@ -83,9 +83,25 @@ public:
 	bool canMap(Device *from, Device *to);
 
 	/*
-	 * Caller should have device and handle locks.
+	 * Return: whether access is permitted, and the error code if not
+	 *
+	 * Caller should hold device and handle locks.
 	 */
 	bool canAccessHandle(Device *client, Device *server, Handle *h, uint8_t op, uint8_t &attErr);
+
+	/*
+	 * Return: whether access is permitted, and the properties.
+	 *
+	 * Caller should hold device and handle locks.
+	 */
+	bool getCharAccessProperties(Device *client, Device *server, Handle *h, uint8_t &properties);
+
+	/*
+	 * Return: whether the uuid type may be read.
+	 *
+	 * Caller should hold device and handle locks.
+	 */
+	bool canReadType(Device *client, Device *server, UUID &attType);
 private:
 	Beetle &beetle;
 

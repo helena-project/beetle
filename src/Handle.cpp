@@ -35,7 +35,7 @@ Handle::~Handle() {
 
 }
 
-bool Handle::isCacheInfinite() {
+bool Handle::isCacheInfinite() const {
 	return cacheInfinite;
 }
 
@@ -43,7 +43,7 @@ void Handle::setCacheInfinite(bool cacheInfinite) {
 	this->cacheInfinite = cacheInfinite;
 }
 
-uint16_t Handle::getCharHandle() {
+uint16_t Handle::getCharHandle() const {
 	return charHandle;
 }
 
@@ -51,7 +51,7 @@ void Handle::setCharHandle(uint16_t charHandle) {
 	this->charHandle = charHandle;
 }
 
-uint16_t Handle::getEndGroupHandle() {
+uint16_t Handle::getEndGroupHandle() const {
 	return endGroupHandle;
 }
 
@@ -59,7 +59,7 @@ void Handle::setEndGroupHandle(uint16_t endGroupHandle) {
 	this->endGroupHandle = endGroupHandle;
 }
 
-uint16_t Handle::getHandle() {
+uint16_t Handle::getHandle() const {
 	return handle;
 }
 
@@ -67,7 +67,7 @@ void Handle::setHandle(uint16_t handle) {
 	this->handle = handle;
 }
 
-uint16_t Handle::getServiceHandle() {
+uint16_t Handle::getServiceHandle() const {
 	return serviceHandle;
 }
 
@@ -75,7 +75,7 @@ void Handle::setServiceHandle(uint16_t serviceHandle) {
 	this->serviceHandle = serviceHandle;
 }
 
-UUID& Handle::getUuid() {
+UUID Handle::getUuid() const {
 	return uuid;
 }
 
@@ -83,7 +83,7 @@ void Handle::setUuid(UUID uuid_) {
 	uuid = uuid_;
 }
 
-std::string Handle::str() {
+std::string Handle::str() const {
 	std::stringstream ss;
 	ss << handle << "\t" << uuid.str()
 			<< "\tsH=" << serviceHandle
@@ -114,11 +114,11 @@ PrimaryService::PrimaryService() {
 	uuid = UUID(GATT_PRIM_SVC_UUID);
 }
 
-UUID PrimaryService::getServiceUuid() {
+UUID PrimaryService::getServiceUuid() const {
 	return UUID(cache.value, cache.len);
 }
 
-std::string PrimaryService::str() {
+std::string PrimaryService::str() const {
 	std::stringstream ss;
 	ss << handle << "\t" << "[PrimaryService]"
 			<< "\tuuid=" << UUID(cache.value, cache.len).str()
@@ -130,12 +130,16 @@ Characteristic::Characteristic() {
 	uuid = UUID(GATT_CHARAC_UUID);
 }
 
-uint16_t Characteristic::getAttrHandle() {
-	return charHandle;
+uint16_t Characteristic::getAttrHandle() const {
+	return *(uint16_t *)(cache.value + 1);
 }
 
-UUID Characteristic::getCharUuid() {
+UUID Characteristic::getCharUuid() const {
 	return UUID(cache.value + 3, cache.len - 3);
+}
+
+uint8_t Characteristic::getProperties() const {
+	return cache.value[0];
 }
 
 static std::string getPropertiesString(uint8_t properties) {
@@ -151,7 +155,7 @@ static std::string getPropertiesString(uint8_t properties) {
 	return ss.str();
 }
 
-std::string Characteristic::str() {
+std::string Characteristic::str() const {
 	std::stringstream ss;
 	ss << handle << "\t" << "[Characteristic]"
 			<< "\tsH=" << serviceHandle << "\t";
@@ -171,7 +175,7 @@ ClientCharCfg::ClientCharCfg() {
 	uuid = UUID(GATT_CLIENT_CHARAC_CFG_UUID);
 }
 
-std::string ClientCharCfg::str() {
+std::string ClientCharCfg::str() const {
 	std::stringstream ss;
 	ss << handle << "\t" << "[ClientCharCfg]"
 			<< "\tsH=" << serviceHandle

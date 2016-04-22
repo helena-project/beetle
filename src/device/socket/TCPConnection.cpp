@@ -55,6 +55,7 @@ bool TCPConnection::write(uint8_t *buf, int len) {
 			pdebug(bufCpy, len);
 		}
 		delete[] bufCpy;
+		pendingWrites.decrement();
 	});
 	return true;
 }

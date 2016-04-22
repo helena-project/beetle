@@ -15,13 +15,12 @@
 #include "UUID.h"
 #include "att.h"
 
-inline int pack_error_pdu(uint8_t opCode, uint16_t handle, uint8_t errCode, uint8_t *&buf) {
-	buf = new uint8_t[5];
+const int ATT_ERROR_PDU_LEN = 5;
+inline void pack_error_pdu(uint8_t opCode, uint16_t handle, uint8_t errCode, uint8_t *buf) {
 	buf[0] = ATT_OP_ERROR;
 	buf[1] = opCode;
 	*(uint16_t *)(buf + 2) = htobs(handle);
 	buf[4] = errCode;
-	return 5;
 }
 
 inline int pack_read_by_type_req_pdu(uint16_t attType, uint16_t startHandle, uint16_t endHandle, uint8_t *&buf) {
@@ -56,24 +55,24 @@ inline bool parse_find_by_type_value_request(uint8_t *buf, int len, uint16_t &st
 }
 
 inline bool parse_read_by_type_value_request(uint8_t *buf, int len, uint16_t &startHandle,
-		uint16_t &endHandle, UUID *&uuid) {
+		uint16_t &endHandle, UUID &uuid) {
 	if (len != 7 && len != 21) {
 		return false;
 	}
 	startHandle = btohs(*(uint16_t *)(buf + 1));
 	endHandle = btohs(*(uint16_t *)(buf + 3));
-	uuid = new UUID(buf + 5, len - 5);
+	uuid = UUID(buf + 5, len - 5);
 	return true;
 }
 
 inline bool parse_read_by_group_type_request(uint8_t *buf, int len, uint16_t &startHandle,
-		uint16_t &endHandle, UUID *&uuid) {
+		uint16_t &endHandle, UUID &uuid) {
 	if (len != 7 && len != 21) {
 		return false;
 	}
 	startHandle = btohs(*(uint16_t *)(buf + 1));
 	endHandle = btohs(*(uint16_t *)(buf + 3));
-	uuid = new UUID(buf + 5, len - 5);
+	uuid = UUID(buf + 5, len - 5);
 	return true;
 }
 

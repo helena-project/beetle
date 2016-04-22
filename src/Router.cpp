@@ -82,10 +82,9 @@ int Router::routeUnsupported(uint8_t *buf, int len, device_t src) {
 		pwarn(std::to_string(src) + " does not id a device");
 		return -1;
 	} else {
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], 0, ATT_ECODE_REQ_NOT_SUPP, err);
-		beetle.devices[src]->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(buf[0], 0, ATT_ECODE_REQ_NOT_SUPP, err);
+		beetle.devices[src]->writeResponse(err, ATT_ERROR_PDU_LEN);
 		return 0;
 	}
 }
@@ -103,13 +102,14 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 
 	Device *sourceDevice = beetle.devices[src];
 
+	const uint8_t opCode = buf[0];
+
 	uint16_t startHandle;
 	uint16_t endHandle;
 	if (!parse_find_info_request(buf, len, startHandle, endHandle)) {
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], 0, ATT_ECODE_INVALID_PDU, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, 0, ATT_ECODE_INVALID_PDU, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 		return 0;
 	}
 
@@ -120,17 +120,16 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 	}
 
 	if (startHandle == 0 || startHandle > endHandle) {
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], startHandle, ATT_ECODE_INVALID_HANDLE, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, startHandle, ATT_ECODE_INVALID_HANDLE, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 		return 0;
 	}
 
 	int srcMTU = sourceDevice->getMTU();
 	int respLen = 0;
 	int respHandleCount = 0;
-	uint8_t *resp = new uint8_t[srcMTU];
+	uint8_t resp[srcMTU];
 	resp[0] = ATT_OP_FIND_INFO_RESP;
 	resp[1] = 1; // TODO handle non standard uuids (cb4.2 p2177)
 	respLen += 2;
@@ -176,6 +175,16 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 
 				// TODO this allows 16bit handles only
 				Handle *handle = mapping.second;
+
+				/*
+				 * Check that access is permitted.
+				 */
+				uint8_t unused;
+				if (dst != BEETLE_RESERVED_DEVICE && beetle.accessControl->canAccessHandle(
+						sourceDevice, destinationDevice, handle, opCode, unused) == false) {
+					continue;
+				}
+
 				*(uint16_t *)(resp + respLen) = htobs(offset);
 				*(uint16_t *)(resp + respLen + 2) = htobs(handle->getUuid().getShort());
 				respLen += 4;
@@ -203,13 +212,11 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 	if (respHandleCount > 0) {
 		sourceDevice->writeResponse(resp, respLen);
 	} else {
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 	}
 
-	delete[] resp;
 	return 0;
 }
 
@@ -226,16 +233,17 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 
 	Device *sourceDevice = beetle.devices[src];
 
+	const uint8_t opCode = buf[0];
+
 	uint16_t startHandle;
 	uint16_t endHandle;
 	uint16_t attType;
 	uint8_t *attValue;
 	int attValLen;
 	if (!parse_find_by_type_value_request(buf, len, startHandle, endHandle, attType, attValue, attValLen)) {
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], 0, ATT_ECODE_INVALID_PDU, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, 0, ATT_ECODE_INVALID_PDU, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 		return 0;
 	}
 
@@ -247,10 +255,9 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 	}
 
 	if (startHandle == 0 || startHandle > endHandle) {
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], startHandle, ATT_ECODE_INVALID_HANDLE, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, startHandle, ATT_ECODE_INVALID_HANDLE, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 		return 0;
 	}
 
@@ -265,7 +272,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 	int respLen = 0;
 	int respHandleCount = 0;
 	// bool cutShort = false;
-	uint8_t *resp = new uint8_t[srcMTU];
+	uint8_t resp[srcMTU];
 	resp[0] = ATT_OP_FIND_BY_TYPE_RESP;
 	respLen++;
 
@@ -282,6 +289,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 			// do nothing
 		} else if (dst == src) {
 			// do nothing
+			pwarn("illegal state detected");
 		} else if (dst >= 0) {
 			/*
 			 * Lock handles
@@ -291,14 +299,14 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 				return -1;
 			}
 
-			Device *destinatonDevice = beetle.devices[dst];
+			Device *destinationDevice = beetle.devices[dst];
 
 			/*
 			 * Lock handles
 			 */
-			std::lock_guard<std::recursive_mutex> handlesLg(destinatonDevice->handlesMutex);
+			std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
 
-			for (auto &mapping : destinatonDevice->handles) {
+			for (auto &mapping : destinationDevice->handles) {
 				uint16_t offset = mapping.first + handleRange.start;
 				if (offset < startHandle) {
 					continue;
@@ -309,6 +317,15 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 
 				Handle *handle = mapping.second;
 				if (handle->getUuid().getShort() == attType) {
+					/*
+					 * Check whether access is permitted.
+					 */
+					uint8_t unused;
+					if (dst != BEETLE_RESERVED_DEVICE && beetle.accessControl->canAccessHandle(
+							sourceDevice, destinationDevice, handle, opCode, unused) == false) {
+						continue;
+					}
+
 					int cmpLen = (attValLen < handle->cache.len) ? attValLen : handle->cache.len;
 					if (memcmp(handle->cache.value, attValue, cmpLen) == 0) {
 						*(uint16_t *)(resp + respLen) = htobs(offset);
@@ -346,13 +363,11 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 	if (respHandleCount > 0) {
 		sourceDevice->writeResponse(resp, respLen);
 	} else {
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 	}
 
-	delete[] resp;
 	return 0;
 }
 
@@ -369,14 +384,16 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 
 	Device *sourceDevice = beetle.devices[src];
 
+	const uint8_t opCode = buf[0];
+	assert(opCode == ATT_OP_READ_BY_TYPE_REQ);
+
 	uint16_t startHandle;
 	uint16_t endHandle;
-	UUID *attType;
+	UUID attType;
 	if (!parse_read_by_type_value_request(buf, len, startHandle, endHandle, attType)) {
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], 0, ATT_ECODE_INVALID_PDU, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, 0, ATT_ECODE_INVALID_PDU, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 		return 0;
 	}
 
@@ -387,11 +404,9 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 	}
 
 	if (startHandle == 0 || startHandle > endHandle) {
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], startHandle, ATT_ECODE_INVALID_HANDLE, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
-		delete attType;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, startHandle, ATT_ECODE_INVALID_HANDLE, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 		return 0;
 	}
 
@@ -426,7 +441,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 			}
 
 			Handle *handle = kv.second;
-			if (handle->getUuid() == *attType) {
+			if (handle->getUuid() == attType) {
 				*(uint16_t*)(resp + 2) = htobs(handle->getHandle());
 				memcpy(resp + 4, handle->cache.value, handle->cache.len);
 				respLen += 2 + handle->cache.len;
@@ -438,19 +453,17 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 		if (respLen > 2) {
 			sourceDevice->writeResponse(resp, respLen);
 		} else {
-			uint8_t *err;
-			int len = pack_error_pdu(buf[0], startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
-			sourceDevice->writeResponse(err, len);
-			delete[] err;
+			uint8_t err[ATT_ERROR_PDU_LEN];
+			pack_error_pdu(opCode, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
+			sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 		}
 	} else if (dst == NULL_RESERVED_DEVICE) {
 		if (debug_router) {
 			pdebug("ReadByTypeRequest to null");
 		}
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 	} else {
 		handle_range_t handleRange = sourceDevice->hat->getHandleRange(startHandle);
 		*(uint16_t *)(buf + 1) = htobs(startHandle - handleRange.start);
@@ -466,7 +479,18 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 			pdebug("ReadByTypeRequest to " + destinationDevice->getName());
 		}
 
-		destinationDevice->writeTransaction(buf, len, [this, src, dst, attType, handleRange, startHandle](uint8_t *resp, int respLen) {
+		/*
+		 * Check whether the attribute type may be read.
+		 */
+		if (beetle.accessControl->canReadType(sourceDevice, destinationDevice, attType) == false) {
+			uint8_t err[ATT_ERROR_PDU_LEN];
+			pack_error_pdu(opCode, startHandle, ATT_ECODE_READ_NOT_PERM, err);
+			sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
+			return 0;
+		}
+
+		destinationDevice->writeTransaction(buf, len, [this, src, dst, attType, handleRange, startHandle](
+				uint8_t *resp, int respLen) {
 			/*
 			 * Lock devices
 			 */
@@ -474,37 +498,70 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 
 			if (beetle.devices.find(src) == beetle.devices.end()) {
 				pwarn(std::to_string(src) + " does not id a device");
-				delete attType;
 				return;
 			}
 			Device *sourceDevice = beetle.devices[src];
 
+			if (beetle.devices.find(dst) == beetle.devices.end()) {
+				pwarn(std::to_string(src) + " does not id a device");
+				return;
+			}
+			Device *destinationDevice = beetle.devices[dst];
+			std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
+
 			if (resp == NULL || respLen <= 2) {
-				uint8_t *err;
-				int len = pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, startHandle, ATT_ECODE_ABORTED, err);
-				sourceDevice->writeResponse(err, len);
-				delete[] err;
+				uint8_t err[ATT_ERROR_PDU_LEN];
+				pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, startHandle, ATT_ECODE_ABORTED, err);
+				sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 			} else if (resp[0] == ATT_OP_ERROR) {
 				*(uint16_t *)(resp + 2) = htobs(startHandle);
 				sourceDevice->writeResponse(resp, respLen);
 			} else {
+				uint8_t respCopy[respLen];
+				int respCopyLen = 0;
+				respCopy[0] = resp[0];
+				respCopy[1] = resp[1];
+				respCopyLen += 2;
+
 				int segLen = resp[1];
 				for (int i = 2; i < respLen; i += segLen) {
 					uint16_t handle = btohs(*(uint16_t *)(resp + i));
+
+					if (destinationDevice->handles.find(handle) == destinationDevice->handles.end()) {
+						pwarn("response for unknown handle : " + std::to_string(handle));
+						continue;
+					}
+					Handle *h = destinationDevice->handles[handle];
+					uint8_t unused;
+					if (beetle.accessControl->canAccessHandle(sourceDevice, destinationDevice, h,
+							ATT_OP_READ_REQ, unused) == false) {
+						continue;
+					}
+
+					/*
+					 * Update the response
+					 */
 					handle += handleRange.start;
 					*(uint16_t *)(resp + i) = htobs(handle);
-					if (attType->isShort() && attType->getShort() == GATT_CHARAC_UUID) {
+					if (attType.isShort() && attType.getShort() == GATT_CHARAC_UUID) {
 						int j = i + 3;
 						uint16_t valueHandle = btohs(*(uint16_t *)(resp + j));
 						valueHandle += handleRange.start;
 						*(uint16_t *)(resp + j) = htobs(valueHandle);
 					}
+					memcpy(respCopy + respCopyLen, resp + i, segLen);
+					respCopyLen += segLen;
 				}
-				sourceDevice->writeResponse(resp, respLen);
+				if (respCopyLen == 2) {
+					uint8_t err[ATT_ERROR_PDU_LEN];
+					pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, startHandle, ATT_ECODE_READ_NOT_PERM, err);
+					sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
+				} else {
+					sourceDevice->writeResponse(respCopy, respCopyLen);
+				}
 			}
 		});
 	}
-	delete attType;
 	return 0;
 }
 
@@ -521,14 +578,16 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 
 	Device *sourceDevice = beetle.devices[src];
 
+	const uint8_t opCode = buf[0];
+	assert(opCode == ATT_OP_READ_BY_GROUP_REQ);
+
 	uint16_t startHandle;
 	uint16_t endHandle;
-	UUID *attType;
+	UUID attType;
 	if (!parse_read_by_group_type_request(buf, len, startHandle, endHandle, attType)) {
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], 0, ATT_ECODE_INVALID_PDU, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, 0, ATT_ECODE_INVALID_PDU, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 		return 0;
 	}
 
@@ -539,11 +598,9 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 	}
 
 	if (startHandle == 0 || startHandle > endHandle) {
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], startHandle, ATT_ECODE_INVALID_HANDLE, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
-		delete attType;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, startHandle, ATT_ECODE_INVALID_HANDLE, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 		return 0;
 	}
 
@@ -555,7 +612,7 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 	int srcMTU = sourceDevice->getMTU();
 	int respLen = 0;
 	int respHandleCount = 0;
-	uint8_t *resp = new uint8_t[srcMTU];
+	uint8_t resp[srcMTU];
 	resp[0] = ATT_OP_READ_BY_GROUP_RESP;
 //	resp[1] is length, fill later
 	respLen += 2;
@@ -597,7 +654,7 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 				// TODO this allows 16bit handles only
 				Handle *handle = mapping.second;
 
-				if (handle->getUuid() == *attType) {
+				if (handle->getUuid() == attType) {
 					if (respHandleCount == 0) { // set the length
 						resp[1] = 4 + handle->cache.len;
 					} else {
@@ -636,14 +693,11 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 	if (respHandleCount > 0) {
 		sourceDevice->writeResponse(resp, respLen);
 	} else {
-		uint8_t *err;
-		int len = pack_error_pdu(buf[0], startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 	}
 
-	delete[] resp;
-	delete attType;
 	return 0;
 }
 
@@ -659,6 +713,8 @@ int Router::routeHandleNotifyOrIndicate(uint8_t *buf, int len, device_t src) {
 	}
 
 	Device *sourceDevice = beetle.devices[src];
+
+	const uint8_t opCode = buf[0];
 
 	/*
 	 * Lock hat
@@ -692,9 +748,9 @@ int Router::routeHandleNotifyOrIndicate(uint8_t *buf, int len, device_t src) {
 			handle += handleRange.start;
 			*(uint16_t *)(buf + 1) = htobs(handle);
 
-			if (buf[0] == ATT_OP_HANDLE_NOTIFY) {
+			if (opCode == ATT_OP_HANDLE_NOTIFY) {
 				destinationDevice->writeCommand(buf, len);
-			} else if (buf[0] == ATT_OP_HANDLE_IND) {
+			} else if (opCode == ATT_OP_HANDLE_IND) {
 				destinationDevice->writeTransaction(buf, len, [dst](uint8_t *a, int b) {
 					if (debug_router) {
 						pdebug("got confirmation from " + std::to_string(dst));
@@ -704,7 +760,7 @@ int Router::routeHandleNotifyOrIndicate(uint8_t *buf, int len, device_t src) {
 		}
 	}
 
-	if (buf[0] == ATT_OP_HANDLE_IND) {
+	if (opCode == ATT_OP_HANDLE_IND) {
 		uint8_t buf = ATT_OP_HANDLE_CNF;
 		sourceDevice->writeResponse(&buf, sizeof(buf));
 	}
@@ -725,7 +781,8 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 
 	Device *sourceDevice = beetle.devices[src];
 
-	uint8_t opCode = buf[0];
+	const uint8_t opCode = buf[0];
+
 	uint16_t handle = btohs(*(uint16_t *)(buf + 1));
 
 	/*
@@ -735,10 +792,9 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 
 	device_t dst = sourceDevice->hat->getDeviceForHandle(handle);
 	if (dst == NULL_RESERVED_DEVICE) {
-		uint8_t *err;
-		int len = pack_error_pdu(opCode, handle, ATT_ECODE_ATTR_NOT_FOUND, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, handle, ATT_ECODE_ATTR_NOT_FOUND, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 		return 0;
 	}
 
@@ -757,10 +813,9 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 
 	uint16_t remoteHandle = handle - handleRange.start;
 	if (destinationDevice->handles.find(remoteHandle) == destinationDevice->handles.end()) {
-		uint8_t *err;
-		int len = pack_error_pdu(opCode, handle, ATT_ECODE_ATTR_NOT_FOUND, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, handle, ATT_ECODE_ATTR_NOT_FOUND, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 		return 0;
 	}
 
@@ -775,10 +830,9 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		if (debug_router) {
 			pdebug("access denied: " + std::to_string(proxyH->getHandle()));
 		}
-		uint8_t *err;
-		int len = pack_error_pdu(opCode, handle, ecode, err);
-		sourceDevice->writeResponse(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, handle, ecode, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 		return 0;
 	}
 
@@ -787,12 +841,11 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		/*
 		 * Length of subscription command needs to be correct.
 		 */
-		if (len != 2) {
+		if (len != 5) {
 			if (opCode == ATT_OP_WRITE_REQ) {
-				uint8_t *err;
-				int len = pack_error_pdu(opCode, handle, ATT_ECODE_IO, err);
-				beetle.devices[src]->writeResponse(err, len);
-				delete[] err;
+				uint8_t err[ATT_ERROR_PDU_LEN];
+				pack_error_pdu(opCode, handle, ATT_ECODE_IO, err);
+				sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 			}
 			return 0;
 		}
@@ -800,9 +853,8 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		/*
 		 * Update to subscription
 		 */
-		uint16_t charHandle = proxyH->getCharHandle();
-		Handle *charH = beetle.devices[dst]->handles[charHandle];
-		Handle *charAttrH = beetle.devices[dst]->handles[charH->getCharHandle()];
+		Characteristic *charH = dynamic_cast<Characteristic *>(destinationDevice->handles[proxyH->getCharHandle()]);
+		CharacteristicValue *charAttrH = dynamic_cast<CharacteristicValue *>(destinationDevice->handles[charH->getAttrHandle()]);
 		if (buf[3] == 0) {
 			charAttrH->subscribers.erase(src);
 		} else {
@@ -827,10 +879,9 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 					}
 
 					if (resp == NULL) {
-						uint8_t *err;
-						int len = pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);
-						beetle.devices[src]->writeResponse(err, len);
-						delete[] err;
+						uint8_t err[ATT_ERROR_PDU_LEN];
+						pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);
+						beetle.devices[src]->writeResponse(err, ATT_ERROR_PDU_LEN);
 					} else {
 						beetle.devices[src]->writeResponse(resp, respLen);
 					}
@@ -874,10 +925,9 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 				}
 
 				if (resp == NULL) {
-					uint8_t *err;
-					int len = pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);
-					beetle.devices[src]->writeResponse(err, len);
-					delete[] err;
+					uint8_t err[ATT_ERROR_PDU_LEN];
+					pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);
+					beetle.devices[src]->writeResponse(err, ATT_ERROR_PDU_LEN);
 				} else {
 					if (resp[0] == ATT_OP_READ_RESP) {
 						if (beetle.devices.find(dst) == beetle.devices.end()) {

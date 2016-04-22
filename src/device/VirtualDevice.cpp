@@ -85,19 +85,17 @@ void VirtualDevice::stop() {
 
 	transactionMutex.lock();
 	if (currentTransaction) {
-		uint8_t *err;
-		int len = pack_error_pdu(currentTransaction->buf[0], 0, ATT_ECODE_ABORTED, err);
-		currentTransaction->cb(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(currentTransaction->buf[0], 0, ATT_ECODE_ABORTED, err);
+		currentTransaction->cb(err, ATT_ERROR_PDU_LEN);
 		delete[] currentTransaction->buf;
 		delete currentTransaction;
 	}
 	while (pendingTransactions.size() > 0) {
 		transaction_t *t = pendingTransactions.front();
-		uint8_t *err;
-		int len = pack_error_pdu(t->buf[0], 0, ATT_ECODE_ABORTED, err);
-		currentTransaction->cb(err, len);
-		delete[] err;
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(t->buf[0], 0, ATT_ECODE_ABORTED, err);
+		currentTransaction->cb(err, ATT_ERROR_PDU_LEN);
 		delete[] t->buf;
 		delete t;
 		pendingTransactions.pop();
@@ -211,7 +209,7 @@ static std::string discoverDeviceName(VirtualDevice *d) {
 	uint8_t *req = NULL;
 	uint8_t *resp = NULL;
 	std::string name;
-	int reqLen = pack_read_by_type_req_pdu(GATT_CHARAC_DEVICE_NAME, 0x1, 0xFFFF, req);
+	int reqLen = pack_read_by_type_req_pdu(GATT_GAP_CHARAC_DEVICE_NAME_UUID, 0x1, 0xFFFF, req);
 	int respLen = d->writeTransactionBlocking(req, reqLen, resp);
 	if (resp == NULL || resp[0] != ATT_OP_READ_BY_TYPE_RESP) {
 		name = "unknown";
@@ -441,9 +439,6 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 			Handle *charHandle = new Characteristic();
 			charHandle->setHandle(characteristic.handle);
 			charHandle->setServiceHandle(serviceHandle->getHandle());
-
-			// store attrHandle in charHandle
-			charHandle->setCharHandle(btohs(*(uint16_t *)(characteristic.value + 1)));
 			charHandle->setCacheInfinite(true);
 
 			// let the handle inherit the pointer

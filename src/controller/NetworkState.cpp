@@ -141,7 +141,7 @@ static std::string serializeHandles(Device *d) {
 		}
 		Characteristic *chr = dynamic_cast<Characteristic *>(h.second);
 		if (chr) {
-			currCharUuids.insert(d->handles[chr->getCharHandle()]->getUuid().str());
+			currCharUuids.insert(d->handles[chr->getAttrHandle()]->getUuid().str());
 		}
 	}
 

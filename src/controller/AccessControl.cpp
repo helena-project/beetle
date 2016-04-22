@@ -314,3 +314,86 @@ bool AccessControl::canAccessHandle(Device *client, Device *server, Handle *hand
 		return true;
 	}
 }
+
+bool AccessControl::getCharAccessProperties(Device *client, Device *server, Handle *handle, uint8_t &properties) {
+	boost::shared_lock<boost::shared_mutex> lk(cacheMutex);
+	auto key = std::make_pair(server->getId(), client->getId());
+	if (cache.find(key) == cache.end()) {
+		pwarn("no cached access control rules exist for client-server");
+		return false;
+	}
+	cached_mapping_info_t &ruleMapping = cache[key];
+	properties = 0;
+
+	Characteristic *ch = dynamic_cast<Characteristic *>(handle);
+	if (ch) {
+		PrimaryService *ps = dynamic_cast<PrimaryService *>(server->handles[ch->getServiceHandle()]);
+		if (!ps) {
+			return false;
+		}
+		auto serviceMap = ruleMapping.service_char_rules.find(ps->getServiceUuid());
+		if (serviceMap == ruleMapping.service_char_rules.end()) {
+			return false;
+		}
+
+		auto charMap = serviceMap->second.find(ch->getCharUuid());
+		if (charMap == serviceMap->second.end()) {
+			return false;
+		}
+
+		for (rule_t ruleId : charMap->second) {
+			Rule rule = ruleMapping.rules[ruleId];
+			/*
+			 * TODO evaluate rule
+			 */
+			properties |= rule.properties;
+		}
+		return true;
+	}
+	return false;
+}
+
+bool AccessControl::canReadType(Device *client, Device *server, UUID &attType) {
+	boost::shared_lock<boost::shared_mutex> lk(cacheMutex);
+	auto key = std::make_pair(server->getId(), client->getId());
+	if (cache.find(key) == cache.end()) {
+		pwarn("no cached access control rules exist for client-server");
+		return false;
+	}
+	cached_mapping_info_t &ruleMapping = cache[key];
+
+	if (attType.isShort()) {
+		switch (attType.getShort()) {
+		case GATT_PRIM_SVC_UUID:
+		case GATT_SND_SVC_UUID:
+		case GATT_INCLUDE_UUID:
+		case GATT_CHARAC_UUID:
+		case GATT_CHARAC_EXT_PROPER_UUID:
+		case GATT_CHARAC_USER_DESC_UUID:
+		case GATT_CLIENT_CHARAC_CFG_UUID:
+		case GATT_SERVER_CHARAC_CFG_UUID:
+		case GATT_CHARAC_FMT_UUID:
+		case GATT_CHARAC_AGREG_FMT_UUID:
+		case GATT_CHARAC_VALID_RANGE_UUID:
+		case GATT_EXTERNAL_REPORT_REFERENCE:
+		case GATT_REPORT_REFERENCE:
+		case GATT_GAP_SERVICE_UUID:
+		case GATT_GAP_CHARAC_DEVICE_NAME_UUID:
+		case GATT_GAP_CHARAC_APPEARANCE_UUID:
+		case GATT_GAP_CHARAC_PERIPH_PRIV_FLAG_UUID:
+		case GATT_GAP_CHARAC_PREF_CONN_PARAMS_UUID:
+		case GATT_GATT_SERVICE_UUID:
+			return true;
+		case GATT_GAP_CHARAC_RECONNECTION_ADDR_UUID:
+		case GATT_GATT_CHARAC_SERVICE_CHANGED_UUID:
+			return false;
+		}
+	}
+
+	for (auto &service : ruleMapping.service_char_rules) {
+		if (service.second.find(attType) != service.second.end()) {
+			return true;
+		}
+	}
+	return false;
+}

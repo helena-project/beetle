@@ -39,29 +39,29 @@ public:
 	Handle();
 	virtual ~Handle();
 
-	bool isCacheInfinite();
+	bool isCacheInfinite() const;
 	void setCacheInfinite(bool cacheInfinite);
 
 	/*
 	 * Stores the handle of the characteristic, or the handle of the attribute
 	 * value if this handle is a characteristic.
 	 */
-	uint16_t getCharHandle();
+	uint16_t getCharHandle() const;
 	void setCharHandle(uint16_t charHandle);
 
-	uint16_t getEndGroupHandle();
+	uint16_t getEndGroupHandle() const;
 	void setEndGroupHandle(uint16_t endGroupHandle);
 
-	uint16_t getHandle();
+	uint16_t getHandle() const;
 	void setHandle(uint16_t handle);
 
-	uint16_t getServiceHandle();
+	uint16_t getServiceHandle() const;
 	void setServiceHandle(uint16_t serviceHandle);
 
-	UUID& getUuid();
+	UUID getUuid() const;
 	void setUuid(UUID uuid);
 
-	virtual std::string str();
+	virtual std::string str() const;
 
 	CachedHandle cache;
 	std::set<device_t> subscribers;
@@ -77,16 +77,17 @@ protected:
 class PrimaryService : public Handle {
 public:
 	PrimaryService();
-	UUID getServiceUuid();
-	std::string str();
+	UUID getServiceUuid() const;
+	std::string str() const;
 };
 
 class Characteristic : public Handle {
 public:
 	Characteristic();
-	uint16_t getAttrHandle();
-	UUID getCharUuid();
-	std::string str();
+	uint16_t getAttrHandle() const;
+	UUID getCharUuid() const;
+	uint8_t getProperties() const;
+	std::string str() const;
 };
 
 class CharacteristicValue : public Handle {
@@ -96,7 +97,7 @@ class CharacteristicValue : public Handle {
 class ClientCharCfg : public Handle {
 public:
 	ClientCharCfg();
-	std::string str();
+	std::string str() const;
 };
 
 #endif /* INCLUDE_HANDLE_H_ */
