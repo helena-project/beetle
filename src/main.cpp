@@ -14,6 +14,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <signal.h>
 
 #include <AutoConnect.h>
 #include <Beetle.h>
@@ -61,6 +62,12 @@ std::string getDefaultName() {
 	char name[100];
 	assert(gethostname(name, sizeof(name)) == 0);
 	return "beetle@" + std::string(name);
+}
+
+void sigpipe_handler_ignore(int unused) {
+	if (debug_socket) {
+		pdebug("caught signal SIGPIPE");
+	}
 }
 
 int main(int argc, char *argv[]) {
@@ -123,6 +130,8 @@ int main(int argc, char *argv[]) {
 	if (resetHci) resetHciHelper();
 
 	try {
+		signal(SIGPIPE, sigpipe_handler_ignore);
+
 		Beetle btl(name);
 		TCPDeviceServer tcpServer(btl, tcpPort);
 		UnixDomainSocketServer ipcServer(btl, path);

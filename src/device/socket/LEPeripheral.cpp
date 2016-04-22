@@ -59,7 +59,9 @@ LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType
 
 LEPeripheral::~LEPeripheral() {
 	pendingWrites.wait();
-	
+	if (debug_socket) {
+		pdebug("shutting down socket");
+	}
 	shutdown(sockfd, SHUT_RDWR);
 	if (readThread.joinable()) readThread.join();
 	close(sockfd);
@@ -83,6 +85,9 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 	pendingWrites.increment();
 	beetle.writers.schedule(getId(), [this, bufCpy, len] {
 		if (write_all(sockfd, bufCpy, len) != len) {
+			if (debug_socket) {
+				pdebug("socket write failed");
+			}
 			if (!isStopped()) {
 				stop();
 				beetle.removeDevice(getId());

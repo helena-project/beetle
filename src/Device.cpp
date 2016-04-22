@@ -73,20 +73,27 @@ int Device::getHighestHandle() {
 
 void Device::unsubscribeAll(device_t d) {
 	std::lock_guard<std::recursive_mutex> lg(handlesMutex);
+	std::set<uint16_t> charCccdsToWrite;
 	for (auto &kv : handles) {
-		Handle *handle = kv.second;
-		if (handle->getUuid().isShort() &&
-				handle->getUuid().getShort() == GATT_CLIENT_CHARAC_CFG_UUID &&
-				handle->subscribers.find(d) != handle->subscribers.end()) {
-			handle->subscribers.erase(d);
-			if (handle->subscribers.size() == 0) {
-				int reqLen = 5;
-				uint8_t req[reqLen];
-				memset(req, 0, reqLen);
-				req[0] = ATT_OP_WRITE_REQ;
-				*(uint16_t *)(req + 1) = htobs(handle->getHandle());
-				writeTransaction(req, reqLen, [](uint8_t *resp, int respLen) {});
+		CharacteristicValue *cvH = dynamic_cast<CharacteristicValue *>(kv.second);
+		if (cvH && cvH->getUuid().isShort() &&
+				cvH->subscribers.find(d) != cvH->subscribers.end()) {
+			cvH->subscribers.erase(d);
+			if (cvH->subscribers.size() == 0) {
+				charCccdsToWrite.insert(cvH->getCharHandle());
 			}
+		}
+		/*
+		 * Makes assumption that cccd follows attribute value
+		 */
+		ClientCharCfg *cccdH = dynamic_cast<ClientCharCfg *>(kv.second);
+		if (cccdH && charCccdsToWrite.find(cccdH->getCharHandle()) != charCccdsToWrite.end()) {
+			int reqLen = 5;
+			uint8_t req[reqLen];
+			memset(req, 0, reqLen);
+			req[0] = ATT_OP_WRITE_REQ;
+			*(uint16_t *)(req + 1) = htobs(cccdH->getHandle());
+			writeTransaction(req, reqLen, [](uint8_t *resp, int respLen) {});
 		}
 	}
 }

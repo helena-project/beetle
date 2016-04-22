@@ -50,12 +50,23 @@ void Beetle::removeDevice(device_t id) {
 	Device *d = devices[id];
 	devices.erase(id);
 
+	d->hatMutex.lock();
+	for (device_t server : d->hat->getDevices()) {
+		if (devices.find(server) != devices.end()) {
+			if (debug) {
+				std::stringstream ss;
+				ss << "unsubscribing " << id << " from " << server;
+				pdebug(ss.str());
+			}
+			devices[server]->unsubscribeAll(id);
+		}
+	}
+
 	for (auto &kv : devices) {
 		/*
 		 * Cancel subscriptions and inform that services have changed
 		 */
 		assert(kv.first != id);
-		kv.second->unsubscribeAll(id);
 		if (!kv.second->hat->getDeviceRange(id).isNull()) {
 			beetleDevice->informServicesChanged(kv.second->hat->free(id), kv.first);
 		}
