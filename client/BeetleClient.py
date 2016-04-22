@@ -85,8 +85,8 @@ outputThread.setDaemon(True)
 outputThread.start()
 
 # Regexes to match convenience commands.
-writePattern = re.compile(r"^write (?P<handle>\d+) (?P<value>.*)$")
-readPattern = re.compile(r"^read (?P<handle>\d+)$")
+writePattern = re.compile(r"^write (?P<handle>[\d+]+) (?P<value>.*)$")
+readPattern = re.compile(r"^read (?P<handle>[\d+]+)$")
 
 def inputReader(s):
 	"""
@@ -97,23 +97,24 @@ def inputReader(s):
 		line = line.strip().lower()
 		
 		try: 
-			writeCommand = writePattern.match(line)
-			readCommand = readPattern.match(line)
-			if writeCommand is not None:
-				command = writeCommand.groupdict()
+			writeRequest = writePattern.match(line)
+			readRequest = readPattern.match(line)
+			if writeRequest is not None:
+				command = writeRequest.groupdict()
 				message = bytearray()
-				handle = int(command["handle"])
-				message.append(0x52)
+
+				handle = int(eval(command["handle"]))
+				message.append(0x12)
 				message.append(handle & 0xFF)
 				message.append(handle >> 8)
 				value = command["value"]
 				value = value.replace(" ", "")
 				message += bytearray.fromhex(value)
-			elif readCommand is not None:
-				command = readCommand.groupdict()
+			elif readRequest is not None:
+				command = readRequest.groupdict()
 				message = bytearray()
 				message.append(0x0A)
-				handle = int(command["handle"])
+				handle = int(eval(command["handle"]))
 				message.append(handle & 0xFF)
 				message.append(handle >> 8)
 			else:
