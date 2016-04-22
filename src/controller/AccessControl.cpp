@@ -94,7 +94,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	using namespace boost::network;
 	http::client::request request(getUrl(hostAndPort, resource.str()));
 		request << header("User-Agent", "linux");
-	auto response = client->delete_(request);
+	auto response = client->get(request);
 
 	switch (response.status()) {
 	case 200: {
@@ -130,11 +130,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
  */
 bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringstream &response) {
 	json j;
-	response >> j;
-
-	if (debug_network) {
-		pdebug(j);
-	}
+	j << response;
 
 	bool result = j["result"];
 
@@ -151,7 +147,7 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 		rule_t ruleId = std::stoi(key);
 
 		Rule rule;
-		rule.properties = value["prop"];
+		rule.setProperties(value["prop"]);
 		rule.encryption = value["enc"];
 		rule.integrity = value["int"];
 		std::string lease = value["lease"];
@@ -162,22 +158,25 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 	}
 
 	for (json::iterator it = services.begin(); it != services.end(); ++it) {
-		UUID serviceUuid = UUID(it.key());
+		std::string tmp = it.key();
+		UUID serviceUuid = UUID(tmp);
 		json chars = it.value();
 		if (debug_network) {
 			pdebug("service: " + serviceUuid.str());
 		}
 
+		assert(cacheEntry.service_char_rules.find(serviceUuid) == cacheEntry.service_char_rules.end());
 		for (json::iterator it2 = chars.begin(); it2 != chars.end(); ++it2) {
-			UUID charUuid = UUID(it2.key());
+			tmp = it2.key();
+			UUID charUuid = UUID(tmp);
 			json ruleIds = it2.value();
 			if (debug_network) {
 				pdebug("char: " + charUuid.str());
 			}
 
 			std::set<rule_t> charRulesSet;
-			for (auto rId : ruleIds) {
-				rule_t ruleId = rId;
+			for (json::iterator it3 = ruleIds.begin(); it3 != ruleIds.end(); ++it3) {
+				rule_t ruleId = *it3;
 				charRulesSet.insert(ruleId);
 			}
 
@@ -241,6 +240,7 @@ bool AccessControl::canAccessHandle(Device *client, Device *server, Handle *hand
 		if (serviceMap == ruleMapping.service_char_rules.end()) {
 			return false;
 		}
+
 		auto charMap = serviceMap->second.find(ch->getCharUuid());
 		if (charMap == serviceMap->second.end()) {
 			return false;
@@ -253,7 +253,7 @@ bool AccessControl::canAccessHandle(Device *client, Device *server, Handle *hand
 	 * Case 3: This is a handle that is part of a service.
 	 */
 	ps = dynamic_cast<PrimaryService *>(server->handles[handle->getServiceHandle()]);
-	ch = dynamic_cast<Characteristic *>(server->handles[ch->getCharHandle()]);
+	ch = dynamic_cast<Characteristic *>(server->handles[handle->getCharHandle()]);
 	if (!ps || !ch) {
 		return false;
 	}

@@ -52,32 +52,27 @@ public:
 	/*
 	 * Returns the full 128-bit uuid.
 	 */
-	uuid_t get();
+	uuid_t get() const;
 
 	/*
 	 * Returns the 16-bit short uuid.
 	 */
-	uint16_t getShort();
+	uint16_t getShort() const;
 
 	/*
 	 * Returns whether the uuid has the Bluetooth base
 	 */
-	bool isShort();
-
-	/*
-	 * Are they the same uuid?
-	 */
-	bool compareTo(UUID &other);
+	bool isShort() const;
 
 	bool operator <(const UUID &rhs) const {
-	    return memcmp(uuid.value, rhs.uuid.value, UUID_LEN);
+	    return memcmp(uuid.value, rhs.uuid.value, UUID_LEN) < 0;
 	}
 
 	bool operator ==(const UUID &rhs) const {
 	    return memcmp(uuid.value, rhs.uuid.value, UUID_LEN) == 0;
 	}
 
-	std::string str();
+	std::string str() const;
 private:
 	uuid_t uuid;
 };

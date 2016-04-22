@@ -37,7 +37,6 @@ UUID::UUID(uint8_t *value, size_t len) {
 
 UUID::UUID(std::string s) {
 	s.erase(std::remove(s.begin(), s.end(), '-'), s.end());
-	unsigned int c;
 	if (s.length() == SHORT_UUID_LEN * 2) {
 		memset(uuid.value, 0, UUID_LEN);
 		memcpy(uuid.value + 4, BLUETOOTH_BASE_UUID, 12);
@@ -48,7 +47,7 @@ UUID::UUID(std::string s) {
 		for (int i = 0; i < (int) s.length(); i += 2) {
 			uuid.value[i / 2] = (char)std::stoi(s.substr(i, 2), NULL, 16);
 		}
-		c = uuid.value[0];
+		char c = uuid.value[0];
 		uuid.value[0] = uuid.value[1];
 		uuid.value[1] = c;
 		c = uuid.value[2];
@@ -73,19 +72,20 @@ UUID::~UUID() {
 
 }
 
-uuid_t UUID::get() {
+uuid_t UUID::get() const{
 	return uuid;
 }
 
-uint16_t UUID::getShort() {
+uint16_t UUID::getShort() const {
 	return *(uint16_t *)(uuid.value + 2);
 }
 
-bool UUID::isShort() {
-	return memcmp(uuid.value + 4, BLUETOOTH_BASE_UUID, 12) == 0;
+bool UUID::isShort() const {
+	return uuid.value[0] == 0 && uuid.value[1] == 0 &&
+			memcmp(uuid.value + 4, BLUETOOTH_BASE_UUID, 12) == 0;
 }
 
-std::string UUID::str() {
+std::string UUID::str() const {
 	std::stringstream ss;
 	if (isShort()) {
 		ss << boost::format("%02X") % static_cast<int>(uuid.value[3]);
@@ -104,8 +104,4 @@ std::string UUID::str() {
 		}
 	}
 	return ss.str();
-}
-
-bool UUID::compareTo(UUID &other) {
-	return memcmp(uuid.value, other.get().value, sizeof(uuid_t)) == 0;
 }

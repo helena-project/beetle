@@ -426,7 +426,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 			}
 
 			Handle *handle = kv.second;
-			if (handle->getUuid().compareTo(*attType)) {
+			if (handle->getUuid() == *attType) {
 				*(uint16_t*)(resp + 2) = htobs(handle->getHandle());
 				memcpy(resp + 4, handle->cache.value, handle->cache.len);
 				respLen += 2 + handle->cache.len;
@@ -597,7 +597,7 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 				// TODO this allows 16bit handles only
 				Handle *handle = mapping.second;
 
-				if (handle->getUuid().compareTo(*attType)) {
+				if (handle->getUuid() == *attType) {
 					if (respHandleCount == 0) { // set the length
 						resp[1] = 4 + handle->cache.len;
 					} else {
@@ -736,7 +736,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 	device_t dst = sourceDevice->hat->getDeviceForHandle(handle);
 	if (dst == NULL_RESERVED_DEVICE) {
 		uint8_t *err;
-		int len = pack_error_pdu(buf[0], handle, ATT_ECODE_ATTR_NOT_FOUND, err);
+		int len = pack_error_pdu(opCode, handle, ATT_ECODE_ATTR_NOT_FOUND, err);
 		sourceDevice->writeResponse(err, len);
 		delete[] err;
 		return 0;
@@ -758,7 +758,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 	uint16_t remoteHandle = handle - handleRange.start;
 	if (destinationDevice->handles.find(remoteHandle) == destinationDevice->handles.end()) {
 		uint8_t *err;
-		int len = pack_error_pdu(buf[0], handle, ATT_ECODE_ATTR_NOT_FOUND, err);
+		int len = pack_error_pdu(opCode, handle, ATT_ECODE_ATTR_NOT_FOUND, err);
 		sourceDevice->writeResponse(err, len);
 		delete[] err;
 		return 0;
@@ -771,16 +771,32 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 	 */
 	uint8_t ecode;
 	if (dst != BEETLE_RESERVED_DEVICE && beetle.accessControl->canAccessHandle(sourceDevice,
-			destinationDevice, proxyH, buf[0], ecode) == false) {
+			destinationDevice, proxyH, opCode, ecode) == false) {
+		if (debug_router) {
+			pdebug("access denied: " + std::to_string(proxyH->getHandle()));
+		}
 		uint8_t *err;
-		int len = pack_error_pdu(buf[0], handle, ecode, err);
+		int len = pack_error_pdu(opCode, handle, ecode, err);
 		sourceDevice->writeResponse(err, len);
 		delete[] err;
 		return 0;
 	}
 
-	if (opCode == ATT_OP_WRITE_REQ && proxyH->getUuid().isShort()
-			&& proxyH->getUuid().getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
+	if ((opCode == ATT_OP_WRITE_REQ || opCode == ATT_OP_WRITE_CMD) &&
+		dynamic_cast<ClientCharCfg *>(proxyH) != NULL) {
+		/*
+		 * Length of subscription command needs to be correct.
+		 */
+		if (len != 2) {
+			if (opCode == ATT_OP_WRITE_REQ) {
+				uint8_t *err;
+				int len = pack_error_pdu(opCode, handle, ATT_ECODE_IO, err);
+				beetle.devices[src]->writeResponse(err, len);
+				delete[] err;
+			}
+			return 0;
+		}
+
 		/*
 		 * Update to subscription
 		 */
@@ -794,28 +810,32 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		}
 		int numSubscribers = charAttrH->subscribers.size();
 		if (dst != BEETLE_RESERVED_DEVICE &&
-				((numSubscribers == 0 && buf[3] == 0) || (numSubscribers == 1 && buf[3] == 1))) {
+				((numSubscribers == 0 && buf[3] == 0) || (numSubscribers == 1 && (buf[3] == 1 || buf[3] == 2)))) {
 			*(uint16_t *)(buf + 1) = htobs(remoteHandle);
-			destinationDevice->writeTransaction(buf, len, [this, handle, src, dst, opCode](uint8_t *resp, int respLen) {
-				/*
-				 * Lock devices
-				 */
-				boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
+			if (opCode == ATT_OP_WRITE_CMD) {
+				destinationDevice->writeCommand(buf, len);
+			} else {
+				destinationDevice->writeTransaction(buf, len, [this, handle, src, dst, opCode](uint8_t *resp, int respLen) {
+					/*
+					 * Lock devices
+					 */
+					boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 
-				if (beetle.devices.find(src) == beetle.devices.end()) {
-					pwarn(std::to_string(src) + " does not id a device");
-					return;
-				}
+					if (beetle.devices.find(src) == beetle.devices.end()) {
+						pwarn(std::to_string(src) + " does not id a device");
+						return;
+					}
 
-				if (resp == NULL) {
-					uint8_t *err;
-					int len = pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);
-					beetle.devices[src]->writeResponse(err, len);
-					delete[] err;
-				} else {
-					beetle.devices[src]->writeResponse(resp, respLen);
-				}
-			});
+					if (resp == NULL) {
+						uint8_t *err;
+						int len = pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);
+						beetle.devices[src]->writeResponse(err, len);
+						delete[] err;
+					} else {
+						beetle.devices[src]->writeResponse(resp, respLen);
+					}
+				});
+			}
 		} else {
 			uint8_t resp = ATT_OP_WRITE_RESP;
 			sourceDevice->writeResponse(&resp, 1);

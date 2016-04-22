@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 					"Host and port of the Beetle control")
 			("debug,d", po::value<bool>(&debug)->implicit_value(true),
 					"Enable general debugging")
-			("auto-connect-all", po::value<bool>(&autoConnectAll)->default_value(false),
+			("auto-connect-all", po::value<bool>(&autoConnectAll)->implicit_value(true)->default_value(false),
 					"Connect to all nearby BLE devices")
 			("reset-hci", po::value<bool>(&resetHci)->default_value(true),
 					"Set hci down/up at start-up")

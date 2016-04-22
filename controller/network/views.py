@@ -146,7 +146,7 @@ def disconnect_entity(request, gateway, remote_id):
 
 	entity_conns = ConnectedEntity.objects.filter(
 		gateway__gateway__name=gateway, 
-		remote_id__lte=remote_id)
+		remote_id=remote_id)
 	entity_conns.delete()
 
 	return HttpResponse("disconnected")
