@@ -17,11 +17,16 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 
+admin.site.site_header = "Beetle Network Administration"
+admin.site.site_title = "Beetle administration"
+admin.site.index_title = "Beetle administration"
+
 urlpatterns = [
     url(r'^gatt/', include('gatt.urls')),
     url(r'^beetle/', include('beetle.urls')),
     url(r'^access/', include('access.urls')),
     url(r'^network/', include('network.urls')),
     url(r'^admin/', admin.site.urls),
+    url(r'^jet/', include('jet.urls', 'jet')),
     url(r'^$', lambda r: HttpResponseRedirect('admin/')),
 ]

@@ -35,11 +35,9 @@ public:
 	bool exclusive;
 	time_t lease;
 	void setProperties(std::string s) {
+		properties |= GATT_CHARAC_PROP_EXT;
 		for (char c : s) {
 			switch (c) {
-			case 'e':
-				exclusive = true;
-				break;
 			case 'b':
 				properties |= GATT_CHARAC_PROP_BCAST;
 				break;
@@ -102,6 +100,11 @@ public:
 	 * Caller should hold device and handle locks.
 	 */
 	bool canReadType(Device *client, Device *server, UUID &attType);
+
+	/*
+	 * Get handler to clear irrelevant cached rules.
+	 */
+	RemoveDeviceHandler getRemoveDeviceHandler();
 private:
 	Beetle &beetle;
 

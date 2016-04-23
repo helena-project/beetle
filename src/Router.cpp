@@ -220,6 +220,7 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 	return 0;
 }
 
+// TODO this works for discovery purposes, but not if things are not cached
 int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 	/*
 	 * Lock devices
@@ -532,6 +533,10 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 						continue;
 					}
 					Handle *h = destinationDevice->handles[handle];
+
+					/*
+					 * Check if access is permitted.
+					 */
 					uint8_t unused;
 					if (beetle.accessControl->canAccessHandle(sourceDevice, destinationDevice, h,
 							ATT_OP_READ_REQ, unused) == false) {
@@ -565,6 +570,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 	return 0;
 }
 
+// TODO this works for discovery purposes, but not if things are not cached
 int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 	/*
 	 * Lock devices
@@ -903,6 +909,21 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		uint8_t resp[respLen];
 		resp[0] = ATT_OP_READ_RESP;
 		memcpy(resp + 1, proxyH->cache.value, proxyH->cache.len);
+
+		Characteristic *ch = dynamic_cast<Characteristic *>(proxyH);
+		if (ch) {
+			/*
+			 * This works because characterisics are cached infinitely.
+			 */
+			uint8_t properties;
+			if (!beetle.accessControl->getCharAccessProperties(sourceDevice, destinationDevice, ch, properties)) {
+				pwarn("access properties changed");
+				uint8_t err[ATT_ERROR_PDU_LEN];
+				pack_error_pdu(opCode, handle, ATT_ECODE_READ_NOT_PERM, err);
+				sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
+			}
+			resp[1] &= properties;
+		}
 		sourceDevice->writeResponse(resp, respLen);
 	} else {
 		/*

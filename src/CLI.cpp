@@ -432,7 +432,9 @@ void CLI::doListDevices(const std::vector<std::string>& cmd) {
 			LEPeripheral *le =  dynamic_cast<LEPeripheral *>(d);
 			if (le) {
 				printMessage("  deviceAddr : " + ba2str_cpp(le->getBdaddr()));
-				printMessage("  addrType : " + (le->getAddrType() == PUBLIC) ? "public" : "random");
+				std::stringstream ss;
+				ss << "  addrType : " << ((le->getAddrType() == PUBLIC) ? "public" : "random");
+				printMessage(ss.str());
 			}
 
 			TCPConnection *tcp = dynamic_cast<TCPConnection *>(d);

@@ -125,6 +125,22 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	}
 }
 
+RemoveDeviceHandler AccessControl::getRemoveDeviceHandler() {
+	return [this](device_t d){
+		boost::unique_lock<boost::shared_mutex> cacheLk(cacheMutex);
+		for (auto it = cache.cbegin(); it != cache.cend();) {
+			/*
+			 * Remove any cached rules regarding this device.
+			 */
+		  if (it->first.first == d || it->first.second == d) {
+		    cache.erase(it++);
+		  } else {
+		    ++it;
+		  }
+		}
+	};
+}
+
 /*
  * Unpacks the controller response and returns whether the mapping is allowed.
  */
@@ -150,7 +166,7 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 		rule.setProperties(value["prop"]);
 		rule.encryption = value["enc"];
 		rule.integrity = value["int"];
-		std::string lease = value["lease"];
+		rule.exclusive = value["excl"];
 		std::string tStr = value["lease"];
 		rule.lease = static_cast<time_t>(std::stod(tStr));
 

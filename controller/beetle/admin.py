@@ -14,11 +14,12 @@ class EntityAdminForm(forms.ModelForm):
 class EntityAdmin(admin.ModelAdmin):
 	list_display = ("name", "etype", "verified")
 	search_fields = ("name",)
+	list_editable = ("verified",)
 	list_filter = ("etype", "verified")
 
 @admin.register(Gateway)
 class GatewayAdmin(admin.ModelAdmin):
 	list_display = ("name", "os", "trusted")
-	search_fields = ("name",)
+	search_fields = ("name", "trusted")
 	list_filter = ("os", "trusted")
 

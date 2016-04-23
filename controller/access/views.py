@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.http import require_GET
 
-from .models import Rule
+from .models import Rule, RuleException
 
 from beetle.models import Entity, Gateway
 from gatt.models import Service, Characteristic
@@ -59,6 +59,20 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 		applicable_rules = applicable_rules.filter(
 			start__lte=timestamp, expire__gte=timestamp) \
 			| applicable_rules.filter(expire__isnull=True)
+
+	excluded_rule_ids = set()
+	for rule in applicable_rules:
+		applicable_exceptions = RuleException.objects.filter(
+			Q(from_entity=from_entity) | Q(from_entity__name="*"),
+			Q(from_gateway=from_gateway) | Q(from_gateway__name="*"),
+			Q(to_entity=to_entity) | Q(to_entity__name="*"),
+			Q(to_gateway=to_gateway) | Q(to_gateway__name="*"),
+			rule=rule)
+		if applicable_exceptions.exists():
+			excluded_rule_ids.add(rule.id)
+
+	for exclude_id in excluded_rule_ids:
+		applicable_rules = applicable_rules.exclude(id=exclude_id)
 	
 	response = {}
 	if not applicable_rules.exists():
@@ -78,6 +92,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 	# 				"int" : True,
 	# 				"enc" : False,
 	# 				"lease" : 1000,
+	#				"excl" : False,
 	# 			}, 
 	# 		},
 	# 		"services": {
@@ -114,6 +129,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 					# Put the rule in the result
 					rules[char_rule.id] = {
 						"prop" : char_rule.properties,
+						"excl" : char_rule.exclusive,
 						"int" : char_rule.integrity,
 						"enc" : char_rule.encryption,
 						"lease" : (timestamp + char_rule.lease_duration).strftime("%s"),
@@ -125,3 +141,18 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 		"services" : services,
 	}
 	return JsonResponse(response)
+
+@gzip_page
+@require_GET
+def view_rule_exceptions(request, rule_id):
+	response = []
+	for exception in RuleException.objects.filter(rule__id=int(rule_id)):
+		response.append({
+			"from_entity" : exception.from_entity.name,
+			"from_gateway" : exception.from_gateway.name,
+			"to_entity" : exception.to_entity.name,
+			"to_gateway" : exception.to_gateway.name,
+			# "service" : exception.service.name,
+			# "characteristic" : exception.characteristic.name,
+		})
+	return JsonResponse(response, safe=False)

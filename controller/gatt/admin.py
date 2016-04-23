@@ -20,8 +20,9 @@ class ServiceAdminForm(forms.ModelForm):
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
 	form = ServiceAdminForm
-	list_display = ("uuid", "verified", "name", "stype")
+	list_display = ("uuid", "name", "stype", "verified")
 	list_filter = ("verified",)
+	list_editable = ("verified",)
 	search_fields = ("uuid", "name", "stype")
 	ordering = ("uuid",)
 
@@ -39,7 +40,8 @@ class CharacteristicAdminForm(forms.ModelForm):
 @admin.register(Characteristic)
 class CharacteristicAdmin(admin.ModelAdmin):
 	form = CharacteristicAdminForm
-	list_display = ("uuid", "verified", "name", "ctype")
+	list_display = ("uuid", "name", "ctype", "verified")
 	list_filter = ("verified",)
+	list_editable = ("verified",)
 	search_fields = ("uuid", "name", "ctype")
 	ordering = ("uuid",)

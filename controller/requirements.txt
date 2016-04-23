@@ -2,3 +2,4 @@ django
 django-ipware
 cronex
 django-sslserver
+django-jet

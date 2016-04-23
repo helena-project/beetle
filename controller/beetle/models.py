@@ -15,14 +15,14 @@ class Entity(models.Model):
 	APP = "app"
 	DEVICE = "device"
 	UNKNOWN = "unknown"
-	TYPES = (
+	TYPE_CHOICES = (
 		(APP, "app"),
 		(DEVICE, "device"),
 		(UNKNOWN, "unknown"),
 	)
 
 	name = models.CharField(max_length=100, primary_key=True)
-	etype = models.CharField(max_length=20, choices=TYPES)
+	etype = models.CharField(max_length=20, choices=TYPE_CHOICES)
 	verified = models.BooleanField(
 		default=False,
 		help_text="Has this entity been verified by a human?")
@@ -45,14 +45,14 @@ class Gateway(models.Model):
 	ANDROID = "android"
 	LINUX = "linux"
 	UNKNOWN = "unknown"
-	OSES = (
+	OS_CHOICES = (
 		(ANDROID, "android"),
 		(LINUX, "linux"),
 		(UNKNOWN, "unknown"),
 	)
 
 	name = models.CharField(max_length=20, primary_key=True)
-	os = models.CharField(max_length=20, choices=OSES)
+	os = models.CharField(max_length=20, choices=OS_CHOICES)
 	trusted = models.BooleanField(default=False)
 
 	def __unicode__(self):
