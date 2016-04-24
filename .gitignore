@@ -1,5 +1,6 @@
 /Debug/
 /Release/
-/RPi2/
 *~
 /.settings/
+*.o
+*.d
