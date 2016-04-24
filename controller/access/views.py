@@ -60,15 +60,19 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 			start__lte=timestamp, expire__gte=timestamp) \
 			| applicable_rules.filter(expire__isnull=True)
 
+	applicable_exceptions = RuleException.objects.filter(
+		Q(from_entity=from_entity) | Q(from_entity__name="*"),
+		Q(from_gateway=from_gateway) | Q(from_gateway__name="*"),
+		Q(to_entity=to_entity) | Q(to_entity__name="*"),
+		Q(to_gateway=to_gateway) | Q(to_gateway__name="*"))
+
 	excluded_rule_ids = set()
 	for rule in applicable_rules:
-		applicable_exceptions = RuleException.objects.filter(
-			Q(from_entity=from_entity) | Q(from_entity__name="*"),
-			Q(from_gateway=from_gateway) | Q(from_gateway__name="*"),
-			Q(to_entity=to_entity) | Q(to_entity__name="*"),
-			Q(to_gateway=to_gateway) | Q(to_gateway__name="*"),
-			rule=rule)
-		if applicable_exceptions.exists():
+		rule_exceptions = applicable_exceptions.filter(
+			rule=rule,
+			service__name="*", 
+			characteristic__name="*")
+		if rule_exceptions.exists():
 			excluded_rule_ids.add(rule.id)
 
 	for exclude_id in excluded_rule_ids:
@@ -78,8 +82,6 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 	if not applicable_rules.exists():
 		response["result"] = False
 		return JsonResponse(response)
-	else:
-		response["result"] = True
 
 	# Response format:
 	# ================
@@ -108,6 +110,9 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 	for service_instance in ServiceInstance.objects.filter(entity=conn_from_entity):
 		service_rules = applicable_rules.filter(
 			Q(service=service_instance.service) | Q(service__name="*"))
+		service_rule_exceptions = applicable_exceptions.filter(
+			Q(service=service_instance.service) | Q(service__name="*"))
+
 		service = service_instance.service
 
 		for char_instance in CharInstance.objects.filter(service=service_instance):
@@ -121,6 +126,16 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 			char_rules = service_rules.filter(
 				Q(characteristic=char_instance.char) | Q(characteristic__name="*"))
 			for char_rule in char_rules:
+
+				char_rule_exceptions = service_rule_exceptions.filter(
+					Q(characteristic=char_instance.char) | Q(characteristic__name="*"),
+					rule=char_rule)
+				if char_rule_exceptions.exists():
+					continue
+
+				#####################################
+				# All checks pass, access permitted #
+				#####################################
 				if service.uuid not in services:
 					services[service.uuid] = {}
 				if char.uuid not in services[service.uuid]:
@@ -136,10 +151,14 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 					}
 				services[service.uuid][char.uuid].append(char_rule.id)
 				
-	response["access"] = {
-		"rules" : rules,
-		"services" : services,
-	}
+	if not rules:
+		response["result"] = False
+	else:
+		response["result"] = True
+		response["access"] = {
+			"rules" : rules,
+			"services" : services,
+		}
 	return JsonResponse(response)
 
 @gzip_page
@@ -152,7 +171,7 @@ def view_rule_exceptions(request, rule_id):
 			"from_gateway" : exception.from_gateway.name,
 			"to_entity" : exception.to_entity.name,
 			"to_gateway" : exception.to_gateway.name,
-			# "service" : exception.service.name,
-			# "characteristic" : exception.characteristic.name,
+			"service" : exception.service.name,
+			"characteristic" : exception.characteristic.name,
 		})
 	return JsonResponse(response, safe=False)

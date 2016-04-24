@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import ConnectedGateway, ConnectedEntity, ServiceInstance, CharInstance
+from .models import ConnectedGateway, ConnectedEntity, ServiceInstance, \
+	CharInstance, ExclusiveLease
 
 # Register your models here.
 
@@ -77,3 +78,8 @@ class ConnectedEntityAdmin(admin.ModelAdmin):
 		return '<a href="/network/view/%s" target="_blank">link</a>' % (obj.entity.name)
 	get_entity_link.short_description = "detail"
 	get_entity_link.allow_tags = True
+
+@admin.register(ExclusiveLease)
+class ExclusiveLeaseAdmin(admin.ModelAdmin):
+	list_display = ("gateway", "group",)
+	search_fields = ("gateway", "group")

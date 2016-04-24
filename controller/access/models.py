@@ -83,7 +83,7 @@ class Rule(models.Model):
 
 class RuleException(models.Model):
 	"""
-	Deny, instead of allow, access
+	Deny, instead of allow, access. Used for attenuating existing rules.
 	"""
 	rule = models.ForeignKey(
 		"Rule",
@@ -105,7 +105,8 @@ class RuleException(models.Model):
 		related_name="except_to_gateway",
 		help_text="Gateway connected to client.")
 
-	# TODO: allow fine exclusions based on service and characteristic
+	service = models.ForeignKey("gatt.Service")
+	characteristic = models.ForeignKey("gatt.Characteristic")
 
 	def __unicode__(self):
 		return "(except) %d" % self.id
@@ -114,6 +115,10 @@ class ExclusiveGroup(models.Model):
 	"""
 	Group rules by exclusive access.
 	"""
+
+	class Meta:
+		verbose_name_plural = "Exclusive rule groups"
+
 	description = models.CharField(
 		max_length=500,
 		help_text="Logical description of this group.")
@@ -131,7 +136,8 @@ class User(models.Model):
 	class Meta:
 		unique_together = (("first_name", "last_name"),)
 
-	first_name = models.CharField(max_length=100)
+	first_name = models.CharField(
+		max_length=100)
 	last_name = models.CharField(
 		max_length=100, 
 		blank=True)
@@ -146,28 +152,25 @@ class User(models.Model):
 		help_text="Gateways that this user may provide credentials from.")
 
 	def __unicode__(self):
-		return first_name + " " + last_name
+		return self.first_name + " " + self.last_name
 
 class DynamicAuth(models.Model):
 	"""
 	Base class for dynamic rules.
 	"""
 	class Meta:
-		verbose_name = "Factor"
 		verbose_name_plural = "Dynamic Auth"
 
 	ON_CONNECT = "OnConnect"
 	ON_USE = "OnUse"
-	DELAYED = "Delayed"
 	REQUIRE_WHEN_CHOICES = (
 		(ON_CONNECT, "OnConnect"),
 		(ON_USE, "OnUse"),
-		(DELAYED, "Delayed"),
 	)
 
 	rule = models.ForeignKey("Rule")
 
-	session_len = models.DurationField(
+	session_length = models.DurationField(
 		default=timedelta(hours=1), 
 		help_text="Time before reauthenticaton. Hint: HH:mm:ss")
 	require_when = models.CharField(

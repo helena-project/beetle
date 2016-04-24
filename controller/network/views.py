@@ -4,6 +4,7 @@ from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.views.decorators.gzip import gzip_page
+from django.views.decorators.csrf import csrf_exempt
 
 from ipware.ip import get_ip
 
@@ -18,6 +19,7 @@ from gatt.shared import convert_uuid, check_uuid
 # Create your views here.
 
 @transaction.atomic
+@csrf_exempt
 @require_http_methods(["POST", "DELETE"])
 def connect_gateway(request, gateway):
 	"""
@@ -99,6 +101,7 @@ def _load_services_and_characteristics(services, entity_conn):
 			char_ins.save()
 
 @transaction.atomic
+@csrf_exempt
 @require_POST
 def connect_entity(request, gateway, entity, remote_id):
 	"""
@@ -135,6 +138,7 @@ def connect_entity(request, gateway, entity, remote_id):
 		return response
 
 @transaction.atomic
+@csrf_exempt
 @require_http_methods(["DELETE"])
 def disconnect_entity(request, gateway, remote_id):
 	"""
