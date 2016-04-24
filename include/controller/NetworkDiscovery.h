@@ -13,6 +13,7 @@
 #include <list>
 
 #include <Beetle.h>
+#include <controller/ControllerClient.h>
 #include <UUID.h>
 
 typedef struct {
@@ -25,7 +26,7 @@ typedef struct {
 
 class NetworkDiscovery {
 public:
-	NetworkDiscovery(std::string hostAndPort);
+	NetworkDiscovery(ControllerClient &client);
 	virtual ~NetworkDiscovery();
 
 	/*
@@ -38,9 +39,7 @@ public:
 	 */
 	std::list<discovery_result_t> discoverDevices();
 private:
-	std::string hostAndPort;
-
-	boost::network::http::client *client;
+	ControllerClient &client;
 
 	std::list<discovery_result_t> queryHelper(std::string resource);
 };

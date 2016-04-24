@@ -8,7 +8,6 @@
 #ifndef CONTROLLER_ACCESSCONTROL_H_
 #define CONTROLLER_ACCESSCONTROL_H_
 
-#include <boost/network/protocol/http/client.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <cstdint>
 #include <ctime>
@@ -20,6 +19,7 @@
 
 #include <ble/gatt.h>
 #include <Beetle.h>
+#include <controller/ControllerClient.h>
 #include <Debug.h>
 #include <UUID.h>
 
@@ -72,7 +72,7 @@ typedef struct {
 
 class AccessControl {
 public:
-	AccessControl(Beetle &beetle, std::string hostAndPort);
+	AccessControl(Beetle &beetle, ControllerClient &client);
 	virtual ~AccessControl();
 
 	/*
@@ -108,9 +108,7 @@ public:
 private:
 	Beetle &beetle;
 
-	std::string hostAndPort;
-
-	boost::network::http::client *client;
+	ControllerClient &client;
 
 	std::map<std::pair<device_t, device_t>, cached_mapping_info_t> cache;
 	boost::shared_mutex cacheMutex;

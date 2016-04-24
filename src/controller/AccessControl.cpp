@@ -16,29 +16,19 @@
 #include <sstream>
 
 #include <ble/att.h>
-#include <controller/Controller.h>
 #include <Debug.h>
 #include <device/socket/tcp/TCPServerProxy.h>
 #include <Device.h>
 
 using json = nlohmann::json;
 
-AccessControl::AccessControl(Beetle &beetle, std::string hostAndPort_) : beetle(beetle) {
-	hostAndPort = hostAndPort_;
+AccessControl::AccessControl(Beetle &beetle, ControllerClient &client)
+: beetle(beetle), client(client) {
 
-	using namespace boost::network;
-	http::client::options options;
-	options.follow_redirects(false)
-	       .cache_resolved(true)
-//	       .openssl_certificate("/tmp/my-cert")
-//	       .openssl_verify_path("/tmp/ca-certs")
-	       .timeout(10);
-
-	client = new http::client(options);
 }
 
 AccessControl::~AccessControl() {
-	delete client; // teardown race
+
 }
 
 bool AccessControl::canMap(Device *from, Device *to) {
@@ -92,9 +82,9 @@ bool AccessControl::canMap(Device *from, Device *to) {
 			<< "/" << toGateway << "/" << std::fixed << toId;
 
 	using namespace boost::network;
-	http::client::request request(getUrl(hostAndPort, resource.str()));
+	http::client::request request(client.getUrl(resource.str()));
 		request << header("User-Agent", "linux");
-	auto response = client->get(request);
+	auto response = client.getClient()->get(request);
 
 	switch (response.status()) {
 	case 200: {

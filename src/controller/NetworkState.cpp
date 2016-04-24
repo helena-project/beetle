@@ -19,7 +19,6 @@
 #include <sstream>
 #include <utility>
 
-#include "controller/Controller.h"
 #include "Debug.h"
 #include "Device.h"
 #include "Handle.h"
@@ -27,28 +26,19 @@
 
 using json = nlohmann::json;
 
-NetworkState::NetworkState(Beetle &beetle, std::string hostAndPort_)
-: beetle(beetle) {
-	hostAndPort = hostAndPort_;
+NetworkState::NetworkState(Beetle &beetle, ControllerClient &client)
+: beetle(beetle), client(client) {
 
 	using namespace boost::network;
-	http::client::options options;
-	options.follow_redirects(false)
-	       .cache_resolved(true)
-//	       .openssl_certificate("/tmp/my-cert")
-//	       .openssl_verify_path("/tmp/ca-certs")
-	       .timeout(10);
-
-	client = new http::client(options);
-	http::client::request request(getUrl(hostAndPort, "network/connect/" + beetle.name));
+	http::client::request request(client.getUrl("network/connect/" + beetle.name));
 	request << header("User-Agent", "linux");
 
-	http::client::response response = client->post(request);
+	http::client::response response = client.getClient()->post(request);
 	if (response.status() != 200) {
 		std::stringstream ss;
-		ss << "error connecting to controller (" << response.status() << "): "
+		ss << "error connecting to beetle controller (" << response.status() << "): "
 				<< body(response);
-		throw NetworkException(ss.str());
+		throw ControllerException(ss.str());
 	} else {
 		if (debug_network) {
 			std::stringstream ss;
@@ -60,9 +50,9 @@ NetworkState::NetworkState(Beetle &beetle, std::string hostAndPort_)
 
 NetworkState::~NetworkState() {
 	using namespace boost::network;
-	http::client::request request(getUrl(hostAndPort, "network/connect/" + beetle.name));
+	http::client::request request(client.getUrl("network/connect/" + beetle.name));
 		request << header("User-Agent", "linux");
-	http::client::response response = client->delete_(request);
+	http::client::response response = client.getClient()->delete_(request);
 	if (response.status() != 200) {
 		std::stringstream ss;
 				ss << "error disconnecting from controller (" << response.status() << "): "
@@ -75,7 +65,6 @@ NetworkState::~NetworkState() {
 			pdebug(ss.str());
 		}
 	}
-	delete client; // teardown race
 }
 
 AddDeviceHandler NetworkState::getAddDeviceHandler() {
@@ -159,7 +148,7 @@ static std::string serializeHandles(Device *d) {
 }
 
 void NetworkState::addDeviceHelper(Device *d) {
-	std::string url = getUrl(hostAndPort,
+	std::string url = client.getUrl(
 			"network/connect/" + beetle.name + "/" + d->getName() + "/" + std::to_string(d->getId()));
 	if (debug_network) {
 		pdebug("post: " + url);
@@ -173,9 +162,9 @@ void NetworkState::addDeviceHelper(Device *d) {
 	request << header("Content-Length", std::to_string(requestBody.length()));
 	request << body(requestBody);
 
-	auto response = client->post(request);
+	auto response = client.getClient()->post(request);
 	if (response.status() != 200) {
-		throw NetworkException("error informing server of connection " + std::to_string(d->getId()));
+		throw ControllerException("error informing server of connection " + std::to_string(d->getId()));
 	} else {
 		if (debug_network) {
 			std::stringstream ss;
@@ -186,7 +175,7 @@ void NetworkState::addDeviceHelper(Device *d) {
 }
 
 void NetworkState::removeDeviceHelper(device_t d) {
-	std::string url = getUrl(hostAndPort, "network/connect/" + beetle.name + "/" + std::to_string(d));
+	std::string url = client.getUrl("network/connect/" + beetle.name + "/" + std::to_string(d));
 	if (debug_network) {
 		pdebug("delete: " + url);
 	}
@@ -195,9 +184,9 @@ void NetworkState::removeDeviceHelper(device_t d) {
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
 
-	auto response = client->delete_(request);
+	auto response = client.getClient()->delete_(request);
 	if (response.status() != 200) {
-		throw NetworkException("error informing server of disconnection " + std::to_string(d));
+		throw ControllerException("error informing server of disconnection " + std::to_string(d));
 	} else {
 		if (debug_network) {
 			std::stringstream ss;

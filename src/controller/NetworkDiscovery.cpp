@@ -7,7 +7,6 @@
 
 #include <controller/NetworkDiscovery.h>
 
-#include <controller/Controller.h>
 #include <boost/network/message/directives.hpp>
 #include <boost/network/message/wrappers/body.hpp>
 #include <boost/network/message.hpp>
@@ -21,22 +20,12 @@
 
 using json = nlohmann::json;
 
-NetworkDiscovery::NetworkDiscovery(std::string hostAndPort_) {
-	hostAndPort = hostAndPort_;
+NetworkDiscovery::NetworkDiscovery(ControllerClient &client) : client(client) {
 
-	using namespace boost::network;
-	http::client::options options;
-	options.follow_redirects(false)
-	       .cache_resolved(true)
-//	       .openssl_certificate("/tmp/my-cert")
-//	       .openssl_verify_path("/tmp/ca-certs")
-	       .timeout(10);
-
-	client = new http::client(options);
 }
 
 NetworkDiscovery::~NetworkDiscovery() {
-	delete client; // teardown race
+
 }
 
 std::list<discovery_result_t> NetworkDiscovery::discoverDevices() {
@@ -52,7 +41,7 @@ std::list<discovery_result_t> NetworkDiscovery::discoverByUuid(UUID uuid, bool i
 }
 
 std::list<discovery_result_t> NetworkDiscovery::queryHelper(std::string resource) {
-	std::string url = getUrl(hostAndPort, resource);
+	std::string url = client.getUrl(resource);
 
 	using namespace boost::network;
 	http::client::request request(url);
@@ -60,7 +49,7 @@ std::list<discovery_result_t> NetworkDiscovery::queryHelper(std::string resource
 
 	std::list<discovery_result_t> ret;
 
-	auto response = client->get(request);
+	auto response = client.getClient()->get(request);
 	if (response.status() == 200) {
 		std::stringstream ss;
 		ss << body(response);

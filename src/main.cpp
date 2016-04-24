@@ -21,7 +21,7 @@
 #include <controller/AccessControl.h>
 #include <controller/NetworkState.h>
 #include <controller/NetworkDiscovery.h>
-#include <controller/Controller.h>
+#include <controller/ControllerClient.h>
 #include <CLI.h>
 #include <Debug.h>
 #include <ipc/UnixDomainSocketServer.h>
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 	bool serveIpc;
 	std::string name;
 	std::string path;
-	std::string beetleConrollerHostPort;
+	std::string beetleControllerHostPort;
 
 	namespace po = boost::program_options;
 	po::options_description desc("Options");
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
 			("ipc,u", po::value<std::string>(&path)
 					->default_value("/tmp/beetle"),
 					"Unix domain socket path")
-			("controller,c", po::value<std::string>(&beetleConrollerHostPort)
+			("controller,c", po::value<std::string>(&beetleControllerHostPort)
 					->default_value("localhost:80"),
 					"Host and port of the Beetle control")
 			("debug,d", po::value<bool>(&debug)
@@ -182,17 +182,20 @@ int main(int argc, char *argv[]) {
 
 		AutoConnect autoConnect(btl, autoConnectAll);
 
+		std::unique_ptr<ControllerClient> controllerClient;
 		std::unique_ptr<NetworkState> networkState;
 		std::unique_ptr<AccessControl> accessControl;
 		std::unique_ptr<NetworkDiscovery> networkDiscovery;
 		if (runController) {
-			networkState.reset(new NetworkState(btl, beetleConrollerHostPort));
+			controllerClient.reset(new ControllerClient(beetleControllerHostPort));
+
+			networkState.reset(new NetworkState(btl, *controllerClient));
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());
 			btl.registerRemoveDeviceHandler(networkState->getRemoveDeviceHandler());
 
-			networkDiscovery.reset(new NetworkDiscovery(beetleConrollerHostPort));
+			networkDiscovery.reset(new NetworkDiscovery(*controllerClient));
 
-			accessControl.reset(new AccessControl(btl, beetleConrollerHostPort));
+			accessControl.reset(new AccessControl(btl, *controllerClient));
 			btl.setAccessControl(accessControl.get());
 		}
 

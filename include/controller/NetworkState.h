@@ -8,17 +8,15 @@
 #ifndef INCLUDE_CONTROLLER_NETWORKREPORTER_H_
 #define INCLUDE_CONTROLLER_NETWORKREPORTER_H_
 
-#include <boost/network/protocol/http/client.hpp>
-#include <string>
-
 #include "Beetle.h"
+#include "ControllerClient.h"
 
 /*
  * Reports devices connected and disconnected.
  */
 class NetworkState {
 public:
-	NetworkState(Beetle &beetle, std::string hostAndPort);
+	NetworkState(Beetle &beetle, ControllerClient &client);
 	virtual ~NetworkState();
 
 	AddDeviceHandler getAddDeviceHandler();
@@ -26,9 +24,7 @@ public:
 private:
 	Beetle &beetle;
 
-	std::string hostAndPort;
-
-	boost::network::http::client *client;
+	ControllerClient &client;
 
 	void addDeviceHelper(Device *device);
 	void removeDeviceHelper(device_t d);
