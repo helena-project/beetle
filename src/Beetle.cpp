@@ -102,7 +102,7 @@ void Beetle::mapDevices(device_t from, device_t to) {
 
 	Device *fromD = devices[from];
 	Device *toD = devices[to];
-	if (accessControl->canMap(fromD, toD) == false) {
+	if (accessControl && accessControl->canMap(fromD, toD) == false) {
 		pwarn("permission denied");
 		return;
 	}
@@ -158,8 +158,9 @@ void Beetle::registerRemoveDeviceHandler(RemoveDeviceHandler h) {
 }
 
 void Beetle::setAccessControl(AccessControl *ac) {
-	assert(accessControl == NULL);
+	assert(accessControl == NULL && ac != NULL);
 	accessControl = ac;
+	registerRemoveDeviceHandler(ac->getRemoveDeviceHandler());
 }
 
 

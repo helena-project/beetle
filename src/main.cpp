@@ -76,6 +76,9 @@ int main(int argc, char *argv[]) {
 	bool debugAll;
 	bool autoConnectAll;
 	bool resetHci;
+	bool runController;
+	bool serveTcp;
+	bool serveIpc;
 	std::string name;
 	std::string path;
 	std::string beetleConrollerHostPort;
@@ -86,31 +89,63 @@ int main(int argc, char *argv[]) {
 			("help,h", "")
 			("name,n", po::value<std::string>(&name)->default_value(getDefaultName()),
 					"Name this Beetle gateway")
-			("scan,s", po::value<bool>(&scanningEnabled)->implicit_value(true),
+			("scan,s", po::value<bool>(&scanningEnabled)
+					->implicit_value(true),
 					"Enable scanning for BLE devices")
-			("tcp-port,p", po::value<int>(&tcpPort)->default_value(5000),
+			("tcp-port,p", po::value<int>(&tcpPort)
+					->default_value(5000),
 					"Specify remote TCP server port")
-			("ipc,u", po::value<std::string>(&path)->default_value("/tmp/beetle"),
+			("ipc,u", po::value<std::string>(&path)
+					->default_value("/tmp/beetle"),
 					"Unix domain socket path")
-			("master,c", po::value<std::string>(&beetleConrollerHostPort)->default_value("localhost:80"),
+			("controller,c", po::value<std::string>(&beetleConrollerHostPort)
+					->default_value("localhost:80"),
 					"Host and port of the Beetle control")
-			("debug,d", po::value<bool>(&debug)->implicit_value(true),
+			("debug,d", po::value<bool>(&debug)
+					->implicit_value(true),
 					"Enable general debugging")
-			("auto-connect-all", po::value<bool>(&autoConnectAll)->implicit_value(true)->default_value(false),
+			("auto-connect-all", po::value<bool>(&autoConnectAll)
+					->implicit_value(true)
+					->default_value(false),
 					"Connect to all nearby BLE devices")
-			("reset-hci", po::value<bool>(&resetHci)->default_value(true),
+			("reset-hci", po::value<bool>(&resetHci)
+					->default_value(true),
 					"Set hci down/up at start-up")
-			("debug-discovery", po::value<bool>(&debug_discovery)->implicit_value(true)->default_value(false),
+			("no-controller", po::value<bool>(&runController)
+					->default_value(true)
+					->implicit_value(false),
+					"Disable network state, discovery, or access control")
+			("no-tcp", po::value<bool>(&serveTcp)
+					->default_value(true)
+					->implicit_value(false),
+					"Disable remote access over tcp")
+			("no-ipc", po::value<bool>(&serveIpc)
+					->default_value(true)
+					->implicit_value(false),
+					"Disable access over unix domain sockets")
+			("debug-discovery", po::value<bool>(&debug_discovery)
+					->implicit_value(true)
+					->default_value(false),
 					"Enable debugging for GATT discovery")
-			("debug-scan", po::value<bool>(&debug_scan)->implicit_value(true)->default_value(false),
+			("debug-scan", po::value<bool>(&debug_scan)
+					->implicit_value(true)
+					->default_value(false),
 					"Enable debugging for BLE scanning")
-			("debug-socket", po::value<bool>(&debug_socket)->implicit_value(true)->default_value(false),
+			("debug-socket", po::value<bool>(&debug_socket)
+					->implicit_value(true)
+					->default_value(false),
 					"Enable debugging for sockets")
-			("debug-router", po::value<bool>(&debug_router)->implicit_value(true)->default_value(false),
+			("debug-router", po::value<bool>(&debug_router)
+					->implicit_value(true)
+					->default_value(false),
 					"Enable debugging for router")
-			("debug-network", po::value<bool>(&debug_network)->implicit_value(true)->default_value(false),
+			("debug-network", po::value<bool>(&debug_network)
+					->implicit_value(true)
+					->default_value(false),
 					"Enable debugging for control plane")
-			("debug-all", po::value<bool>(&debugAll)->implicit_value(true)->default_value(false),
+			("debug-all", po::value<bool>(&debugAll)
+					->implicit_value(true)
+					->default_value(false),
 					"Enable ALL debugging");
 	po::variables_map vm;
 	try {
@@ -133,27 +168,41 @@ int main(int argc, char *argv[]) {
 		signal(SIGPIPE, sigpipe_handler_ignore);
 
 		Beetle btl(name);
-		TCPDeviceServer tcpServer(btl, tcpPort);
-		UnixDomainSocketServer ipcServer(btl, path);
+
+		std::unique_ptr<TCPDeviceServer> tcpServer;
+		if (serveTcp) {
+			tcpServer.reset(new TCPDeviceServer(btl, tcpPort));
+		}
+
+		std::unique_ptr<UnixDomainSocketServer> ipcServer;
+		if (serveIpc) {
+			ipcServer.reset(new UnixDomainSocketServer(btl, path));
+		}
+
 		AutoConnect autoConnect(btl, autoConnectAll);
 
-		NetworkState networkState(btl, beetleConrollerHostPort);
-		btl.registerAddDeviceHandler(networkState.getAddDeviceHandler());
-		btl.registerRemoveDeviceHandler(networkState.getRemoveDeviceHandler());
+		std::unique_ptr<NetworkState> networkState;
+		std::unique_ptr<AccessControl> accessControl;
+		std::unique_ptr<NetworkDiscovery> networkDiscovery;
+		if (runController) {
+			networkState.reset(new NetworkState(btl, beetleConrollerHostPort));
+			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());
+			btl.registerRemoveDeviceHandler(networkState->getRemoveDeviceHandler());
 
-		NetworkDiscovery networkDiscovery(beetleConrollerHostPort);
+			networkDiscovery.reset(new NetworkDiscovery(beetleConrollerHostPort));
 
-		AccessControl accessControl(btl, beetleConrollerHostPort);
-		btl.setAccessControl(&accessControl);
+			accessControl.reset(new AccessControl(btl, beetleConrollerHostPort));
+			btl.setAccessControl(accessControl.get());
+		}
 
-		CLI cli(btl, tcpPort, path, networkDiscovery);
+		CLI cli(btl, tcpPort, path, networkDiscovery.get());
 
-		Scanner scanner;
-		scanner.registerHandler(cli.getDiscoveryHander());
-		scanner.registerHandler(autoConnect.getDiscoveryHandler());
-
+		std::unique_ptr<Scanner> scanner;
 		if (scanningEnabled) {
-			scanner.start();
+			scanner.reset(new Scanner());
+			scanner->registerHandler(cli.getDiscoveryHander());
+			scanner->registerHandler(autoConnect.getDiscoveryHandler());
+			scanner->start();
 		}
 
 		cli.join();

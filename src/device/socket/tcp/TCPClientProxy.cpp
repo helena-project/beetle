@@ -32,7 +32,7 @@ TCPClientProxy::TCPClientProxy(Beetle &beetle, int sockfd, std::string clientGat
 }
 
 TCPClientProxy::~TCPClientProxy() {
-	// TODO Auto-generated destructor stub
+	// Nothing to do, handled by superclass
 }
 
 device_t TCPClientProxy::getLocalDeviceId() {

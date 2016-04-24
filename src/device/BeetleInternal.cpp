@@ -70,7 +70,7 @@ int BeetleInternal::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&re
 		pwarn("Beetle received an unanticipated request");
 	}
 	resp = new uint8_t[ATT_ERROR_PDU_LEN];
-	pack_error_pdu(buf[0], 0, ATT_ECODE_UNLIKELY, resp); // TODO: probably not the right error code
+	pack_error_pdu(buf[0], 0, ATT_ECODE_UNLIKELY, resp);
 	return ATT_ERROR_PDU_LEN;
 }
 

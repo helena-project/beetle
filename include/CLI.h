@@ -20,7 +20,7 @@
 
 class CLI {
 public:
-	CLI(Beetle &beetle, int port, std::string path, NetworkDiscovery &discovery);
+	CLI(Beetle &beetle, int port, std::string path, NetworkDiscovery *discovery = NULL);
 	virtual ~CLI();
 	/*
 	 * Block program exit with CLI.
@@ -39,7 +39,7 @@ private:
 
 	Beetle &beetle;
 
-	NetworkDiscovery &networkDiscovery;
+	NetworkDiscovery *networkDiscovery;
 
 	int port;
 	std::string path;

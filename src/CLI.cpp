@@ -37,7 +37,7 @@
 #include "hat/HandleAllocationTable.h"
 #include "Handle.h"
 
-CLI::CLI(Beetle &beetle, int port_, std::string path_, NetworkDiscovery &discovery)
+CLI::CLI(Beetle &beetle, int port_, std::string path_, NetworkDiscovery *discovery)
 : beetle(beetle), networkDiscovery(discovery), t() {
 	port = port_;
 	path = path_;
@@ -309,6 +309,11 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 }
 
 void CLI::doDiscover(const std::vector<std::string>& cmd) {
+	if (!networkDiscovery) {
+		printUsageError("Beetle controller not enabled. Network discovery unavailable.");
+		return;
+	}
+
 	if (cmd.size() != 2 && cmd.size() != 3) {
 		printUsage("discover d");
 		printUsage("discover s uuid");
@@ -318,14 +323,14 @@ void CLI::doDiscover(const std::vector<std::string>& cmd) {
 
 	std::list<discovery_result_t> discovered;
 	if (cmd[1] == "d") {
-		discovered = networkDiscovery.discoverDevices();
+		discovered = networkDiscovery->discoverDevices();
 	} else if (cmd[1] == "s"){
 		if (cmd.size() != 3) {
 			printUsageError("no uuid specified");
 			return;
 		}
 		try {
-			discovered = networkDiscovery.discoverByUuid(UUID(cmd[2]), true);
+			discovered = networkDiscovery->discoverByUuid(UUID(cmd[2]), true);
 		} catch (std::invalid_argument &e) {
 			printUsageError("could not parse uuid");
 			return;
@@ -336,7 +341,7 @@ void CLI::doDiscover(const std::vector<std::string>& cmd) {
 			return;
 		}
 		try {
-			discovered = networkDiscovery.discoverByUuid(UUID(cmd[2]), false);
+			discovered = networkDiscovery->discoverByUuid(UUID(cmd[2]), false);
 		} catch (std::invalid_argument &e) {
 			printUsageError("could not parse uuid");
 			return;

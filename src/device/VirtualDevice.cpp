@@ -166,7 +166,6 @@ int VirtualDevice::getMTU() {
 void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 	std::unique_lock<std::mutex> lk(transactionMutex);
 	if (!currentTransaction) {
-		// TODO what to do here?
 		pwarn("unexpected transaction response when none existed!");
 		return;
 	} else {
@@ -183,7 +182,6 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 		t->cb(buf, len);
 		delete[] t->buf;
 		delete t;
-
 	}
 }
 

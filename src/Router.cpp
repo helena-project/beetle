@@ -180,7 +180,8 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 				 * Check that access is permitted.
 				 */
 				uint8_t unused;
-				if (dst != BEETLE_RESERVED_DEVICE && beetle.accessControl->canAccessHandle(
+				if (dst != BEETLE_RESERVED_DEVICE && beetle.accessControl
+						&& beetle.accessControl->canAccessHandle(
 						sourceDevice, destinationDevice, handle, opCode, unused) == false) {
 					continue;
 				}
@@ -322,7 +323,8 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 					 * Check whether access is permitted.
 					 */
 					uint8_t unused;
-					if (dst != BEETLE_RESERVED_DEVICE && beetle.accessControl->canAccessHandle(
+					if (dst != BEETLE_RESERVED_DEVICE && beetle.accessControl
+							&& beetle.accessControl->canAccessHandle(
 							sourceDevice, destinationDevice, handle, opCode, unused) == false) {
 						continue;
 					}
@@ -483,7 +485,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 		/*
 		 * Check whether the attribute type may be read.
 		 */
-		if (beetle.accessControl->canReadType(sourceDevice, destinationDevice, attType) == false) {
+		if (beetle.accessControl && beetle.accessControl->canReadType(sourceDevice, destinationDevice, attType) == false) {
 			uint8_t err[ATT_ERROR_PDU_LEN];
 			pack_error_pdu(opCode, startHandle, ATT_ECODE_READ_NOT_PERM, err);
 			sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
@@ -512,7 +514,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 
 			if (resp == NULL || respLen <= 2) {
 				uint8_t err[ATT_ERROR_PDU_LEN];
-				pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, startHandle, ATT_ECODE_ABORTED, err);
+				pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, startHandle, ATT_ECODE_UNLIKELY, err);
 				sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
 			} else if (resp[0] == ATT_OP_ERROR) {
 				*(uint16_t *)(resp + 2) = htobs(startHandle);
@@ -538,8 +540,8 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 					 * Check if access is permitted.
 					 */
 					uint8_t unused;
-					if (beetle.accessControl->canAccessHandle(sourceDevice, destinationDevice, h,
-							ATT_OP_READ_REQ, unused) == false) {
+					if (beetle.accessControl && beetle.accessControl->canAccessHandle(sourceDevice,
+							destinationDevice, h, ATT_OP_READ_REQ, unused) == false) {
 						continue;
 					}
 
@@ -831,7 +833,8 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 	 * Query access control.
 	 */
 	uint8_t ecode;
-	if (dst != BEETLE_RESERVED_DEVICE && beetle.accessControl->canAccessHandle(sourceDevice,
+	if (dst != BEETLE_RESERVED_DEVICE && beetle.accessControl
+			&& beetle.accessControl->canAccessHandle(sourceDevice,
 			destinationDevice, proxyH, opCode, ecode) == false) {
 		if (debug_router) {
 			pdebug("access denied: " + std::to_string(proxyH->getHandle()));
@@ -916,7 +919,8 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 			 * This works because characterisics are cached infinitely.
 			 */
 			uint8_t properties;
-			if (!beetle.accessControl->getCharAccessProperties(sourceDevice, destinationDevice, ch, properties)) {
+			if (beetle.accessControl && beetle.accessControl->getCharAccessProperties(
+					sourceDevice, destinationDevice, ch, properties) == false) {
 				pwarn("access properties changed");
 				uint8_t err[ATT_ERROR_PDU_LEN];
 				pack_error_pdu(opCode, handle, ATT_ECODE_READ_NOT_PERM, err);

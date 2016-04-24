@@ -30,7 +30,15 @@ TCPServerProxy::TCPServerProxy(Beetle &beetle, int sockfd, std::string serverGat
 }
 
 TCPServerProxy::~TCPServerProxy() {
-	// TODO Auto-generated destructor stub
+	// Nothing to do, handled by superclass
+}
+
+device_t TCPServerProxy::getRemoteDeviceId() {
+	return remoteProxyTo;
+}
+
+std::string TCPServerProxy::getServerGateway() {
+	return serverGateway;
 }
 
 TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host,

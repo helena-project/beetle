@@ -22,8 +22,8 @@ public:
 			struct sockaddr_in serverGatewaySockAddr, device_t remoteProxyTo);
 	virtual ~TCPServerProxy();
 
-	device_t getRemoteDeviceId() { return remoteProxyTo; };
-	std::string getServerGateway() { return	serverGateway; };
+	device_t getRemoteDeviceId();
+	std::string getServerGateway();
 
 	static TCPServerProxy *connectRemote(Beetle &beetle, std::string server,
 			int port, device_t remoteProxyTo_);
