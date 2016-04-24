@@ -367,13 +367,13 @@ void CLI::doDisconnect(const std::vector<std::string>& cmd) {
 
 	boost::unique_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
 	Device *device = matchDevice(cmd[1]);
-	deviceslk.unlock();
-
 	if (device != NULL) {
 		VirtualDevice *virtualDevice = dynamic_cast<VirtualDevice *>(device);
 		if (virtualDevice) {
 			virtualDevice->stop();
-			beetle.removeDevice(device->getId());
+			device_t deviceId = virtualDevice->getId();
+			deviceslk.unlock();
+			beetle.removeDevice(deviceId);
 		} else {
 			printMessage("cannot stop " + device->getName());
 		}
@@ -532,7 +532,7 @@ Device *CLI::matchDevice(const std::string &input) {
 	} else {
 		device_t id = NULL_RESERVED_DEVICE;
 		try {
-			id = std::strtol(input.c_str(), NULL, 10);
+			id = std::stoll(input);
 		} catch (std::invalid_argument &e) {
 			if (debug) {
 				pdebug(input + " did not match a device id");

@@ -134,7 +134,7 @@ void Scanner::scanDaemon() {
   			i += len + 1;
   		}
 
-  		if (debug_scan) {
+  		if (debug) {
   			std::stringstream ss;
   			ss << "discovered " << addr << "\t" << ((addrType == PUBLIC) ? "public" : "random")
   					<< "\t" << name;

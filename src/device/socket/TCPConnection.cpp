@@ -67,7 +67,7 @@ bool TCPConnection::write(uint8_t *buf, int len) {
 
 void TCPConnection::readDaemon() {
 	if (debug) pdebug(getName() + " readDaemon started");
-	uint8_t buf[255];
+	uint8_t buf[256];
 	uint8_t len;
 	while (!isStopped()) {
 		// read length of ATT message

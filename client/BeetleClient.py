@@ -53,7 +53,7 @@ def outputPrinter(s):
 		print "Exception in output thread:", err
 		os.kill(os.getpid(), signal.SIGTERM)
 
-def readParams():
+def readClientParams():
 	"""
 	Ask the user for params until done.
 	"""
@@ -73,11 +73,16 @@ def readParams():
 	return "\n".join(params)
 
 # Send initial connection parameters. Just 0 for now.
-params = readParams()
+clientParams = readClientParams()
 
-paramsLength = struct.pack("!i", len(params))
-s.send(paramsLength.encode('utf-8'))
-s.send(params.encode('utf-8'))
+clientParamsLength = struct.pack("!i", len(clientParams))
+s.send(clientParamsLength.encode('utf-8'))
+s.send(clientParams.encode('utf-8'))
+
+# Read parameters in plaintext from server
+serverParamsLength = struct.unpack("!i", s.recv(4))[0]
+for serverParam in s.recv(serverParamsLength).split("\n"):
+	print "$ %s" % serverParam.rstrip()
 
 # Start the printer thread.
 outputThread = threading.Thread(target=outputPrinter, args=(s,))

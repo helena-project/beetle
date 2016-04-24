@@ -90,7 +90,8 @@ int main(int argc, char *argv[]) {
 			("name,n", po::value<std::string>(&name)->default_value(getDefaultName()),
 					"Name this Beetle gateway")
 			("scan,s", po::value<bool>(&scanningEnabled)
-					->implicit_value(true),
+					->implicit_value(true)
+					->default_value(false),
 					"Enable scanning for BLE devices")
 			("tcp-port,p", po::value<int>(&tcpPort)
 					->default_value(5000),

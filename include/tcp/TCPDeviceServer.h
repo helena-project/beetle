@@ -43,8 +43,6 @@ private:
 	int sockfd;
 
 	void startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr);
-	bool readParamsHelper(int clifd, int paramsLength,
-			std::map<std::string,std::string> &params);
 };
 
 #endif /* INCLUDE_TCP_TCPDEVICESERVER_H_ */

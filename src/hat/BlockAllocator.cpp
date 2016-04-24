@@ -34,7 +34,6 @@ std::set<device_t> BlockAllocator::getDevices() {
 	for (int i = 0; i < numBlocks; i++) {
 		if (blocks[i] != NULL_RESERVED_DEVICE) {
 			ret.insert(blocks[i]);
-			std::cout << blocks[i] << std::endl;
 		}
 	}
 	return ret;

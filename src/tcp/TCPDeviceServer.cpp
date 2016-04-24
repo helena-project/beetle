@@ -17,7 +17,8 @@
 
 #include "device/socket/tcp/TCPClientProxy.h"
 #include "Debug.h"
-#include "tcp/ConnParams.h"
+#include "tcp/TCPConnParams.h"
+#include "../device/socket/shared.h"
 
 TCPDeviceServer::TCPDeviceServer(Beetle &beetle, int port) : beetle(beetle) {
 	running = true;
@@ -69,111 +70,75 @@ void TCPDeviceServer::serverDaemon(int port) {
 	if (debug) pdebug("tcp serverDaemon exited");
 }
 
-bool TCPDeviceServer::readParamsHelper(int clifd, int paramsLen,
-		std::map<std::string, std::string> &params) {
-	int bytesRead = 0;
-	char lineBuffer[2048];
-	int lineIndex = 0;
-	while (bytesRead < paramsLen) {
-		char ch;
-		int n = read(clifd, &ch, 1);
-		if (n < 0) {
-			if (debug) {
-				pdebug("could not finish reading tcp connection parameters");
-			}
-			return false;
-		} else if (n == 0) {
-			continue;
-		}
-
-		/* advance */
-		bytesRead += n;
-
-		if (ch == '\n') {
-			lineBuffer[lineIndex] = '\0';
-			lineIndex = 0;
-			std::string line = std::string(lineBuffer);
-			if (line.length() == 0) {
-				continue;
-			}
-			size_t splitIdx = line.find(' ');
-			if (splitIdx == std::string::npos) {
-				if (debug) {
-					pdebug("unable to parse parameters: " + line);
-				}
-				return false;
-			}
-			std::string paramName = line.substr(0, splitIdx);
-			std::string paramValue = line.substr(splitIdx + 1, line.length());
-			params[paramName] = paramValue;
-		} else if (ch != '\0') {
-			lineBuffer[lineIndex] = ch;
-			lineIndex++;
-		}
-	}
-
-	if (lineIndex != 0) {
-		lineBuffer[lineIndex] = '\0';
-		std::string line = std::string(lineBuffer);
-		size_t splitIdx = line.find(' ');
-		if (splitIdx == std::string::npos) {
-			if (debug) {
-				pdebug("unable to parse parameters: " + line);
-			}
-			return false;
-		}
-		std::string paramName = line.substr(0, splitIdx);
-		std::string paramValue = line.substr(splitIdx + 1, line.length());
-		params[paramName] = paramValue;
-	}
-	return true;
-}
-
 void TCPDeviceServer::startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr) {
-	uint32_t paramsLen;
-	if (read(clifd, &paramsLen, sizeof(uint32_t)) != sizeof(uint32_t)) {
+	uint32_t clientParamsLen;
+	if (read(clifd, &clientParamsLen, sizeof(uint32_t)) != sizeof(uint32_t)) {
 		if (debug) {
-			pdebug("could not read tcp connection parameters length");
+			pdebug("could not read tcp connection client parameters length");
 		}
 		close(clifd);
 		return;
 	}
 
-	paramsLen = ntohl(paramsLen);
+	/*
+	 * Read params from the client.
+	 */
+	clientParamsLen = ntohl(clientParamsLen);
 	if (debug) {
-		pdebug("expecting " + std::to_string(paramsLen) + " bytes of parameters");
+		pdebug("expecting " + std::to_string(clientParamsLen) + " bytes of parameters");
 	}
 
-	std::map<std::string, std::string> params;
-	if (!readParamsHelper(clifd, paramsLen, params)) {
+	std::map<std::string, std::string> clientParams;
+	if (!readParamsHelper(clifd, clientParamsLen, clientParams)) {
 		pwarn("unable to read parameters");
 		close(clifd);
 		return;
 	}
 
 	if (debug) {
-		for (auto &kv : params) {
+		for (auto &kv : clientParams) {
 			pdebug("parsed param (" + kv.first + "," + kv.second + ")");
 		}
 		pdebug("done reading tcp connection parameters");
 	}
 
+	/*
+	 * Send params to the client.
+	 */
+    std::stringstream ss;
+    ss << TCP_PARAM_GATEWAY << " " << beetle.name;
+    std::string serverParams = ss.str();
+    uint32_t serverParamsLen = htonl(serverParams.length());
+
+    if (write_all(clifd, (uint8_t *)&serverParamsLen, sizeof(serverParamsLen)) == false) {
+    	close(clifd);
+    	if (debug) pdebug("could not write server params length");
+    }
+
+    if (write_all(clifd, (uint8_t *)serverParams.c_str(), serverParams.length()) == false) {
+    	close(clifd);
+    	if (debug) pdebug("could not write server params");
+    }
+
+    /*
+     * Instantiate the virtual device around the client socket.
+     */
 	VirtualDevice *device = NULL;
 	try {
 		/*
 		 * Takes over the clifd
 		 */
-		if (params.find(TCP_PARAM_GATEWAY) == params.end()) {
-			device = new TCPConnection(beetle, clifd, params[TCP_PARAM_CLIENT], cliaddr);
+		if (clientParams.find(TCP_PARAM_GATEWAY) == clientParams.end()) {
+			device = new TCPConnection(beetle, clifd, clientParams[TCP_PARAM_CLIENT], cliaddr);
 		} else {
 			// name of the client gateway
-			std::string client = params[TCP_PARAM_GATEWAY];
+			std::string client = clientParams[TCP_PARAM_GATEWAY];
 			// device that the client is requesting
-			device_t deviceId = std::stol(params[TCP_PARAM_DEVICE]);
+			device_t deviceId = std::stol(clientParams[TCP_PARAM_DEVICE]);
 			device = new TCPClientProxy(beetle, clifd, client, cliaddr, deviceId);
 		}
 
-		if (params[TCP_PARAM_SERVER] == "true") {
+		if (clientParams[TCP_PARAM_SERVER] == "true") {
 			device->start();
 		} else {
 			device->startNd();

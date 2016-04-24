@@ -43,7 +43,7 @@ void Beetle::removeDevice(device_t id) {
 	}
 	boost::unique_lock<boost::shared_mutex> devicesLk(devicesMutex);
 	if (devices.find(id) == devices.end()) {
-		pwarn("removing non existant device!");
+		pwarn("removing non-existent device!");
 		return;
 	}
 

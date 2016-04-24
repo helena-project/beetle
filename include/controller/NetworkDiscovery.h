@@ -38,6 +38,10 @@ public:
 	 * Look for devices in the network.
 	 */
 	std::list<discovery_result_t> discoverDevices();
+
+	/*
+	 * Map gateway to host and port.
+	 */
 private:
 	ControllerClient &client;
 

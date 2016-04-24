@@ -35,7 +35,7 @@ def connect_gateway(request, gateway):
 		try:
 			gateway = Gateway.objects.get(name=gateway)
 		except Gateway.DoesNotExist:
-			return HttpResponse("no gateway found", status=400)
+			return HttpResponse("no gateway named " + gateway, status=400)
 
 		gateway_conn, created = ConnectedGateway.objects.get_or_create(
 			gateway=gateway)

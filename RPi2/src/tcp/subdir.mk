@@ -4,12 +4,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/tcp/TCPConnParams.cpp \
 ../src/tcp/TCPDeviceServer.cpp 
 
 OBJS += \
+./src/tcp/TCPConnParams.o \
 ./src/tcp/TCPDeviceServer.o 
 
 CPP_DEPS += \
+./src/tcp/TCPConnParams.d \
 ./src/tcp/TCPDeviceServer.d 
 
 
