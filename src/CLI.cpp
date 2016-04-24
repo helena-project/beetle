@@ -271,7 +271,7 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 	}
 	std::string host;
 	int port;
-	device_t remoteId;
+	device_t remoteId = -1;
 	size_t colonIndex = cmd[1].find(':');
 	if (colonIndex != std::string::npos) {
 		/*
@@ -334,7 +334,7 @@ void CLI::doDiscover(const std::vector<std::string>& cmd) {
 		return;
 	}
 
-	bool success;
+	bool success = false;
 	std::list<discovery_result_t> discovered;
 	if (cmd[1] == "d") {
 		success = networkDiscovery->discoverDevices(discovered);
