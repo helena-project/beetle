@@ -8,7 +8,6 @@
 #ifndef CONTROLLER_NETWORKDISCOVERY_H_
 #define CONTROLLER_NETWORKDISCOVERY_H_
 
-#include <boost/network/protocol/http/client.hpp>
 #include <string>
 #include <list>
 

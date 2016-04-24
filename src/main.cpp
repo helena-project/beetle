@@ -94,13 +94,13 @@ int main(int argc, char *argv[]) {
 					->default_value(false),
 					"Enable scanning for BLE devices")
 			("tcp-port,p", po::value<int>(&tcpPort)
-					->default_value(5000),
+					->default_value(3002),
 					"Specify remote TCP server port")
 			("ipc,u", po::value<std::string>(&path)
 					->default_value("/tmp/beetle"),
 					"Unix domain socket path")
 			("controller,c", po::value<std::string>(&beetleControllerHostPort)
-					->default_value("localhost:80"),
+					->default_value("localhost:443"),
 					"Host and port of the Beetle control")
 			("debug,d", po::value<bool>(&debug)
 					->implicit_value(true),

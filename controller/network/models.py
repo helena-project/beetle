@@ -14,7 +14,7 @@ class ConnectedGateway(models.Model):
 	"""
 	A Beetle gateway
 	"""
-	DEFAULT_GATEWAY_TCP_SERVER_PORT = 5000 
+	DEFAULT_GATEWAY_TCP_SERVER_PORT = 3002 
 	CONNECTION_TIMEOUT = timedelta(minutes=60)
 
 	gateway = models.ForeignKey("beetle.Gateway")

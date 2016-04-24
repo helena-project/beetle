@@ -2,5 +2,6 @@ django
 django-ipware
 cronex
 django-sslserver
+django-ssl-redirect
 django-jet
 gunicorn

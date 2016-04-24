@@ -1,2 +1,2 @@
 #!/bin/bash
-exec ./manage.py runserver 0.0.0.0:80
+exec ./manage.py runsslserver 0.0.0.0:443

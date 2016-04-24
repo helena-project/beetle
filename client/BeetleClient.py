@@ -21,7 +21,7 @@ def getArguments():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--host", default="localhost", 
 		help="hostname of the Beetle server")
-	parser.add_argument("--port", "-p", type=int, default=5000, 
+	parser.add_argument("--port", "-p", type=int, default=3002, 
 		help="port the server is runnng on")
 	return parser.parse_args()
 
