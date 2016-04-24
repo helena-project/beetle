@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
 		if (runController) {
 			controllerClient.reset(new ControllerClient(beetleControllerHostPort));
 
-			networkState.reset(new NetworkState(btl, *controllerClient));
+			networkState.reset(new NetworkState(btl, *controllerClient, tcpPort));
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());
 			btl.registerRemoveDeviceHandler(networkState->getRemoveDeviceHandler());
 

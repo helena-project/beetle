@@ -28,26 +28,49 @@ NetworkDiscovery::~NetworkDiscovery() {
 
 }
 
-std::list<discovery_result_t> NetworkDiscovery::discoverDevices() {
+bool NetworkDiscovery::discoverDevices(std::list<discovery_result_t> &ret) {
 	std::stringstream resource;
 	resource << "network/discover/entities";
-	return queryHelper(resource.str());
+	return queryHelper(resource.str(), ret);
 }
 
-std::list<discovery_result_t> NetworkDiscovery::discoverByUuid(UUID uuid, bool isService) {
+bool NetworkDiscovery::discoverByUuid(UUID uuid, std::list<discovery_result_t> &ret, bool isService) {
 	std::stringstream resource;
 	resource << "network/discover/" << ((isService) ? "service" : "char") << "/" << uuid.str();
-	return queryHelper(resource.str());
+	return queryHelper(resource.str(), ret);
 }
 
-std::list<discovery_result_t> NetworkDiscovery::queryHelper(std::string resource) {
+bool NetworkDiscovery::findGatewayByName(std::string name, std::string &ip, int &port) {
+	std::string url = client.getUrl("network/find/gateway/" + name);
+
+	using namespace boost::network;
+	http::client::request request(url);
+	request << header("User-Agent", "linux");
+	auto response = client.getClient()->get(request);
+	if (response.status() == 200) {
+		std::stringstream ss;
+		ss << body(response);
+		json j;
+		j << ss;
+		ip = j["ip"];
+		port = j["port"];
+		return true;
+	} else {
+		if (debug_network) {
+			std::stringstream ss;
+			ss << "error : " << body(response);
+			pwarn(ss.str());
+		}
+		return false;
+	}
+}
+
+bool NetworkDiscovery::queryHelper(std::string resource, std::list<discovery_result_t> &ret) {
 	std::string url = client.getUrl(resource);
 
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
-
-	std::list<discovery_result_t> ret;
 
 	auto response = client.getClient()->get(request);
 	if (response.status() == 200) {
@@ -64,10 +87,13 @@ std::list<discovery_result_t> NetworkDiscovery::queryHelper(std::string resource
 			result.port = it["gateway"]["port"];
 			ret.push_back(result);
 		}
+		return true;
 	} else {
-		std::stringstream ss;
-		ss << "network discovery failed : " << body(response);
-		pwarn(ss.str());
+		if (debug_network) {
+			std::stringstream ss;
+			ss << "network discovery failed : " << body(response);
+			pwarn(ss.str());
+		}
+		return false;
 	}
-	return ret;
 }

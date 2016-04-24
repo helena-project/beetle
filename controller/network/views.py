@@ -32,6 +32,11 @@ def connect_gateway(request, gateway):
 		##############
 		# Connection #
 		##############
+		port = int(request.POST["port"]);
+		ip_address = get_ip(request)
+		if ip_address is None:
+			return HttpResponse(status=400)
+
 		try:
 			gateway = Gateway.objects.get(name=gateway)
 		except Gateway.DoesNotExist:
@@ -43,10 +48,8 @@ def connect_gateway(request, gateway):
 			gateway_conn.last_seen = timezone.now()
 			ConnectedEntity.objects.filter(gateway=gateway_conn).delete()
 
-		ip_address = get_ip(request)
-		if ip_address is None:
-			return HttpResponse(status=400)
 		gateway_conn.ip_address = ip_address
+		gateway_conn.port = port
 		gateway_conn.save()
 
 		return HttpResponse("connected")
@@ -216,8 +219,6 @@ def discover_with_uuid(request, uuid, is_service=True):
 		return HttpResponse("invalid uuid %s" % uuid, status=400)
 	uuid = convert_uuid(uuid)
 
-	print uuid
-
 	response = []
 	if is_service:
 		qs = ServiceInstance.objects.filter(service__uuid=uuid)
@@ -238,3 +239,15 @@ def discover_with_uuid(request, uuid, is_service=True):
 		});
 
 	return JsonResponse(response, safe=False)
+
+@require_GET
+def find_gateway(request, gateway):
+	try:
+		gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
+	except ConnectedGateway.DoesNotExist:
+		return HttpResponse("could not locate " + gateway, status=400)
+		
+	return JsonResponse({
+		"ip" : gateway_conn.ip_address,
+		"port" : gateway_conn.port,
+	})

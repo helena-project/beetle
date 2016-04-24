@@ -32,20 +32,22 @@ public:
 	/*
 	 * Look for devices in the network with the uuid
 	 */
-	std::list<discovery_result_t> discoverByUuid(UUID uuid, bool isService = true);
+	bool discoverByUuid(UUID uuid, std::list<discovery_result_t> &ret, bool isService = true);
 
 	/*
 	 * Look for devices in the network.
 	 */
-	std::list<discovery_result_t> discoverDevices();
+	bool discoverDevices(std::list<discovery_result_t> &ret);
 
 	/*
-	 * Map gateway to host and port.
+	 * Look for gateway in the network.
 	 */
+	bool findGatewayByName(std::string name, std::string &ip, int &port);
+
 private:
 	ControllerClient &client;
 
-	std::list<discovery_result_t> queryHelper(std::string resource);
+	bool queryHelper(std::string resource, std::list<discovery_result_t> &ret);
 };
 
 #endif /* CONTROLLER_NETWORKDISCOVERY_H_ */

@@ -17,6 +17,7 @@
 
 #include <ble/att.h>
 #include <Debug.h>
+#include <device/socket/tcp/TCPClientProxy.h>
 #include <device/socket/tcp/TCPServerProxy.h>
 #include <Device.h>
 
@@ -32,7 +33,6 @@ AccessControl::~AccessControl() {
 }
 
 bool AccessControl::canMap(Device *from, Device *to) {
-
 	std::string fromGateway;
 	device_t fromId;
 	switch (from->getType()) {
@@ -50,7 +50,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	case Device::TCP_SERVER_PROXY: {
 		TCPServerProxy *fromCast = dynamic_cast<TCPServerProxy *>(from);
 		fromGateway = fromCast->getServerGateway();
-		fromId = fromCast->getId();
+		fromId = fromCast->getRemoteDeviceId();
 		break;
 	}
 	case Device::UNKNOWN:
@@ -60,7 +60,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
 
 	std::string toGateway;
 	device_t toId;
-	switch (from->getType()) {
+	switch (to->getType()) {
 	case Device::BEETLE_INTERNAL:
 		return false;
 	case Device::IPC_APPLICATION:
@@ -208,6 +208,12 @@ static inline bool isWriteReq(uint8_t op) {
 
 bool AccessControl::canAccessHandle(Device *client, Device *server, Handle *handle,
 		uint8_t op, uint8_t &attErr) {
+	if (dynamic_cast<TCPClientProxy *>(client)) {
+		return true;
+	} else if (dynamic_cast<TCPServerProxy *>(client)) {
+		return false;
+	}
+
 	/*
 	 * Default reason to deny op.
 	 */
@@ -323,6 +329,13 @@ bool AccessControl::canAccessHandle(Device *client, Device *server, Handle *hand
 
 bool AccessControl::getCharAccessProperties(Device *client, Device *server, Handle *handle, uint8_t &properties) {
 	boost::shared_lock<boost::shared_mutex> lk(cacheMutex);
+	if (dynamic_cast<TCPClientProxy *>(client)) {
+		properties = 0xFF;
+		return true;
+	} else if (dynamic_cast<TCPServerProxy *>(client)) {
+		return false;
+	}
+
 	auto key = std::make_pair(server->getId(), client->getId());
 	if (cache.find(key) == cache.end()) {
 		pwarn("no cached access control rules exist for client-server");
@@ -360,6 +373,12 @@ bool AccessControl::getCharAccessProperties(Device *client, Device *server, Hand
 }
 
 bool AccessControl::canReadType(Device *client, Device *server, UUID &attType) {
+	if (dynamic_cast<TCPClientProxy *>(client)) {
+		return true;
+	} else if (dynamic_cast<TCPServerProxy *>(client)) {
+		return false;
+	}
+
 	boost::shared_lock<boost::shared_mutex> lk(cacheMutex);
 	auto key = std::make_pair(server->getId(), client->getId());
 	if (cache.find(key) == cache.end()) {

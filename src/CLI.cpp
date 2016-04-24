@@ -266,24 +266,37 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 void CLI::doRemote(const std::vector<std::string>& cmd) {
 	if (cmd.size() != 3) {
 		printUsage("remote host:port remoteId");
+		printUsage("remote remoteGateway remoteId");
 		return;
 	}
-
-	size_t colonIndex = cmd[1].find(':');
-	if (colonIndex == std::string::npos) {
-		printUsageError("invalid host:port pair");
-		return;
-	}
-	std::string host = cmd[1].substr(0, colonIndex);
-
+	std::string host;
 	int port;
 	device_t remoteId;
-	try {
-		port = std::stoi(cmd[1].substr(colonIndex + 1, cmd[1].length()));
-		remoteId = std::stol(cmd[2]);
-	} catch (std::invalid_argument &e) {
-		printUsageError("invalid port or remoteId");
-		return;
+	size_t colonIndex = cmd[1].find(':');
+	if (colonIndex != std::string::npos) {
+		/*
+		 * Parse from host:port
+		 */
+		host = cmd[1].substr(0, colonIndex);
+		try {
+			port = std::stoi(cmd[1].substr(colonIndex + 1, cmd[1].length()));
+			remoteId = std::stol(cmd[2]);
+		} catch (std::invalid_argument &e) {
+			printUsageError("invalid port or remoteId");
+			return;
+		}
+	} else {
+		/*
+		 * Lookup by gateway name
+		 */
+		if (!networkDiscovery) {
+			printUsageError("Beetle controller not enabled. Gateway lookup unavailable.");
+			return;
+		}
+		if (!networkDiscovery->findGatewayByName(cmd[1], host, port)) {
+			printMessage("failed to locate " + cmd[1]);
+			return;
+		}
 	}
 
 	VirtualDevice* device = NULL;
@@ -321,16 +334,17 @@ void CLI::doDiscover(const std::vector<std::string>& cmd) {
 		return;
 	}
 
+	bool success;
 	std::list<discovery_result_t> discovered;
 	if (cmd[1] == "d") {
-		discovered = networkDiscovery->discoverDevices();
+		success = networkDiscovery->discoverDevices(discovered);
 	} else if (cmd[1] == "s"){
 		if (cmd.size() != 3) {
 			printUsageError("no uuid specified");
 			return;
 		}
 		try {
-			discovered = networkDiscovery->discoverByUuid(UUID(cmd[2]), true);
+			success = networkDiscovery->discoverByUuid(UUID(cmd[2]), discovered, true);
 		} catch (std::invalid_argument &e) {
 			printUsageError("could not parse uuid");
 			return;
@@ -341,7 +355,7 @@ void CLI::doDiscover(const std::vector<std::string>& cmd) {
 			return;
 		}
 		try {
-			discovered = networkDiscovery->discoverByUuid(UUID(cmd[2]), false);
+			success = networkDiscovery->discoverByUuid(UUID(cmd[2]), discovered, false);
 		} catch (std::invalid_argument &e) {
 			printUsageError("could not parse uuid");
 			return;
@@ -350,12 +364,16 @@ void CLI::doDiscover(const std::vector<std::string>& cmd) {
 		printUsageError("invalid argument: " + cmd[1]);
 	}
 
-	for (auto &d : discovered) {
-		printMessage("device : " + d.name);
-		printMessage("  gateway : " + d.gateway);
-		printMessage("  remote id : " + std::to_string(d.id));
-		printMessage("  ip : " + d.ip);
-		printMessage("  port : " + std::to_string(d.port));
+	if (success) {
+		for (auto &d : discovered) {
+			printMessage("device : " + d.name);
+			printMessage("  gateway : " + d.gateway);
+			printMessage("  remote id : " + std::to_string(d.id));
+			printMessage("  ip : " + d.ip);
+			printMessage("  port : " + std::to_string(d.port));
+		}
+	} else {
+		printMessage("network discovery failed");
 	}
 }
 

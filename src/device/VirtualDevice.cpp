@@ -49,13 +49,17 @@ void VirtualDevice::start() {
 
 	startInternal();
 
-	std::string discoveredName = discoverDeviceName(this);
-	if (name != "") {
-		if (discoveredName != name) {
-			pwarn("discovered name " + discoveredName + " does not equal " + name);
-		}
-	} else {
-		name = discoveredName;
+//	std::string discoveredName = discoverDeviceName(this);
+//	if (name != "") {
+//		if (discoveredName != name) {
+//			pwarn("discovered name " + discoveredName + " does not equal " + name);
+//		}
+//	} else {
+//		name = discoveredName;
+//	}
+
+	if (name == "") {
+		name = discoverDeviceName(this);;
 	}
 
 	std::map<uint16_t, Handle *> handlesTmp = discoverAllHandles(this);

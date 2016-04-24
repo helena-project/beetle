@@ -26,12 +26,16 @@
 
 using json = nlohmann::json;
 
-NetworkState::NetworkState(Beetle &beetle, ControllerClient &client)
+NetworkState::NetworkState(Beetle &beetle, ControllerClient &client, int tcpPort)
 : beetle(beetle), client(client) {
+	std::string postParams = "port=" + std::to_string(tcpPort);
 
 	using namespace boost::network;
 	http::client::request request(client.getUrl("network/connect/" + beetle.name));
 	request << header("User-Agent", "linux");
+	request << header("Content-Type", "application/x-www-form-urlencoded");
+	request << header("Content-Length", std::to_string(postParams.length()));
+	request << body(postParams);
 
 	http::client::response response = client.getClient()->post(request);
 	if (response.status() != 200) {

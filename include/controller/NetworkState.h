@@ -16,7 +16,7 @@
  */
 class NetworkState {
 public:
-	NetworkState(Beetle &beetle, ControllerClient &client);
+	NetworkState(Beetle &beetle, ControllerClient &client, int tcpPort);
 	virtual ~NetworkState();
 
 	AddDeviceHandler getAddDeviceHandler();
