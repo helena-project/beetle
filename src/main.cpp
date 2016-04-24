@@ -108,13 +108,14 @@ int main(int argc, char *argv[]) {
 					->implicit_value(true)
 					->default_value(false),
 					"Connect to all nearby BLE devices")
-			("reset-hci", po::value<bool>(&resetHci)
-					->default_value(true),
+			("no-reset-hci", po::value<bool>(&resetHci)
+					->default_value(true)
+					->implicit_value(false),
 					"Set hci down/up at start-up")
 			("no-controller", po::value<bool>(&runController)
 					->default_value(true)
 					->implicit_value(false),
-					"Disable network state, discovery, or access control")
+					"Disable network state, discovery, and access control")
 			("no-tcp", po::value<bool>(&serveTcp)
 					->default_value(true)
 					->implicit_value(false),
