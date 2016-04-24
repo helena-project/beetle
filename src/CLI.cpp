@@ -271,7 +271,7 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 	}
 	std::string host;
 	int port;
-	device_t remoteId = -1;
+	device_t remoteId;
 	size_t colonIndex = cmd[1].find(':');
 	if (colonIndex != std::string::npos) {
 		/*
@@ -280,9 +280,8 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 		host = cmd[1].substr(0, colonIndex);
 		try {
 			port = std::stoi(cmd[1].substr(colonIndex + 1, cmd[1].length()));
-			remoteId = std::stol(cmd[2]);
 		} catch (std::invalid_argument &e) {
-			printUsageError("invalid port or remoteId");
+			printUsageError("invalid port");
 			return;
 		}
 	} else {
@@ -297,6 +296,13 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 			printMessage("failed to locate " + cmd[1]);
 			return;
 		}
+	}
+
+	try {
+		remoteId = std::stol(cmd[2]);
+	} catch (std::invalid_argument &e) {
+		printUsageError("invalid remoteId");
+		return;
 	}
 
 	VirtualDevice* device = NULL;
