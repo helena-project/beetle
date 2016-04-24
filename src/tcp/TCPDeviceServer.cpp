@@ -56,6 +56,9 @@ void TCPDeviceServer::serverDaemon(int port) {
 
 		int clifd = accept(sockfd, (struct sockaddr *)&client_addr, &clilen);
 		if (clifd < 0) {
+			if (!running) {
+				break;
+			}
 			pwarn("error on accept");
 			continue;
 		}

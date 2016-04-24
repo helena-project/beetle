@@ -59,6 +59,9 @@ void UnixDomainSocketServer::serverDaemon() {
 
 		int clifd = accept(fd, (struct sockaddr *)&cliaddr, &clilen);
 		if (clifd < 0) {
+			if (!running) {
+				break;
+			}
 			pwarn("error on accept");
 			continue;
 		}
