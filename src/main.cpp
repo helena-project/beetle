@@ -5,16 +5,14 @@
  *      Author: james
  */
 
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/hci.h>
-#include <bluetooth/hci_lib.h>
 #include <boost/program_options.hpp>
 #include <unistd.h>
-#include <cstdlib>
 #include <iostream>
 #include <map>
 #include <string>
 #include <signal.h>
+#include <cassert>
+#include <memory>
 
 #include <AutoConnect.h>
 #include <Beetle.h>
@@ -27,6 +25,8 @@
 #include <ipc/UnixDomainSocketServer.h>
 #include <Scanner.h>
 #include <tcp/TCPDeviceServer.h>
+#include <HCI.h>
+
 
 /* Global debug variables */
 bool debug;				// Debug.h
@@ -34,7 +34,7 @@ bool debug_scan;		// Scan.h
 bool debug_discovery;	// VirtualDevice.h
 bool debug_router;		// Router.h
 bool debug_socket;		// Debug.h
-bool debug_network;		// Controller.h
+bool debug_controller;	// Debug.h
 
 void setDebugAll() {
 	debug = true;
@@ -42,20 +42,7 @@ void setDebugAll() {
 	debug_router = true;
 	debug_socket = true;
 	debug_discovery = true;
-	debug_network = true;
-}
-
-void resetHciHelper() {
-	assert(system(NULL) != 0);
-	int hciDevice = hci_get_route(NULL);
-	assert(hciDevice >= 0);
-	std::string hciName = "hci" + std::to_string(hciDevice);
-	std::string command = "hciconfig " + hciName + " down";
-	pdebug("System: " + command);
-	assert(system(command.c_str()) == 0);
-	command = "hciconfig " + hciName + " up";
-	pdebug("System: " + command);
-	assert(system(command.c_str()) == 0);
+	debug_controller = true;
 }
 
 std::string getDefaultName() {
@@ -141,10 +128,10 @@ int main(int argc, char *argv[]) {
 					->implicit_value(true)
 					->default_value(false),
 					"Enable debugging for router")
-			("debug-network", po::value<bool>(&debug_network)
+			("debug-controller", po::value<bool>(&debug_controller)
 					->implicit_value(true)
 					->default_value(false),
-					"Enable debugging for control plane")
+					"Enable debugging for the control plane")
 			("debug-all", po::value<bool>(&debugAll)
 					->implicit_value(true)
 					->default_value(false),
@@ -157,14 +144,19 @@ int main(int argc, char *argv[]) {
 			return 0;
 		}
 		po::notify(vm);
-	} catch(po::error& e) {
+	} catch (po::error& e) {
 		std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
 		std::cerr << desc << std::endl;
 		return 1;
 	}
 
-	if (debugAll) setDebugAll();
-	if (resetHci) resetHciHelper();
+	if (debugAll) {
+		setDebugAll();
+	}
+
+	if (resetHci) {
+		HCI::resetHCI();
+	}
 
 	try {
 		signal(SIGPIPE, sigpipe_handler_ignore);

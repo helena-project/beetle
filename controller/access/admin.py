@@ -42,11 +42,11 @@ class SubjectAuthInline(admin.StackedInline):
 
 class PasscodeAuthInline(admin.StackedInline):
     model = PasscodeAuth
-    max_num = 1 
+    max_num = 1
 
 class NetworkAuthInline(admin.StackedInline):
     model = NetworkAuth
-    extra = 3
+    max_num = 1
 
 class RuleExceptionInline(admin.TabularInline):
     model = RuleException

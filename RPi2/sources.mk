@@ -25,6 +25,7 @@ C_DEPS :=
 SUBDIRS := \
 src \
 src/controller \
+src/controller/access \
 src/device \
 src/device/socket \
 src/device/socket/tcp \

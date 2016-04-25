@@ -22,43 +22,11 @@
 #include <controller/ControllerClient.h>
 #include <Debug.h>
 #include <UUID.h>
+#include <controller/access/Rule.h>
 
 class Handle;
 
 typedef int rule_t;
-
-class Rule {
-public:
-	uint8_t properties;
-	bool integrity;
-	bool encryption;
-	bool exclusive;
-	time_t lease;
-	void setProperties(std::string s) {
-		properties |= GATT_CHARAC_PROP_EXT;
-		for (char c : s) {
-			switch (c) {
-			case 'b':
-				properties |= GATT_CHARAC_PROP_BCAST;
-				break;
-			case 'r':
-				properties |= GATT_CHARAC_PROP_READ;
-				break;
-			case 'w':
-				properties |= GATT_CHARAC_PROP_WRITE_NR | GATT_CHARAC_PROP_WRITE | GATT_CHARAC_PROP_AUTH_SIGN_WRITE;
-				break;
-			case 'n':
-				properties |= GATT_CHARAC_PROP_NOTIFY;
-				break;
-			case 'i':
-				properties |= GATT_CHARAC_PROP_IND;
-				break;
-			default:
-				pwarn("received unsupported property");
-			}
-		}
-	}
-};
 
 typedef struct {
 	std::map<rule_t, Rule> rules;

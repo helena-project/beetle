@@ -28,7 +28,7 @@ Scanner::Scanner() : t() {
 	/*
 	 * Set these intervals high since we are filtering duplicates manually.
 	 */
- 	scanInterval = 0x0f00;	// TODO these should be configurable
+ 	scanInterval = 0x0100;	// TODO these should be configurable
  	scanWindow = 0x0010;
 }
 

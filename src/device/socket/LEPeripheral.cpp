@@ -8,11 +8,13 @@
 #include "device/socket/LEPeripheral.h"
 
 #include <bluetooth/l2cap.h>
-#include <sys/socket.h>
-#include <unistd.h>
 #include <cstring>
+#include <errno.h>
 #include <iostream>
 #include <string>
+#include <sys/socket.h>
+#include <sstream>
+#include <unistd.h>
 
 #include "ble/att.h"
 #include "Debug.h"
@@ -55,6 +57,17 @@ LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType
         close(sockfd);
         throw DeviceException("could not connect");
     }
+
+    unsigned int connInfoLen = sizeof(connInfo);
+    if (getsockopt(sockfd, SOL_L2CAP, L2CAP_CONNINFO, &connInfo, &connInfoLen) < 0) {
+    	close(sockfd);
+    	throw DeviceException("could not get l2cap conn info");
+    }
+
+    /*
+     * Set default connection interval.
+     */
+    beetle.hci.setConnectionInterval(connInfo.hci_handle, 40, 200, 10, 500, 5);
 }
 
 LEPeripheral::~LEPeripheral() {
@@ -86,7 +99,9 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 	beetle.writers.schedule(getId(), [this, bufCpy, len] {
 		if (write_all(sockfd, bufCpy, len) != len) {
 			if (debug_socket) {
-				pdebug("socket write failed");
+				std::stringstream ss;
+				ss << "socket write failed : " << strerror(errno);
+				pdebug(ss.str());
 			}
 			if (!isStopped()) {
 				stop();
@@ -105,20 +120,14 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 
 void LEPeripheral::readDaemon() {
 	if (debug) pdebug(getName() + " readDaemon started");
-	uint8_t buf[64];
+	uint8_t buf[32];
 	while (!isStopped()) {
 		int n = read(sockfd, buf, sizeof(buf));
 		if (debug_socket) {
 			pdebug(getName() + " read " + std::to_string(n) + " bytes");
 		}
 		if (n < 0) {
-			int error;
-			socklen_t len = sizeof(error);
-			if (int retval = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len) != 0) {
-				std::cerr << "error getting socket error code: " << strerror(retval) << std::endl;
-			} else {
-				std::cerr << "socket error: " << strerror(error) << std::endl;
-			}
+			std::cerr << "socket error: " << strerror(errno) << std::endl;
 			if (!isStopped()) {
 				stop();
 				beetle.removeDevice(getId());

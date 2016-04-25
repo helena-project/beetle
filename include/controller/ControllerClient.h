@@ -30,10 +30,10 @@ public:
 	ControllerClient(std::string hostAndPort, std::string cert, std::string caCerts);
 	virtual ~ControllerClient();
 	std::string getUrl(std::string resource);
-	boost::network::http::client *getClient();
+	std::shared_ptr<boost::network::http::client> getClient();
 private:
 	std::string hostAndPort;
-	boost::network::http::client *client;
+	std::shared_ptr<boost::network::http::client> client;
 };
 
 #endif /* CONTROLLER_CONTROLLERCLIENT_H_ */

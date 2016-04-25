@@ -16,6 +16,7 @@
 
 #include "sync/OrderedThreadPool.h"
 #include "sync/ThreadPool.h"
+#include "HCI.h"
 
 class AccessControl;
 class BeetleInternal;
@@ -91,6 +92,11 @@ public:
 	 * Router object to route ATT packets
 	 */
 	Router *router;
+
+	/*
+	 * HCI socket
+	 */
+	HCI hci;
 
 	/*
 	 * Set the access control mechanism.

@@ -2,9 +2,11 @@ from __future__ import unicode_literals
 
 from django.db import models
 from django.utils import timezone
+from django.core import serializers
+from polymorphic.models import PolymorphicModel
+
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
-from django.core import serializers
 
 from gatt.models import Service, Characteristic
 from beetle.models import Entity, Gateway
@@ -43,8 +45,12 @@ class Rule(models.Model):
 		related_name="rule_to_gateway",
 		help_text="Gateway connected to client.")
 
-	service = models.ForeignKey("gatt.Service")
-	characteristic = models.ForeignKey("gatt.Characteristic")
+	service = models.ForeignKey(
+		"gatt.Service", 
+		default="")
+	characteristic = models.ForeignKey(
+		"gatt.Characteristic",
+		default="")
 
 	# fields verified programatically
 	cron_expression = models.CharField(
@@ -154,28 +160,27 @@ class User(models.Model):
 	def __unicode__(self):
 		return self.first_name + " " + self.last_name
 
-class DynamicAuth(models.Model):
+class DynamicAuth(PolymorphicModel):
 	"""
 	Base class for dynamic rules.
 	"""
 	class Meta:
 		verbose_name_plural = "Dynamic Auth"
 
-	ON_CONNECT = "OnConnect"
-	ON_USE = "OnUse"
+	ON_MAP = 1
+	ON_ACCESS = 2
 	REQUIRE_WHEN_CHOICES = (
-		(ON_CONNECT, "OnConnect"),
-		(ON_USE, "OnUse"),
+		(ON_MAP, "map"),
+		(ON_ACCESS, "access"),
 	)
 
 	rule = models.ForeignKey("Rule")
 
-	session_length = models.DurationField(
-		default=timedelta(hours=1), 
-		help_text="Time before reauthenticaton. Hint: HH:mm:ss")
-	require_when = models.CharField(
-		max_length=100, 
-		default=ON_USE,
+	# session_length = models.DurationField(
+	# 	default=timedelta(hours=1), 
+	# 	help_text="Time before reauthenticaton. Hint: HH:mm:ss")
+	require_when = models.IntegerField(
+		default=ON_MAP,
 		choices=REQUIRE_WHEN_CHOICES,
 		help_text="When to trigger authentication.")
 
@@ -188,7 +193,7 @@ class AdminAuth(DynamicAuth):
 		verbose_name_plural = "Admin Auth"
 
 	message = models.CharField(
-		max_length=200, 
+		max_length=100, 
 		blank=True,
 		help_text="Any additional message to present to the admin.")
 
@@ -207,7 +212,7 @@ class SubjectAuth(DynamicAuth):
 		verbose_name_plural = "Subject Auth"
 
 	message = models.CharField(
-		max_length=200, 
+		max_length=100, 
 		blank=True,
 		help_text="Any additional message to present to the user.")
 
@@ -239,10 +244,10 @@ class NetworkAuth(DynamicAuth):
 
 	is_private = models.BooleanField(
 		default=False,
-		help_text="Allow access from any private IP, using the below as a mask.")
+		help_text="Allow access from any private IP.")
 	ip_address = models.CharField(
 		max_length=45, 
-		default="0.0.0.0",
+		default="127.0.0.1",
 		help_text="IP address to be matched exactly.")
 
 	def __unicode__(self):

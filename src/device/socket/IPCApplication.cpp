@@ -7,11 +7,12 @@
 
 #include "device/socket/IPCApplication.h"
 
-#include <asm-generic/socket.h>
-#include <unistd.h>
 #include <cstring>
+#include <errno.h>
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <unistd.h>
 
 #include "Debug.h"
 #include "sync/OrderedThreadPool.h"
@@ -47,7 +48,9 @@ bool IPCApplication::write(uint8_t *buf, int len) {
 	beetle.writers.schedule(getId(), [this, bufCpy, len] {
 		if (write_all(sockfd, bufCpy, len) != len) {
 			if (debug_socket) {
-				pdebug("socket write failed");
+				std::stringstream ss;
+				ss << "socket write failed : " << strerror(errno);
+				pdebug(ss.str());
 			}
 			if (!isStopped()) {
 				stop();
@@ -73,13 +76,7 @@ void IPCApplication::readDaemon() {
 			pdebug(getName() + " read " + std::to_string(n) + " bytes");
 		}
 		if (n < 0) {
-			int error;
-			socklen_t len = sizeof(error);
-			if (int retval = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len) != 0) {
-				std::cerr << "error getting socket error code: " << strerror(retval) << std::endl;
-			} else {
-				std::cerr << "socket error: " << strerror(error) << std::endl;
-			}
+			std::cerr << "socket error: " << strerror(errno) << std::endl;
 			if (!isStopped()) {
 				stop();
 				beetle.removeDevice(getId());

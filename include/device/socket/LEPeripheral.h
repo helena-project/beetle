@@ -9,6 +9,7 @@
 #define INCLUDE_DEVICE_SOCKET_LEPERIPHERAL_H_
 
 #include <bluetooth/bluetooth.h>
+#include <bluetooth/l2cap.h>
 #include <cstdint>
 #include <thread>
 
@@ -35,6 +36,8 @@ private:
 	AddrType bdaddrType;
 
 	int sockfd;
+
+	struct l2cap_conninfo connInfo;
 
 	std::thread readThread;
 	void readDaemon();

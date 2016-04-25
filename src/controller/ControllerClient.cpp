@@ -28,7 +28,7 @@ ControllerClient::ControllerClient(std::string hostAndPort) : hostAndPort(hostAn
 //	       .openssl_verify_path(defaultCertPath)
 	       .timeout(10);
 	// TODO use certs
-	client = new http::client(options);
+	client.reset(new http::client(options));
 }
 
 ControllerClient::ControllerClient(std::string hostAndPort, std::string cert,
@@ -44,11 +44,11 @@ ControllerClient::ControllerClient(std::string hostAndPort, std::string cert,
 //	       .openssl_certificate(cert)
 //	       .openssl_verify_path(caCerts)
 	       .timeout(10);
-	client = new http::client(options);
+	client.reset(new http::client(options));
 }
 
 ControllerClient::~ControllerClient() {
-	delete client;
+
 }
 
 std::string ControllerClient::getUrl(std::string resource) {
@@ -59,7 +59,7 @@ std::string ControllerClient::getUrl(std::string resource) {
 	return ss.str();
 }
 
-boost::network::http::client *ControllerClient::getClient() {
+std::shared_ptr<boost::network::http::client> ControllerClient::getClient() {
 	return client;
 }
 

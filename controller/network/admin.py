@@ -58,8 +58,8 @@ class CharInstanceInline(admin.TabularInline):
 
 @admin.register(ConnectedEntity)
 class ConnectedEntityAdmin(admin.ModelAdmin):
-	list_display = ("get_entity_name", "get_gateway_name", "get_entity_link", "last_seen")
-	search_fields = ("get_entity_name", "get_gateway_name")
+	list_display = ("get_entity_name", "get_gateway_name", "remote_id", "get_entity_link", "last_seen")
+	search_fields = ("get_entity_name", "get_gateway_name", "remote_id")
 	list_filter = ("gateway",)
 	ordering = ('last_seen',)
 	inlines = (ServiceInstanceInline, CharInstanceInline)

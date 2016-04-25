@@ -56,7 +56,7 @@ bool NetworkDiscovery::findGatewayByName(std::string name, std::string &ip, int 
 		port = j["port"];
 		return true;
 	} else {
-		if (debug_network) {
+		if (debug_controller) {
 			std::stringstream ss;
 			ss << "error : " << body(response);
 			pwarn(ss.str());
@@ -89,7 +89,7 @@ bool NetworkDiscovery::queryHelper(std::string resource, std::list<discovery_res
 		}
 		return true;
 	} else {
-		if (debug_network) {
+		if (debug_controller) {
 			std::stringstream ss;
 			ss << "network discovery failed : " << body(response);
 			pwarn(ss.str());

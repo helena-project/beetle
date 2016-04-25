@@ -8,6 +8,7 @@ CPP_SRCS += \
 ../src/Beetle.cpp \
 ../src/CLI.cpp \
 ../src/Device.cpp \
+../src/HCI.cpp \
 ../src/Handle.cpp \
 ../src/Router.cpp \
 ../src/Scanner.cpp \
@@ -19,6 +20,7 @@ OBJS += \
 ./src/Beetle.o \
 ./src/CLI.o \
 ./src/Device.o \
+./src/HCI.o \
 ./src/Handle.o \
 ./src/Router.o \
 ./src/Scanner.o \
@@ -30,6 +32,7 @@ CPP_DEPS += \
 ./src/Beetle.d \
 ./src/CLI.d \
 ./src/Device.d \
+./src/HCI.d \
 ./src/Handle.d \
 ./src/Router.d \
 ./src/Scanner.d \

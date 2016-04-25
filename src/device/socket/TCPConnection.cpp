@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <cassert>
 #include <cstring>
+#include <sstream>
+#include <errno.h>
 #include <iostream>
 
 #include "ble/att.h"
@@ -48,7 +50,9 @@ bool TCPConnection::write(uint8_t *buf, int len) {
 		uint8_t bufLen = len;
 		if (write_all(sockfd, &bufLen, 1) != 1 || write_all(sockfd, bufCpy, len) != len) {
 			if (debug_socket) {
-				pdebug("socket write failed");
+				std::stringstream ss;
+				ss << "socket write failed : " << strerror(errno);
+				pdebug(ss.str());
 			}
 			if (!isStopped()) {
 				stop();
@@ -73,13 +77,7 @@ void TCPConnection::readDaemon() {
 		// read length of ATT message
 		int bytesRead = read(sockfd, &len, sizeof(len));
 		if (bytesRead < 0) {
-			int error;
-			socklen_t errorLen = sizeof(error);
-			if (int retval = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &errorLen) != 0) {
-				std::cerr << "error getting socket error code: " << strerror(retval) << std::endl;
-			} else {
-				std::cerr << "socket error: " << strerror(error) << std::endl;
-			}
+			std::cerr << "socket error: " << strerror(errno) << std::endl;
 			stop();
 			beetle.removeDevice(getId());
 			break;
@@ -96,13 +94,7 @@ void TCPConnection::readDaemon() {
 			while (!isStopped() && bytesRead < len) {
 				int n = read(sockfd, buf + bytesRead, len - bytesRead);
 				if (n < 0) {
-					int error;
-					socklen_t errorLen = sizeof(error);
-					if (int retval = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &errorLen) != 0) {
-						std::cerr << "error getting socket error code: " << strerror(retval) << std::endl;
-					} else {
-						std::cerr << "socket error: " << strerror(error) << std::endl;
-					}
+					std::cerr << "socket error: " << strerror(errno) << std::endl;
 					if (!isStopped()) {
 						stop();
 						beetle.removeDevice(getId());

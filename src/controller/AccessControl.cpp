@@ -10,16 +10,20 @@
 #include <boost/network/protocol/http/client.hpp>
 #include <boost/network/protocol/http/request.hpp>
 #include <boost/thread/lock_types.hpp>
+#include <cassert>
 #include <exception>
-#include <iostream>
 #include <json/json.hpp>
+#include <list>
+#include <memory>
 #include <sstream>
 
 #include <ble/att.h>
-#include <Debug.h>
 #include <device/socket/tcp/TCPClientProxy.h>
 #include <device/socket/tcp/TCPServerProxy.h>
 #include <Device.h>
+#include <controller/access/DynamicAuth.h>
+#include <Handle.h>
+
 
 using json = nlohmann::json;
 
@@ -81,14 +85,19 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	resource << "access/canMap/" << fromGateway << "/" << std::fixed << fromId
 			<< "/" << toGateway << "/" << std::fixed << toId;
 
+	std::string url = client.getUrl(resource.str());
 	using namespace boost::network;
-	http::client::request request(client.getUrl(resource.str()));
+	http::client::request request(url);
 		request << header("User-Agent", "linux");
+
+	if (debug_controller) {
+		pdebug("get: " + url);
+	}
 	auto response = client.getClient()->get(request);
 
 	switch (response.status()) {
 	case 200: {
-		if (debug_network) {
+		if (debug_controller) {
 			pdebug("controller request ok");
 		}
 		try {
@@ -106,7 +115,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
 		pwarn("internal server error");
 		return false;
 	default:
-		if (debug_network) {
+		if (debug_controller) {
 			std::stringstream ss;
 			ss << "controller request failed " << response.status();
 			pdebug(ss.str());
@@ -123,7 +132,7 @@ RemoveDeviceHandler AccessControl::getRemoveDeviceHandler() {
 			 * Remove any cached rules regarding this device.
 			 */
 		  if (it->first.first == d || it->first.second == d) {
-		    cache.erase(it++);
+			  cache.erase(it++);
 		  } else {
 		    ++it;
 		  }
@@ -138,36 +147,85 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 	json j;
 	j << response;
 
+	if (debug_controller) {
+		pdebug(json(j).dump());
+	}
+
 	bool result = j["result"];
 
 	json access = j["access"];
 	json rules = access["rules"];
 	json services = access["services"];
 
+	bool satisfiable = false;
 	cached_mapping_info_t cacheEntry;
 	for (json::iterator it = rules.begin(); it != rules.end(); ++it) {
 
-		std::string key = it.key();
-		json value = it.value();
+		std::string ruleIdStr = it.key();
+		json ruleValue = it.value();
 
-		rule_t ruleId = std::stoi(key);
+		rule_t ruleId = std::stoi(ruleIdStr);
 
 		Rule rule;
-		rule.setProperties(value["prop"]);
-		rule.encryption = value["enc"];
-		rule.integrity = value["int"];
-		rule.exclusive = value["excl"];
-		std::string tStr = value["lease"];
+		rule.setProperties(ruleValue["prop"]);
+		rule.encryption = ruleValue["enc"];
+		rule.integrity = ruleValue["int"];
+		rule.exclusive = ruleValue["excl"];
+		std::string tStr = ruleValue["lease"];
 		rule.lease = static_cast<time_t>(std::stod(tStr));
+		json dAuthValues = ruleValue["dauth"];
+
+		for (json::iterator it2 = dAuthValues.begin(); it2 != dAuthValues.end(); ++it2) {
+			json dAuthValue = *it2;
+			std::string type = dAuthValue["type"];
+
+			DynamicAuth *auth = NULL;
+			if (type == "network") {
+				NetworkAuth *nAuth = new NetworkAuth();
+				int when = dAuthValue["when"];
+				nAuth->when = static_cast<DynamicAuth::When>(when);
+				nAuth->ip = dAuthValue["ip"];
+				nAuth->isPrivate = dAuthValue["priv"];
+				auth = nAuth;
+			} else {
+				if (debug_controller) {
+					pwarn("unsupported auth type");
+				}
+			}
+
+			if (auth != NULL) {
+				if (auth->when == DynamicAuth::ON_MAP) {
+					auth->evaluate(from, to);
+					if (auth->state == DynamicAuth::SATISFIED) {
+						// on connect rule satsfied
+						satisfiable = true;
+					}
+				} else {
+					// rule to be evaluated later
+					satisfiable = true;
+				}
+				rule.additionalAuth.push_back(std::shared_ptr<DynamicAuth>(auth));
+			} else {
+				// rule with no dynamic
+				satisfiable = true;
+			}
+		}
 
 		cacheEntry.rules[ruleId] = rule;
+	}
+
+	if (satisfiable == false) {
+		/*
+		 * All rules are on evalaulated onMap and none are satisfiable
+		 */
+		return false;
 	}
 
 	for (json::iterator it = services.begin(); it != services.end(); ++it) {
 		std::string tmp = it.key();
 		UUID serviceUuid = UUID(tmp);
 		json chars = it.value();
-		if (debug_network) {
+		if (debug_controller) {
 			pdebug("service: " + serviceUuid.str());
 		}
 
@@ -176,7 +234,7 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 			tmp = it2.key();
 			UUID charUuid = UUID(tmp);
 			json ruleIds = it2.value();
-			if (debug_network) {
+			if (debug_controller) {
 				pdebug("char: " + charUuid.str());
 			}
 
@@ -308,11 +366,26 @@ bool AccessControl::canAccessHandle(Device *client, Device *server, Handle *hand
 		}
 		for (rule_t rId : charMap->second) {
 			Rule rule = ruleMapping.rules[rId];
+			bool satisfiable = false;
 			if (isRead && (rule.properties & GATT_CHARAC_PROP_READ)) {
-				return true;
+				satisfiable = true;
 			}
 			if (isWrite && (rule.properties & GATT_CHARAC_PROP_WRITE)) {
-				return true;
+				satisfiable = true;
+			}
+			if (satisfiable) {
+				for (std::shared_ptr<DynamicAuth> &dAuth : rule.additionalAuth) {
+					if (dAuth->state == DynamicAuth::UNATTEMPTED && dAuth->when == DynamicAuth::ON_ACCESS) {
+						dAuth->evaluate(server, client);
+					}
+					if (dAuth->state != DynamicAuth::SATISFIED) {
+						satisfiable = false;
+						break;
+					}
+				}
+				if (satisfiable) {
+					return true;
+				}
 			}
 		}
 		if (isRead) {
@@ -363,7 +436,7 @@ bool AccessControl::getCharAccessProperties(Device *client, Device *server, Hand
 		for (rule_t ruleId : charMap->second) {
 			Rule rule = ruleMapping.rules[ruleId];
 			/*
-			 * TODO evaluate rule
+			 * Nothing to do here. This is part of discovery.
 			 */
 			properties |= rule.properties;
 		}
@@ -416,8 +489,27 @@ bool AccessControl::canReadType(Device *client, Device *server, UUID &attType) {
 	}
 
 	for (auto &service : ruleMapping.service_char_rules) {
-		if (service.second.find(attType) != service.second.end()) {
-			return true;
+		auto characteristic = service.second.find(attType);
+		if (characteristic != service.second.end()) {
+			for (rule_t ruleId : characteristic->second) {
+				Rule rule = ruleMapping.rules[ruleId];
+				if (rule.properties && GATT_CHARAC_PROP_READ == 0) {
+					continue;
+				}
+				bool satisfied = true;
+				for (std::shared_ptr<DynamicAuth> &dAuth : rule.additionalAuth) {
+					if (dAuth->state == DynamicAuth::UNATTEMPTED && dAuth->when == DynamicAuth::ON_ACCESS) {
+						dAuth->evaluate(server, client);
+					}
+					if (dAuth->state != DynamicAuth::SATISFIED) {
+						satisfied = false;
+						break;
+					}
+				}
+				if (satisfied) {
+					return true;
+				}
+			}
 		}
 	}
 	return false;

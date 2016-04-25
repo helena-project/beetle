@@ -15,6 +15,7 @@ RM := rm -rf
 -include src/device/socket/tcp/subdir.mk
 -include src/device/socket/subdir.mk
 -include src/device/subdir.mk
+-include src/controller/access/subdir.mk
 -include src/controller/subdir.mk
 -include src/subdir.mk
 -include subdir.mk

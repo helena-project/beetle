@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'access.apps.AccessConfig',
     'sslserver',
     'jet',
+    'polymorphic',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -151,11 +152,11 @@ JET_SIDE_MENU_CUSTOM_APPS = [
     ('access', [
         'User',
         'Rule',
-        'ExclusiveGroup',
+        # 'ExclusiveGroup',
     ]),
     ('network', [
         'ConnectedGateway',
         'ConnectedEntity',
-        'ExclusiveLease',
+        # 'ExclusiveLease',
     ]),
 ]

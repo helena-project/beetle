@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.http import require_GET
 
-from .models import Rule, RuleException
+from .models import Rule, RuleException, DynamicAuth, AdminAuth, SubjectAuth, PasscodeAuth, NetworkAuth
 
 from beetle.models import Entity, Gateway
 from gatt.models import Service, Characteristic
@@ -27,6 +27,15 @@ def _get_gateway_and_entity_helper(gateway, remote_id):
 		remote_id=remote_id)
 	entity = conn_entity.entity
 	return gateway, entity, conn_gateway, conn_entity
+
+def _get_gateway_helper(gateway):
+	"""
+	Same as above without an entity.
+	"""
+	gateway = Gateway.objects.get(name=gateway)
+	conn_gateway = ConnectedGateway.objects.get(gateway=gateway)
+	return gateway, conn_gateway
+
 
 @gzip_page
 @require_GET
@@ -141,6 +150,23 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 				if char.uuid not in services[service.uuid]:
 					services[service.uuid][char.uuid] = []
 				if char_rule.id not in rules:
+					dynamic_auth = []
+					for auth in DynamicAuth.objects.filter(rule=char_rule):
+						auth_obj = {
+							"when" : auth.require_when,
+						}
+						if isinstance(auth, NetworkAuth):
+							auth_obj["type"] = "network"
+							auth_obj["ip"] = auth.ip_address
+							auth_obj["priv"] = auth.is_private
+						elif isinstance(auth, AdminAuth):
+							auth_obj["type"] = "admin"
+						elif isinstance(auth, SubjectAuth):
+							auth_obj["type"] = "subject"
+						elif isinstance(auth, PasscodeAuth):
+							auth_obj["type"] = "passcode"
+						dynamic_auth.append(auth_obj)
+
 					# Put the rule in the result
 					rules[char_rule.id] = {
 						"prop" : char_rule.properties,
@@ -148,7 +174,10 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 						"int" : char_rule.integrity,
 						"enc" : char_rule.encryption,
 						"lease" : (timestamp + char_rule.lease_duration).strftime("%s"),
+						"dauth" : dynamic_auth,
 					}
+
+
 				services[service.uuid][char.uuid].append(char_rule.id)
 				
 	if not rules:

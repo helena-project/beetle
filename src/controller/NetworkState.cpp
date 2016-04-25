@@ -44,7 +44,7 @@ NetworkState::NetworkState(Beetle &beetle, ControllerClient &client, int tcpPort
 				<< body(response);
 		throw ControllerException(ss.str());
 	} else {
-		if (debug_network) {
+		if (debug_controller) {
 			std::stringstream ss;
 			ss << "beetle controller: " <<  body(response);
 			pdebug(ss.str());
@@ -63,7 +63,7 @@ NetworkState::~NetworkState() {
 						<< body(response);
 		pwarn(ss.str());
 	} else {
-		if (debug_network) {
+		if (debug_controller) {
 			std::stringstream ss;
 			ss << "beetle controller: " << body(response);
 			pdebug(ss.str());
@@ -75,7 +75,7 @@ AddDeviceHandler NetworkState::getAddDeviceHandler() {
 	return [this](device_t d) {
 		boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 		if (beetle.devices.find(d) == beetle.devices.end()) {
-			if (debug_network) {
+			if (debug_controller) {
 				pwarn("tried to add device that does not exist" + std::to_string(d));
 			}
 			return;
@@ -85,7 +85,7 @@ AddDeviceHandler NetworkState::getAddDeviceHandler() {
 		case Device::IPC_APPLICATION:
 		case Device::LE_PERIPHERAL:
 		case Device::TCP_CONNECTION:
-			if (debug_network) {
+			if (debug_controller) {
 				pdebug("informing controller of new connection");
 			}
 			try {
@@ -95,7 +95,7 @@ AddDeviceHandler NetworkState::getAddDeviceHandler() {
 			}
 			break;
 		default:
-			if (debug_network) {
+			if (debug_controller) {
 				pdebug("not reporting " + device->getTypeStr());
 			}
 			return;
@@ -145,7 +145,7 @@ static std::string serializeHandles(Device *d) {
 		arr.push_back(j);
 	}
 
-	if (debug_network) {
+	if (debug_controller) {
 		pdebug(json(arr).dump());
 	}
 	return json(arr).dump();
@@ -154,7 +154,7 @@ static std::string serializeHandles(Device *d) {
 void NetworkState::addDeviceHelper(Device *d) {
 	std::string url = client.getUrl(
 			"network/connect/" + beetle.name + "/" + d->getName() + "/" + std::to_string(d->getId()));
-	if (debug_network) {
+	if (debug_controller) {
 		pdebug("post: " + url);
 	}
 
@@ -170,7 +170,7 @@ void NetworkState::addDeviceHelper(Device *d) {
 	if (response.status() != 200) {
 		throw ControllerException("error informing server of connection " + std::to_string(d->getId()));
 	} else {
-		if (debug_network) {
+		if (debug_controller) {
 			std::stringstream ss;
 			ss << "controller responded for " << std::to_string(d->getId()) << ": " << body(response);
 			pdebug(ss.str());
@@ -180,7 +180,7 @@ void NetworkState::addDeviceHelper(Device *d) {
 
 void NetworkState::removeDeviceHelper(device_t d) {
 	std::string url = client.getUrl("network/connect/" + beetle.name + "/" + std::to_string(d));
-	if (debug_network) {
+	if (debug_controller) {
 		pdebug("delete: " + url);
 	}
 
@@ -192,7 +192,7 @@ void NetworkState::removeDeviceHelper(device_t d) {
 	if (response.status() != 200) {
 		throw ControllerException("error informing server of disconnection " + std::to_string(d));
 	} else {
-		if (debug_network) {
+		if (debug_controller) {
 			std::stringstream ss;
 			ss << "controller responded for " << std::to_string(d) << ": " << body(response);
 			pdebug(ss.str());
