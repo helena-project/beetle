@@ -3,18 +3,19 @@
 ##### Requirements
 - libboost-all-dev, libbluetooth-dev, libcppnetlib-dev, libasio-dev, openssl
 - Eclipse CDT (Mars)
+- For Ubuntu 15.04, libcppnetlib needs to be compiled and installed manually: https://github.com/cpp-netlib/cpp-netlib.git
 
 ##### To build and run
 1. clone and import the project into Eclipse
 2. build
 3. in a terminal, ``` cd Debug ```
-4. ``` sudo ./Beetle ```  
+4. ``` sudo ./Beetle --no-controller``` 
 
 ##### Python tcp client
 In ```client``` subdirectory. 
 
 ##### Python controller
-In ```controller``` subdirectory. 
+In ```controller``` subdirectory. Needed to run with the controller enabled.
 
 ##### TCP connection protocol
 Parameters are key value pairs sent at the beginning of the connection in ASCII text. 

@@ -6,6 +6,4 @@ Runs a HTTPS server in django.
 1. ```pip install -r requirements.txt```
 2. ```./setup.sh```
 3. ```sudo ./runserver.sh```
-
-##### Certificates
-A default certificate is in ```certificate``` for testing use. 
+4. Navigate to the web interface on port 443 and add your gateways and rules.
