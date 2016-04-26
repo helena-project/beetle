@@ -4,23 +4,20 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/device/BeetleInternal.cpp \
-../src/device/VirtualDevice.cpp 
+../src/controller/access/DynamicAuth.cpp 
 
 OBJS += \
-./src/device/BeetleInternal.o \
-./src/device/VirtualDevice.o 
+./src/controller/access/DynamicAuth.o 
 
 CPP_DEPS += \
-./src/device/BeetleInternal.d \
-./src/device/VirtualDevice.d 
+./src/controller/access/DynamicAuth.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
-src/device/%.o: ../src/device/%.cpp
+src/controller/access/%.o: ../src/controller/access/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -std=c++1y -D__cplusplus=201402L -I../lib/include -I../include -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
+	g++ -std=c++1y -D__cplusplus=201402L -I../lib/include -I../include -O1 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
