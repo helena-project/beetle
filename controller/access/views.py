@@ -45,6 +45,32 @@ def _get_gateway_helper(gateway):
 
 #-------------------------------------------------------------------------------
 
+def _rule_is_static_subset(rule1, rule2):
+	"""
+	Returns whether a rule1 is a static subset of rule2.
+	"""
+	def _lte(a, b):
+		return a == b or b.name == "*"
+
+	is_subset = True
+	is_subset &= _lte(rule1.from_entity, rule2.from_entity)
+	is_subset &= _lte(rule1.from_gateway, rule2.from_gateway)
+	is_subset &= _lte(rule1.to_entity, rule2.to_entity)
+	is_subset &= _lte(rule1.to_gateway, rule2.to_gateway)
+	is_subset &= _lte(rule1.service, rule2.service)
+	is_subset &= _lte(rule1.characteristic, rule2.characteristic)
+	
+	if not is_subset:
+		return is_subset
+
+	is_subset &= set(rule1.properties) == set(rule2.properties)
+	is_subset &= rule1.exclusive == rule2.exclusive
+	is_subset &= rule1.integrity == rule2.integrity
+	is_subset &= rule1.encryption == rule2.encryption
+	is_subset &= rule1.lease_duration == rule2.lease_duration
+
+	return is_subset
+
 @gzip_page
 @require_GET
 def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=None):

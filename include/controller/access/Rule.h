@@ -26,6 +26,7 @@ public:
 	bool encryption;
 	bool exclusive;
 	time_t lease;
+	int priority = 0;
 	std::list<std::shared_ptr<DynamicAuth>> additionalAuth;
 	void setProperties(std::string s) {
 		properties |= GATT_CHARAC_PROP_EXT;

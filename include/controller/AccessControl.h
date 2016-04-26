@@ -13,7 +13,7 @@
 #include <ctime>
 #include <iostream>
 #include <map>
-#include <set>
+#include <queue>
 #include <string>
 #include <utility>
 
@@ -26,7 +26,13 @@
 
 class Handle;
 
-typedef int rule_t;
+typedef uint32_t rule_t;
+
+/*
+ * Use upper 32 bits to encode priority, lower 32 bits to encode rule id.
+ */
+typedef uint64_t rule_info_t;
+typedef std::set<rule_info_t> rule_info_set;
 
 typedef struct {
 	std::map<rule_t, Rule> rules;
@@ -35,7 +41,7 @@ typedef struct {
 	 * Mapping of service uuids to maps of char uuids to sets of relevant rules.
 	 * Uuids are stored in uppercase.
 	 */
-	std::map<UUID, std::map<UUID, std::set<rule_t>>> service_char_rules;
+	std::map<UUID, std::map<UUID, rule_info_set>> service_char_rules;
 } cached_mapping_info_t;
 
 class AccessControl {

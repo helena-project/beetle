@@ -7,21 +7,11 @@ from .models import ConnectedGateway, ConnectedEntity, ServiceInstance, \
 
 class ConnectedEntityInline(admin.TabularInline):
 	model = ConnectedEntity
-	fields = ("get_entity_name", "get_gateway_name", "last_seen")
+	fields = ("entity", "gateway", "last_seen")
 	readonly_fields = ("entity", "gateway", "last_seen")
 
 	def has_add_permission(self, request):
 		return False
-
-	def get_entity_name(self, obj):
-		return obj.entity.name
-	get_entity_name.short_description = "entity"
-	get_entity_name.admin_order_field = "entity__name"
-
-	def get_gateway_name(self, obj):
-		return obj.gateway.gateway.name
-	get_gateway_name.short_description = "gateway"
-	get_gateway_name.admin_order_field = "gateway__gateway__name"
 
 @admin.register(ConnectedGateway)
 class ConnectedGatewayAdmin(admin.ModelAdmin):

@@ -173,6 +173,7 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 		rule.exclusive = ruleValue["excl"];
 		std::string tStr = ruleValue["lease"];
 		rule.lease = static_cast<time_t>(std::stod(tStr));
+		rule.priority = 0;
 		json dAuthValues = ruleValue["dauth"];
 
 		for (json::iterator it2 = dAuthValues.begin(); it2 != dAuthValues.end(); ++it2) {
@@ -184,8 +185,14 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 				std::string ip = dAuthValue["ip"];
 				bool isPrivate = dAuthValue["priv"];
 				auth = new NetworkAuth(ruleId, ip, isPrivate);
+				rule.priority += 0;
 			} else if (type == "passcode") {
 				auth = new PasscodeAuth(ruleId);
+				rule.priority += 1 << 1;
+			} else if (type == "subject") {
+				rule.priority += 1 << 2;
+			} else if (type == "admin") {
+				rule.priority += 1 << 3;
 			}
 
 			/*
@@ -248,10 +255,12 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 				pdebug("char: " + charUuid.str());
 			}
 
-			std::set<rule_t> charRulesSet;
+			rule_info_set charRulesSet;
 			for (json::iterator it3 = ruleIds.begin(); it3 != ruleIds.end(); ++it3) {
 				rule_t ruleId = *it3;
-				charRulesSet.insert(ruleId);
+				rule_info_t ruleInfo = ((uint64_t)cacheEntry.rules[ruleId].priority) << 32;
+				ruleInfo += ruleId;
+				charRulesSet.insert(ruleInfo);
 			}
 
 			cacheEntry.service_char_rules[serviceUuid][charUuid] = charRulesSet;
@@ -354,7 +363,8 @@ bool AccessControl::canAccessHandle(Device *client, Device *server, Handle *hand
 		if(!isWriteReq(op)) {
 			return true;
 		} else {
-			for (rule_t rId : charMap->second) {
+			for (rule_info_t rInfo : charMap->second) {
+				rule_t rId = rInfo & 0xFFFFFFFF;
 				Rule rule = ruleMapping.rules[rId];
 				if ((rule.properties & (GATT_CHARAC_PROP_IND | GATT_CHARAC_PROP_IND)) != 0) {
 					return true;
@@ -374,7 +384,8 @@ bool AccessControl::canAccessHandle(Device *client, Device *server, Handle *hand
 		if (!isRead && !isWrite) {
 			return true;
 		}
-		for (rule_t rId : charMap->second) {
+		for (rule_info_t rInfo : charMap->second) {
+			rule_t rId = rInfo & 0xFFFFFFFF;
 			Rule rule = ruleMapping.rules[rId];
 			bool satisfiable = false;
 			if (isRead && (rule.properties & GATT_CHARAC_PROP_READ)) {
@@ -443,8 +454,9 @@ bool AccessControl::getCharAccessProperties(Device *client, Device *server, Hand
 			return false;
 		}
 
-		for (rule_t ruleId : charMap->second) {
-			Rule rule = ruleMapping.rules[ruleId];
+		for (rule_info_t rInfo : charMap->second) {
+			rule_t rId = rInfo & 0xFFFFFFFF;
+			Rule rule = ruleMapping.rules[rId];
 			/*
 			 * Nothing to do here. This is part of discovery.
 			 */
@@ -501,8 +513,9 @@ bool AccessControl::canReadType(Device *client, Device *server, UUID &attType) {
 	for (auto &service : ruleMapping.service_char_rules) {
 		auto characteristic = service.second.find(attType);
 		if (characteristic != service.second.end()) {
-			for (rule_t ruleId : characteristic->second) {
-				Rule rule = ruleMapping.rules[ruleId];
+			for (rule_info_t rInfo : characteristic->second) {
+				rule_t rId = rInfo & 0xFFFFFFFF;
+				Rule rule = ruleMapping.rules[rId];
 				if (rule.properties && GATT_CHARAC_PROP_READ == 0) {
 					continue;
 				}
