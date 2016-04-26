@@ -195,10 +195,9 @@ class AdminAuthInstance(models.Model):
 	"""
 	Authenticated instance
 	"""
-
 	class Meta:
-		verbose_name = "Active passcode"
-		verbose_name_plural = "Active passcodes"
+		verbose_name = "AdminAuth state"
+		verbose_name_plural = "AdminAuth state"
 
 	rule = models.ForeignKey("Rule")
 	entity = models.ForeignKey("beetle.Entity")
@@ -265,10 +264,9 @@ class PasscodeAuthInstance(models.Model):
 	"""
 	Authenticated instance
 	"""
-
 	class Meta:
-		verbose_name = "Passcode auth aessisn"
-		verbose_name_plural = "Passcode auth seasions"
+		verbose_name = "PasscodeAuth state"
+		verbose_name_plural = "PasscodeAuth state"
 
 	rule = models.ForeignKey("Rule")
 	entity = models.ForeignKey("beetle.Entity")

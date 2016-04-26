@@ -5,8 +5,11 @@ import re
 
 # Register your models here.
 
-from .models import Rule, RuleException, AdminAuth, SubjectAuth, \
-	PasscodeAuth, PasscodeAuthInstance, NetworkAuth, ExclusiveGroup
+from .models import Rule, RuleException, \
+	AdminAuth, AdminAuthInstance, \
+	SubjectAuth, \
+	PasscodeAuth, PasscodeAuthInstance, \
+	NetworkAuth, ExclusiveGroup
 
 from beetle.models import Entity, Gateway
 from gatt.models import Service, Characteristic
@@ -32,6 +35,13 @@ def make_inactive(ruleadmin, request, queryset):
 	queryset.update(active=False)
 make_inactive.short_description = "Mark selected rules as inactive."
 
+@admin.register(AdminAuthInstance)
+class AdminAuthInstanceAdmin(admin.ModelAdmin):
+	list_display = ("rule", "entity", "timestamp", "expire") 
+	list_searchable = ("rule", "entity")
+	list_filter = ("rule", "entity")
+	readonly_fields = list_display
+
 class AdminAuthInline(admin.StackedInline):
     model = AdminAuth
     max_num = 1
@@ -45,6 +55,7 @@ class PasscodeAuthInstanceAdmin(admin.ModelAdmin):
 	list_display = ("rule", "entity", "timestamp", "expire") 
 	list_searchable = ("rule", "entity")
 	list_filter = ("rule", "entity")
+	readonly_fields = list_display
 
 class PasscodeAuthInline(admin.StackedInline):
     model = PasscodeAuth

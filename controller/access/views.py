@@ -225,9 +225,19 @@ def _is_rule_exempt_helper(rule, entity):
 
 @require_http_methods(["GET","POST"])
 def view_form_passcode(request, rule, entity):
-	rule = Rule.objects.get(name=rule)
-	entity = Entity.objects.get(name=entity)
-	passcode_auth = DynamicAuth.objects.instance_of(DynamicAuth).get(rule=rule)
+	context = RequestContext(request)
+
+	try:
+		rule = Rule.objects.get(name=rule)
+		entity = Entity.objects.get(name=entity)
+		passcode_auth = DynamicAuth.objects.instance_of(DynamicAuth).get(rule=rule)
+	except Exception, err:
+		context_dict = {
+			"title" : "An error occurred...",
+			"message" : str(err),
+		}
+		return render_to_response('access/empty_response.html', context_dict, context)
+
 	now = timezone.now()
 
 	context = RequestContext(request)
@@ -248,7 +258,7 @@ def view_form_passcode(request, rule, entity):
 				"b" : "denied",
 			}
 		})
-		return render_to_response('access/passcode_form_result.html', 
+		return render_to_response('access/passcode_form_submit.html', 
 			context_dict, context)
 
 	if request.method == "GET":
@@ -256,6 +266,9 @@ def view_form_passcode(request, rule, entity):
 		# Requesting the form #
 		#######################
 		if passcode_auth.code == "":
+			#############################
+			# No passcode, grant access #
+			#############################
 			auth_instance, _ = PasscodeAuthInstance.objects.get_or_create(
 				entity=entity, rule=rule)
 			auth_instance.timestamp = now
@@ -268,9 +281,12 @@ def view_form_passcode(request, rule, entity):
 					"b" : "approved",
 				}
 			})
-			return render_to_response('access/passcode_form_result.html', 
+			return render_to_response('access/passcode_form_submit.html', 
 				context_dict, context)
 		else:
+			############################
+			# Render the password form #
+			############################
 			return render_to_response('access/passcode_form.html', 
 				context_dict, context)
 	elif request.method == "POST":
@@ -279,10 +295,10 @@ def view_form_passcode(request, rule, entity):
 		#######################
 		code = request.POST["code"]
 		allowed = False
-		# try:
-		allowed = pwd_context.verify(code, passcode_auth.chash) 
-		# except:
-		# 	pass
+		try:
+			allowed = pwd_context.verify(code, passcode_auth.chash) 
+		except:
+			pass
 
 		if not allowed:
 			context_dict.update({
@@ -304,7 +320,7 @@ def view_form_passcode(request, rule, entity):
 					"b" : "approved",
 				}
 			})
-		return render_to_response('access/passcode_form_result.html', 
+		return render_to_response('access/passcode_form_submit.html', 
 			context_dict, context)
 	else:
 		return HttpResponse(status=403)

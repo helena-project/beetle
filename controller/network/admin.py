@@ -8,7 +8,7 @@ from .models import ConnectedGateway, ConnectedEntity, ServiceInstance, \
 class ConnectedEntityInline(admin.TabularInline):
 	model = ConnectedEntity
 	fields = ("get_entity_name", "get_gateway_name", "last_seen")
-	readonly_fields = fields
+	readonly_fields = ("entity", "gateway", "last_seen")
 
 	def has_add_permission(self, request):
 		return False
@@ -29,6 +29,7 @@ class ConnectedGatewayAdmin(admin.ModelAdmin):
 	search_fields = ("get_gateway_name", "ip_address", "get_entity_list")
 	ordering = ("last_seen",)
 	inlines = (ConnectedEntityInline,)
+	readonly_fields = ("last_seen", "ip_address", "port", "gateway")
 
 	def get_gateway_name(self, obj):
 		return obj.gateway.name
@@ -63,6 +64,7 @@ class ConnectedEntityAdmin(admin.ModelAdmin):
 	list_filter = ("gateway",)
 	ordering = ('last_seen',)
 	inlines = (ServiceInstanceInline, CharInstanceInline)
+	readonly_fields = ("entity", "gateway", "remote_id", "last_seen")
 
 	def get_entity_name(self, obj):
 		return obj.entity.name
