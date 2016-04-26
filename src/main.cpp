@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
 		std::unique_ptr<AccessControl> accessControl;
 		std::unique_ptr<NetworkDiscovery> networkDiscovery;
 		if (runController) {
-			controllerClient.reset(new ControllerClient(beetleControllerHostPort));
+			controllerClient.reset(new ControllerClient(btl, beetleControllerHostPort));
 
 			networkState.reset(new NetworkState(btl, *controllerClient, tcpPort));
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());

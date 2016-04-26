@@ -3,6 +3,28 @@ from __future__ import unicode_literals
 from django.db import models
 
 # Create your models here.
+
+class Contact(models.Model):
+	"""
+	A human user with contact information.
+	"""
+	class Meta:
+		unique_together = (("first_name", "last_name"),)
+
+	first_name = models.CharField(
+		max_length=100)
+	last_name = models.CharField(
+		max_length=100, 
+		blank=True)
+	phone_number = models.CharField(
+		max_length=100)
+	email_address = models.CharField(
+		max_length=100, 
+		blank=True)
+	
+	def __unicode__(self):
+		return self.first_name + " " + self.last_name
+
 class Entity(models.Model):
 	""" 
 	An application or peripheral device 
@@ -27,14 +49,10 @@ class Entity(models.Model):
 		default=False,
 		help_text="Has this entity been verified by a human?")
 
+	owner = models.ForeignKey("Contact", default=2)
+
 	def __unicode__(self):
-		if self.etype == self.DEVICE:
-			prefix = "(d) "
-		elif self.etype == self.APP: 
-			prefix = "(a) "
-		else:
-			prefix = ""
-		return prefix + self.name
+		return self.name
 
 class Gateway(models.Model):
 	""" 
@@ -55,5 +73,7 @@ class Gateway(models.Model):
 	os = models.CharField(max_length=20, choices=OS_CHOICES)
 	trusted = models.BooleanField(default=False)
 
+	owner = models.ForeignKey("Contact", default=1)
+
 	def __unicode__(self):
-		return "(gw) " + self.name
+		return self.name

@@ -120,7 +120,8 @@ void Scanner::scanDaemon() {
   		le_advertising_info *info = (le_advertising_info *)(meta->data + 1);
 
   		std::string addr = ba2str_cpp(info->bdaddr);
-  		AddrType addrType = (info->bdaddr_type == LE_PUBLIC_ADDRESS) ? PUBLIC : RANDOM;
+  		LEPeripheral::AddrType addrType = (info->bdaddr_type == LE_PUBLIC_ADDRESS) ?
+  				LEPeripheral::AddrType::PUBLIC : LEPeripheral::AddrType::RANDOM;
   		std::string name = "";
   		int i = 0;
   		while (i < info->length) {
@@ -136,7 +137,7 @@ void Scanner::scanDaemon() {
 
   		if (debug) {
   			std::stringstream ss;
-  			ss << "discovered " << addr << "\t" << ((addrType == PUBLIC) ? "public" : "random")
+  			ss << "discovered " << addr << "\t" << ((addrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random")
   					<< "\t" << name;
   			pdebug(ss.str());
   		}

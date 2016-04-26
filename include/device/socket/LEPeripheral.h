@@ -17,12 +17,12 @@
 #include "sync/Countdown.h"
 #include "device/VirtualDevice.h"
 
-enum AddrType {
-	PUBLIC, RANDOM,
-};
-
 class LEPeripheral: public VirtualDevice {
 public:
+	enum AddrType {
+		PUBLIC, RANDOM,
+	};
+
 	LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType);
 	virtual ~LEPeripheral();
 

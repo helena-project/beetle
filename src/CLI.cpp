@@ -184,7 +184,7 @@ void CLI::doScan(const std::vector<std::string>& cmd) {
 	for (auto &d : discovered) {
 		std::stringstream ss;
 		ss << aliases[d.first] << "\t" << d.first
-				<< "\t" << ((d.second.bdaddrType == PUBLIC) ? "public" : "random")
+				<< "\t" << ((d.second.bdaddrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random")
 				<< "\t" << d.second.name;
 		printMessage(ss.str());
 	}
@@ -196,7 +196,7 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 		printUsage("connect alias");
 		return;
 	}
-	AddrType addrType;
+	LEPeripheral::AddrType addrType;
 	bdaddr_t addr;
 
 	if (cmd.size() == 3) {
@@ -209,9 +209,9 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 		}
 
 		if (cmd[2] == "public") {
-			addrType = PUBLIC;
+			addrType = LEPeripheral::AddrType::PUBLIC;
 		} else if (cmd[2] == "random") {
-			addrType = RANDOM;
+			addrType = LEPeripheral::AddrType::RANDOM;
 		} else {
 			printUsageError("invalid address type");
 			return;
@@ -462,7 +462,8 @@ void CLI::doListDevices(const std::vector<std::string>& cmd) {
 			if (le) {
 				printMessage("  deviceAddr : " + ba2str_cpp(le->getBdaddr()));
 				std::stringstream ss;
-				ss << "  addrType : " << ((le->getAddrType() == PUBLIC) ? "public" : "random");
+				ss << "  addrType : " << ((le->getAddrType() == LEPeripheral::AddrType::PUBLIC) ?
+						"public" : "random");
 				printMessage(ss.str());
 			}
 

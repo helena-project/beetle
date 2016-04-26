@@ -18,7 +18,8 @@ inline bool fileExists(const std::string& name) {
     return (access(name.c_str(), F_OK) != -1);
 }
 
-ControllerClient::ControllerClient(std::string hostAndPort) : hostAndPort(hostAndPort) {
+ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort)
+: beetle(beetle), hostAndPort(hostAndPort) {
 	using namespace boost::network;
 	http::client::options options;
 	options.follow_redirects(false)
@@ -31,8 +32,8 @@ ControllerClient::ControllerClient(std::string hostAndPort) : hostAndPort(hostAn
 	client.reset(new http::client(options));
 }
 
-ControllerClient::ControllerClient(std::string hostAndPort, std::string cert,
-		std::string caCerts) : hostAndPort(hostAndPort) {
+ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, std::string cert,
+		std::string caCerts) : beetle(beetle), hostAndPort(hostAndPort) {
 	assert(fileExists(cert));
 	assert(fileExists(caCerts));
 
@@ -63,3 +64,6 @@ std::shared_ptr<boost::network::http::client> ControllerClient::getClient() {
 	return client;
 }
 
+std::string ControllerClient::getName() {
+	return beetle.name;
+}

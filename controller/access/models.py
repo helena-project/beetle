@@ -8,12 +8,14 @@ from polymorphic.models import PolymorphicModel
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 
+from passlib.apps import django_context as pwd_context
+
 from gatt.models import Service, Characteristic
-from beetle.models import Entity, Gateway
+from beetle.models import Entity, Gateway, Contact
 
 # Create your models here.
 
-def default_expire():
+def default_expire(self=None):
 	return timezone.now() + relativedelta(years=1)
 
 class Rule(models.Model):
@@ -26,6 +28,12 @@ class Rule(models.Model):
 		max_length=100, 
 		unique=True,
 		help_text="A human readable rule for searching and indexing.")
+
+	description = models.CharField(
+		max_length=500,
+		default="", 
+		blank=True,
+		help_text="Description of the rule.")
 
 	# fields queried using SQL
 	from_entity = models.ForeignKey(
@@ -81,11 +89,12 @@ class Rule(models.Model):
 		default=timezone.now)
 	expire = models.DateTimeField(
 		default=default_expire)
-	active = models.BooleanField(default=True, 
+	active = models.BooleanField(
+		default=True,
 		help_text="Rule will be considered?")
 
 	def __unicode__(self):
-		return "(rule) %d" % self.id
+		return self.name
 
 class RuleException(models.Model):
 	"""
@@ -115,7 +124,7 @@ class RuleException(models.Model):
 	characteristic = models.ForeignKey("gatt.Characteristic")
 
 	def __unicode__(self):
-		return "(except) %d" % self.id
+		return "(except) %s" % self.rule
 
 class ExclusiveGroup(models.Model):
 	"""
@@ -135,30 +144,7 @@ class ExclusiveGroup(models.Model):
 	def __unicode__(self):
 		return self.description
 
-class User(models.Model):
-	"""
-	A human user who can be used to answer auth requests.
-	"""
-	class Meta:
-		unique_together = (("first_name", "last_name"),)
-
-	first_name = models.CharField(
-		max_length=100)
-	last_name = models.CharField(
-		max_length=100, 
-		blank=True)
-	phone_number = models.CharField(
-		max_length=100)
-	email_address = models.CharField(
-		max_length=100, 
-		blank=True)
-	gateways = models.ManyToManyField(
-		"beetle.Gateway",
-		blank=True,
-		help_text="Gateways that this user may provide credentials from.")
-
-	def __unicode__(self):
-		return self.first_name + " " + self.last_name
+#-------------------------------------------------------------------------------
 
 class DynamicAuth(PolymorphicModel):
 	"""
@@ -176,13 +162,15 @@ class DynamicAuth(PolymorphicModel):
 
 	rule = models.ForeignKey("Rule")
 
-	# session_length = models.DurationField(
-	# 	default=timedelta(hours=1), 
-	# 	help_text="Time before reauthenticaton. Hint: HH:mm:ss")
+	session_length = models.DurationField(
+		default=timedelta(hours=1), 
+		help_text="Time before reauthenticaton. Hint: HH:mm:ss")
 	require_when = models.IntegerField(
 		default=ON_MAP,
 		choices=REQUIRE_WHEN_CHOICES,
 		help_text="When to trigger authentication.")
+
+#-------------------------------------------------------------------------------
 
 class AdminAuth(DynamicAuth):
 	"""
@@ -197,11 +185,30 @@ class AdminAuth(DynamicAuth):
 		blank=True,
 		help_text="Any additional message to present to the admin.")
 
-	admin = models.ForeignKey("User",	
+	admin = models.ForeignKey("beetle.Contact",	
 		help_text="User with authority over this rule")
 
 	def __unicode__(self):
 		return ""
+
+class AdminAuthInstance(models.Model):
+	"""
+	Authenticated instance
+	"""
+
+	class Meta:
+		verbose_name = "Active passcode"
+		verbose_name_plural = "Active passcodes"
+
+	rule = models.ForeignKey("Rule")
+	entity = models.ForeignKey("beetle.Entity")
+	timestamp = models.DateTimeField(auto_now_add=True)
+	expire = models.DateTimeField(default=timezone.now)
+
+	def __unicode__(self):
+		return "%d %s" % (self.rule.id, self.entity.name)
+
+#-------------------------------------------------------------------------------
 
 class SubjectAuth(DynamicAuth):
 	"""
@@ -219,6 +226,8 @@ class SubjectAuth(DynamicAuth):
 	def __unicode__(self):
 		return ""
 
+#-------------------------------------------------------------------------------
+
 class PasscodeAuth(DynamicAuth):
 	"""
 	Prompt user for a passcode.
@@ -227,11 +236,49 @@ class PasscodeAuth(DynamicAuth):
 		verbose_name = "Passcode"
 		verbose_name_plural = "Passcode Auth"
 
-	code = models.CharField(max_length=512)
-	salt = models.CharField(max_length=512)
+	code = models.CharField(
+		max_length=200,
+		blank=True,
+		help_text="Enter a passcode for this rule.")
+	chash = models.CharField(
+		max_length=200,
+		blank=True, 
+		editable=False,
+		help_text="Hashed passcode.")
+	hint = models.CharField(
+		max_length=500,
+		blank=True,
+		help_text="Passcode hint.")
+
+	def save(self, *args, **kwargs):
+		if self.code != "" and set(self.code) != set('*'):
+			self.chash = pwd_context.encrypt(self.code)
+			self.code = "*" * len(self.code)
+		elif self.code == "":
+			self.chash = ""
+		super(PasscodeAuth, self).save(*args, **kwargs)
 
 	def __unicode__(self):
 		return ""
+
+class PasscodeAuthInstance(models.Model):
+	"""
+	Authenticated instance
+	"""
+
+	class Meta:
+		verbose_name = "Passcode auth aessisn"
+		verbose_name_plural = "Passcode auth seasions"
+
+	rule = models.ForeignKey("Rule")
+	entity = models.ForeignKey("beetle.Entity")
+	timestamp = models.DateTimeField(auto_now_add=True)
+	expire = models.DateTimeField(default=timezone.now)
+
+	def __unicode__(self):
+		return "%d %s" % (self.rule.id, self.entity.name)
+
+#-------------------------------------------------------------------------------
 
 class NetworkAuth(DynamicAuth):
 	"""

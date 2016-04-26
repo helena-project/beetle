@@ -88,7 +88,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	std::string url = client.getUrl(resource.str());
 	using namespace boost::network;
 	http::client::request request(url);
-		request << header("User-Agent", "linux");
+	request << header("User-Agent", "linux");
 
 	if (debug_controller) {
 		pdebug("get: " + url);
@@ -181,21 +181,31 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 
 			DynamicAuth *auth = NULL;
 			if (type == "network") {
-				NetworkAuth *nAuth = new NetworkAuth();
+				std::string ip = dAuthValue["ip"];
+				bool isPrivate = dAuthValue["priv"];
+				auth = new NetworkAuth(ruleId, ip, isPrivate);
+			} else if (type == "passcode") {
+				auth = new PasscodeAuth(ruleId);
+			}
+
+			/*
+			 * Populate generic fields
+			 */
+			if (auth != NULL) {
 				int when = dAuthValue["when"];
-				nAuth->when = static_cast<DynamicAuth::When>(when);
-				nAuth->ip = dAuthValue["ip"];
-				nAuth->isPrivate = dAuthValue["priv"];
-				auth = nAuth;
+				auth->when = static_cast<DynamicAuth::When>(when);
 			} else {
 				if (debug_controller) {
 					pwarn("unsupported auth type");
 				}
 			}
 
+			/*
+			 * Evaluate if ON_MAP
+			 */
 			if (auth != NULL) {
 				if (auth->when == DynamicAuth::ON_MAP) {
-					auth->evaluate(from, to);
+					auth->evaluate(client, from, to);
 					if (auth->state == DynamicAuth::SATISFIED) {
 						// on connect rule satsfied
 						satisfiable = true;
@@ -376,7 +386,7 @@ bool AccessControl::canAccessHandle(Device *client, Device *server, Handle *hand
 			if (satisfiable) {
 				for (std::shared_ptr<DynamicAuth> &dAuth : rule.additionalAuth) {
 					if (dAuth->state == DynamicAuth::UNATTEMPTED && dAuth->when == DynamicAuth::ON_ACCESS) {
-						dAuth->evaluate(server, client);
+						dAuth->evaluate(this->client, server, client);
 					}
 					if (dAuth->state != DynamicAuth::SATISFIED) {
 						satisfiable = false;
@@ -499,7 +509,7 @@ bool AccessControl::canReadType(Device *client, Device *server, UUID &attType) {
 				bool satisfied = true;
 				for (std::shared_ptr<DynamicAuth> &dAuth : rule.additionalAuth) {
 					if (dAuth->state == DynamicAuth::UNATTEMPTED && dAuth->when == DynamicAuth::ON_ACCESS) {
-						dAuth->evaluate(server, client);
+						dAuth->evaluate(this->client, server, client);
 					}
 					if (dAuth->state != DynamicAuth::SATISFIED) {
 						satisfied = false;

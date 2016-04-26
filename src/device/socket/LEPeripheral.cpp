@@ -84,7 +84,7 @@ bdaddr_t LEPeripheral::getBdaddr() {
 	return bdaddr;
 };
 
-AddrType LEPeripheral::getAddrType() {
+LEPeripheral::AddrType LEPeripheral::getAddrType() {
 	return bdaddrType;
 };
 

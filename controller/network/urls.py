@@ -6,18 +6,22 @@ urlpatterns = [
 	url(r'^connect/(?P<gateway>[\w\-@\'\. ]+)$', 
 		views.connect_gateway,
 	 	name='connect a gateway'),
+
 	url(r'^connect/(?P<gateway>[\w\-@\'\. ]+)/(?P<entity>[\w\-@\'\. ]+)/(?P<remote_id>\d+)$', 
 		views.connect_entity, 
 		name='connect an entity'),
 	url(r'^connect/(?P<gateway>[\w\-@\'\. ]+)/(?P<remote_id>\d+)$', 
 		views.disconnect_entity, 
 		name='disconnect an entity'),
+
 	url(r'^find/gateway/(?P<gateway>[\w\-@\'\. ]+)$', 
 		views.find_gateway,  
 		name='find a gateway by name'),
+
 	url(r'^view/(?P<entity>[\w\-@\'\. ]+)$', 
 		views.view_entity, 
 		name='view the services and characteristics of an entity'),
+	
 	url(r'^discover/entities$', 
 		views.discover_entities, 
 		name='discover entities'),

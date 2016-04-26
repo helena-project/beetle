@@ -1,7 +1,8 @@
 django
 django-ipware
-cronex
 django-sslserver
-django-ssl-redirect
+django-sslify
 django-jet
+cronex
+passlib
 gunicorn

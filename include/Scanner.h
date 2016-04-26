@@ -37,7 +37,7 @@ class ScannerException : public std::exception {
 typedef struct {
 	std::string name;
 	bdaddr_t bdaddr;
-	AddrType bdaddrType;
+	LEPeripheral::AddrType bdaddrType;
 } peripheral_info_t;
 
 /*

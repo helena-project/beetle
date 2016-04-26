@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'polymorphic',
     'django.contrib.admin',
     'django.contrib.auth',
+    'passlib.ext.django',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -51,8 +52,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE_CLASSES = [
-    'ssl_redirect.middleware.SSLRedirectMiddleware',
-    'django.middleware.gzip.GZipMiddleware',
+    'sslify.middleware.SSLifyMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -66,10 +66,12 @@ MIDDLEWARE_CLASSES = [
 
 ROOT_URLCONF = 'main.urls'
 
+TEMPLATE_PATH = os.path.join(BASE_DIR, 'templates')
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [TEMPLATE_PATH],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -135,23 +137,27 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # SSL settings
-SSL_ALWAYS = True
+SSLIFY_DISABLE = True
 
 # Jet admin interface settings
 JET_SIDE_MENU_COMPACT = True
 JET_DEFAULT_THEME = 'light-violet'
 JET_SIDE_MENU_CUSTOM_APPS = [
+    # ('auth', [
+    #     '__all__'
+    # ]),
     ('beetle', [
-        'Gateway',
+        'Contact',
         'Entity',
+        'Gateway',
     ]),
     ('gatt', [
         'Service',
         'Characteristic',
     ]),
     ('access', [
-        'User',
         'Rule',
+        'PasscodeAuthInstance',
         # 'ExclusiveGroup',
     ]),
     ('network', [

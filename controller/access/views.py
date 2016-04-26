@@ -1,21 +1,28 @@
-from django.shortcuts import render
+from django.shortcuts import render, render_to_response
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from django.core import serializers
 from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_http_methods
+from django.template import RequestContext
 
-from .models import Rule, RuleException, DynamicAuth, AdminAuth, SubjectAuth, PasscodeAuth, NetworkAuth
+from passlib.apps import django_context as pwd_context
 
-from beetle.models import Entity, Gateway
+from .models import Rule, RuleException, DynamicAuth, AdminAuth, SubjectAuth, \
+	PasscodeAuth, NetworkAuth, PasscodeAuthInstance
+
+from beetle.models import Entity, Gateway, Contact
 from gatt.models import Service, Characteristic
-from network.models import ConnectedGateway, ConnectedEntity, ServiceInstance, CharInstance
+from network.models import ConnectedGateway, ConnectedEntity, ServiceInstance, \
+	CharInstance
 
 import dateutil.parser
 import cronex
+import json
+import base64
 
-# Create your views here.
+#-------------------------------------------------------------------------------
 
 def _get_gateway_and_entity_helper(gateway, remote_id):
 	"""
@@ -36,6 +43,7 @@ def _get_gateway_helper(gateway):
 	conn_gateway = ConnectedGateway.objects.get(gateway=gateway)
 	return gateway, conn_gateway
 
+#-------------------------------------------------------------------------------
 
 @gzip_page
 @require_GET
@@ -177,7 +185,6 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 						"dauth" : dynamic_auth,
 					}
 
-
 				services[service.uuid][char.uuid].append(char_rule.id)
 				
 	if not rules:
@@ -192,9 +199,9 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 
 @gzip_page
 @require_GET
-def view_rule_exceptions(request, rule_id):
+def view_rule_exceptions(request, rule):
 	response = []
-	for exception in RuleException.objects.filter(rule__id=int(rule_id)):
+	for exception in RuleException.objects.filter(rule__name=rule):
 		response.append({
 			"from_entity" : exception.from_entity.name,
 			"from_gateway" : exception.from_gateway.name,
@@ -204,3 +211,119 @@ def view_rule_exceptions(request, rule_id):
 			"characteristic" : exception.characteristic.name,
 		})
 	return JsonResponse(response, safe=False)
+
+#-------------------------------------------------------------------------------
+
+def _is_rule_exempt_helper(rule, entity):
+	return bool(RuleException.objects.filter(
+		Q(to_entity=entity) | Q(to_entity__name="*"),
+		service__name="*", 
+		characteristic__name="*",
+		rule=rule))
+
+#-------------------------------------------------------------------------------
+
+@require_http_methods(["GET","POST"])
+def view_form_passcode(request, rule, entity):
+	rule = Rule.objects.get(name=rule)
+	entity = Entity.objects.get(name=entity)
+	passcode_auth = DynamicAuth.objects.instance_of(DynamicAuth).get(rule=rule)
+	now = timezone.now()
+
+	context = RequestContext(request)
+	context_dict = {
+		"rule" : rule,
+		"entity" : entity,
+		"auth" : passcode_auth
+	}
+
+	if (rule.to_entity.name != "*" and rule.to_entity != entity) or \
+		_is_rule_exempt_helper(rule, entity):
+		#######################
+		# Rule does not apply #
+		#######################
+		context_dict.update({
+			"status" : {
+				"a" : "Does Not Apply",
+				"b" : "denied",
+			}
+		})
+		return render_to_response('access/passcode_form_result.html', 
+			context_dict, context)
+
+	if request.method == "GET":
+		#######################
+		# Requesting the form #
+		#######################
+		if passcode_auth.code == "":
+			auth_instance, _ = PasscodeAuthInstance.objects.get_or_create(
+				entity=entity, rule=rule)
+			auth_instance.timestamp = now
+			auth_instance.expire = now + passcode_auth.session_length
+			auth_instance.save()
+
+			context_dict.update({
+				"status" : {
+					"a" : "Success",
+					"b" : "approved",
+				}
+			})
+			return render_to_response('access/passcode_form_result.html', 
+				context_dict, context)
+		else:
+			return render_to_response('access/passcode_form.html', 
+				context_dict, context)
+	elif request.method == "POST":
+		#######################
+		# Submitting the form #
+		#######################
+		code = request.POST["code"]
+		allowed = False
+		# try:
+		allowed = pwd_context.verify(code, passcode_auth.chash) 
+		# except:
+		# 	pass
+
+		if not allowed:
+			context_dict.update({
+				"status" : {
+					"a" : "Failure",
+					"b" : "denied",
+				}
+			})
+		else:
+			auth_instance, _ = PasscodeAuthInstance.objects.get_or_create(
+				entity=entity, rule=rule)
+			auth_instance.timestamp = now
+			auth_instance.expire = now + passcode_auth.session_length
+			auth_instance.save()
+
+			context_dict.update({
+				"status" : {
+					"a" : "Success",
+					"b" : "approved",
+				}
+			})
+		return render_to_response('access/passcode_form_result.html', 
+			context_dict, context)
+	else:
+		return HttpResponse(status=403)
+
+@require_GET
+def query_passcode_liveness(request, rule_id, to_gateway, to_id):
+	rule_id = int(rule_id)
+	to_id = int(to_id)
+	_, to_entity, _, _ = _get_gateway_and_entity_helper(to_gateway, to_id)
+
+	try:
+		auth_instance = PasscodeAuthInstance.objects.get(
+			rule__id=rule_id, entity=to_entity)
+	except PasscodeAuthInstance.DoesNotExist:
+		return HttpResponse(status=403)	# denied
+
+	if timezone.now() > auth_instance.expire:
+		return HttpResponse(status=403)	# denied
+	else:
+		return HttpResponse(auth_instance.expire.strftime("%s"), status=200)
+
+#-------------------------------------------------------------------------------

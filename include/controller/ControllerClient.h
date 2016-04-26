@@ -14,6 +14,8 @@
 #include <exception>
 #include <string>
 
+#include <Beetle.h>
+
 class ControllerException : public std::exception {
   public:
 	ControllerException(std::string msg) : msg(msg) {};
@@ -26,12 +28,14 @@ class ControllerException : public std::exception {
 
 class ControllerClient {
 public:
-	ControllerClient(std::string hostAndPort);
-	ControllerClient(std::string hostAndPort, std::string cert, std::string caCerts);
+	ControllerClient(Beetle &beetle, std::string hostAndPort);
+	ControllerClient(Beetle &beetle, std::string hostAndPort, std::string cert, std::string caCerts);
 	virtual ~ControllerClient();
 	std::string getUrl(std::string resource);
 	std::shared_ptr<boost::network::http::client> getClient();
+	std::string getName();
 private:
+	Beetle &beetle;
 	std::string hostAndPort;
 	std::shared_ptr<boost::network::http::client> client;
 };
