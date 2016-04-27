@@ -1,27 +1,19 @@
 [
   {
     "model": "beetle.Contact",
-    "pk": 1,
-    "fields": {
-      "first_name": "root",
-      "phone_number": "000-000-0000"
-    }
-  },
-  {
-    "model": "beetle.Contact",
-    "pk": 2,
+    "pk": 0,
     "fields": {
       "first_name": "null",
       "phone_number": "000-000-0000"
     }
   },
   {
-    "model": "beetle.Entity",
+    "model": "beetle.Principal",
     "fields": {
       "name": "*",
-      "etype": "unknown",
+      "ptype": "unknown",
       "verified": true,
-      "owner": 1
+      "owner": 0
     }
   },
   {
@@ -29,8 +21,7 @@
     "fields": {
       "name": "*",
       "os": "unknown",
-      "trusted": false,
-      "owner": 1
+      "trusted": false
     }
   }
 ]

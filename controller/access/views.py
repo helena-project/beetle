@@ -12,9 +12,9 @@ from passlib.apps import django_context as pwd_context
 from .models import Rule, RuleException, DynamicAuth, AdminAuth, SubjectAuth, \
 	PasscodeAuth, NetworkAuth, PasscodeAuthInstance
 
-from beetle.models import Entity, Gateway, Contact
+from beetle.models import Principal, Gateway, Contact
 from gatt.models import Service, Characteristic
-from network.models import ConnectedGateway, ConnectedEntity, ServiceInstance, \
+from network.models import ConnectedGateway, ConnectedPrincipal, ServiceInstance, \
 	CharInstance
 
 import dateutil.parser
@@ -24,20 +24,20 @@ import base64
 
 #-------------------------------------------------------------------------------
 
-def _get_gateway_and_entity_helper(gateway, remote_id):
+def _get_gateway_and_principal_helper(gateway, remote_id):
 	"""
 	Gateway is a string, remote_id is an int.
 	"""
 	gateway = Gateway.objects.get(name=gateway)
 	conn_gateway = ConnectedGateway.objects.get(gateway=gateway)
-	conn_entity = ConnectedEntity.objects.get(gateway=conn_gateway, 
+	conn_principal = ConnectedPrincipal.objects.get(gateway=conn_gateway, 
 		remote_id=remote_id)
-	entity = conn_entity.entity
-	return gateway, entity, conn_gateway, conn_entity
+	principal = conn_principal.principal
+	return gateway, principal, conn_gateway, conn_principal
 
 def _get_gateway_helper(gateway):
 	"""
-	Same as above without an entity.
+	Same as above without an principal.
 	"""
 	gateway = Gateway.objects.get(name=gateway)
 	conn_gateway = ConnectedGateway.objects.get(gateway=gateway)
@@ -53,9 +53,9 @@ def _rule_is_static_subset(rule1, rule2):
 		return a == b or b.name == "*"
 
 	is_subset = True
-	is_subset &= _lte(rule1.from_entity, rule2.from_entity)
+	is_subset &= _lte(rule1.from_principal, rule2.from_principal)
 	is_subset &= _lte(rule1.from_gateway, rule2.from_gateway)
-	is_subset &= _lte(rule1.to_entity, rule2.to_entity)
+	is_subset &= _lte(rule1.to_principal, rule2.to_principal)
 	is_subset &= _lte(rule1.to_gateway, rule2.to_gateway)
 	is_subset &= _lte(rule1.service, rule2.service)
 	is_subset &= _lte(rule1.characteristic, rule2.characteristic)
@@ -84,17 +84,17 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 		timestamp = timezone.now()
 
 	from_id = int(from_id)
-	from_gateway, from_entity, conn_from_gateway, conn_from_entity = \
-		_get_gateway_and_entity_helper(from_gateway, from_id)
+	from_gateway, from_principal, conn_from_gateway, conn_from_principal = \
+		_get_gateway_and_principal_helper(from_gateway, from_id)
 
 	to_id = int(to_id)
-	to_gateway, to_entity, conn_to_gateway, conn_to_entity = \
-		_get_gateway_and_entity_helper(to_gateway, to_id)
+	to_gateway, to_principal, conn_to_gateway, conn_to_principal = \
+		_get_gateway_and_principal_helper(to_gateway, to_id)
 
 	applicable_rules = Rule.objects.filter(
-		Q(from_entity=from_entity) | Q(from_entity__name="*"),
+		Q(from_principal=from_principal) | Q(from_principal__name="*"),
 		Q(from_gateway=from_gateway) | Q(from_gateway__name="*"),
-		Q(to_entity=to_entity) | Q(to_entity__name="*"),
+		Q(to_principal=to_principal) | Q(to_principal__name="*"),
 		Q(to_gateway=to_gateway) | Q(to_gateway__name="*"),
 		active=True)
 
@@ -104,9 +104,9 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 			| applicable_rules.filter(expire__isnull=True)
 
 	applicable_exceptions = RuleException.objects.filter(
-		Q(from_entity=from_entity) | Q(from_entity__name="*"),
+		Q(from_principal=from_principal) | Q(from_principal__name="*"),
 		Q(from_gateway=from_gateway) | Q(from_gateway__name="*"),
-		Q(to_entity=to_entity) | Q(to_entity__name="*"),
+		Q(to_principal=to_principal) | Q(to_principal__name="*"),
 		Q(to_gateway=to_gateway) | Q(to_gateway__name="*"))
 
 	excluded_rule_ids = set()
@@ -136,8 +136,11 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 	# 				"prop" : "rwni",
 	# 				"int" : True,
 	# 				"enc" : False,
-	# 				"lease" : 1000,
+	# 				"lease" : 1000,		# Expiration time
 	#				"excl" : False,
+	#				"dauth" : [
+	#					... 			# Additional auth	
+	#				]
 	# 			}, 
 	# 		},
 	# 		"services": {
@@ -150,7 +153,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 
 	services = {}
 	rules = {}
-	for service_instance in ServiceInstance.objects.filter(entity=conn_from_entity):
+	for service_instance in ServiceInstance.objects.filter(principal=conn_from_principal):
 		service_rules = applicable_rules.filter(
 			Q(service=service_instance.service) | Q(service__name="*"))
 		service_rule_exceptions = applicable_exceptions.filter(
@@ -195,8 +198,14 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 							auth_obj["priv"] = auth.is_private
 						elif isinstance(auth, AdminAuth):
 							auth_obj["type"] = "admin"
+							if auth_obj.admin.contact.id == Contact.NULL:
+								# Rule is unsatisfiable: there is no admin
+								continue
 						elif isinstance(auth, SubjectAuth):
 							auth_obj["type"] = "subject"
+							if to_principal.owner.id == Contact.NULL:
+								# Rule is unsatisfiable: there is user to authenticate
+								continue
 						elif isinstance(auth, PasscodeAuth):
 							auth_obj["type"] = "passcode"
 						dynamic_auth.append(auth_obj)
@@ -229,9 +238,9 @@ def view_rule_exceptions(request, rule):
 	response = []
 	for exception in RuleException.objects.filter(rule__name=rule):
 		response.append({
-			"from_entity" : exception.from_entity.name,
+			"from_principal" : exception.from_principal.name,
 			"from_gateway" : exception.from_gateway.name,
-			"to_entity" : exception.to_entity.name,
+			"to_principal" : exception.to_principal.name,
 			"to_gateway" : exception.to_gateway.name,
 			"service" : exception.service.name,
 			"characteristic" : exception.characteristic.name,
@@ -240,9 +249,9 @@ def view_rule_exceptions(request, rule):
 
 #-------------------------------------------------------------------------------
 
-def _is_rule_exempt_helper(rule, entity):
+def _is_rule_exempt_helper(rule, principal):
 	return bool(RuleException.objects.filter(
-		Q(to_entity=entity) | Q(to_entity__name="*"),
+		Q(to_principal=principal) | Q(to_principal__name="*"),
 		service__name="*", 
 		characteristic__name="*",
 		rule=rule))
@@ -250,12 +259,12 @@ def _is_rule_exempt_helper(rule, entity):
 #-------------------------------------------------------------------------------
 
 @require_http_methods(["GET","POST"])
-def view_form_passcode(request, rule, entity):
+def view_form_passcode(request, rule, principal):
 	context = RequestContext(request)
 
 	try:
 		rule = Rule.objects.get(name=rule)
-		entity = Entity.objects.get(name=entity)
+		principal = Principal.objects.get(name=principal)
 		passcode_auth = DynamicAuth.objects.instance_of(DynamicAuth).get(rule=rule)
 	except Exception, err:
 		context_dict = {
@@ -269,12 +278,12 @@ def view_form_passcode(request, rule, entity):
 	context = RequestContext(request)
 	context_dict = {
 		"rule" : rule,
-		"entity" : entity,
+		"principal" : principal,
 		"auth" : passcode_auth
 	}
 
-	if (rule.to_entity.name != "*" and rule.to_entity != entity) or \
-		_is_rule_exempt_helper(rule, entity):
+	if (rule.to_principal.name != "*" and rule.to_principal != principal) or \
+		_is_rule_exempt_helper(rule, principal):
 		#######################
 		# Rule does not apply #
 		#######################
@@ -296,7 +305,7 @@ def view_form_passcode(request, rule, entity):
 			# No passcode, grant access #
 			#############################
 			auth_instance, _ = PasscodeAuthInstance.objects.get_or_create(
-				entity=entity, rule=rule)
+				principal=principal, rule=rule)
 			auth_instance.timestamp = now
 			auth_instance.expire = now + passcode_auth.session_length
 			auth_instance.save()
@@ -335,7 +344,7 @@ def view_form_passcode(request, rule, entity):
 			})
 		else:
 			auth_instance, _ = PasscodeAuthInstance.objects.get_or_create(
-				entity=entity, rule=rule)
+				principal=principal, rule=rule)
 			auth_instance.timestamp = now
 			auth_instance.expire = now + passcode_auth.session_length
 			auth_instance.save()
@@ -355,11 +364,11 @@ def view_form_passcode(request, rule, entity):
 def query_passcode_liveness(request, rule_id, to_gateway, to_id):
 	rule_id = int(rule_id)
 	to_id = int(to_id)
-	_, to_entity, _, _ = _get_gateway_and_entity_helper(to_gateway, to_id)
+	_, to_principal, _, _ = _get_gateway_and_principal_helper(to_gateway, to_id)
 
 	try:
 		auth_instance = PasscodeAuthInstance.objects.get(
-			rule__id=rule_id, entity=to_entity)
+			rule__id=rule_id, principal=to_principal)
 	except PasscodeAuthInstance.DoesNotExist:
 		return HttpResponse(status=403)	# denied
 

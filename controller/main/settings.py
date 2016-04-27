@@ -148,7 +148,7 @@ JET_SIDE_MENU_CUSTOM_APPS = [
     # ]),
     ('beetle', [
         'Contact',
-        'Entity',
+        'Principal',
         'Gateway',
     ]),
     ('gatt', [
@@ -163,7 +163,7 @@ JET_SIDE_MENU_CUSTOM_APPS = [
     ]),
     ('network', [
         'ConnectedGateway',
-        'ConnectedEntity',
+        'ConnectedPrincipal',
         # 'ExclusiveLease',
     ]),
 ]

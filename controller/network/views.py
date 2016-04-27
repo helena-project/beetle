@@ -10,8 +10,8 @@ from ipware.ip import get_ip
 
 import json
 
-from .models import ConnectedGateway, ConnectedEntity, CharInstance, ServiceInstance
-from beetle.models import Gateway, Entity
+from .models import ConnectedGateway, ConnectedPrincipal, CharInstance, ServiceInstance
+from beetle.models import Gateway, Principal
 from gatt.models import Service, Characteristic
 from gatt.shared import convert_uuid, check_uuid
 
@@ -46,7 +46,7 @@ def connect_gateway(request, gateway):
 			gateway=gateway)
 		if not created:
 			gateway_conn.last_seen = timezone.now()
-			ConnectedEntity.objects.filter(gateway=gateway_conn).delete()
+			ConnectedPrincipal.objects.filter(gateway=gateway_conn).delete()
 
 		gateway_conn.ip_address = ip_address
 		gateway_conn.port = port
@@ -64,13 +64,13 @@ def connect_gateway(request, gateway):
 	else:
 		return HttpResponse(status=405)
 
-def _load_services_and_characteristics(services, entity_conn):
+def _load_services_and_characteristics(services, principal_conn):
 	"""
 	Parse the services and characteristics
 	"""
 	# first clear any existing
-	ServiceInstance.objects.filter(entity=entity_conn).delete()
-	CharInstance.objects.filter(entity=entity_conn).delete()
+	ServiceInstance.objects.filter(principal=principal_conn).delete()
+	CharInstance.objects.filter(principal=principal_conn).delete()
 
 	# parse and setup service/char heirarchy
 	for service_obj in services:
@@ -85,7 +85,7 @@ def _load_services_and_characteristics(services, entity_conn):
 
 		service_ins, _ = ServiceInstance.objects.get_or_create(
 			service=service, 
-			entity=entity_conn)
+			principal=principal_conn)
 		service_ins.save()
 
 		for char_uuid in service_obj["chars"]:
@@ -99,42 +99,42 @@ def _load_services_and_characteristics(services, entity_conn):
 
 			char_ins, _ = CharInstance.objects.get_or_create(
 				char=char, 
-				entity=entity_conn, 
+				principal=principal_conn, 
 				service=service_ins)
 			char_ins.save()
 
 @transaction.atomic
 @csrf_exempt
 @require_POST
-def connect_entity(request, gateway, entity, remote_id):
+def connect_principal(request, gateway, principal, remote_id):
 	"""
 	Connect an application or peripheral
 	"""
-	if gateway == "*" or entity == "*":
+	if gateway == "*" or principal == "*":
 		return HttpResponse(status=400)
 	remote_id = int(remote_id)
 
 	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
-	entity, created = Entity.objects.get_or_create(name=entity)
+	principal, created = Principal.objects.get_or_create(name=principal)
 	if created:
 		pass
 
 	try:
-		entity_conn = ConnectedEntity.objects.get(entity=entity, gateway=gateway_conn)
-		entity_conn.remote_id = remote_id
-		entity_conn.last_seen = timezone.now()
-	except ConnectedEntity.DoesNotExist:
-		entity_conn = ConnectedEntity(
-			entity=entity, 
+		principal_conn = ConnectedPrincipal.objects.get(principal=principal, gateway=gateway_conn)
+		principal_conn.remote_id = remote_id
+		principal_conn.last_seen = timezone.now()
+	except ConnectedPrincipal.DoesNotExist:
+		principal_conn = ConnectedPrincipal(
+			principal=principal, 
 			gateway=gateway_conn, 
 			remote_id=remote_id)
 
 	gateway_conn.last_seen = timezone.now()
 	gateway_conn.save()
-	entity_conn.save()
+	principal_conn.save()
 
 	services = json.loads(request.body)
-	response = _load_services_and_characteristics(services, entity_conn)
+	response = _load_services_and_characteristics(services, principal_conn)
 	if response is None:
 		return HttpResponse("connected")
 	else:
@@ -143,7 +143,7 @@ def connect_entity(request, gateway, entity, remote_id):
 @transaction.atomic
 @csrf_exempt
 @require_http_methods(["DELETE"])
-def disconnect_entity(request, gateway, remote_id):
+def disconnect_principal(request, gateway, remote_id):
 	"""
 	Disconnect an application or peripheral
 	"""
@@ -151,27 +151,27 @@ def disconnect_entity(request, gateway, remote_id):
 		return HttpResponse(status=400)
 	remote_id = int(remote_id)
 
-	entity_conns = ConnectedEntity.objects.filter(
+	principal_conns = ConnectedPrincipal.objects.filter(
 		gateway__gateway__name=gateway, 
 		remote_id=remote_id)
-	entity_conns.delete()
+	principal_conns.delete()
 
 	return HttpResponse("disconnected")
 
 @require_GET
 @gzip_page
-def view_entity(request, entity, detailed=True):
+def view_principal(request, principal, detailed=True):
 	"""
-	Returns in json, the entity's service anc characteristic uuids
+	Returns in json, the principal's service anc characteristic uuids
 	"""
-	entity_conns = ConnectedEntity.objects.filter(entity__name=entity).order_by("-last_seen")
+	principal_conns = ConnectedPrincipal.objects.filter(principal__name=principal).order_by("-last_seen")
 	
-	if len(entity_conns) == 0:
+	if len(principal_conns) == 0:
 		return HttpResponse(status=202)
 	
 	response = []
-	entity_conn = entity_conns[0]
-	for service_ins in ServiceInstance.objects.filter(entity=entity_conn):
+	principal_conn = principal_conns[0]
+	for service_ins in ServiceInstance.objects.filter(principal=principal_conn):
 		if detailed:
 			response.append({
 				"name": service_ins.service.name,
@@ -190,21 +190,21 @@ def view_entity(request, entity, detailed=True):
 
 @require_GET
 @gzip_page
-def discover_entities(request):
+def discover_principals(request):
 	"""
-	Get list of connnected entities
+	Get list of connnected principals
 	"""
 	response = []
-	for conn_entity in ConnectedEntity.objects.all():
+	for conn_principal in ConnectedPrincipal.objects.all():
 		response.append({
-			"entity" : {
-				"name" : conn_entity.entity.name,
-				"id" : conn_entity.remote_id,
+			"principal" : {
+				"name" : conn_principal.principal.name,
+				"id" : conn_principal.remote_id,
 			},
 			"gateway" : {
-				"name" : conn_entity.gateway.gateway.name,
-				"ip" : conn_entity.gateway.ip_address,
-				"port" : conn_entity.gateway.port,
+				"name" : conn_principal.gateway.gateway.name,
+				"ip" : conn_principal.gateway.ip_address,
+				"port" : conn_principal.gateway.port,
 			},
 		});
 	return JsonResponse(response, safe=False)
@@ -227,14 +227,14 @@ def discover_with_uuid(request, uuid, is_service=True):
 	
 	for x in qs:
 		response.append({
-			"entity" : {
-				"name" : x.entity.entity.name,
-				"id" : x.entity.remote_id,
+			"principal" : {
+				"name" : x.principal.principal.name,
+				"id" : x.principal.remote_id,
 			},
 			"gateway" : {
-				"name" : x.entity.gateway.gateway.name,
-				"ip" : x.entity.gateway.ip_address,
-				"port" : x.entity.gateway.port,
+				"name" : x.principal.gateway.gateway.name,
+				"ip" : x.principal.gateway.ip_address,
+				"port" : x.principal.gateway.port,
 			},
 		});
 

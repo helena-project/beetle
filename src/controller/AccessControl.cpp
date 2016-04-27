@@ -176,55 +176,59 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 		rule.priority = 0;
 		json dAuthValues = ruleValue["dauth"];
 
-		for (json::iterator it2 = dAuthValues.begin(); it2 != dAuthValues.end(); ++it2) {
-			json dAuthValue = *it2;
-			std::string type = dAuthValue["type"];
+		if (dAuthValues.size() == 0) {
+			satisfiable = true;
+		} else {
+			for (json::iterator it2 = dAuthValues.begin(); it2 != dAuthValues.end(); ++it2) {
+				json dAuthValue = *it2;
+				std::string type = dAuthValue["type"];
 
-			DynamicAuth *auth = NULL;
-			if (type == "network") {
-				std::string ip = dAuthValue["ip"];
-				bool isPrivate = dAuthValue["priv"];
-				auth = new NetworkAuth(ruleId, ip, isPrivate);
-				rule.priority += 0;
-			} else if (type == "passcode") {
-				auth = new PasscodeAuth(ruleId);
-				rule.priority += 1 << 1;
-			} else if (type == "subject") {
-				rule.priority += 1 << 2;
-			} else if (type == "admin") {
-				rule.priority += 1 << 3;
-			}
-
-			/*
-			 * Populate generic fields
-			 */
-			if (auth != NULL) {
-				int when = dAuthValue["when"];
-				auth->when = static_cast<DynamicAuth::When>(when);
-			} else {
-				if (debug_controller) {
-					pwarn("unsupported auth type");
+				DynamicAuth *auth = NULL;
+				if (type == "network") {
+					std::string ip = dAuthValue["ip"];
+					bool isPrivate = dAuthValue["priv"];
+					auth = new NetworkAuth(ruleId, ip, isPrivate);
+					rule.priority += 0;
+				} else if (type == "passcode") {
+					auth = new PasscodeAuth(ruleId);
+					rule.priority += 1 << 1;
+				} else if (type == "subject") {
+					rule.priority += 1 << 2;
+				} else if (type == "admin") {
+					rule.priority += 1 << 3;
 				}
-			}
 
-			/*
-			 * Evaluate if ON_MAP
-			 */
-			if (auth != NULL) {
-				if (auth->when == DynamicAuth::ON_MAP) {
-					auth->evaluate(client, from, to);
-					if (auth->state == DynamicAuth::SATISFIED) {
-						// on connect rule satsfied
+				/*
+				 * Populate generic fields
+				 */
+				if (auth != NULL) {
+					int when = dAuthValue["when"];
+					auth->when = static_cast<DynamicAuth::When>(when);
+				} else {
+					if (debug_controller) {
+						pwarn("unsupported auth type");
+					}
+				}
+
+				/*
+				 * Evaluate if ON_MAP
+				 */
+				if (auth != NULL) {
+					if (auth->when == DynamicAuth::ON_MAP) {
+						auth->evaluate(client, from, to);
+						if (auth->state == DynamicAuth::SATISFIED) {
+							// on connect rule satsfied
+							satisfiable = true;
+						}
+					} else {
+						// rule to be evaluated later
 						satisfiable = true;
 					}
+					rule.additionalAuth.push_back(std::shared_ptr<DynamicAuth>(auth));
 				} else {
-					// rule to be evaluated later
+					// rule with no dynamic
 					satisfiable = true;
 				}
-				rule.additionalAuth.push_back(std::shared_ptr<DynamicAuth>(auth));
-			} else {
-				// rule with no dynamic
-				satisfiable = true;
 			}
 		}
 
@@ -233,8 +237,11 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 
 	if (satisfiable == false) {
 		/*
-		 * All rules are on evalaulated onMap and none are satisfiable
+		 * All rules are on evalualated onMap and none are satisfiable
 		 */
+		if (debug_controller) {
+			pdebug("no rules are satisfiable");
+		}
 		return false;
 	}
 
@@ -259,7 +266,7 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 			for (json::iterator it3 = ruleIds.begin(); it3 != ruleIds.end(); ++it3) {
 				rule_t ruleId = *it3;
 				rule_info_t ruleInfo = ((uint64_t)cacheEntry.rules[ruleId].priority) << 32;
-				ruleInfo += ruleId;
+				ruleInfo |= ruleId;
 				charRulesSet.insert(ruleInfo);
 			}
 

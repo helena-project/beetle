@@ -3,26 +3,26 @@ from django import forms
 
 import re
 
-from .models import Entity, Gateway, Contact
+from .models import Principal, Gateway, Contact
 
 # Register your models here.
 
-class EntityAdminForm(forms.ModelForm):
+class PrincipalAdminForm(forms.ModelForm):
 	def __init__(self, *args, **kwargs):
-		super(EntityAdminForm, self).__init__(*args, **kwargs)
+		super(PrincipalAdminForm, self).__init__(*args, **kwargs)
 		self.initial["verified"] = True 
 
-@admin.register(Entity)
-class EntityAdmin(admin.ModelAdmin):
-	list_display = ("name", "owner", "etype", "verified")
+@admin.register(Principal)
+class PrincipalAdmin(admin.ModelAdmin):
+	list_display = ("name", "owner", "ptype", "verified")
 	search_fields = ("name", "owner",)
 	list_editable = ("verified",)
-	list_filter = ("etype", "verified")
+	list_filter = ("ptype", "verified")
 
 @admin.register(Gateway)
 class GatewayAdmin(admin.ModelAdmin):
-	list_display = ("name", "owner", "os", "trusted")
-	search_fields = ("name", "owner", "trusted")
+	list_display = ("name", "os", "trusted")
+	search_fields = ("name", "trusted")
 	list_filter = ("os", "trusted")
 
 class ContactAdminForm(forms.ModelForm):

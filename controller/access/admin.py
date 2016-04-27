@@ -11,7 +11,7 @@ from .models import Rule, RuleException, \
 	PasscodeAuth, PasscodeAuthInstance, \
 	NetworkAuth, ExclusiveGroup
 
-from beetle.models import Entity, Gateway
+from beetle.models import Principal, Gateway
 from gatt.models import Service, Characteristic
 
 class RuleAdminForm(forms.ModelForm):
@@ -37,9 +37,9 @@ make_inactive.short_description = "Mark selected rules as inactive."
 
 @admin.register(AdminAuthInstance)
 class AdminAuthInstanceAdmin(admin.ModelAdmin):
-	list_display = ("rule", "entity", "timestamp", "expire") 
-	list_searchable = ("rule", "entity")
-	list_filter = ("rule", "entity")
+	list_display = ("rule", "principal", "timestamp", "expire") 
+	list_searchable = ("rule", "principal")
+	list_filter = ("rule", "principal")
 	readonly_fields = list_display
 
 class AdminAuthInline(admin.StackedInline):
@@ -52,9 +52,9 @@ class SubjectAuthInline(admin.StackedInline):
 
 @admin.register(PasscodeAuthInstance)
 class PasscodeAuthInstanceAdmin(admin.ModelAdmin):
-	list_display = ("rule", "entity", "timestamp", "expire") 
-	list_searchable = ("rule", "entity")
-	list_filter = ("rule", "entity")
+	list_display = ("rule", "principal", "timestamp", "expire") 
+	list_searchable = ("rule", "principal")
+	list_filter = ("rule", "principal")
 	readonly_fields = list_display
 
 class PasscodeAuthInline(admin.StackedInline):
@@ -75,12 +75,12 @@ class RuleAdmin(admin.ModelAdmin):
 	list_display = (
 		"name",
 		"description",
-		"from_entity", 
-		"from_gateway", 
-		"to_entity", 
-		"to_gateway",
 		"service",
 		"characteristic",
+		"from_principal", 
+		"from_gateway", 
+		"to_principal", 
+		"to_gateway",
 		"get_exceptions_link",
 		"cron_expression",
 		"properties",
@@ -93,9 +93,9 @@ class RuleAdmin(admin.ModelAdmin):
 		"active")
 	actions = [make_active, make_inactive]
 	search_fields = (
-		"to_entity", 
+		"to_principal", 
 		"to_gateway", 
-		"from_entity", 
+		"from_principal", 
 		"from_gateway",
 		"service",
 		"characteristic")

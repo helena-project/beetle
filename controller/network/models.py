@@ -4,7 +4,7 @@ from django.db import models
 
 from datetime import timedelta
 
-from beetle.models import Entity, Gateway
+from beetle.models import Principal, Gateway
 from gatt.models import Service, Characteristic
 from access.models import ExclusiveGroup
 
@@ -29,29 +29,29 @@ class ConnectedGateway(models.Model):
 	def __unicode__(self):
 		return self.gateway.name + "@" + self.ip_address
 
-class ConnectedEntity(models.Model):
+class ConnectedPrincipal(models.Model):
 	"""
 	An app or peripheral
 	"""
 	class Meta:
-		verbose_name_plural = "Connected entities"
+		verbose_name_plural = "Connected principals"
 
 	CONNECTION_TIMEOUT = timedelta(minutes=15)
 
-	entity = models.ForeignKey("beetle.Entity")
+	principal = models.ForeignKey("beetle.Principal")
 	gateway = models.ForeignKey("ConnectedGateway")
 	remote_id = models.IntegerField(
 		help_text="id of the device on the gateway")
 	last_seen = models.DateTimeField(auto_now_add=True)
 
 	def __unicode__(self):
-		return self.entity.name + "@" + self.gateway.gateway.name
+		return self.principal.name + "@" + self.gateway.gateway.name
 
 class ServiceInstance(models.Model):
 	"""
 	An instance of a service
 	"""
-	entity = models.ForeignKey("ConnectedEntity")
+	principal = models.ForeignKey("ConnectedPrincipal")
 	service = models.ForeignKey("gatt.Service") 
 
 	def __unicode__(self):
@@ -61,7 +61,7 @@ class CharInstance(models.Model):
 	"""
 	An instance of a characterisic
 	"""
-	entity = models.ForeignKey("ConnectedEntity")
+	principal = models.ForeignKey("ConnectedPrincipal")
 	service = models.ForeignKey("ServiceInstance")
 	char = models.ForeignKey("gatt.Characteristic")
 

@@ -11,6 +11,8 @@ class Contact(models.Model):
 	class Meta:
 		unique_together = (("first_name", "last_name"),)
 
+	NULL = 0
+
 	first_name = models.CharField(
 		max_length=100)
 	last_name = models.CharField(
@@ -25,13 +27,13 @@ class Contact(models.Model):
 	def __unicode__(self):
 		return self.first_name + " " + self.last_name
 
-class Entity(models.Model):
+class Principal(models.Model):
 	""" 
-	An application or peripheral device 
+	An application or peripheral device, using GATT
 	"""
 	
 	class Meta:
-		verbose_name_plural = 'Entities'
+		verbose_name_plural = 'Principals'
 
 	# allowed types
 	APP = "app"
@@ -44,19 +46,19 @@ class Entity(models.Model):
 	)
 
 	name = models.CharField(max_length=100, primary_key=True)
-	etype = models.CharField(max_length=20, choices=TYPE_CHOICES)
+	ptype = models.CharField(max_length=20, choices=TYPE_CHOICES)
 	verified = models.BooleanField(
 		default=False,
-		help_text="Has this entity been verified by a human?")
+		help_text="Has this principal been verified by a human?")
 
-	owner = models.ForeignKey("Contact", default=2)
+	owner = models.ForeignKey("Contact", default=Contact.NULL)
 
 	def __unicode__(self):
 		return self.name
 
 class Gateway(models.Model):
 	""" 
-	A gateway 
+	A gateway in the network, serving as a GATT translator
 	"""
 
 	# allowed types
@@ -72,8 +74,6 @@ class Gateway(models.Model):
 	name = models.CharField(max_length=20, primary_key=True)
 	os = models.CharField(max_length=20, choices=OS_CHOICES)
 	trusted = models.BooleanField(default=False)
-
-	owner = models.ForeignKey("Contact", default=1)
 
 	def __unicode__(self):
 		return self.name

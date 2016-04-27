@@ -3,11 +3,11 @@ from django.conf.urls import include, url
 from . import views
 
 urlpatterns = [
-	url(r'^entity?/$', views.list_entities, name='list entities'),
+	url(r'^principal?/$', views.list_principals, name='list principals'),
 	url(r'^gateway?/$', views.list_gateways, name='list gateways'),
-	url(r'^entity/(?P<entity>[\w_\-\']+)$',
-	 	views.find_entity, 
-		name='find entity by name'),
+	url(r'^principal/(?P<principal>[\w_\-\']+)$',
+	 	views.find_principal, 
+		name='find principal by name'),
 	url(r'^gateway/(?P<gateway>[\w_\-\']+)$', 
 		views.find_gateway,
 	 	name='find gateway by name'),

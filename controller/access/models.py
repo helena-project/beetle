@@ -11,7 +11,7 @@ from dateutil.relativedelta import relativedelta
 from passlib.apps import django_context as pwd_context
 
 from gatt.models import Service, Characteristic
-from beetle.models import Entity, Gateway, Contact
+from beetle.models import Principal, Gateway, Contact
 
 # Create your models here.
 
@@ -36,16 +36,16 @@ class Rule(models.Model):
 		help_text="Description of the rule.")
 
 	# fields queried using SQL
-	from_entity = models.ForeignKey(
-		"beetle.Entity", 
+	from_principal = models.ForeignKey(
+		"beetle.Principal", 
 		related_name="rule_from",
 		help_text="Application or peripheral acting as server.")
 	from_gateway = models.ForeignKey(
 		"beetle.Gateway", 
 		related_name="rule_from_gateway",
 		help_text="Gateway connected to server.")
-	to_entity = models.ForeignKey(
-		"beetle.Entity", 
+	to_principal = models.ForeignKey(
+		"beetle.Principal", 
 		related_name="rule_to",
 		help_text="Application or peripheral acting as client.")
 	to_gateway = models.ForeignKey(
@@ -103,25 +103,26 @@ class RuleException(models.Model):
 	rule = models.ForeignKey(
 		"Rule",
 		help_text="Rule to invert")
-	from_entity = models.ForeignKey(
-		"beetle.Entity", 
+
+	service = models.ForeignKey("gatt.Service")
+	characteristic = models.ForeignKey("gatt.Characteristic")
+
+	from_principal = models.ForeignKey(
+		"beetle.Principal", 
 		related_name="except_from",
 		help_text="Application or peripheral acting as server.")
 	from_gateway = models.ForeignKey(
 		"beetle.Gateway", 
 		related_name="except_from_gateway",
 		help_text="Gateway connected to server.")
-	to_entity = models.ForeignKey(
-		"beetle.Entity", 
+	to_principal = models.ForeignKey(
+		"beetle.Principal", 
 		related_name="except_to",
 		help_text="Application or peripheral acting as client.")
 	to_gateway = models.ForeignKey(
 		"beetle.Gateway", 
 		related_name="except_to_gateway",
 		help_text="Gateway connected to client.")
-
-	service = models.ForeignKey("gatt.Service")
-	characteristic = models.ForeignKey("gatt.Characteristic")
 
 	def __unicode__(self):
 		return "(except) %s" % self.rule
@@ -200,12 +201,12 @@ class AdminAuthInstance(models.Model):
 		verbose_name_plural = "AdminAuth state"
 
 	rule = models.ForeignKey("Rule")
-	entity = models.ForeignKey("beetle.Entity")
+	principal = models.ForeignKey("beetle.Principal")
 	timestamp = models.DateTimeField(auto_now_add=True)
 	expire = models.DateTimeField(default=timezone.now)
 
 	def __unicode__(self):
-		return "%d %s" % (self.rule.id, self.entity.name)
+		return "%d %s" % (self.rule.id, self.principal.name)
 
 #-------------------------------------------------------------------------------
 
@@ -269,12 +270,12 @@ class PasscodeAuthInstance(models.Model):
 		verbose_name_plural = "PasscodeAuth state"
 
 	rule = models.ForeignKey("Rule")
-	entity = models.ForeignKey("beetle.Entity")
+	principal = models.ForeignKey("beetle.Principal")
 	timestamp = models.DateTimeField(auto_now_add=True)
 	expire = models.DateTimeField(default=timezone.now)
 
 	def __unicode__(self):
-		return "%d %s" % (self.rule.id, self.entity.name)
+		return "%d %s" % (self.rule.id, self.principal.name)
 
 #-------------------------------------------------------------------------------
 
