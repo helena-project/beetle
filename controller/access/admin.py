@@ -12,6 +12,8 @@ from beetle.models import Principal, Gateway
 from gatt.models import Service, Characteristic
 
 class RuleAdminForm(forms.ModelForm):
+	description = forms.CharField(widget=forms.Textarea)
+
 	def clean_cron_expression(self):
 		try:
 			_ = cronex.CronExpression(str(self.cleaned_data["cron_expression"]))

@@ -22,7 +22,6 @@ class ServiceAdmin(admin.ModelAdmin):
 	form = ServiceAdminForm
 	list_display = ("uuid", "name", "stype", "verified")
 	list_filter = ("verified",)
-	list_editable = ("verified",)
 	search_fields = ("uuid", "name", "stype")
 	ordering = ("uuid",)
 
@@ -42,6 +41,5 @@ class CharacteristicAdmin(admin.ModelAdmin):
 	form = CharacteristicAdminForm
 	list_display = ("uuid", "name", "ctype", "verified")
 	list_filter = ("verified",)
-	list_editable = ("verified",)
 	search_fields = ("uuid", "name", "ctype")
 	ordering = ("uuid",)
