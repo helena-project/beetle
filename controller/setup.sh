@@ -6,6 +6,7 @@
 ./manage.py makemigrations gatt
 ./manage.py makemigrations access
 ./manage.py makemigrations network
+./manage.py makemigrations authstate
 
 ./manage.py migrate
 

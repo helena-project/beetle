@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'gatt.apps.GattConfig',
     'network.apps.NetworkConfig',
     'access.apps.AccessConfig',
+    'authstate.apps.AuthstateConfig',
     'sslserver',
     'jet',
     'polymorphic',
@@ -157,6 +158,9 @@ JET_SIDE_MENU_CUSTOM_APPS = [
     ]),
     ('access', [
         'Rule',
+        # 'ExclusiveGroup',
+    ]),
+    ('authstate', [
         'AdminAuthInstance',
         'PasscodeAuthInstance',
         # 'ExclusiveGroup',

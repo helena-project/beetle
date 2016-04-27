@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^beetle/', include('beetle.urls')),
     url(r'^access/', include('access.urls')),
     url(r'^network/', include('network.urls')),
+    url(r'^authstate/', include('authstate.urls')),
     url(r'^admin/', admin.site.urls),
     url(r'^jet/', include('jet.urls', 'jet')),
     url(r'^$', lambda r: HttpResponseRedirect('admin/')),

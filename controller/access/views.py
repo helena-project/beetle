@@ -4,46 +4,21 @@ from django.db.models import Q
 from django.core import serializers
 from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
-from django.views.decorators.http import require_GET, require_http_methods
-from django.template import RequestContext
-
-from passlib.apps import django_context as pwd_context
+from django.views.decorators.http import require_GET
 
 from .models import Rule, RuleException, DynamicAuth, AdminAuth, SubjectAuth, \
-	PasscodeAuth, NetworkAuth, PasscodeAuthInstance
+	PasscodeAuth, NetworkAuth
 
 from beetle.models import Principal, Gateway, Contact
 from gatt.models import Service, Characteristic
 from network.models import ConnectedGateway, ConnectedPrincipal, ServiceInstance, \
 	CharInstance
+from network.shared import get_gateway_helper, get_gateway_and_principal_helper
 
 import dateutil.parser
 import cronex
 import json
 import base64
-
-#-------------------------------------------------------------------------------
-
-def _get_gateway_and_principal_helper(gateway, remote_id):
-	"""
-	Gateway is a string, remote_id is an int.
-	"""
-	gateway = Gateway.objects.get(name=gateway)
-	conn_gateway = ConnectedGateway.objects.get(gateway=gateway)
-	conn_principal = ConnectedPrincipal.objects.get(gateway=conn_gateway, 
-		remote_id=remote_id)
-	principal = conn_principal.principal
-	return gateway, principal, conn_gateway, conn_principal
-
-def _get_gateway_helper(gateway):
-	"""
-	Same as above without an principal.
-	"""
-	gateway = Gateway.objects.get(name=gateway)
-	conn_gateway = ConnectedGateway.objects.get(gateway=gateway)
-	return gateway, conn_gateway
-
-#-------------------------------------------------------------------------------
 
 def _rule_is_static_subset(rule1, rule2):
 	"""
@@ -85,11 +60,11 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 
 	from_id = int(from_id)
 	from_gateway, from_principal, conn_from_gateway, conn_from_principal = \
-		_get_gateway_and_principal_helper(from_gateway, from_id)
+		get_gateway_and_principal_helper(from_gateway, from_id)
 
 	to_id = int(to_id)
 	to_gateway, to_principal, conn_to_gateway, conn_to_principal = \
-		_get_gateway_and_principal_helper(to_gateway, to_id)
+		get_gateway_and_principal_helper(to_gateway, to_id)
 
 	applicable_rules = Rule.objects.filter(
 		Q(from_principal=from_principal) | Q(from_principal__name="*"),
@@ -247,134 +222,3 @@ def view_rule_exceptions(request, rule):
 		})
 	return JsonResponse(response, safe=False)
 
-#-------------------------------------------------------------------------------
-
-def _is_rule_exempt_helper(rule, principal):
-	return bool(RuleException.objects.filter(
-		Q(to_principal=principal) | Q(to_principal__name="*"),
-		service__name="*", 
-		characteristic__name="*",
-		rule=rule))
-
-#-------------------------------------------------------------------------------
-
-@require_http_methods(["GET","POST"])
-def view_form_passcode(request, rule, principal):
-	context = RequestContext(request)
-
-	try:
-		rule = Rule.objects.get(name=rule)
-		principal = Principal.objects.get(name=principal)
-		passcode_auth = DynamicAuth.objects.instance_of(DynamicAuth).get(rule=rule)
-	except Exception, err:
-		context_dict = {
-			"title" : "An error occurred...",
-			"message" : str(err),
-		}
-		return render_to_response('access/empty_response.html', context_dict, context)
-
-	now = timezone.now()
-
-	context = RequestContext(request)
-	context_dict = {
-		"rule" : rule,
-		"principal" : principal,
-		"auth" : passcode_auth
-	}
-
-	if (rule.to_principal.name != "*" and rule.to_principal != principal) or \
-		_is_rule_exempt_helper(rule, principal):
-		#######################
-		# Rule does not apply #
-		#######################
-		context_dict.update({
-			"status" : {
-				"a" : "Does Not Apply",
-				"b" : "denied",
-			}
-		})
-		return render_to_response('access/passcode_form_submit.html', 
-			context_dict, context)
-
-	if request.method == "GET":
-		#######################
-		# Requesting the form #
-		#######################
-		if passcode_auth.code == "":
-			#############################
-			# No passcode, grant access #
-			#############################
-			auth_instance, _ = PasscodeAuthInstance.objects.get_or_create(
-				principal=principal, rule=rule)
-			auth_instance.timestamp = now
-			auth_instance.expire = now + passcode_auth.session_length
-			auth_instance.save()
-
-			context_dict.update({
-				"status" : {
-					"a" : "Success",
-					"b" : "approved",
-				}
-			})
-			return render_to_response('access/passcode_form_submit.html', 
-				context_dict, context)
-		else:
-			############################
-			# Render the password form #
-			############################
-			return render_to_response('access/passcode_form.html', 
-				context_dict, context)
-	elif request.method == "POST":
-		#######################
-		# Submitting the form #
-		#######################
-		code = request.POST["code"]
-		allowed = False
-		try:
-			allowed = pwd_context.verify(code, passcode_auth.chash) 
-		except:
-			pass
-
-		if not allowed:
-			context_dict.update({
-				"status" : {
-					"a" : "Failure",
-					"b" : "denied",
-				}
-			})
-		else:
-			auth_instance, _ = PasscodeAuthInstance.objects.get_or_create(
-				principal=principal, rule=rule)
-			auth_instance.timestamp = now
-			auth_instance.expire = now + passcode_auth.session_length
-			auth_instance.save()
-
-			context_dict.update({
-				"status" : {
-					"a" : "Success",
-					"b" : "approved",
-				}
-			})
-		return render_to_response('access/passcode_form_submit.html', 
-			context_dict, context)
-	else:
-		return HttpResponse(status=403)
-
-@require_GET
-def query_passcode_liveness(request, rule_id, to_gateway, to_id):
-	rule_id = int(rule_id)
-	to_id = int(to_id)
-	_, to_principal, _, _ = _get_gateway_and_principal_helper(to_gateway, to_id)
-
-	try:
-		auth_instance = PasscodeAuthInstance.objects.get(
-			rule__id=rule_id, principal=to_principal)
-	except PasscodeAuthInstance.DoesNotExist:
-		return HttpResponse(status=403)	# denied
-
-	if timezone.now() > auth_instance.expire:
-		return HttpResponse(status=403)	# denied
-	else:
-		return HttpResponse(auth_instance.expire.strftime("%s"), status=200)
-
-#-------------------------------------------------------------------------------

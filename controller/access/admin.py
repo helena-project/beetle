@@ -5,10 +5,7 @@ import re
 
 # Register your models here.
 
-from .models import Rule, RuleException, \
-	AdminAuth, AdminAuthInstance, \
-	SubjectAuth, \
-	PasscodeAuth, PasscodeAuthInstance, \
+from .models import Rule, RuleException, AdminAuth, SubjectAuth, PasscodeAuth, \
 	NetworkAuth, ExclusiveGroup
 
 from beetle.models import Principal, Gateway
@@ -35,13 +32,6 @@ def make_inactive(ruleadmin, request, queryset):
 	queryset.update(active=False)
 make_inactive.short_description = "Mark selected rules as inactive."
 
-@admin.register(AdminAuthInstance)
-class AdminAuthInstanceAdmin(admin.ModelAdmin):
-	list_display = ("rule", "principal", "timestamp", "expire") 
-	list_searchable = ("rule", "principal")
-	list_filter = ("rule", "principal")
-	readonly_fields = list_display
-
 class AdminAuthInline(admin.StackedInline):
     model = AdminAuth
     max_num = 1
@@ -49,13 +39,6 @@ class AdminAuthInline(admin.StackedInline):
 class SubjectAuthInline(admin.StackedInline):
     model = SubjectAuth
     max_num = 1
-
-@admin.register(PasscodeAuthInstance)
-class PasscodeAuthInstanceAdmin(admin.ModelAdmin):
-	list_display = ("rule", "principal", "timestamp", "expire") 
-	list_searchable = ("rule", "principal")
-	list_filter = ("rule", "principal")
-	readonly_fields = list_display
 
 class PasscodeAuthInline(admin.StackedInline):
     model = PasscodeAuth

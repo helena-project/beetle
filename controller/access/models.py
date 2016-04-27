@@ -192,22 +192,6 @@ class AdminAuth(DynamicAuth):
 	def __unicode__(self):
 		return ""
 
-class AdminAuthInstance(models.Model):
-	"""
-	Authenticated instance
-	"""
-	class Meta:
-		verbose_name = "AdminAuth state"
-		verbose_name_plural = "AdminAuth state"
-
-	rule = models.ForeignKey("Rule")
-	principal = models.ForeignKey("beetle.Principal")
-	timestamp = models.DateTimeField(auto_now_add=True)
-	expire = models.DateTimeField(default=timezone.now)
-
-	def __unicode__(self):
-		return "%d %s" % (self.rule.id, self.principal.name)
-
 #-------------------------------------------------------------------------------
 
 class SubjectAuth(DynamicAuth):
@@ -260,22 +244,6 @@ class PasscodeAuth(DynamicAuth):
 
 	def __unicode__(self):
 		return ""
-
-class PasscodeAuthInstance(models.Model):
-	"""
-	Authenticated instance
-	"""
-	class Meta:
-		verbose_name = "PasscodeAuth state"
-		verbose_name_plural = "PasscodeAuth state"
-
-	rule = models.ForeignKey("Rule")
-	principal = models.ForeignKey("beetle.Principal")
-	timestamp = models.DateTimeField(auto_now_add=True)
-	expire = models.DateTimeField(default=timezone.now)
-
-	def __unicode__(self):
-		return "%d %s" % (self.rule.id, self.principal.name)
 
 #-------------------------------------------------------------------------------
 

@@ -77,8 +77,8 @@ class Gateway(models.Model):
 	)
 
 	name = models.CharField(max_length=20, primary_key=True)
-	os = models.CharField(max_length=20, choices=OS_CHOICES)
-	trusted = models.BooleanField(default=False)
+	os = models.CharField(max_length=20, default=LINUX, choices=OS_CHOICES)
+	trusted = models.BooleanField(default=True)
 
 	def __unicode__(self):
 		return self.name
