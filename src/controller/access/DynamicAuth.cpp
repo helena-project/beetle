@@ -82,7 +82,8 @@ void PasscodeAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 			|| dynamic_cast<IPCApplication *>(to)
 			|| (dynamic_cast<TCPConnection *>(to) && !dynamic_cast<TCPClientProxy *>(to) && !dynamic_cast<TCPServerProxy *>(to))) {
 		std::stringstream resource;
-		resource << "access/passcode/isLive/" << ruleId << "/" << cc.getName() << "/" << to->getId();
+		resource << "access/passcode/isLive/" << std::fixed << ruleId
+				<< "/" << cc.getName() << "/" << std::fixed << to->getId();
 		std::string url = cc.getUrl(resource.str());
 
 		using namespace boost::network;

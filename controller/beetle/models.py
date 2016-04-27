@@ -33,7 +33,8 @@ class Principal(models.Model):
 	"""
 	
 	class Meta:
-		verbose_name_plural = 'Principals'
+		verbose_name = "GATT principal"
+		verbose_name_plural = "GATT principals"
 
 	# allowed types
 	APP = "app"
@@ -60,6 +61,10 @@ class Gateway(models.Model):
 	""" 
 	A gateway in the network, serving as a GATT translator
 	"""
+
+	class Meta:
+		verbose_name = "Gateway"
+		verbose_name_plural = "Gateways"
 
 	# allowed types
 	ANDROID = "android"
