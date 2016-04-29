@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from passlib.apps import django_context as pwd_context
 
-from .models import AdminAuthInstance, UserAuthInstance, PasscodeAuthInstance
+from .models import AdminAuthInstance, UserAuthInstance, PasscodeAuthInstance, BeetleEmailAccount
 
 from beetle.models import Principal, Gateway, Contact
 from gatt.models import Service, Characteristic
@@ -186,9 +186,6 @@ SMS_GATEWAYS = {
 	SPRINT : "page.nextel.com",
 }
 
-CONTROLLER_EMAIL = "jhong.beetle@gmail.com"
-CONTROLLER_EMAIL_PASSWD = "beetletest"
-
 EMAIL_REPLY_REGEX = re.compile(
 	r"X-OPWV-Extra-Message-Type:Reply\s+[oO][kK]\s+-----Original Message-----")
 
@@ -239,6 +236,9 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 	###########################################
 	# not yet authorized, send a text message #
 	###########################################
+	controller_email_acct = BeetleEmailAccount.objects.get()
+	if not controller_email_acct.address:
+		return HttpResponse("no sender address set up at server", status=500)
 
 	# TODO fix this to not be AT&T
 	email = admin_auth.admin.phone_number.replace("-","") + "@" + SMS_GATEWAYS[ATT]
@@ -246,7 +246,7 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 
 	server = smtplib.SMTP('smtp.gmail.com', 587)
 	server.starttls()
-	server.login(CONTROLLER_EMAIL, CONTROLLER_EMAIL_PASSWD)
+	server.login(controller_email_acct.address, controller_email_acct.password)
 
 	# write the sms
 	msg_id = _generate_rand_string()
@@ -254,17 +254,17 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 	body = _format_admin_auth_body(rule, to_principal, admin_auth)
 	
 	msg = MIMEMultipart()
-	msg['From'] = CONTROLLER_EMAIL
+	msg['From'] = controller_email_acct.address
 	msg['To'] = admin_auth.admin.first_name
 	msg['Subject'] = subject
 	msg.attach(MIMEText(body, 'plain'))
 
-	server.sendmail(CONTROLLER_EMAIL, email, msg.as_string())
+	server.sendmail(controller_email_acct.address, email, msg.as_string())
 	server.quit()
 
 	# wait for response
 	mail = imaplib.IMAP4_SSL('imap.gmail.com')
-	mail.login(CONTROLLER_EMAIL, CONTROLLER_EMAIL_PASSWD)
+	mail.login(controller_email_acct.address, controller_email_acct.password)
 
 	timeout = current_time + relativedelta(seconds=60)
 	while timezone.now() < timeout:
@@ -274,6 +274,7 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 		ids = data[0].split()
 
 		if not ids:
+			print "no response"
 			continue
 		
 		latest_email_id = ids[-1]
@@ -287,6 +288,8 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 				expire=current_time + admin_auth.session_length)
 			auth_instance.save()
 			return HttpResponse(auth_instance.expire.strftime("%s"), status=202)
+		else:
+			print "no match"
 
 	return HttpResponse("no response from admin", status=408)
 
@@ -333,6 +336,9 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 	###########################################
 	# not yet authorized, send a text message #
 	###########################################
+	controller_email_acct = BeetleEmailAccount.objects.get()
+	if not controller_email_acct.address:
+		return HttpResponse("no sender address set up at server", status=500)
 
 	# TODO fix this to not be AT&T
 	email = to_principal.owner.phone_number.replace("-","") + "@" + SMS_GATEWAYS[ATT]
@@ -340,7 +346,7 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 
 	server = smtplib.SMTP('smtp.gmail.com', 587)
 	server.starttls()
-	server.login(CONTROLLER_EMAIL, CONTROLLER_EMAIL_PASSWD)
+	server.login(controller_email_acct.address, controller_email_acct.password)
 
 	# write the sms
 	msg_id = _generate_rand_string()
@@ -348,17 +354,17 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 	body = _format_user_auth_body(rule, to_principal, user_auth)
 	
 	msg = MIMEMultipart()
-	msg['From'] = CONTROLLER_EMAIL
-	msg['To'] = user_auth.owner.first_name
+	msg['From'] = controller_email_acct.address
+	msg['To'] = to_principal.owner.first_name
 	msg['Subject'] = subject
 	msg.attach(MIMEText(body, 'plain'))
 
-	server.sendmail(CONTROLLER_EMAIL, email, msg.as_string())
+	server.sendmail(controller_email_acct.address, email, msg.as_string())
 	server.quit()
 
 	# wait for response
 	mail = imaplib.IMAP4_SSL('imap.gmail.com')
-	mail.login(CONTROLLER_EMAIL, CONTROLLER_EMAIL_PASSWD)
+	mail.login(controller_email_acct.address, controller_email_acct.password)
 
 	timeout = current_time + relativedelta(seconds=60)
 	while timezone.now() < timeout:

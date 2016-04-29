@@ -46,8 +46,13 @@ class Principal(models.Model):
 		(UNKNOWN, "unknown"),
 	)
 
-	name = models.CharField(max_length=100, primary_key=True)
-	ptype = models.CharField(max_length=20, choices=TYPE_CHOICES)
+	name = models.CharField(
+		max_length=100, 
+		primary_key=True)
+	ptype = models.CharField(
+		max_length=20, 
+		choices=TYPE_CHOICES,
+		default=UNKNOWN)	
 	verified = models.BooleanField(
 		default=False,
 		help_text="Has this principal been verified by a human?")
@@ -76,8 +81,13 @@ class Gateway(models.Model):
 		(UNKNOWN, "unknown"),
 	)
 
-	name = models.CharField(max_length=20, primary_key=True)
-	os = models.CharField(max_length=20, default=LINUX, choices=OS_CHOICES)
+	name = models.CharField(
+		max_length=20, 
+		primary_key=True)
+	os = models.CharField(
+		max_length=20, 
+		default=LINUX, 
+		choices=OS_CHOICES)
 	trusted = models.BooleanField(default=True)
 
 	def __unicode__(self):

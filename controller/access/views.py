@@ -163,6 +163,8 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 					services[service.uuid][char.uuid] = []
 				if char_rule.id not in rules:
 					dynamic_auth = []
+					unsatisfiable = False
+
 					for auth in DynamicAuth.objects.filter(rule=char_rule):
 						auth_obj = {
 							"when" : auth.require_when,
@@ -175,15 +177,20 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 							auth_obj["type"] = "admin"
 							if auth.admin.id == Contact.NULL:
 								# Rule is unsatisfiable: there is no admin
-								continue
+								unsatisfiable = True
+								break
 						elif isinstance(auth, UserAuth):
 							auth_obj["type"] = "user"
 							if to_principal.owner.id == Contact.NULL:
 								# Rule is unsatisfiable: there is user to authenticate
-								continue
+								unsatisfiable = True
+								break
 						elif isinstance(auth, PasscodeAuth):
 							auth_obj["type"] = "passcode"
 						dynamic_auth.append(auth_obj)
+					
+					if unsatisfiable:
+						continue
 
 					# Put the rule in the result
 					rules[char_rule.id] = {

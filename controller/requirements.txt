@@ -3,6 +3,8 @@ django-ipware
 django-sslserver
 django-sslify
 django-jet
+django-polymorphic
+django-solo
 cronex
 passlib
 gunicorn

@@ -34,25 +34,37 @@ def make_inactive(ruleadmin, request, queryset):
 	queryset.update(active=False)
 make_inactive.short_description = "Mark selected rules as inactive."
 
-class AdminAuthInline(admin.StackedInline):
-    model = AdminAuth
-    max_num = 1
+class AlwaysChangedModelForm(forms.ModelForm):
+	def has_changed(self):
+		return True
 
-class UserAuthInline(admin.StackedInline):
-    model = UserAuth
-    max_num = 1
+class AdminAuthInline(admin.TabularInline):
+	model = AdminAuth
+	max_num = 1
+	extra = 0
+	form = AlwaysChangedModelForm
 
-class PasscodeAuthInline(admin.StackedInline):
-    model = PasscodeAuth
-    max_num = 1
+class UserAuthInline(admin.TabularInline):
+	model = UserAuth
+	max_num = 1
+	extra = 0
+	form = AlwaysChangedModelForm
 
-class NetworkAuthInline(admin.StackedInline):
-    model = NetworkAuth
-    max_num = 1
+class PasscodeAuthInline(admin.TabularInline):
+	model = PasscodeAuth
+	max_num = 1
+	extra = 0
+	form = AlwaysChangedModelForm
+
+class NetworkAuthInline(admin.TabularInline):
+	model = NetworkAuth
+	max_num = 1
+	extra = 0
+	form = AlwaysChangedModelForm
 
 class RuleExceptionInline(admin.TabularInline):
-    model = RuleException
-    extra = 1
+	model = RuleException
+	extra = 1
 
 @admin.register(Rule)
 class RuleAdmin(admin.ModelAdmin):

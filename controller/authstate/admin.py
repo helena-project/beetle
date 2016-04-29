@@ -1,8 +1,15 @@
 from django.contrib import admin
 
-from .models import AdminAuthInstance, PasscodeAuthInstance, UserAuthInstance
+from .models import BeetleEmailAccount, AdminAuthInstance, PasscodeAuthInstance, UserAuthInstance
+
+from solo.admin import SingletonModelAdmin
 
 # Register your models here.
+
+class BeetleEmailAccountAdmin(SingletonModelAdmin):
+	list_display = ("address",)
+admin.site.register(BeetleEmailAccount, BeetleEmailAccountAdmin)
+
 @admin.register(AdminAuthInstance)
 class AdminAuthInstanceAdmin(admin.ModelAdmin):
 	list_display = ("rule", "principal", "timestamp", "expire") 

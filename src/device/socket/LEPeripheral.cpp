@@ -67,7 +67,7 @@ LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType
     /*
      * Set default connection interval.
      */
-    beetle.hci.setConnectionInterval(connInfo.hci_handle, 40, 200, 10, 500, 5);
+    beetle.hci.setConnectionInterval(connInfo.hci_handle, 40, 100, 10, 100, 5);
 }
 
 LEPeripheral::~LEPeripheral() {

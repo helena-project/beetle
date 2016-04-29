@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'sslserver',
     'jet',
     'polymorphic',
+    'solo',
     'django.contrib.admin',
     'django.contrib.auth',
     'passlib.ext.django',
@@ -161,6 +162,7 @@ JET_SIDE_MENU_CUSTOM_APPS = [
         # 'ExclusiveGroup',
     ]),
     ('authstate', [
+        'BeetleEmailAccount',
         'AdminAuthInstance',
         'UserAuthInstance',
         'PasscodeAuthInstance',
