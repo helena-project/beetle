@@ -139,7 +139,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # SSL settings
-SSLIFY_DISABLE = True
+SSLIFY_DISABLE = False
 
 # Jet admin interface settings
 JET_SIDE_MENU_COMPACT = True
