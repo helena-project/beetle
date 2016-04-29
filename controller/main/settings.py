@@ -162,6 +162,7 @@ JET_SIDE_MENU_CUSTOM_APPS = [
     ]),
     ('authstate', [
         'AdminAuthInstance',
+        'UserAuthInstance',
         'PasscodeAuthInstance',
         # 'ExclusiveGroup',
     ]),
