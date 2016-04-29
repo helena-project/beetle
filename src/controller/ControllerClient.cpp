@@ -14,6 +14,8 @@
 #include <cassert>
 #include <sstream>
 
+static const int CLIENT_TIMEOUT = 180;
+
 inline bool fileExists(const std::string& name) {
     return (access(name.c_str(), F_OK) != -1);
 }
@@ -27,7 +29,7 @@ ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort)
 		   .always_verify_peer(false)
 //	       .openssl_certificate(defaultVerifyFile)
 //	       .openssl_verify_path(defaultCertPath)
-	       .timeout(10);
+	       .timeout(CLIENT_TIMEOUT);
 	// TODO use certs
 	client.reset(new http::client(options));
 }
@@ -44,7 +46,7 @@ ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, std:
 		   .always_verify_peer(false)
 //	       .openssl_certificate(cert)
 //	       .openssl_verify_path(caCerts)
-	       .timeout(10);
+	       .timeout(CLIENT_TIMEOUT);
 	client.reset(new http::client(options));
 }
 

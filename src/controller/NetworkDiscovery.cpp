@@ -46,21 +46,29 @@ bool NetworkDiscovery::findGatewayByName(std::string name, std::string &ip, int 
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
-	auto response = client.getClient()->get(request);
-	if (response.status() == 200) {
-		std::stringstream ss;
-		ss << body(response);
-		json j;
-		j << ss;
-		ip = j["ip"];
-		port = j["port"];
-		return true;
-	} else {
-		if (debug_controller) {
+
+	try {
+		auto response = client.getClient()->get(request);
+		if (response.status() == 200) {
 			std::stringstream ss;
-			ss << "error : " << body(response);
-			pwarn(ss.str());
+			ss << body(response);
+			json j;
+			j << ss;
+			ip = j["ip"];
+			port = j["port"];
+			return true;
+		} else {
+			if (debug_controller) {
+				std::stringstream ss;
+				ss << "error : " << body(response);
+				pwarn(ss.str());
+			}
+			return false;
 		}
+	} catch (std::exception &e) {
+		std::stringstream ss;
+		ss << "caught exception: " <<  e.what();
+		pwarn(ss.str());
 		return false;
 	}
 }
@@ -72,28 +80,35 @@ bool NetworkDiscovery::queryHelper(std::string resource, std::list<discovery_res
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
 
-	auto response = client.getClient()->get(request);
-	if (response.status() == 200) {
-		std::stringstream ss;
-		ss << body(response);
-		json j;
-		j << ss;
-		for (auto &it : j) {
-			discovery_result_t result;
-			result.name = it["principal"]["name"];
-			result.id = it["principal"]["id"];
-			result.gateway = it["gateway"]["name"];
-			result.ip = it["gateway"]["ip"];
-			result.port = it["gateway"]["port"];
-			ret.push_back(result);
-		}
-		return true;
-	} else {
-		if (debug_controller) {
+	try {
+		auto response = client.getClient()->get(request);
+		if (response.status() == 200) {
 			std::stringstream ss;
-			ss << "network discovery failed : " << body(response);
-			pwarn(ss.str());
+			ss << body(response);
+			json j;
+			j << ss;
+			for (auto &it : j) {
+				discovery_result_t result;
+				result.name = it["principal"]["name"];
+				result.id = it["principal"]["id"];
+				result.gateway = it["gateway"]["name"];
+				result.ip = it["gateway"]["ip"];
+				result.port = it["gateway"]["port"];
+				ret.push_back(result);
+			}
+			return true;
+		} else {
+			if (debug_controller) {
+				std::stringstream ss;
+				ss << "network discovery failed : " << body(response);
+				pwarn(ss.str());
+			}
+			return false;
 		}
+	} catch (std::exception &e) {
+		std::stringstream ss;
+		ss << "caught exception: " <<  e.what();
+		pwarn(ss.str());
 		return false;
 	}
 }

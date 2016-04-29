@@ -17,6 +17,8 @@
 #include <ble/gatt.h>
 #include <Debug.h>
 
+typedef uint32_t rule_t;
+
 class DynamicAuth;
 
 class Rule {

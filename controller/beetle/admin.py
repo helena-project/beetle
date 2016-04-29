@@ -28,7 +28,7 @@ class GatewayAdmin(admin.ModelAdmin):
 class ContactAdminForm(forms.ModelForm):
 	def clean_phone_number(self):
 		number = self.cleaned_data["phone_number"]
-		if re.match(r"^\d{3}-\d{3}-\d{4}", number) is None:
+		if re.match(r"^\d{3}-?\d{3}-?\d{4}", number) is None:
 			raise forms.ValidationError("Invalid phone number.")
 		return number
 	def clean_first_name(self):

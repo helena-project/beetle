@@ -90,21 +90,129 @@ void PasscodeAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 		http::client::request request(url);
 		request << header("User-Agent", "linux");
 
-		auto response = cc.getClient()->get(request);
-		if (response.status() == 200) {
+		try {
+			auto response = cc.getClient()->get(request);
+			if (response.status() == 200) {
+				std::stringstream ss;
+				ss << body(response);
+				expire = static_cast<time_t>(std::stod(ss.str()));
+				state = SATISFIED;
+			} else {
+				state = UNATTEMPTED;
+			}
+		} catch (std::exception &e) {
 			std::stringstream ss;
-			ss << body(response);
-			expire = static_cast<time_t>(std::stod(ss.str()));
-			state = SATISFIED;
-		} else {
-			state = UNATTEMPTED;
+			ss << "caught exception: " <<  e.what();
+			pwarn(ss.str());
+			state = DENIED;
 		}
 	} else {
 		state = SATISFIED;
 	}
+
 	if (debug_controller) {
 		std::stringstream ss;
 		ss << "evaluated passcode auth : " << ((state == SATISFIED) ? "satisfied" : "not satisfied");
+		pdebug(ss.str());
+	}
+}
+
+AdminAuth::AdminAuth(rule_t r) : DynamicAuth(r) {
+
+}
+
+void AdminAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
+	if (state == SATISFIED) {
+		return;
+	}
+
+	if (state == UNATTEMPTED) {
+		if (dynamic_cast<LEPeripheral *>(to)
+				|| dynamic_cast<IPCApplication *>(to)
+				|| (dynamic_cast<TCPConnection *>(to) && !dynamic_cast<TCPClientProxy *>(to) && !dynamic_cast<TCPServerProxy *>(to))) {
+			std::stringstream resource;
+			resource << "authstate/admin/request/" << std::fixed << ruleId
+					<< "/" << cc.getName() << "/" << std::fixed << to->getId();
+			std::string url = cc.getUrl(resource.str());
+
+			using namespace boost::network;
+			http::client::request request(url);
+			request << header("User-Agent", "linux");
+
+			try {
+				auto response = cc.getClient()->post(request);
+				if (response.status() == 202) {
+					std::stringstream ss;
+					ss << body(response);
+					expire = static_cast<time_t>(std::stod(ss.str()));
+					state = SATISFIED;
+				} else {
+					state = DENIED;
+				}
+			} catch (std::exception &e) {
+				std::stringstream ss;
+				ss << "caught exception: " <<  e.what();
+				pwarn(ss.str());
+				state = DENIED;
+			}
+		} else {
+			state = SATISFIED;
+		}
+	}
+
+	if (debug_controller) {
+		std::stringstream ss;
+		ss << "evaluated admin auth : " << ((state == SATISFIED) ? "satisfied" : "not satisfied");
+		pdebug(ss.str());
+	}
+}
+
+UserAuth::UserAuth(rule_t r) : DynamicAuth(r) {
+
+}
+
+void UserAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
+	if (state == SATISFIED) {
+		return;
+	}
+
+	if (state == UNATTEMPTED) {
+		if (dynamic_cast<LEPeripheral *>(to)
+				|| dynamic_cast<IPCApplication *>(to)
+				|| (dynamic_cast<TCPConnection *>(to) && !dynamic_cast<TCPClientProxy *>(to) && !dynamic_cast<TCPServerProxy *>(to))) {
+			std::stringstream resource;
+			resource << "authstate/user/request/" << std::fixed << ruleId
+					<< "/" << cc.getName() << "/" << std::fixed << to->getId();
+			std::string url = cc.getUrl(resource.str());
+
+			using namespace boost::network;
+			http::client::request request(url);
+			request << header("User-Agent", "linux");
+
+			try {
+				auto response = cc.getClient()->post(request);
+				if (response.status() == 202) {
+					std::stringstream ss;
+					ss << body(response);
+					expire = static_cast<time_t>(std::stod(ss.str()));
+					state = SATISFIED;
+				} else {
+					state = DENIED;
+				}
+			} catch (std::exception &e) {
+				std::stringstream ss;
+				ss << "caught exception: " <<  e.what();
+				pwarn(ss.str());
+				state = DENIED;
+			}
+		} else {
+			state = SATISFIED;
+		}
+	}
+
+	if (debug_controller) {
+		std::stringstream ss;
+		ss << "evaluated user auth : " << ((state == SATISFIED) ? "satisfied" : "not satisfied");
 		pdebug(ss.str());
 	}
 }

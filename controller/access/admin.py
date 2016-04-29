@@ -5,7 +5,7 @@ import re
 
 # Register your models here.
 
-from .models import Rule, RuleException, AdminAuth, SubjectAuth, PasscodeAuth, \
+from .models import Rule, RuleException, AdminAuth, UserAuth, PasscodeAuth, \
 	NetworkAuth, ExclusiveGroup
 
 from beetle.models import Principal, Gateway
@@ -38,8 +38,8 @@ class AdminAuthInline(admin.StackedInline):
     model = AdminAuth
     max_num = 1
 
-class SubjectAuthInline(admin.StackedInline):
-    model = SubjectAuth
+class UserAuthInline(admin.StackedInline):
+    model = UserAuth
     max_num = 1
 
 class PasscodeAuthInline(admin.StackedInline):
@@ -59,7 +59,7 @@ class RuleAdmin(admin.ModelAdmin):
 	form = RuleAdminForm
 	list_display = (
 		"name",
-		"description",
+		"get_description",
 		"service",
 		"characteristic",
 		"from_principal", 
@@ -88,9 +88,16 @@ class RuleAdmin(admin.ModelAdmin):
 	inlines = (
 		RuleExceptionInline,
 		AdminAuthInline, 
-		SubjectAuthInline,
+		UserAuthInline,
 		PasscodeAuthInline, 
 		NetworkAuthInline,)
+
+	def get_description(self, obj):
+		if len(obj.description) > 40:
+			return obj.description[:40] + "..."
+		else:
+			return obj.description 
+	get_description.short_description = "description"
 
 	def get_exceptions_link(self, obj):
 		return '<a href="/access/view/rule/%s/except" target="_blank">link</a>' % (obj.name,)

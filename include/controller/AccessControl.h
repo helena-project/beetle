@@ -26,8 +26,6 @@
 
 class Handle;
 
-typedef uint32_t rule_t;
-
 /*
  * Use upper 32 bits to encode priority, lower 32 bits to encode rule id.
  */

@@ -194,13 +194,13 @@ class AdminAuth(DynamicAuth):
 
 #-------------------------------------------------------------------------------
 
-class SubjectAuth(DynamicAuth):
+class UserAuth(DynamicAuth):
 	"""
 	Prompt the user for permission.
 	"""
 	class Meta:
-		verbose_name = "Subject"
-		verbose_name_plural = "Subject Auth"
+		verbose_name = "User Auth"
+		verbose_name_plural = "User Auth"
 
 	message = models.CharField(
 		max_length=100, 

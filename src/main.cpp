@@ -48,7 +48,7 @@ void setDebugAll() {
 std::string getDefaultName() {
 	char name[100];
 	assert(gethostname(name, sizeof(name)) == 0);
-	return "beetle@" + std::string(name);
+	return "btl@" + std::string(name);
 }
 
 void sigpipe_handler_ignore(int unused) {

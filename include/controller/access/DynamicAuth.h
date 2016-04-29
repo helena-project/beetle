@@ -10,13 +10,14 @@
 
 #include <string>
 
+#include <controller/access/Rule.h>
 #include <controller/AccessControl.h>
 #include <controller/ControllerClient.h>
 #include <ctime>
 
 class DynamicAuth {
 public:
-	DynamicAuth(rule_t);
+	DynamicAuth(rule_t r);
 	virtual ~DynamicAuth() {};
 
 	enum State {
@@ -44,14 +45,23 @@ private:
 	std::string ip;
 };
 
-//class AdminAuth : public DynamicAuth {
-//	// TODO
-//};
-//
-//class SubjectAuth : public DynamicAuth {
-//	// TODO
-//};
-//
+class AdminAuth : public DynamicAuth {
+public:
+	AdminAuth(rule_t r);
+	virtual ~AdminAuth() {};
+	void evaluate(ControllerClient &cc, Device *from, Device *to);
+private:
+	time_t expire = 0;
+};
+
+class UserAuth : public DynamicAuth {
+public:
+	UserAuth(rule_t r);
+	virtual ~UserAuth() {};
+	void evaluate(ControllerClient &cc, Device *from, Device *to);
+private:
+	time_t expire = 0;
+};
 
 class PasscodeAuth : public DynamicAuth {
 public:

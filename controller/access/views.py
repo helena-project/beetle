@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.http import require_GET
 
-from .models import Rule, RuleException, DynamicAuth, AdminAuth, SubjectAuth, \
+from .models import Rule, RuleException, DynamicAuth, AdminAuth, UserAuth, \
 	PasscodeAuth, NetworkAuth
 
 from beetle.models import Principal, Gateway, Contact
@@ -173,11 +173,11 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 							auth_obj["priv"] = auth.is_private
 						elif isinstance(auth, AdminAuth):
 							auth_obj["type"] = "admin"
-							if auth_obj.admin.contact.id == Contact.NULL:
+							if auth.admin.id == Contact.NULL:
 								# Rule is unsatisfiable: there is no admin
 								continue
-						elif isinstance(auth, SubjectAuth):
-							auth_obj["type"] = "subject"
+						elif isinstance(auth, UserAuth):
+							auth_obj["type"] = "user"
 							if to_principal.owner.id == Contact.NULL:
 								# Rule is unsatisfiable: there is user to authenticate
 								continue
@@ -210,6 +210,9 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 @gzip_page
 @require_GET
 def view_rule_exceptions(request, rule):
+	"""
+	View in admin UI.
+	"""
 	response = []
 	for exception in RuleException.objects.filter(rule__name=rule):
 		response.append({

@@ -93,33 +93,41 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	if (debug_controller) {
 		pdebug("get: " + url);
 	}
-	auto response = client.getClient()->get(request);
 
-	switch (response.status()) {
-	case 200: {
-		if (debug_controller) {
-			pdebug("controller request ok");
+	try {
+		auto response = client.getClient()->get(request);
+
+		switch (response.status()) {
+		case 200: {
+			if (debug_controller) {
+				pdebug("controller request ok");
+			}
+			try {
+				std::stringstream ss;
+				ss << body(response);
+				return handleCanMapResponse(from, to, ss);
+			} catch (std::exception &e) {
+				std::stringstream ss;
+				ss << "Error parsing access control server response: " << e.what();
+				pwarn(ss.str());
+				return false;
+			}
 		}
-		try {
-			std::stringstream ss;
-			ss << body(response);
-			return handleCanMapResponse(from, to, ss);
-		} catch (std::exception &e) {
-			std::stringstream ss;
-			ss << "Error parsing access control server response: " << e.what();
-			pwarn(ss.str());
+		case 500:
+			pwarn("internal server error");
+			return false;
+		default:
+			if (debug_controller) {
+				std::stringstream ss;
+				ss << "controller request failed " << response.status();
+				pdebug(ss.str());
+			}
 			return false;
 		}
-	}
-	case 500:
-		pwarn("internal server error");
-		return false;
-	default:
-		if (debug_controller) {
-			std::stringstream ss;
-			ss << "controller request failed " << response.status();
-			pdebug(ss.str());
-		}
+	} catch (std::exception &e) {
+		std::stringstream ss;
+		ss << "caught exception: " <<  e.what();
+		pwarn(ss.str());
 		return false;
 	}
 }
@@ -192,9 +200,11 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 				} else if (type == "passcode") {
 					auth = new PasscodeAuth(ruleId);
 					rule.priority += 1 << 1;
-				} else if (type == "subject") {
+				} else if (type == "user") {
+					auth = new UserAuth(ruleId);
 					rule.priority += 1 << 2;
 				} else if (type == "admin") {
+					auth = new AdminAuth(ruleId);
 					rule.priority += 1 << 3;
 				}
 

@@ -56,18 +56,25 @@ NetworkState::~NetworkState() {
 	using namespace boost::network;
 	http::client::request request(client.getUrl("network/connect/" + beetle.name));
 		request << header("User-Agent", "linux");
-	http::client::response response = client.getClient()->delete_(request);
-	if (response.status() != 200) {
-		std::stringstream ss;
-				ss << "error disconnecting from controller (" << response.status() << "): "
-						<< body(response);
-		pwarn(ss.str());
-	} else {
-		if (debug_controller) {
+
+	try {
+		auto response = client.getClient()->delete_(request);
+		if (response.status() != 200) {
 			std::stringstream ss;
-			ss << "beetle controller: " << body(response);
-			pdebug(ss.str());
+					ss << "error disconnecting from controller (" << response.status() << "): "
+							<< body(response);
+			pwarn(ss.str());
+		} else {
+			if (debug_controller) {
+				std::stringstream ss;
+				ss << "beetle controller: " << body(response);
+				pdebug(ss.str());
+			}
 		}
+	} catch (std::exception &e) {
+		std::stringstream ss;
+		ss << "caught exception: " <<  e.what();
+		pwarn(ss.str());
 	}
 }
 
@@ -166,15 +173,21 @@ void NetworkState::addDeviceHelper(Device *d) {
 	request << header("Content-Length", std::to_string(requestBody.length()));
 	request << body(requestBody);
 
-	auto response = client.getClient()->post(request);
-	if (response.status() != 200) {
-		throw ControllerException("error informing server of connection " + std::to_string(d->getId()));
-	} else {
-		if (debug_controller) {
-			std::stringstream ss;
-			ss << "controller responded for " << std::to_string(d->getId()) << ": " << body(response);
-			pdebug(ss.str());
+	try {
+		auto response = client.getClient()->post(request);
+		if (response.status() != 200) {
+			throw ControllerException("error informing server of connection " + std::to_string(d->getId()));
+		} else {
+			if (debug_controller) {
+				std::stringstream ss;
+				ss << "controller responded for " << std::to_string(d->getId()) << ": " << body(response);
+				pdebug(ss.str());
+			}
 		}
+	} catch (std::exception &e) {
+		std::stringstream ss;
+		ss << "caught exception: " <<  e.what();
+		pwarn(ss.str());
 	}
 }
 
@@ -188,14 +201,20 @@ void NetworkState::removeDeviceHelper(device_t d) {
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
 
-	auto response = client.getClient()->delete_(request);
-	if (response.status() != 200) {
-		throw ControllerException("error informing server of disconnection " + std::to_string(d));
-	} else {
-		if (debug_controller) {
-			std::stringstream ss;
-			ss << "controller responded for " << std::to_string(d) << ": " << body(response);
-			pdebug(ss.str());
+	try {
+		auto response = client.getClient()->delete_(request);
+		if (response.status() != 200) {
+			throw ControllerException("error informing server of disconnection " + std::to_string(d));
+		} else {
+			if (debug_controller) {
+				std::stringstream ss;
+				ss << "controller responded for " << std::to_string(d) << ": " << body(response);
+				pdebug(ss.str());
+			}
 		}
+	} catch (std::exception &e) {
+		std::stringstream ss;
+		ss << "caught exception: " <<  e.what();
+		pwarn(ss.str());
 	}
 }
