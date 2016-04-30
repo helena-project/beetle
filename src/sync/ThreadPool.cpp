@@ -10,7 +10,7 @@
 #include <stddef.h>
 #include <cassert>
 #include <queue>
-
+#include <iostream>
 
 ThreadPool::ThreadPool(int n) {
 	running = true;
@@ -42,7 +42,11 @@ void ThreadPool::workerDaemon() {
 	while (running) {
 		try {
 			auto f = queue.pop();
-			f();
+			try {
+				f();
+			} catch (std::exception &e) {
+				std::cerr << "worker caught exception: " << e.what() << std::endl;
+			}
 		} catch (QueueDestroyedException &e) {
 			break;
 		}

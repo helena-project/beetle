@@ -120,7 +120,9 @@ def connect_principal(request, gateway, principal, remote_id):
 		pass
 
 	try:
-		principal_conn = ConnectedPrincipal.objects.get(principal=principal, gateway=gateway_conn)
+		principal_conn = ConnectedPrincipal.objects.get(
+			principal=principal, 
+			gateway=gateway_conn)
 		principal_conn.remote_id = remote_id
 		principal_conn.last_seen = timezone.now()
 	except ConnectedPrincipal.DoesNotExist:
@@ -142,8 +144,8 @@ def connect_principal(request, gateway, principal, remote_id):
 
 @transaction.atomic
 @csrf_exempt
-@require_http_methods(["DELETE"])
-def disconnect_principal(request, gateway, remote_id):
+@require_http_methods(["DELETE", "PUT"])
+def update_principal(request, gateway, remote_id):
 	"""
 	Disconnect an application or peripheral
 	"""
@@ -151,12 +153,40 @@ def disconnect_principal(request, gateway, remote_id):
 		return HttpResponse(status=400)
 	remote_id = int(remote_id)
 
-	principal_conns = ConnectedPrincipal.objects.filter(
-		gateway__gateway__name=gateway, 
-		remote_id=remote_id)
-	principal_conns.delete()
+	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
+	gateway_conn.last_seen = timezone.now()
+	gateway_conn.save()
 
-	return HttpResponse("disconnected")
+	if request.method == "DELETE":
+		##############
+		# Disconnect #
+		##############
+		principal_conns = ConnectedPrincipal.objects.filter(
+			gateway=gateway_conn, 
+			remote_id=remote_id)
+		principal_conns.delete()
+
+		return HttpResponse("disconnected")
+
+	elif request.method == "PUT":
+		##########
+		# Update #
+		##########
+		principal_conn = ConnectedPrincipal.objects.get(
+			gateway=gateway_conn, remote_id=remote_id)
+		principal_conn.last_seen = timezone.now()
+		principal_conn.save()
+
+		services = json.loads(request.body)
+		response = _load_services_and_characteristics(services, principal_conn)
+
+		if response is None:
+			return HttpResponse("updated")
+		else:
+			return response
+	
+	else:
+		return HttpResponse(status=405)
 
 @require_GET
 @gzip_page
@@ -164,7 +194,8 @@ def view_principal(request, principal, detailed=True):
 	"""
 	Returns in json, the principal's service anc characteristic uuids
 	"""
-	principal_conns = ConnectedPrincipal.objects.filter(principal__name=principal).order_by("-last_seen")
+	principal_conns = ConnectedPrincipal.objects.filter(
+		principal__name=principal).order_by("-last_seen")
 	
 	if len(principal_conns) == 0:
 		return HttpResponse(status=202)
@@ -184,7 +215,8 @@ def view_principal(request, principal, detailed=True):
 		else:
 			response.append({
 				"uuid": service_ins.service.uuid,
-				"chars": [x.char.uuid for x in CharInstance.objects.filter(service=service_ins)]})
+				"chars": [x.char.uuid for x in 
+					CharInstance.objects.filter(service=service_ins)]})
 	
 	return JsonResponse(response, safe=False)
 

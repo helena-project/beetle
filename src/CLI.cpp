@@ -240,6 +240,8 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 	try {
 		device = new LEPeripheral(beetle, addr, addrType);
 
+		beetle.addDevice(device);
+
 		if (discoverHandles) {
 			device->start();
 		} else {
@@ -249,7 +251,6 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 		printMessage("connected to " + std::to_string(device->getId())
 			+ " : " + device->getName());
 
-		beetle.addDevice(device);
 		if (debug) {
 			printMessage(device->getName() + " has handle range [0,"
 					+ std::to_string(device->getHighestHandle()) + "]");

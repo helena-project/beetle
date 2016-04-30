@@ -21,12 +21,14 @@ public:
 
 	AddDeviceHandler getAddDeviceHandler();
 	RemoveDeviceHandler getRemoveDeviceHandler();
+	UpdateDeviceHandler getUpdateDeviceHandler();
 private:
 	Beetle &beetle;
 
 	ControllerClient &client;
 
 	void addDeviceHelper(Device *device);
+	void updateDeviceHelper(Device *device);
 	void removeDeviceHelper(device_t d);
 };
 

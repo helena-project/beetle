@@ -63,8 +63,12 @@ void VirtualDevice::start() {
 	}
 
 	std::map<uint16_t, Handle *> handlesTmp = discoverAllHandles(this);
-	std::lock_guard<std::recursive_mutex> lg(handlesMutex);
+
+	handlesMutex.lock();
 	handles = handlesTmp;
+	handlesMutex.unlock();
+
+	beetle.updateDevice(getId());
 }
 
 void VirtualDevice::startNd() {
@@ -78,6 +82,8 @@ void VirtualDevice::startNd() {
 	if (name == "") {
 		name = "<unknown>";
 	}
+
+	beetle.updateDevice(getId());
 }
 
 

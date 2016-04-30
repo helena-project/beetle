@@ -11,8 +11,8 @@ urlpatterns = [
 		views.connect_principal, 
 		name='connect an principal'),
 	url(r'^connect/(?P<gateway>[\w\-@\'\. ]+)/(?P<remote_id>\d+)$', 
-		views.disconnect_principal, 
-		name='disconnect an principal'),
+		views.update_principal, 
+		name='update an principal'),
 
 	url(r'^find/gateway/(?P<gateway>[\w\-@\'\. ]+)$', 
 		views.find_gateway,  

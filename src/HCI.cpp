@@ -42,7 +42,7 @@ void HCI::resetHCI() {
 	assert(hciDevice >= 0);
 	std::string hciName = "hci" + std::to_string(hciDevice);
 	std::string command = "hciconfig " + hciName + " down";
-	sleep(1);
+	sleep(1); // sleeping seems to ensure that the settings do get applied
 	pdebug("System: " + command);
 	assert(system(command.c_str()) == 0);
 	command = "hciconfig " + hciName + " up";

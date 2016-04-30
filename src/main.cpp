@@ -185,6 +185,7 @@ int main(int argc, char *argv[]) {
 			networkState.reset(new NetworkState(btl, *controllerClient, tcpPort));
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());
 			btl.registerRemoveDeviceHandler(networkState->getRemoveDeviceHandler());
+			btl.registerUpdateDeviceHandler(networkState->getUpdateDeviceHandler());
 
 			networkDiscovery.reset(new NetworkDiscovery(*controllerClient));
 

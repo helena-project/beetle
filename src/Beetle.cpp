@@ -79,6 +79,12 @@ void Beetle::removeDevice(device_t id) {
 	}
 }
 
+void Beetle::updateDevice(device_t id) {
+	for (auto &h : updateHandlers) {
+		workers.schedule([h,id] { h(id); });
+	}
+}
+
 void Beetle::mapDevices(device_t from, device_t to) {
 	if (from == BEETLE_RESERVED_DEVICE || to == BEETLE_RESERVED_DEVICE) {
 		pwarn("not allowed to map Beetle");
@@ -155,6 +161,10 @@ void Beetle::registerAddDeviceHandler(AddDeviceHandler h) {
 
 void Beetle::registerRemoveDeviceHandler(RemoveDeviceHandler h) {
 	removeHandlers.push_back(h);
+}
+
+void Beetle::registerUpdateDeviceHandler(UpdateDeviceHandler h) {
+	updateHandlers.push_back(h);
 }
 
 void Beetle::setAccessControl(AccessControl *ac) {

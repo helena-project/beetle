@@ -32,6 +32,7 @@ const device_t NULL_RESERVED_DEVICE = -1;
 
 typedef std::function<void(device_t d)> AddDeviceHandler;
 typedef std::function<void(device_t d)> RemoveDeviceHandler;
+typedef std::function<void(device_t d)> UpdateDeviceHandler;
 
 class Beetle {
 public:
@@ -49,6 +50,12 @@ public:
 	 * the device from all characteristics.
 	 */
 	void removeDevice(device_t);
+
+	/*
+	 * Inform Beetle that the device has been updated, for instance
+	 * the handles have changed.
+	 */
+	void updateDevice(device_t);
 
 	/*
 	 * Maps handles from device 1 to device 2.
@@ -71,6 +78,12 @@ public:
 	 */
 	void registerRemoveDeviceHandler(RemoveDeviceHandler h);
 	std::vector<RemoveDeviceHandler> removeHandlers;
+
+	/*
+	 * Register handler to be called after a device has been updated.
+	 */
+	void registerUpdateDeviceHandler(UpdateDeviceHandler h);
+	std::vector<UpdateDeviceHandler> updateHandlers;
 
 	/*
 	 * Global map of all devices at this instance.
