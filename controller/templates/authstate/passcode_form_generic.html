@@ -33,8 +33,7 @@ body {
 <table>
 	<th colspan="2">
 		<span style="font-weight: normal;">
-			<h3>Authorize <ins><i>{{ rule.name }}</i></ins><sub>rule</sub> for 
-				<ins><i>{{ principal.name }}</i></ins><sub>{{ principal.ptype }}</sub>.</h3>
+			<h3>Authorize <ins><i>{{ rule.name }}</i></ins><sub>rule</sub>.</h3>
 		</span>
 	</th>
 	<tr>
@@ -47,12 +46,20 @@ body {
 			<td>{{ auth.hint }}</td>
 		{% endif %}
 	</tr>
-	<tr>
-		<form method="post">{% csrf_token %}
+	<form method="post">{% csrf_token %}
+		<tr>
+			<td><b>Principal:</b></td>
+			<td><select name="principal" style="width: 100%; box-sizing: border-box;">
+				{% for principal in principals %}
+					<option value="{{ principal.name }}">{{ principal.name }}</option>
+				{% endfor %}
+			</select></td>		
+		</tr>
+		<tr>
 			<td><input type="submit" value="Code"></td>
 			<td><input type="password" name="code" style="width: 100%; box-sizing: border-box;"></td>		
-		</form>
-	</tr>
+		</tr>
+	</form>
 </table>
 
 </center>  

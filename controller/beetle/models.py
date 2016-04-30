@@ -11,6 +11,7 @@ class Contact(models.Model):
 	class Meta:
 		unique_together = (("first_name", "last_name"),)
 
+	# primary key of NULL
 	NULL = 0
 
 	first_name = models.CharField(
@@ -39,10 +40,12 @@ class Principal(models.Model):
 	# allowed types
 	APP = "app"
 	DEVICE = "device"
+	GATEWAY = "gateway"
 	UNKNOWN = "unknown"
 	TYPE_CHOICES = (
 		(APP, "app"),
 		(DEVICE, "device"),
+		(GATEWAY, "gateway"),
 		(UNKNOWN, "unknown"),
 	)
 
