@@ -2,8 +2,8 @@
 
 ./manage.py runserver 0.0.0.0:80 &
 
-if ["$#" -eq 3] 
-	then
+if [ "$#" -eq 2 ];
+then
 	./manage.py runsslserver 0.0.0.0:443 --certificate "$1" --key "$2"
 else
 	./manage.py runsslserver 0.0.0.0:443
