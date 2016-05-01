@@ -20,13 +20,13 @@ inline bool fileExists(const std::string& name) {
     return (access(name.c_str(), F_OK) != -1);
 }
 
-ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort)
+ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, bool verifyPeers)
 : beetle(beetle), hostAndPort(hostAndPort) {
 	using namespace boost::network;
 	http::client::options options;
 	options.follow_redirects(false)
 	       .cache_resolved(true)
-		   .always_verify_peer(false)
+		   .always_verify_peer(verifyPeers)
 //	       .openssl_certificate(defaultVerifyFile)
 //	       .openssl_verify_path(defaultCertPath)
 	       .timeout(CLIENT_TIMEOUT);
@@ -35,7 +35,7 @@ ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort)
 }
 
 ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, std::string cert,
-		std::string caCerts) : beetle(beetle), hostAndPort(hostAndPort) {
+		std::string caCerts, bool verifyPeers) : beetle(beetle), hostAndPort(hostAndPort) {
 	assert(fileExists(cert));
 	assert(fileExists(caCerts));
 
@@ -43,7 +43,7 @@ ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, std:
 	http::client::options options;
 	options.follow_redirects(false)
 	       .cache_resolved(true)
-		   .always_verify_peer(false)
+		   .always_verify_peer(verifyPeers)
 //	       .openssl_certificate(cert)
 //	       .openssl_verify_path(caCerts)
 	       .timeout(CLIENT_TIMEOUT);

@@ -9,16 +9,18 @@
 #define INCLUDE_DEVICE_SOCKET_TCP_TCPCLIENTPROXY_H_
 
 #include <string>
+#include <openssl/ossl_typ.h>
 
 #include "Beetle.h"
 #include "device/socket/TCPConnection.h"
+
 
 /*
  * Dummy device representing a client at a different Beetle gateway.
  */
 class TCPClientProxy: public TCPConnection {
 public:
-	TCPClientProxy(Beetle &beetle, int sockfd, std::string clientGateway,
+	TCPClientProxy(Beetle &beetle, SSL *ssl, int sockfd, std::string clientGateway,
 			struct sockaddr_in clientGatewaySockAddr, device_t localProxyFor);
 	virtual ~TCPClientProxy();
 

@@ -14,18 +14,20 @@
 #include <cassert>
 #include <memory>
 
-#include <AutoConnect.h>
-#include <Beetle.h>
-#include <controller/AccessControl.h>
-#include <controller/NetworkStateClient.h>
-#include <controller/NetworkDiscoveryClient.h>
-#include <controller/ControllerClient.h>
-#include <CLI.h>
-#include <Debug.h>
-#include <ipc/UnixDomainSocketServer.h>
-#include <Scanner.h>
-#include <tcp/TCPDeviceServer.h>
-#include <HCI.h>
+#include "AutoConnect.h"
+#include "Beetle.h"
+#include "controller/AccessControl.h"
+#include "controller/NetworkStateClient.h"
+#include "controller/NetworkDiscoveryClient.h"
+#include "controller/ControllerClient.h"
+#include "CLI.h"
+#include "Debug.h"
+#include "ipc/UnixDomainSocketServer.h"
+#include "Scanner.h"
+#include "device/socket/tcp/TCPServerProxy.h"
+#include "tcp/TCPDeviceServer.h"
+#include "tcp/SSLConfig.h"
+#include "HCI.h"
 
 
 /* Global debug variables */
@@ -62,13 +64,16 @@ int main(int argc, char *argv[]) {
 	bool scanningEnabled;
 	bool debugAll;
 	bool autoConnectAll;
-	bool resetHci;
-	bool runController;
-	bool serveTcp;
-	bool serveIpc;
+	bool noResetHci;
+	bool noController;
+	bool noTcp;
+	bool noIpc;
 	std::string name;
 	std::string path;
 	std::string beetleControllerHostPort;
+	std::string certificate;
+	std::string key;
+	bool noVerifyPeers;
 
 	namespace po = boost::program_options;
 	po::options_description desc("Options");
@@ -96,21 +101,31 @@ int main(int argc, char *argv[]) {
 					->implicit_value(true)
 					->default_value(false),
 					"Connect to all nearby BLE devices")
-			("no-reset-hci", po::value<bool>(&resetHci)
-					->default_value(true)
-					->implicit_value(false),
+			("cert", po::value<std::string>(&certificate)
+					->default_value("../certs/cert.pem"),
+					"Gateway certificate file")
+			("key", po::value<std::string>(&key)
+					->default_value("../certs/key.pem"),
+					"Gateway private key file")
+			("no-verify", po::value<bool>(&noVerifyPeers)
+					->default_value(true)	// TODO fix this
+					->implicit_value(true),
+					"Gateway certificate file")
+			("no-reset-hci", po::value<bool>(&noResetHci)
+					->default_value(false)
+					->implicit_value(true),
 					"Set hci down/up at start-up")
-			("no-controller", po::value<bool>(&runController)
-					->default_value(true)
-					->implicit_value(false),
+			("no-controller", po::value<bool>(&noController)
+					->default_value(false)
+					->implicit_value(true),
 					"Disable network state, discovery, and access control")
-			("no-tcp", po::value<bool>(&serveTcp)
-					->default_value(true)
-					->implicit_value(false),
+			("no-tcp", po::value<bool>(&noTcp)
+					->default_value(false)
+					->implicit_value(true),
 					"Disable remote access over tcp")
-			("no-ipc", po::value<bool>(&serveIpc)
-					->default_value(true)
-					->implicit_value(false),
+			("no-ipc", po::value<bool>(&noIpc)
+					->default_value(false)
+					->implicit_value(true),
 					"Disable access over unix domain sockets")
 			("debug-discovery", po::value<bool>(&debug_discovery)
 					->implicit_value(true)
@@ -154,22 +169,29 @@ int main(int argc, char *argv[]) {
 		setDebugAll();
 	}
 
-	if (resetHci) {
+	if (!noResetHci) {
 		HCI::resetHCI();
 	}
+
+	SSLConfig clientSSLConfig(!noVerifyPeers);
+	TCPServerProxy::initSSL(&clientSSLConfig);
 
 	try {
 		signal(SIGPIPE, sigpipe_handler_ignore);
 
 		Beetle btl(name);
 
+		std::unique_ptr<SSLConfig> serverSSLConfig;
 		std::unique_ptr<TCPDeviceServer> tcpServer;
-		if (serveTcp) {
-			tcpServer.reset(new TCPDeviceServer(btl, tcpPort));
+		if (!noTcp) {
+			std::cout << "using certificate: " << certificate << std::endl;
+			std::cout << "using key: " << key << std::endl;
+			serverSSLConfig.reset(new SSLConfig(!noVerifyPeers, true, certificate, key));
+			tcpServer.reset(new TCPDeviceServer(btl, *serverSSLConfig, tcpPort));
 		}
 
 		std::unique_ptr<UnixDomainSocketServer> ipcServer;
-		if (serveIpc) {
+		if (!noIpc) {
 			ipcServer.reset(new UnixDomainSocketServer(btl, path));
 		}
 
@@ -179,8 +201,8 @@ int main(int argc, char *argv[]) {
 		std::unique_ptr<NetworkStateClient> networkState;
 		std::unique_ptr<AccessControl> accessControl;
 		std::unique_ptr<NetworkDiscoveryClient> networkDiscovery;
-		if (runController) {
-			controllerClient.reset(new ControllerClient(btl, beetleControllerHostPort));
+		if (!noController) {
+			controllerClient.reset(new ControllerClient(btl, beetleControllerHostPort, !noVerifyPeers));
 
 			networkState.reset(new NetworkStateClient(btl, *controllerClient, tcpPort));
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());

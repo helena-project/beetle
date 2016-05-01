@@ -11,17 +11,19 @@
 #include <unistd.h>
 #include <cassert>
 #include <cstring>
-#include <sstream>
 #include <errno.h>
 #include <iostream>
+#include <openssl/ossl_typ.h>
+#include <sstream>
 
 #include "ble/att.h"
 #include "Debug.h"
 #include "sync/OrderedThreadPool.h"
-#include "shared.h"
+#include "../../tcp/shared.h"
 
-TCPConnection::TCPConnection(Beetle &beetle, int sockfd_, struct sockaddr_in sockaddr_,
+TCPConnection::TCPConnection(Beetle &beetle, SSL *ssl_, int sockfd_, struct sockaddr_in sockaddr_,
 		bool isEndpoint, HandleAllocationTable *hat) : VirtualDevice(beetle, isEndpoint, hat), readThread() {
+	ssl = ssl_;
 	sockfd = sockfd_;
 	sockaddr = sockaddr_;
 }
@@ -31,6 +33,8 @@ TCPConnection::~TCPConnection() {
 	if (debug_socket) {
 		pdebug("shutting down socket");
 	}
+	SSL_shutdown(ssl);
+	SSL_free(ssl);
 	shutdown(sockfd, SHUT_RDWR);
 	if (readThread.joinable()) readThread.join();
 	close(sockfd);
@@ -46,7 +50,7 @@ bool TCPConnection::write(uint8_t *buf, int len) {
 	pendingWrites.increment();
 	beetle.writers.schedule(getId(), [this, bufCpy, len] {
 		uint8_t bufLen = len;
-		if (write_all(sockfd, &bufLen, 1) != 1 || write_all(sockfd, bufCpy, len) != len) {
+		if (SSL_write_all(ssl, &bufLen, 1) != 1 || SSL_write_all(ssl, bufCpy, len) != len) {
 			if (debug_socket) {
 				std::stringstream ss;
 				ss << "socket write failed : " << strerror(errno);
@@ -73,7 +77,7 @@ void TCPConnection::readDaemon() {
 	uint8_t len;
 	while (!isStopped()) {
 		// read length of ATT message
-		int bytesRead = read(sockfd, &len, sizeof(len));
+		int bytesRead = SSL_read(ssl, &len, sizeof(len));
 		if (bytesRead < 0) {
 			std::cerr << "socket error: " << strerror(errno) << std::endl;
 			stop();
@@ -90,7 +94,7 @@ void TCPConnection::readDaemon() {
 			// read payload ATT message
 			bytesRead = 0;
 			while (!isStopped() && bytesRead < len) {
-				int n = read(sockfd, buf + bytesRead, len - bytesRead);
+				int n = SSL_read(ssl, buf + bytesRead, len - bytesRead);
 				if (n < 0) {
 					std::cerr << "socket error: " << strerror(errno) << std::endl;
 					if (!isStopped()) {

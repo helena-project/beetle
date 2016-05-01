@@ -9,11 +9,13 @@
 #define INCLUDE_TCP_TCPDEVICESERVER_H_
 
 #include <exception>
-#include <map>
+#include <openssl/ossl_typ.h>
 #include <string>
 #include <thread>
 
 #include "Beetle.h"
+
+class SSLConfig;
 
 class ServerException : public std::exception {
   public:
@@ -30,10 +32,11 @@ class ServerException : public std::exception {
  */
 class TCPDeviceServer {
 public:
-	TCPDeviceServer(Beetle &beetle, int port);
+	TCPDeviceServer(Beetle &beetle, SSLConfig &sslConfig, int port);
 	virtual ~TCPDeviceServer();
 private:
 	Beetle &beetle;
+	SSLConfig &sslConfig;
 
 	bool running;
 
@@ -42,7 +45,7 @@ private:
 
 	int sockfd;
 
-	void startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr);
+	void startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_in cliaddr);
 };
 
 #endif /* INCLUDE_TCP_TCPDEVICESERVER_H_ */

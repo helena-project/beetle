@@ -14,14 +14,19 @@
 #include <cstdint>
 #include <iostream>
 #include <utility>
+#include <openssl/bio.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 
 #include "device/socket/tcp/TCPClient.h"
 #include "device/socket/tcp/TCPClientProxy.h"
 #include "Debug.h"
 #include "tcp/TCPConnParams.h"
-#include "../device/socket/shared.h"
+#include "tcp/SSLConfig.h"
+#include "shared.h"
 
-TCPDeviceServer::TCPDeviceServer(Beetle &beetle, int port) : beetle(beetle) {
+TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig &sslConfig, int port)
+: beetle(beetle), sslConfig(sslConfig) {
 	running = true;
 	sockfd = -1;
 	t = std::thread(&TCPDeviceServer::serverDaemon, this, port);
@@ -65,18 +70,32 @@ void TCPDeviceServer::serverDaemon(int port) {
 			continue;
 		}
 
-		startTcpDeviceHelper(clifd, client_addr);
+		SSL *ssl = SSL_new(sslConfig.getCtx());
+		SSL_set_fd(ssl, clifd);
+		if (SSL_accept(ssl) <= 0) {
+			pwarn("error on ssl accept");
+			ERR_print_errors_fp(stderr);
+			SSL_shutdown(ssl);
+			SSL_free(ssl);
+			close(clifd);
+			continue;
+		}
+
+		startTcpDeviceHelper(ssl, clifd, client_addr);
 	}
 	close(sockfd);
 	if (debug) pdebug("tcp serverDaemon exited");
 }
 
-void TCPDeviceServer::startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr) {
+void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_in cliaddr) {
 	uint32_t clientParamsLen;
-	if (read(clifd, &clientParamsLen, sizeof(uint32_t)) != sizeof(uint32_t)) {
+	if (SSL_read(ssl, &clientParamsLen, sizeof(uint32_t)) != sizeof(uint32_t)) {
 		if (debug) {
 			pdebug("could not read tcp connection client parameters length");
 		}
+		ERR_print_errors_fp(stderr);
+		SSL_shutdown(ssl);
+		SSL_free(ssl);
 		close(clifd);
 		return;
 	}
@@ -90,7 +109,7 @@ void TCPDeviceServer::startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr
 	}
 
 	std::map<std::string, std::string> clientParams;
-	if (!readParamsHelper(clifd, clientParamsLen, clientParams)) {
+	if (!readParamsHelper(ssl, clientParamsLen, clientParams)) {
 		pwarn("unable to read parameters");
 		close(clifd);
 		return;
@@ -111,12 +130,18 @@ void TCPDeviceServer::startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr
     std::string serverParams = ss.str();
     uint32_t serverParamsLen = htonl(serverParams.length());
 
-    if (write_all(clifd, (uint8_t *)&serverParamsLen, sizeof(serverParamsLen)) == false) {
+    if (SSL_write_all(ssl, (uint8_t *)&serverParamsLen, sizeof(serverParamsLen)) == false) {
+    	ERR_print_errors_fp(stderr);
+    	SSL_shutdown(ssl);
+    	SSL_free(ssl);
     	close(clifd);
     	if (debug) pdebug("could not write server params length");
     }
 
-    if (write_all(clifd, (uint8_t *)serverParams.c_str(), serverParams.length()) == false) {
+    if (SSL_write_all(ssl, (uint8_t *)serverParams.c_str(), serverParams.length()) == false) {
+    	ERR_print_errors_fp(stderr);
+    	SSL_shutdown(ssl);
+    	SSL_free(ssl);
     	close(clifd);
     	if (debug) pdebug("could not write server params");
     }
@@ -130,13 +155,13 @@ void TCPDeviceServer::startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr
 		 * Takes over the clifd
 		 */
 		if (clientParams.find(TCP_PARAM_GATEWAY) == clientParams.end()) {
-			device = new TCPClient(beetle, clifd, clientParams[TCP_PARAM_CLIENT], cliaddr);
+			device = new TCPClient(beetle, ssl, clifd, clientParams[TCP_PARAM_CLIENT], cliaddr);
 		} else {
 			// name of the client gateway
 			std::string client = clientParams[TCP_PARAM_GATEWAY];
 			// device that the client is requesting
 			device_t deviceId = std::stol(clientParams[TCP_PARAM_DEVICE]);
-			device = new TCPClientProxy(beetle, clifd, client, cliaddr, deviceId);
+			device = new TCPClientProxy(beetle, ssl, clifd, client, cliaddr, deviceId);
 		}
 
 		if (clientParams[TCP_PARAM_SERVER] == "true") {

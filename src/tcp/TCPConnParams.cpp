@@ -8,19 +8,20 @@
 #include <tcp/TCPConnParams.h>
 
 #include <stddef.h>
-#include <unistd.h>
 #include <map>
 #include <string>
+#include <openssl/ossl_typ.h>
+#include <openssl/ssl.h>
 
-#include <Debug.h>
+#include "Debug.h"
 
-bool readParamsHelper(int clifd, int paramsLen, std::map<std::string, std::string> &params) {
+bool readParamsHelper(SSL *ssl, int paramsLen, std::map<std::string, std::string> &params) {
 	int bytesRead = 0;
 	char lineBuffer[2048];
 	int lineIndex = 0;
 	while (bytesRead < paramsLen) {
 		char ch;
-		int n = read(clifd, &ch, 1);
+		int n = SSL_read(ssl, &ch, 1);
 		if (n < 0) {
 			if (debug) {
 				pdebug("could not finish reading tcp connection parameters");

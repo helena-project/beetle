@@ -8,11 +8,15 @@
 #ifndef DEVICE_SOCKET_TCP_TCPCLIENT_H_
 #define DEVICE_SOCKET_TCP_TCPCLIENT_H_
 
-#include <device/socket/TCPConnection.h>
+#include <openssl/ossl_typ.h>
+#include <string>
+
+#include "Beetle.h"
+#include "device/socket/TCPConnection.h"
 
 class TCPClient: public TCPConnection {
 public:
-	TCPClient(Beetle &beetle, int sockfd, std::string name, struct sockaddr_in sockaddr);
+	TCPClient(Beetle &beetle, SSL *ssl, int sockfd, std::string name, struct sockaddr_in sockaddr);
 	virtual ~TCPClient();
 };
 

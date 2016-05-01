@@ -10,6 +10,7 @@
 
 #include <map>
 #include <string>
+#include <openssl/ossl_typ.h>
 
 /*
  * Indicate that the client is a gateway. Value is the gateway's name.
@@ -36,6 +37,6 @@ const std::string TCP_PARAM_SERVER = "server";
  * Read paramsLen bytes of plaintext parameters from fd into params.
  * Returns true on success.
  */
-bool readParamsHelper(int fd, int paramsLen, std::map<std::string, std::string> &params);
+bool readParamsHelper(SSL *ssl, int paramsLen, std::map<std::string, std::string> &params);
 
 #endif /* INCLUDE_TCP_CONNPARAMS_H_ */

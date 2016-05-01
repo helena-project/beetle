@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <string>
 #include <thread>
+#include <openssl/ossl_typ.h>
 
 #include "Beetle.h"
 #include "sync/Countdown.h"
@@ -29,12 +30,13 @@ public:
 	struct sockaddr_in getSockaddr();
 
 protected:
-	TCPConnection(Beetle &beetle, int sockfd, struct sockaddr_in sockaddr,
+	TCPConnection(Beetle &beetle, SSL *ssl, int sockfd, struct sockaddr_in sockaddr,
 			bool isEndpoint, HandleAllocationTable *hat = NULL);
 
 	bool write(uint8_t *buf, int len);
 	void startInternal();
 private:
+	SSL *ssl;
 	int sockfd;
 
 	struct sockaddr_in sockaddr;

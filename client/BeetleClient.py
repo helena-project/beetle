@@ -9,6 +9,7 @@ import os
 import re
 import signal
 import socket
+import ssl
 import struct
 import threading
 import time
@@ -28,6 +29,7 @@ def getArguments():
 args = getArguments()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s = ssl.wrap_socket(s, cert_reqs=ssl.CERT_NONE)	# TODO
 s.connect((args.host, args.port))
 
 def outputPrinter(s):
@@ -142,3 +144,4 @@ try:
 except RuntimeError, err:
 	print "Exception in input thread:", err
 	print "Exiting..."
+	s.close()
