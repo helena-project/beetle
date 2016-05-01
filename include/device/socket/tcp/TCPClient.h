@@ -14,6 +14,9 @@
 #include "Beetle.h"
 #include "device/socket/TCPConnection.h"
 
+/*
+ * A non-beetle client communicating using ssl
+ */
 class TCPClient: public TCPConnection {
 public:
 	TCPClient(Beetle &beetle, SSL *ssl, int sockfd, std::string name, struct sockaddr_in sockaddr);

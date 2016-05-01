@@ -30,6 +30,9 @@ public:
 	struct sockaddr_in getSockaddr();
 
 protected:
+	/*
+	 * Cannot directly instantiate a TCPConnection
+	 */
 	TCPConnection(Beetle &beetle, SSL *ssl, int sockfd, struct sockaddr_in sockaddr,
 			bool isEndpoint, HandleAllocationTable *hat = NULL);
 

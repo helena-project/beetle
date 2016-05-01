@@ -33,9 +33,9 @@ SSLConfig::SSLConfig(bool verifyPeers, bool isServer, std::string cert, std::str
 
 	const SSL_METHOD *method;
 	if (isServer) {
-		method = SSLv23_server_method();
+		method = TLSv1_2_server_method();
 	} else {
-		method = SSLv23_client_method();
+		method = TLSv1_2_client_method();
 	}
 	ctx = SSL_CTX_new(method);
 	SSL_CTX_set_default_verify_paths(ctx);
