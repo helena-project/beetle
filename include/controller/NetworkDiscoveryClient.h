@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef CONTROLLER_NETWORKDISCOVERY_H_
-#define CONTROLLER_NETWORKDISCOVERY_H_
+#ifndef CONTROLLER_NETWORKDISCOVERYCLIENT_H_
+#define CONTROLLER_NETWORKDISCOVERYCLIENT_H_
 
 #include <string>
 #include <list>
@@ -23,15 +23,15 @@ typedef struct {
 	int port;
 } discovery_result_t;
 
-class NetworkDiscovery {
+class NetworkDiscoveryClient {
 public:
-	NetworkDiscovery(ControllerClient &client);
-	virtual ~NetworkDiscovery();
+	NetworkDiscoveryClient(Beetle &beetle, ControllerClient &client);
+	virtual ~NetworkDiscoveryClient();
 
 	/*
 	 * Look for devices in the network with the uuid
 	 */
-	bool discoverByUuid(UUID uuid, std::list<discovery_result_t> &ret, bool isService = true);
+	bool discoverByUuid(UUID uuid, std::list<discovery_result_t> &ret, bool isService = true, device_t d = -1);
 
 	/*
 	 * Look for devices in the network.
@@ -44,9 +44,11 @@ public:
 	bool findGatewayByName(std::string name, std::string &ip, int &port);
 
 private:
+	Beetle &beetle;
+
 	ControllerClient &client;
 
 	bool queryHelper(std::string resource, std::list<discovery_result_t> &ret);
 };
 
-#endif /* CONTROLLER_NETWORKDISCOVERY_H_ */
+#endif /* CONTROLLER_NETWORKDISCOVERYCLIENT_H_ */

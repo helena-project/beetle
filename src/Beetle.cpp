@@ -13,7 +13,7 @@
 #include "hat/HandleAllocationTable.h"
 #include "Router.h"
 
-Beetle::Beetle(std::string name_) : workers(2), writers(4) {
+Beetle::Beetle(std::string name_) : workers(4), writers(4) {
 	router = new Router(*this);
 	beetleDevice = new BeetleInternal(*this, name_);
 	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
@@ -173,4 +173,8 @@ void Beetle::setAccessControl(AccessControl *ac) {
 	registerRemoveDeviceHandler(ac->getRemoveDeviceHandler());
 }
 
+void Beetle::setDiscoveryClient(NetworkDiscoveryClient *nd) {
+	assert(discoveryClient == NULL && nd != NULL);
+	discoveryClient = nd;
+}
 

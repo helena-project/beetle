@@ -17,8 +17,8 @@
 #include <AutoConnect.h>
 #include <Beetle.h>
 #include <controller/AccessControl.h>
-#include <controller/NetworkState.h>
-#include <controller/NetworkDiscovery.h>
+#include <controller/NetworkStateClient.h>
+#include <controller/NetworkDiscoveryClient.h>
 #include <controller/ControllerClient.h>
 #include <CLI.h>
 #include <Debug.h>
@@ -176,18 +176,19 @@ int main(int argc, char *argv[]) {
 		AutoConnect autoConnect(btl, autoConnectAll);
 
 		std::unique_ptr<ControllerClient> controllerClient;
-		std::unique_ptr<NetworkState> networkState;
+		std::unique_ptr<NetworkStateClient> networkState;
 		std::unique_ptr<AccessControl> accessControl;
-		std::unique_ptr<NetworkDiscovery> networkDiscovery;
+		std::unique_ptr<NetworkDiscoveryClient> networkDiscovery;
 		if (runController) {
 			controllerClient.reset(new ControllerClient(btl, beetleControllerHostPort));
 
-			networkState.reset(new NetworkState(btl, *controllerClient, tcpPort));
+			networkState.reset(new NetworkStateClient(btl, *controllerClient, tcpPort));
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());
 			btl.registerRemoveDeviceHandler(networkState->getRemoveDeviceHandler());
 			btl.registerUpdateDeviceHandler(networkState->getUpdateDeviceHandler());
 
-			networkDiscovery.reset(new NetworkDiscovery(*controllerClient));
+			networkDiscovery.reset(new NetworkDiscoveryClient(btl, *controllerClient));
+			btl.setDiscoveryClient(networkDiscovery.get());
 
 			accessControl.reset(new AccessControl(btl, *controllerClient));
 			btl.setAccessControl(accessControl.get());

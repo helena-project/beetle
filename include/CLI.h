@@ -15,12 +15,12 @@
 #include <vector>
 
 #include "Beetle.h"
-#include "controller/NetworkDiscovery.h"
+#include <controller/NetworkDiscoveryClient.h>
 #include "Scanner.h"
 
 class CLI {
 public:
-	CLI(Beetle &beetle, int port, std::string path, NetworkDiscovery *discovery = NULL);
+	CLI(Beetle &beetle, int port, std::string path, NetworkDiscoveryClient *discovery = NULL);
 	virtual ~CLI();
 	/*
 	 * Block program exit with CLI.
@@ -39,7 +39,7 @@ private:
 
 	Beetle &beetle;
 
-	NetworkDiscovery *networkDiscovery;
+	NetworkDiscoveryClient *networkDiscovery;
 
 	int port;
 	std::string path;

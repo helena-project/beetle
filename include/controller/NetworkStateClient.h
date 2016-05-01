@@ -14,10 +14,10 @@
 /*
  * Reports devices connected and disconnected.
  */
-class NetworkState {
+class NetworkStateClient {
 public:
-	NetworkState(Beetle &beetle, ControllerClient &client, int tcpPort);
-	virtual ~NetworkState();
+	NetworkStateClient(Beetle &beetle, ControllerClient &client, int tcpPort);
+	virtual ~NetworkStateClient();
 
 	AddDeviceHandler getAddDeviceHandler();
 	RemoveDeviceHandler getRemoveDeviceHandler();

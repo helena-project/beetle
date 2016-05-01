@@ -118,6 +118,12 @@ public:
 	AccessControl *accessControl;
 
 	/*
+	 * Set the discovery client.
+	 */
+	void setDiscoveryClient(NetworkDiscoveryClient *nd);
+	NetworkDiscoveryClient *discoveryClient;
+
+	/*
 	 * Workers for callbacks.
 	 */
 	ThreadPool workers;

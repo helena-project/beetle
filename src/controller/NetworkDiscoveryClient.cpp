@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include <controller/NetworkDiscovery.h>
+#include <controller/NetworkDiscoveryClient.h>
 
 #include <boost/network/message/directives.hpp>
 #include <boost/network/message/wrappers/body.hpp>
@@ -20,27 +20,32 @@
 
 using json = nlohmann::json;
 
-NetworkDiscovery::NetworkDiscovery(ControllerClient &client) : client(client) {
+NetworkDiscoveryClient::NetworkDiscoveryClient(Beetle &beetle, ControllerClient &client)
+: beetle(beetle), client(client) {
 
 }
 
-NetworkDiscovery::~NetworkDiscovery() {
+NetworkDiscoveryClient::~NetworkDiscoveryClient() {
 
 }
 
-bool NetworkDiscovery::discoverDevices(std::list<discovery_result_t> &ret) {
+bool NetworkDiscoveryClient::discoverDevices(std::list<discovery_result_t> &ret) {
 	std::stringstream resource;
 	resource << "network/discover/principals";
 	return queryHelper(resource.str(), ret);
 }
 
-bool NetworkDiscovery::discoverByUuid(UUID uuid, std::list<discovery_result_t> &ret, bool isService) {
+bool NetworkDiscoveryClient::discoverByUuid(UUID uuid, std::list<discovery_result_t> &ret,
+		bool isService, device_t d) {
 	std::stringstream resource;
 	resource << "network/discover/" << ((isService) ? "service" : "char") << "/" << uuid.str();
+	if (d != -1) {
+		resource << "?gateway=" << beetle.name << "&" << "remote_id" << std::fixed << d;
+	}
 	return queryHelper(resource.str(), ret);
 }
 
-bool NetworkDiscovery::findGatewayByName(std::string name, std::string &ip, int &port) {
+bool NetworkDiscoveryClient::findGatewayByName(std::string name, std::string &ip, int &port) {
 	std::string url = client.getUrl("network/find/gateway/" + name);
 
 	using namespace boost::network;
@@ -73,7 +78,7 @@ bool NetworkDiscovery::findGatewayByName(std::string name, std::string &ip, int 
 	}
 }
 
-bool NetworkDiscovery::queryHelper(std::string resource, std::list<discovery_result_t> &ret) {
+bool NetworkDiscoveryClient::queryHelper(std::string resource, std::list<discovery_result_t> &ret) {
 	std::string url = client.getUrl(resource);
 
 	using namespace boost::network;

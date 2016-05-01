@@ -46,9 +46,40 @@ def _rule_is_static_subset(rule1, rule2):
 
 	return is_subset
 
+def _compute_dynamic_auth(rule, principal):
+	"""
+	Computes the dynamic factors that apply.
+	"""
+	result = []
+	for auth in DynamicAuth.objects.filter(rule=rule):
+		auth_obj = {
+			"when" : auth.require_when,
+		}
+		if isinstance(auth, NetworkAuth):
+			auth_obj["type"] = "network"
+			auth_obj["ip"] = auth.ip_address
+			auth_obj["priv"] = auth.is_private
+		elif isinstance(auth, AdminAuth):
+			auth_obj["type"] = "admin"
+			if auth.admin.id == Contact.NULL:
+				# Rule is unsatisfiable: there is no admin
+				return False, []
+		elif isinstance(auth, UserAuth):
+			auth_obj["type"] = "user"
+			if principal.owner.id == Contact.NULL:
+				# Rule is unsatisfiable: there is user to 
+				# authenticate
+				return False, []
+		elif isinstance(auth, PasscodeAuth):
+			auth_obj["type"] = "passcode"
+		result.append(auth_obj)
+	
+	return True, result
+
 @gzip_page
 @require_GET
-def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=None):
+def query_can_map(request, from_gateway, from_id, to_gateway, to_id, 
+	timestamp=None):
 	"""
 	Return whether fromId at fromGateway can connect to toId at toGateway
 	"""
@@ -128,7 +159,8 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 
 	services = {}
 	rules = {}
-	for service_instance in ServiceInstance.objects.filter(principal=conn_from_principal):
+	for service_instance in ServiceInstance.objects.filter(
+		principal=conn_from_principal):
 		service_rules = applicable_rules.filter(
 			Q(service=service_instance.service) | Q(service__name="*"))
 		service_rule_exceptions = applicable_exceptions.filter(
@@ -136,7 +168,8 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 
 		service = service_instance.service
 
-		for char_instance in CharInstance.objects.filter(service=service_instance):
+		for char_instance in CharInstance.objects.filter(
+			service=service_instance):
 			char = char_instance.char
 
 			char_prop = set()
@@ -144,52 +177,30 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 			char_enc = False
 			char_lease = timestamp
 
-			char_rules = service_rules.filter(
-				Q(characteristic=char_instance.char) | Q(characteristic__name="*"))
-			for char_rule in char_rules:
+			
+			for char_rule in service_rules.filter(
+				Q(characteristic=char_instance.char) | 
+				Q(characteristic__name="*")):
+
+				#####################################
+				# Compute access per characteristic #
+				#####################################
 
 				char_rule_exceptions = service_rule_exceptions.filter(
-					Q(characteristic=char_instance.char) | Q(characteristic__name="*"),
+					Q(characteristic=char_instance.char) | 
+					Q(characteristic__name="*"),
 					rule=char_rule)
 				if char_rule_exceptions.exists():
 					continue
 
-				#####################################
-				# All checks pass, access permitted #
-				#####################################
+				# Access allowed
 				if service.uuid not in services:
 					services[service.uuid] = {}
 				if char.uuid not in services[service.uuid]:
 					services[service.uuid][char.uuid] = []
 				if char_rule.id not in rules:
-					dynamic_auth = []
-					unsatisfiable = False
-
-					for auth in DynamicAuth.objects.filter(rule=char_rule):
-						auth_obj = {
-							"when" : auth.require_when,
-						}
-						if isinstance(auth, NetworkAuth):
-							auth_obj["type"] = "network"
-							auth_obj["ip"] = auth.ip_address
-							auth_obj["priv"] = auth.is_private
-						elif isinstance(auth, AdminAuth):
-							auth_obj["type"] = "admin"
-							if auth.admin.id == Contact.NULL:
-								# Rule is unsatisfiable: there is no admin
-								unsatisfiable = True
-								break
-						elif isinstance(auth, UserAuth):
-							auth_obj["type"] = "user"
-							if to_principal.owner.id == Contact.NULL:
-								# Rule is unsatisfiable: there is user to authenticate
-								unsatisfiable = True
-								break
-						elif isinstance(auth, PasscodeAuth):
-							auth_obj["type"] = "passcode"
-						dynamic_auth.append(auth_obj)
-					
-					if unsatisfiable:
+					satisfiable, dauth = _compute_dynamic_auth(rule, to_principal)
+					if not satisfiable:
 						continue
 
 					# Put the rule in the result
@@ -198,8 +209,9 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id, timestamp=N
 						"excl" : char_rule.exclusive,
 						"int" : char_rule.integrity,
 						"enc" : char_rule.encryption,
-						"lease" : (timestamp + char_rule.lease_duration).strftime("%s"),
-						"dauth" : dynamic_auth,
+						"lease" : (timestamp + char_rule.lease_duration
+							).strftime("%s"),
+						"dauth" : dauth,
 					}
 
 				services[service.uuid][char.uuid].append(char_rule.id)

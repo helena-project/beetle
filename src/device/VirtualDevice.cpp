@@ -196,16 +196,42 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 }
 
 void VirtualDevice::readHandler(uint8_t *buf, int len) {
-	if (buf[0] == ATT_OP_MTU_REQ) {
+	uint8_t opCode = buf[0];
+	if (opCode == ATT_OP_MTU_REQ) {
 		mtu = btohs(*(uint16_t *)(buf + 1));
 		uint8_t resp[3];
 		resp[0] = ATT_OP_MTU_RESP;
 		*(uint16_t *)(resp + 1) = htobs(ATT_DEFAULT_LE_MTU);
 		write(resp, sizeof(resp));
-	} else if (((buf[0] & 1) == 1 && buf[0] != ATT_OP_HANDLE_NOTIFY && buf[0] != ATT_OP_HANDLE_IND)
-			|| buf[0] == ATT_OP_HANDLE_CNF) {
+	} else if (((opCode & 1) == 1 && opCode != ATT_OP_HANDLE_NOTIFY && opCode != ATT_OP_HANDLE_IND)
+			|| opCode == ATT_OP_HANDLE_CNF) {
 		handleTransactionResponse(buf, len);
 	} else {
+
+		/*
+		 * Discover services in the network
+		 */
+		if (opCode == ATT_OP_FIND_BY_TYPE_REQ) {
+			uint16_t startHandle;
+			uint16_t endHandle;
+			uint16_t attType;
+			uint8_t *attValue;
+			int attValLen;
+			if (!parse_find_by_type_value_request(buf, len, startHandle, endHandle, attType, attValue, attValLen)) {
+				uint8_t err[ATT_ERROR_PDU_LEN];
+				pack_error_pdu(opCode, 0, ATT_ECODE_INVALID_PDU, err);
+				write(err, sizeof(err));
+			}
+			if (beetle.discoveryClient && attType == GATT_PRIM_SVC_UUID) {
+				UUID serviceUuid(attValue, attValLen);
+				std::list<discovery_result_t> discovered;
+				beetle.discoveryClient->discoverByUuid(serviceUuid, discovered);
+				for (discovery_result_t &discovered : discovered) {
+					// TODO
+				}
+			}
+		}
+
 		beetle.router->route(buf, len, getId());
 	}
 }

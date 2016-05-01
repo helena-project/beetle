@@ -37,7 +37,7 @@
 #include "hat/HandleAllocationTable.h"
 #include "Handle.h"
 
-CLI::CLI(Beetle &beetle, int port_, std::string path_, NetworkDiscovery *discovery)
+CLI::CLI(Beetle &beetle, int port_, std::string path_, NetworkDiscoveryClient *discovery)
 : beetle(beetle), networkDiscovery(discovery), t() {
 	port = port_;
 	path = path_;

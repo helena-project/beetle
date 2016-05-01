@@ -2,7 +2,8 @@ from django.shortcuts import render
 from django.db import transaction
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
-from django.views.decorators.http import require_http_methods, require_GET, require_POST
+from django.views.decorators.http import require_http_methods, require_GET, \
+	require_POST
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.csrf import csrf_exempt
 
@@ -10,7 +11,8 @@ from ipware.ip import get_ip
 
 import json
 
-from .models import ConnectedGateway, ConnectedPrincipal, CharInstance, ServiceInstance
+from .models import ConnectedGateway, ConnectedPrincipal, CharInstance, \
+	ServiceInstance
 from beetle.models import Gateway, Principal
 from gatt.models import Service, Characteristic
 from gatt.shared import convert_uuid, check_uuid

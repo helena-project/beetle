@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include <controller/NetworkState.h>
+#include <controller/NetworkStateClient.h>
 
 #include <boost/network/protocol/http/client.hpp>
 #include <boost/thread/lock_types.hpp>
@@ -26,7 +26,7 @@
 
 using json = nlohmann::json;
 
-NetworkState::NetworkState(Beetle &beetle, ControllerClient &client, int tcpPort)
+NetworkStateClient::NetworkStateClient(Beetle &beetle, ControllerClient &client, int tcpPort)
 : beetle(beetle), client(client) {
 	std::string postParams = "port=" + std::to_string(tcpPort);
 
@@ -52,7 +52,7 @@ NetworkState::NetworkState(Beetle &beetle, ControllerClient &client, int tcpPort
 	}
 }
 
-NetworkState::~NetworkState() {
+NetworkStateClient::~NetworkStateClient() {
 	using namespace boost::network;
 	http::client::request request(client.getUrl("network/connect/" + beetle.name));
 		request << header("User-Agent", "linux");
@@ -78,7 +78,7 @@ NetworkState::~NetworkState() {
 	}
 }
 
-AddDeviceHandler NetworkState::getAddDeviceHandler() {
+AddDeviceHandler NetworkStateClient::getAddDeviceHandler() {
 	return [this](device_t d) {
 		boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 		if (beetle.devices.find(d) == beetle.devices.end()) {
@@ -123,7 +123,7 @@ AddDeviceHandler NetworkState::getAddDeviceHandler() {
 	};
 }
 
-UpdateDeviceHandler NetworkState::getUpdateDeviceHandler() {
+UpdateDeviceHandler NetworkStateClient::getUpdateDeviceHandler() {
 	return [this](device_t d) {
 		boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 		if (beetle.devices.find(d) == beetle.devices.end()) {
@@ -155,7 +155,7 @@ UpdateDeviceHandler NetworkState::getUpdateDeviceHandler() {
 	};
 }
 
-RemoveDeviceHandler NetworkState::getRemoveDeviceHandler() {
+RemoveDeviceHandler NetworkStateClient::getRemoveDeviceHandler() {
 	return [this](device_t d){
 		try {
 			removeDeviceHelper(d);
@@ -203,7 +203,7 @@ static std::string serializeHandles(Device *d) {
 	return json(arr).dump();
 }
 
-void NetworkState::addDeviceHelper(Device *d) {
+void NetworkStateClient::addDeviceHelper(Device *d) {
 	std::string url = client.getUrl(
 			"network/connect/" + beetle.name + "/" + d->getName() + "/" + std::to_string(d->getId()));
 	if (debug_controller) {
@@ -236,11 +236,11 @@ void NetworkState::addDeviceHelper(Device *d) {
 	}
 }
 
-void NetworkState::updateDeviceHelper(Device *d) {
+void NetworkStateClient::updateDeviceHelper(Device *d) {
 	std::string url = client.getUrl(
 			"network/connect/" + beetle.name + "/" + std::to_string(d->getId()));
 	if (debug_controller) {
-		pdebug("post: " + url);
+		pdebug("put: " + url);
 	}
 
 	std::string requestBody = serializeHandles(d);
@@ -269,7 +269,7 @@ void NetworkState::updateDeviceHelper(Device *d) {
 	}
 }
 
-void NetworkState::removeDeviceHelper(device_t d) {
+void NetworkStateClient::removeDeviceHelper(device_t d) {
 	std::string url = client.getUrl("network/connect/" + beetle.name + "/" + std::to_string(d));
 	if (debug_controller) {
 		pdebug("delete: " + url);
