@@ -29,7 +29,7 @@ def getArguments():
 args = getArguments()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s = ssl.wrap_socket(s, cert_reqs=ssl.CERT_NONE)	# TODO
+s = ssl.wrap_socket(s, cert_reqs=ssl.CERT_NONE)	# TODO fix this
 s.connect((args.host, args.port))
 
 def outputPrinter(s):

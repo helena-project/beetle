@@ -16,7 +16,7 @@
 
 #include "Debug.h"
 #include "sync/OrderedThreadPool.h"
-#include "../../tcp/shared.h"
+#include "util/write.h"
 
 IPCApplication::IPCApplication(Beetle &beetle, int sockfd_, std::string name_,
 		struct sockaddr_un sockaddr_, struct ucred ucred_)

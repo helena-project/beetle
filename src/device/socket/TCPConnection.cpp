@@ -19,7 +19,7 @@
 #include "ble/att.h"
 #include "Debug.h"
 #include "sync/OrderedThreadPool.h"
-#include "../../tcp/shared.h"
+#include "util/write.h"
 
 TCPConnection::TCPConnection(Beetle &beetle, SSL *ssl_, int sockfd_, struct sockaddr_in sockaddr_,
 		bool isEndpoint, HandleAllocationTable *hat) : VirtualDevice(beetle, isEndpoint, hat), readThread() {

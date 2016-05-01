@@ -1,12 +1,12 @@
 /*
- * shared.h
+ * write.h
  *
  *  Created on: Mar 28, 2016
  *      Author: james
  */
 
-#ifndef TCP_SHARED_H_
-#define TCP_SHARED_H_
+#ifndef UTIL_WRITE_H_
+#define UTIL_WRITE_H_
 
 #include <openssl/ossl_typ.h>
 #include <openssl/ssl.h>
@@ -38,4 +38,4 @@ inline int SSL_write_all(SSL *ssl, uint8_t *buf, int len) {
 }
 
 
-#endif /* TCP_SHARED_H_ */
+#endif /* UTIL_WRITE_H_ */

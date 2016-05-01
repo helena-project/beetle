@@ -20,7 +20,7 @@
 #include "Debug.h"
 #include "Device.h"
 #include "sync/OrderedThreadPool.h"
-#include "../../tcp/shared.h"
+#include "util/write.h"
 
 
 LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType

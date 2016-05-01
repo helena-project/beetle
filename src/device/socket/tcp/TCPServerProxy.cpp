@@ -8,23 +8,25 @@
 #include "device/socket/tcp/TCPServerProxy.h"
 
 #include <netdb.h>
-#include <netinet/in.h>
-#include <string.h>
 #include <sys/socket.h>
-#include <unistd.h>
-#include <cstdint>
-#include <sstream>
+#include <netinet/in.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#include <string.h>
+#include <cstdint>
+#include <cstdio>
+#include <map>
+#include <sstream>
+
+#include <unistd.h>
+#include <utility>
 
 #include "Debug.h"
 #include "Device.h"
 #include "hat/SingleAllocator.h"
 #include "tcp/TCPConnParams.h"
-#include "../../../tcp/shared.h"
-#include <cstdio>
-#include <map>
-#include <utility>
+#include "util/write.h"
+
 
 TCPServerProxy::TCPServerProxy(Beetle &beetle, SSL *ssl, int sockfd, std::string serverGateway_,
 		struct sockaddr_in serverGatewaySockAddr_, device_t remoteProxyTo_)

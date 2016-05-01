@@ -23,7 +23,7 @@
 #include "Debug.h"
 #include "tcp/TCPConnParams.h"
 #include "tcp/SSLConfig.h"
-#include "shared.h"
+#include "util/write.h"
 
 TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig &sslConfig, int port)
 : beetle(beetle), sslConfig(sslConfig) {
