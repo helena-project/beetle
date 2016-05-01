@@ -10,20 +10,26 @@
 #include <assert.h>
 #include <bluetooth/bluetooth.h>
 #include <cstring>
+#include <list>
 #include <map>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "ble/att.h"
 #include "ble/gatt.h"
 #include "ble/helper.h"
+#include "controller/NetworkDiscoveryClient.h"
 #include "Debug.h"
+#include "device/socket/tcp/TCPServerProxy.h"
 #include "Handle.h"
 #include "Router.h"
 #include "sync/Semaphore.h"
 #include "UUID.h"
 
-VirtualDevice::VirtualDevice(Beetle &beetle, HandleAllocationTable *hat) : Device(beetle, hat) {
+VirtualDevice::VirtualDevice(Beetle &beetle, bool isEndpoint_, HandleAllocationTable *hat)
+: Device(beetle, hat) {
+	isEndpoint = isEndpoint_;
 	started = false;
 	stopped = false;
 	currentTransaction = NULL;
@@ -82,8 +88,6 @@ void VirtualDevice::startNd() {
 	if (name == "") {
 		name = "<unknown>";
 	}
-
-	beetle.updateDevice(getId());
 }
 
 
@@ -195,6 +199,7 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 	}
 }
 
+
 void VirtualDevice::readHandler(uint8_t *buf, int len) {
 	uint8_t opCode = buf[0];
 	if (opCode == ATT_OP_MTU_REQ) {
@@ -211,7 +216,7 @@ void VirtualDevice::readHandler(uint8_t *buf, int len) {
 		/*
 		 * Discover services in the network
 		 */
-		if (opCode == ATT_OP_FIND_BY_TYPE_REQ) {
+		if (opCode == ATT_OP_FIND_BY_TYPE_REQ && isEndpoint && beetle.discoveryClient) {
 			uint16_t startHandle;
 			uint16_t endHandle;
 			uint16_t attType;
@@ -221,18 +226,85 @@ void VirtualDevice::readHandler(uint8_t *buf, int len) {
 				uint8_t err[ATT_ERROR_PDU_LEN];
 				pack_error_pdu(opCode, 0, ATT_ECODE_INVALID_PDU, err);
 				write(err, sizeof(err));
+				return;
 			}
-			if (beetle.discoveryClient && attType == GATT_PRIM_SVC_UUID) {
+
+			if (attType == GATT_PRIM_SVC_UUID) {
 				UUID serviceUuid(attValue, attValLen);
-				std::list<discovery_result_t> discovered;
-				beetle.discoveryClient->discoverByUuid(serviceUuid, discovered);
-				for (discovery_result_t &discovered : discovered) {
-					// TODO
-				}
+				discoverNetworkServices(serviceUuid);
 			}
 		}
 
 		beetle.router->route(buf, len, getId());
+	}
+}
+
+void VirtualDevice::discoverNetworkServices(UUID serviceUuid) {
+	std::list<discovery_result_t> discovered;
+	beetle.discoveryClient->discoverByUuid(serviceUuid, discovered, true, getId());
+	for (discovery_result_t &d : discovered) {
+		if (d.gateway == beetle.name) {
+			/*
+			 * Device is local.
+			 */
+			if (d.id == getId()) {
+				continue;
+			}
+			beetle.mapDevices(d.id, getId());
+		} else {
+			/*
+			 * Device is remote.
+			 */
+			device_t localId = NULL_RESERVED_DEVICE;
+
+			/*
+			 * Check if the remote device is already mapped locally.
+			 */
+			beetle.devicesMutex.lock_shared();
+			for (auto &kv: beetle.devices) {
+				TCPServerProxy *tcpSp = dynamic_cast<TCPServerProxy *>(kv.second);
+				if (tcpSp && tcpSp->getServerGateway() == d.gateway
+						&& tcpSp->getRemoteDeviceId() == d.id) {
+					localId = tcpSp->getId();
+				}
+			}
+			beetle.devicesMutex.unlock_shared();
+
+			if (localId == NULL_RESERVED_DEVICE) {
+				Semaphore sync(0);
+				std::thread t([this, &sync, &localId, d] {
+					/*
+					 * Try to connect and map from remote.
+					 */
+					VirtualDevice *device = NULL;
+					try {
+						device = TCPServerProxy::connectRemote(beetle, d.ip, d.port, d.id);
+						localId = device->getId();
+						sync.notify();
+
+						beetle.addDevice(device);
+
+						device->start();
+
+						if (debug_controller) {
+							pdebug("connected to remote " + std::to_string(device->getId())
+							+ " : " + device->getName());
+						}
+					} catch (DeviceException &e) {
+						std::cout << "caught exception: " << e.what() << std::endl;
+						if (device) {
+							beetle.removeDevice(device->getId());
+						}
+						sync.notify();
+					}
+				});
+				sync.wait();
+			}
+
+			if (localId != NULL_RESERVED_DEVICE) {
+				beetle.mapDevices(localId, getId());
+			}
+		}
 	}
 }
 

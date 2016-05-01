@@ -16,7 +16,7 @@
 
 TCPClientProxy::TCPClientProxy(Beetle &beetle, int sockfd, std::string clientGateway_,
 		struct sockaddr_in clientGatewaySockAddr_, device_t localProxyFor_)
-: TCPConnection(beetle, sockfd, "", clientGatewaySockAddr_, new SingleAllocator(localProxyFor_)) {
+: TCPConnection(beetle, sockfd, clientGatewaySockAddr_, false, new SingleAllocator(localProxyFor_)) {
 	/*
 	 * Make sure the device exists locally.
 	 */

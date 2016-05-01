@@ -17,7 +17,6 @@ Beetle::Beetle(std::string name_) : workers(4), writers(4) {
 	router = new Router(*this);
 	beetleDevice = new BeetleInternal(*this, name_);
 	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
-	accessControl = NULL;
 	name = name_;
 }
 

@@ -19,7 +19,8 @@
 #include "shared.h"
 
 IPCApplication::IPCApplication(Beetle &beetle, int sockfd_, std::string name_,
-		struct sockaddr_un sockaddr_, struct ucred ucred_) : VirtualDevice(beetle), readThread() {
+		struct sockaddr_un sockaddr_, struct ucred ucred_)
+: VirtualDevice(beetle, true), readThread() {
 	type = IPC_APPLICATION;
 	name = name_;
 	sockfd = sockfd_;

@@ -104,9 +104,6 @@ class RuleException(models.Model):
 		"Rule",
 		help_text="Rule to invert")
 
-	service = models.ForeignKey("gatt.Service")
-	characteristic = models.ForeignKey("gatt.Characteristic")
-
 	from_principal = models.ForeignKey(
 		"beetle.Principal", 
 		related_name="except_from",

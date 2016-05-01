@@ -21,7 +21,7 @@ std::atomic_int Device::idCounter(1);
 const std::string Device::deviceType2Str[] = {
 		"BeetleInternal", 	// 0
 		"LePeripheral", 	// 1
-		"TcpConnection",	// 2
+		"TcpClient",		// 2
 		"IpcApplication",	// 3
 		"TcpClientProxy",	// 4
 		"TcpServerProxy",	// 5

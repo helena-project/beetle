@@ -11,9 +11,9 @@
 #include <string>
 #include <list>
 
-#include <Beetle.h>
-#include <controller/ControllerClient.h>
-#include <UUID.h>
+#include "Beetle.h"
+#include "controller/ControllerClient.h"
+#include "UUID.h"
 
 typedef struct {
 	std::string name;

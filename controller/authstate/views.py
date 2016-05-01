@@ -42,8 +42,6 @@ from email.MIMEText import MIMEText
 def _is_rule_exempt_helper(rule, principal):
 	return bool(RuleException.objects.filter(
 		Q(to_principal=principal) | Q(to_principal__name="*"),
-		service__name="*", 
-		characteristic__name="*",
 		rule=rule))
 
 #-------------------------------------------------------------------------------

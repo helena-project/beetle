@@ -12,13 +12,14 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <cstdint>
+#include <exception>
+#include <iostream>
 #include <sstream>
 
-#include <Debug.h>
-#include <device/socket/tcp/TCPClientProxy.h>
-#include <device/socket/tcp/TCPServerProxy.h>
-#include <device/socket/IPCApplication.h>
-#include <device/socket/LEPeripheral.h>
+#include "Debug.h"
+#include "device/socket/tcp/TCPClient.h"
+#include "Device.h"
+
 
 DynamicAuth::DynamicAuth(rule_t ruleId_) {
 	ruleId = ruleId_;
@@ -46,8 +47,8 @@ NetworkAuth::NetworkAuth(rule_t r, std::string ip_, bool isPrivate_) : DynamicAu
 }
 
 void NetworkAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
-	TCPConnection *tcpTo = dynamic_cast<TCPConnection *>(to);
-	if (tcpTo && !dynamic_cast<TCPClientProxy *>(to) && !dynamic_cast<TCPServerProxy *>(to)) {
+	TCPClient *tcpTo = dynamic_cast<TCPClient *>(to);
+	if (tcpTo) {
 		struct sockaddr_in addr = tcpTo->getSockaddr();
 		if (isPrivate) {
 			state = isPrivateAddress(ntohl(addr.sin_addr.s_addr)) ? SATISFIED : DENIED;
@@ -78,9 +79,10 @@ void PasscodeAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 	/*
 	 * Must be an endpoint, not a device created by Beetle.
 	 */
-	if (dynamic_cast<LEPeripheral *>(to)
-			|| dynamic_cast<IPCApplication *>(to)
-			|| (dynamic_cast<TCPConnection *>(to) && !dynamic_cast<TCPClientProxy *>(to) && !dynamic_cast<TCPServerProxy *>(to))) {
+	switch (to->getType()) {
+	case Device::LE_PERIPHERAL:
+	case Device::IPC_APPLICATION:
+	case Device::TCP_CLIENT: {
 		std::stringstream resource;
 		resource << "authstate/passcode/isLive/" << std::fixed << ruleId
 				<< "/" << cc.getName() << "/" << std::fixed << to->getId();
@@ -106,7 +108,9 @@ void PasscodeAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 			pwarn(ss.str());
 			state = DENIED;
 		}
-	} else {
+		break;
+	}
+	default:
 		state = SATISFIED;
 	}
 
@@ -127,9 +131,10 @@ void AdminAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 	}
 
 	if (state == UNATTEMPTED) {
-		if (dynamic_cast<LEPeripheral *>(to)
-				|| dynamic_cast<IPCApplication *>(to)
-				|| (dynamic_cast<TCPConnection *>(to) && !dynamic_cast<TCPClientProxy *>(to) && !dynamic_cast<TCPServerProxy *>(to))) {
+		switch (to->getType()) {
+		case Device::LE_PERIPHERAL:
+		case Device::IPC_APPLICATION:
+		case Device::TCP_CLIENT: {
 			std::stringstream resource;
 			resource << "authstate/admin/request/" << std::fixed << ruleId
 					<< "/" << cc.getName() << "/" << std::fixed << to->getId();
@@ -155,7 +160,9 @@ void AdminAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 				pwarn(ss.str());
 				state = DENIED;
 			}
-		} else {
+			break;
+		}
+		default:
 			state = SATISFIED;
 		}
 	}
@@ -177,9 +184,10 @@ void UserAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 	}
 
 	if (state == UNATTEMPTED) {
-		if (dynamic_cast<LEPeripheral *>(to)
-				|| dynamic_cast<IPCApplication *>(to)
-				|| (dynamic_cast<TCPConnection *>(to) && !dynamic_cast<TCPClientProxy *>(to) && !dynamic_cast<TCPServerProxy *>(to))) {
+		switch (to->getType()) {
+		case Device::LE_PERIPHERAL:
+		case Device::IPC_APPLICATION:
+		case Device::TCP_CLIENT: {
 			std::stringstream resource;
 			resource << "authstate/user/request/" << std::fixed << ruleId
 					<< "/" << cc.getName() << "/" << std::fixed << to->getId();
@@ -205,7 +213,9 @@ void UserAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 				pwarn(ss.str());
 				state = DENIED;
 			}
-		} else {
+			break;
+		}
+		default:
 			state = SATISFIED;
 		}
 	}

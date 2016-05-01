@@ -23,7 +23,7 @@
 
 TCPServerProxy::TCPServerProxy(Beetle &beetle, int sockfd, std::string serverGateway_,
 		struct sockaddr_in serverGatewaySockAddr_, device_t remoteProxyTo_)
-: TCPConnection(beetle, sockfd, "", serverGatewaySockAddr_, new SingleAllocator(NULL_RESERVED_DEVICE)) {
+: TCPConnection(beetle, sockfd, serverGatewaySockAddr_, new SingleAllocator(NULL_RESERVED_DEVICE)) {
 	type = TCP_SERVER_PROXY;
 
 	name = "Proxy to " +  std::to_string(remoteProxyTo_) + " from " + serverGateway_;

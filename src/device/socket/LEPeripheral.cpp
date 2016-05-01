@@ -24,7 +24,7 @@
 
 
 LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType
-		) : VirtualDevice(beetle), readThread() {
+		) : VirtualDevice(beetle, true), readThread() {
 	type = LE_PERIPHERAL;
 
 	bdaddr = addr;

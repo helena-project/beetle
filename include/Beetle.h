@@ -19,6 +19,7 @@
 #include "HCI.h"
 
 class AccessControl;
+class NetworkDiscoveryClient;
 class BeetleInternal;
 class Device;
 class Router;
@@ -115,13 +116,13 @@ public:
 	 * Set the access control mechanism.
 	 */
 	void setAccessControl(AccessControl *ac);
-	AccessControl *accessControl;
+	AccessControl *accessControl = NULL;
 
 	/*
 	 * Set the discovery client.
 	 */
 	void setDiscoveryClient(NetworkDiscoveryClient *nd);
-	NetworkDiscoveryClient *discoveryClient;
+	NetworkDiscoveryClient *discoveryClient = NULL;
 
 	/*
 	 * Workers for callbacks.

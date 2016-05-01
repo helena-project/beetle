@@ -15,6 +15,7 @@
 #include <iostream>
 #include <utility>
 
+#include "device/socket/tcp/TCPClient.h"
 #include "device/socket/tcp/TCPClientProxy.h"
 #include "Debug.h"
 #include "tcp/TCPConnParams.h"
@@ -129,7 +130,7 @@ void TCPDeviceServer::startTcpDeviceHelper(int clifd, struct sockaddr_in cliaddr
 		 * Takes over the clifd
 		 */
 		if (clientParams.find(TCP_PARAM_GATEWAY) == clientParams.end()) {
-			device = new TCPConnection(beetle, clifd, clientParams[TCP_PARAM_CLIENT], cliaddr);
+			device = new TCPClient(beetle, clifd, clientParams[TCP_PARAM_CLIENT], cliaddr);
 		} else {
 			// name of the client gateway
 			std::string client = clientParams[TCP_PARAM_GATEWAY];

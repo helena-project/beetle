@@ -13,10 +13,11 @@ import json
 
 from .models import ConnectedGateway, ConnectedPrincipal, CharInstance, \
 	ServiceInstance
+
 from beetle.models import Gateway, Principal
 from gatt.models import Service, Characteristic
 from gatt.shared import convert_uuid, check_uuid
-
+from access.shared import query_can_map_static
 
 # Create your views here.
 
@@ -159,18 +160,7 @@ def update_principal(request, gateway, remote_id):
 	gateway_conn.last_seen = timezone.now()
 	gateway_conn.save()
 
-	if request.method == "DELETE":
-		##############
-		# Disconnect #
-		##############
-		principal_conns = ConnectedPrincipal.objects.filter(
-			gateway=gateway_conn, 
-			remote_id=remote_id)
-		principal_conns.delete()
-
-		return HttpResponse("disconnected")
-
-	elif request.method == "PUT":
+	if request.method == "PUT":
 		##########
 		# Update #
 		##########
@@ -186,6 +176,17 @@ def update_principal(request, gateway, remote_id):
 			return HttpResponse("updated")
 		else:
 			return response
+
+	elif request.method == "DELETE":		
+		##############
+		# Disconnect #
+		##############
+		principal_conns = ConnectedPrincipal.objects.filter(
+			gateway=gateway_conn, 
+			remote_id=remote_id)
+		principal_conns.delete()
+
+		return HttpResponse("disconnected")
 	
 	else:
 		return HttpResponse(status=405)
@@ -253,6 +254,18 @@ def discover_with_uuid(request, uuid, is_service=True):
 		return HttpResponse("invalid uuid %s" % uuid, status=400)
 	uuid = convert_uuid(uuid)
 
+	###
+	gateway = request.GET.get("gateway", None)
+	remote_id = request.GET.get("remote_id", None)
+	if gateway is not None and remote_id is not None:
+		gateway_conn = ConnectedGateway.objects.get(
+			gateway__name=gateway)
+		principal_conn = ConnectedPrincipal.objects.get(
+			gateway=gateway_conn, remote_id=int(remote_id))
+	###
+
+	current_time = timezone.now()
+
 	response = []
 	if is_service:
 		qs = ServiceInstance.objects.filter(service__uuid=uuid)
@@ -260,6 +273,14 @@ def discover_with_uuid(request, uuid, is_service=True):
 		qs = CharInstance.objects.filter(char__uuid=uuid)
 	
 	for x in qs:
+
+		can_map, _ =  query_can_map_static(x.principal.gateway.gateway, 
+			x.principal.principal, gateway_conn.gateway, 
+			principal_conn.principal, current_time)
+		
+		if not can_map:
+			continue
+
 		response.append({
 			"principal" : {
 				"name" : x.principal.principal.name,

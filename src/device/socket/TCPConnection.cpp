@@ -20,10 +20,8 @@
 #include "sync/OrderedThreadPool.h"
 #include "shared.h"
 
-TCPConnection::TCPConnection(Beetle &beetle, int sockfd_, std::string name_,
-		struct sockaddr_in sockaddr_, HandleAllocationTable *hat) : VirtualDevice(beetle, hat), readThread() {
-	type = TCP_CONNECTION;
-	name = name_;
+TCPConnection::TCPConnection(Beetle &beetle, int sockfd_, struct sockaddr_in sockaddr_,
+		bool isEndpoint, HandleAllocationTable *hat) : VirtualDevice(beetle, isEndpoint, hat), readThread() {
 	sockfd = sockfd_;
 	sockaddr = sockaddr_;
 }

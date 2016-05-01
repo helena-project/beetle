@@ -48,7 +48,7 @@ protected:
 	/*
 	 * Cannot instantiate a VirtualDevice
 	 */
-	VirtualDevice(Beetle &beetle, HandleAllocationTable *hat = NULL);
+	VirtualDevice(Beetle &beetle, bool isEndpoint, HandleAllocationTable *hat = NULL);
 
 	/*
 	 * Called by derived class when a packet is received.
@@ -64,9 +64,12 @@ protected:
 	 * Called at the beginning of start() to start the internals (any daemons).
 	 */
 	virtual void startInternal() = 0;
+
 private:
 	bool stopped;
 	bool started;
+
+	bool isEndpoint;
 
 	int mtu;
 
@@ -84,6 +87,11 @@ private:
 	transaction_t *currentTransaction;
 	std::queue<transaction_t *> pendingTransactions;
 	std::mutex transactionMutex;
+
+	/*
+	 * Helper methods
+	 */
+	void discoverNetworkServices(UUID serviceUuid);
 };
 
 #endif /* VIRTUALDEVICE_H_ */

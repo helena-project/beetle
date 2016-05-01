@@ -23,14 +23,15 @@
  */
 class TCPConnection: public VirtualDevice {
 public:
-	TCPConnection(Beetle &beetle, int sockfd, std::string name,
-			struct sockaddr_in sockaddr, HandleAllocationTable *hat = NULL);
 	virtual ~TCPConnection();
 
 	int getMTU();
 	struct sockaddr_in getSockaddr();
 
 protected:
+	TCPConnection(Beetle &beetle, int sockfd, struct sockaddr_in sockaddr,
+			bool isEndpoint, HandleAllocationTable *hat = NULL);
+
 	bool write(uint8_t *buf, int len);
 	void startInternal();
 private:

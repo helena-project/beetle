@@ -91,7 +91,7 @@ AddDeviceHandler NetworkStateClient::getAddDeviceHandler() {
 		switch (device->getType()) {
 		case Device::IPC_APPLICATION:
 		case Device::LE_PERIPHERAL:
-		case Device::TCP_CONNECTION: {
+		case Device::TCP_CLIENT: {
 			if (debug_controller) {
 				pdebug("informing controller of new connection");
 			}
@@ -136,7 +136,7 @@ UpdateDeviceHandler NetworkStateClient::getUpdateDeviceHandler() {
 		switch (device->getType()) {
 		case Device::IPC_APPLICATION:
 		case Device::LE_PERIPHERAL:
-		case Device::TCP_CONNECTION:
+		case Device::TCP_CLIENT:
 			if (debug_controller) {
 				pdebug("informing controller of new connection");
 			}

@@ -6,20 +6,20 @@
 CPP_SRCS += \
 ../src/controller/AccessControl.cpp \
 ../src/controller/ControllerClient.cpp \
-../src/controller/NetworkDiscovery.cpp \
-../src/controller/NetworkState.cpp 
+../src/controller/NetworkDiscoveryClient.cpp \
+../src/controller/NetworkStateClient.cpp 
 
 OBJS += \
 ./src/controller/AccessControl.o \
 ./src/controller/ControllerClient.o \
-./src/controller/NetworkDiscovery.o \
-./src/controller/NetworkState.o 
+./src/controller/NetworkDiscoveryClient.o \
+./src/controller/NetworkStateClient.o 
 
 CPP_DEPS += \
 ./src/controller/AccessControl.d \
 ./src/controller/ControllerClient.d \
-./src/controller/NetworkDiscovery.d \
-./src/controller/NetworkState.d 
+./src/controller/NetworkDiscoveryClient.d \
+./src/controller/NetworkStateClient.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include <controller/NetworkDiscoveryClient.h>
+#include "controller/NetworkDiscoveryClient.h"
 
 #include <boost/network/message/directives.hpp>
 #include <boost/network/message/wrappers/body.hpp>
@@ -16,7 +16,7 @@
 #include <json/json.hpp>
 #include <sstream>
 
-#include <Debug.h>
+#include "Debug.h"
 
 using json = nlohmann::json;
 

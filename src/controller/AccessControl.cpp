@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include <controller/AccessControl.h>
+#include "controller/AccessControl.h"
 
 #include <boost/network/protocol/http/client.hpp>
 #include <boost/network/protocol/http/request.hpp>
@@ -17,12 +17,13 @@
 #include <memory>
 #include <sstream>
 
-#include <ble/att.h>
-#include <device/socket/tcp/TCPClientProxy.h>
-#include <device/socket/tcp/TCPServerProxy.h>
-#include <Device.h>
-#include <controller/access/DynamicAuth.h>
-#include <Handle.h>
+#include "ble/att.h"
+#include "device/socket/tcp/TCPClient.h"
+#include "device/socket/tcp/TCPClientProxy.h"
+#include "device/socket/tcp/TCPServerProxy.h"
+#include "Device.h"
+#include "controller/access/DynamicAuth.h"
+#include "Handle.h"
 
 
 using json = nlohmann::json;
@@ -44,7 +45,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
 		return true;
 	case Device::IPC_APPLICATION:
 	case Device::LE_PERIPHERAL:
-	case Device::TCP_CONNECTION: {
+	case Device::TCP_CLIENT: {
 		fromGateway = beetle.name;
 		fromId = from->getId();
 		break;
@@ -69,7 +70,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
 		return false;
 	case Device::IPC_APPLICATION:
 	case Device::LE_PERIPHERAL:
-	case Device::TCP_CONNECTION: {
+	case Device::TCP_CLIENT: {
 		toGateway = beetle.name;
 		toId = to->getId();
 		break;
@@ -184,9 +185,7 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 		rule.priority = 0;
 		json dAuthValues = ruleValue["dauth"];
 
-		if (dAuthValues.size() == 0) {
-			// do nothing
-		} else {
+		if (dAuthValues.size() > 0) {
 			for (json::iterator it2 = dAuthValues.begin(); it2 != dAuthValues.end(); ++it2) {
 				json dAuthValue = *it2;
 				std::string type = dAuthValue["type"];
@@ -231,9 +230,6 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 						}
 					}
 					rule.additionalAuth.push_back(std::shared_ptr<DynamicAuth>(auth));
-				} else {
-					// rule with no dynamic
-					satisfiable = false;
 				}
 			}
 		}

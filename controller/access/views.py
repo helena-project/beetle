@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.http import require_GET
 
+from .shared import query_can_map_static
 from .models import Rule, RuleException, DynamicAuth, AdminAuth, UserAuth, \
 	PasscodeAuth, NetworkAuth
 
@@ -20,36 +21,7 @@ import cronex
 import json
 import base64
 
-def _rule_is_static_subset(rule1, rule2):
-	"""
-	Returns whether a rule1 is a static subset of rule2.
-	"""
-	def _lte(a, b):
-		return a == b or b.name == "*"
-
-	is_subset = True
-	is_subset &= _lte(rule1.from_principal, rule2.from_principal)
-	is_subset &= _lte(rule1.from_gateway, rule2.from_gateway)
-	is_subset &= _lte(rule1.to_principal, rule2.to_principal)
-	is_subset &= _lte(rule1.to_gateway, rule2.to_gateway)
-	is_subset &= _lte(rule1.service, rule2.service)
-	is_subset &= _lte(rule1.characteristic, rule2.characteristic)
-	
-	if not is_subset:
-		return is_subset
-
-	is_subset &= set(rule1.properties) == set(rule2.properties)
-	is_subset &= rule1.exclusive == rule2.exclusive
-	is_subset &= rule1.integrity == rule2.integrity
-	is_subset &= rule1.encryption == rule2.encryption
-	is_subset &= rule1.lease_duration == rule2.lease_duration
-
-	return is_subset
-
-def _compute_dynamic_auth(rule, principal):
-	"""
-	Computes the dynamic factors that apply.
-	"""
+def _get_dynamic_auth(rule, principal):
 	result = []
 	for auth in DynamicAuth.objects.filter(rule=rule):
 		auth_obj = {
@@ -78,13 +50,12 @@ def _compute_dynamic_auth(rule, principal):
 
 @gzip_page
 @require_GET
-def query_can_map(request, from_gateway, from_id, to_gateway, to_id, 
-	timestamp=None):
+def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 	"""
 	Return whether fromId at fromGateway can connect to toId at toGateway
 	"""
 
-	if timestamp is None and "timestamp" in request.GET:
+	if "timestamp" in request.GET:
 		timestamp = dateutil.parser.parse(request.GET["timestamp"])
 	else:
 		timestamp = timezone.now()
@@ -97,38 +68,11 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id,
 	to_gateway, to_principal, conn_to_gateway, conn_to_principal = \
 		get_gateway_and_principal_helper(to_gateway, to_id)
 
-	applicable_rules = Rule.objects.filter(
-		Q(from_principal=from_principal) | Q(from_principal__name="*"),
-		Q(from_gateway=from_gateway) | Q(from_gateway__name="*"),
-		Q(to_principal=to_principal) | Q(to_principal__name="*"),
-		Q(to_gateway=to_gateway) | Q(to_gateway__name="*"),
-		active=True)
-
-	if timestamp is not None:
-		applicable_rules = applicable_rules.filter(
-			start__lte=timestamp, expire__gte=timestamp) \
-			| applicable_rules.filter(expire__isnull=True)
-
-	applicable_exceptions = RuleException.objects.filter(
-		Q(from_principal=from_principal) | Q(from_principal__name="*"),
-		Q(from_gateway=from_gateway) | Q(from_gateway__name="*"),
-		Q(to_principal=to_principal) | Q(to_principal__name="*"),
-		Q(to_gateway=to_gateway) | Q(to_gateway__name="*"))
-
-	excluded_rule_ids = set()
-	for rule in applicable_rules:
-		rule_exceptions = applicable_exceptions.filter(
-			rule=rule,
-			service__name="*", 
-			characteristic__name="*")
-		if rule_exceptions.exists():
-			excluded_rule_ids.add(rule.id)
-
-	for exclude_id in excluded_rule_ids:
-		applicable_rules = applicable_rules.exclude(id=exclude_id)
+	can_map, applicable_rules = query_can_map_static(from_gateway, 
+		from_principal, to_gateway, to_principal, timestamp)
 	
 	response = {}
-	if not applicable_rules.exists():
+	if not can_map:
 		response["result"] = False
 		return JsonResponse(response)
 
@@ -163,43 +107,29 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id,
 		principal=conn_from_principal):
 		service_rules = applicable_rules.filter(
 			Q(service=service_instance.service) | Q(service__name="*"))
-		service_rule_exceptions = applicable_exceptions.filter(
-			Q(service=service_instance.service) | Q(service__name="*"))
 
 		service = service_instance.service
 
 		for char_instance in CharInstance.objects.filter(
 			service=service_instance):
-			char = char_instance.char
-
-			char_prop = set()
-			char_int = False
-			char_enc = False
-			char_lease = timestamp
-
 			
+			characteristic = char_instance.char
+
 			for char_rule in service_rules.filter(
-				Q(characteristic=char_instance.char) | 
+				Q(characteristic=characteristic) | 
 				Q(characteristic__name="*")):
 
 				#####################################
 				# Compute access per characteristic #
 				#####################################
 
-				char_rule_exceptions = service_rule_exceptions.filter(
-					Q(characteristic=char_instance.char) | 
-					Q(characteristic__name="*"),
-					rule=char_rule)
-				if char_rule_exceptions.exists():
-					continue
-
 				# Access allowed
 				if service.uuid not in services:
 					services[service.uuid] = {}
-				if char.uuid not in services[service.uuid]:
-					services[service.uuid][char.uuid] = []
+				if characteristic.uuid not in services[service.uuid]:
+					services[service.uuid][characteristic.uuid] = []
 				if char_rule.id not in rules:
-					satisfiable, dauth = _compute_dynamic_auth(rule, to_principal)
+					satisfiable, dauth = _get_dynamic_auth(char_rule, to_principal)
 					if not satisfiable:
 						continue
 
@@ -214,7 +144,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id,
 						"dauth" : dauth,
 					}
 
-				services[service.uuid][char.uuid].append(char_rule.id)
+				services[service.uuid][characteristic.uuid].append(char_rule.id)
 				
 	if not rules:
 		response["result"] = False
