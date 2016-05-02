@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django import forms
 
 from .models import BeetleEmailAccount, AdminAuthInstance, PasscodeAuthInstance, UserAuthInstance
 
@@ -6,7 +7,11 @@ from solo.admin import SingletonModelAdmin
 
 # Register your models here.
 
+class BeetleEmailAccountForm(forms.ModelForm):
+	password = forms.CharField(widget=forms.PasswordInput())
+
 class BeetleEmailAccountAdmin(SingletonModelAdmin):
+	form = BeetleEmailAccountForm
 	list_display = ("address",)
 admin.site.register(BeetleEmailAccount, BeetleEmailAccountAdmin)
 
