@@ -70,6 +70,7 @@ class RuleExceptionInline(admin.TabularInline):
 @admin.register(Rule)
 class RuleAdmin(admin.ModelAdmin):
 	form = RuleAdminForm
+	save_as = True
 	list_display = (
 		"name",
 		"get_description",

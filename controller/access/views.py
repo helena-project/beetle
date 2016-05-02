@@ -12,8 +12,8 @@ from .models import Rule, RuleException, DynamicAuth, AdminAuth, UserAuth, \
 
 from beetle.models import Principal, Gateway, Contact
 from gatt.models import Service, Characteristic
-from network.models import ConnectedGateway, ConnectedPrincipal, ServiceInstance, \
-	CharInstance
+from network.models import ConnectedGateway, ConnectedPrincipal, \
+	ServiceInstance, CharInstance
 from network.shared import get_gateway_helper, get_gateway_and_principal_helper
 
 import dateutil.parser
@@ -49,6 +49,45 @@ def _get_dynamic_auth(rule, principal):
 		result.append(auth_obj)
 	
 	return True, result
+
+def _get_minimal_rules(rules, cached_relations, ignore_properties=False):
+	"""
+	Returns the rules that are 'minimal'.
+	"""
+	if rules.count() == 0:
+		return rules
+
+	not_minimal_ids = set()
+	# TODO: this is not efficient... filling in upper triangular matrix of 
+	# strict partial order.
+	for lhs in rules.order_by("id"):
+		for rhs in rules.filter(id__gte=lhs.id):
+			key = (lhs.id, rhs.id)
+			if key not in cached_relations:
+				lhs_lte_rhs = lhs.domain_lte(rhs) and \
+					(ignore_properties or lhs.properties_lte(rhs))
+				rhs_lte_lhs = rhs.domain_lte(lhs) and \
+					(ignore_properties or rhs.properties_lte(lhs))
+				if lhs_lte_rhs and rhs_lte_lhs:
+					cached_relations[key] = 0
+				elif lhs_lte_rhs:
+					cached_relations[key] = -1
+				elif rhs_lte_lhs:
+					cached_relations[key] = 1
+				else:
+					cached_relations[key] = 0
+			cached_val = cached_relations[key]
+			if cached_val == 0:
+				pass
+			elif cached_val > 0:
+				not_minimal_ids.add(lhs.id)
+			else:
+				not_minimal_ids.add(rhs.id)
+
+	for rule_id in not_minimal_ids:
+		rules = rules.exclude(id=rule_id)
+
+	return rules
 
 @gzip_page
 @require_GET
@@ -103,6 +142,9 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 	# 	}
 	# }
 
+	# Cached already computed relations for a strict partial order
+	cached_relations = {}
+
 	services = {}
 	rules = {}
 	for service_instance in ServiceInstance.objects.filter(
@@ -117,9 +159,10 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 			
 			characteristic = char_instance.char
 
-			for char_rule in service_rules.filter(
-				Q(characteristic=characteristic) | 
-				Q(characteristic__name="*")):
+			char_rules = service_rules.filter(Q(characteristic=characteristic) | 
+				Q(characteristic__name="*"))
+
+			for char_rule in _get_minimal_rules(char_rules, cached_relations):
 
 				#####################################
 				# Compute access per characteristic #

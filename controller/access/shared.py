@@ -2,31 +2,6 @@ from django.db.models import Q
 
 from .models import Rule, RuleException
 
-def _rule_is_static_subset(rule1, rule2):
-	"""
-	Returns whether a rule1 is a static subset of rule2.
-	"""
-	def _lte(a, b):
-		return a == b or b.name == "*"
-
-	is_static_subset = True
-	is_static_subset &= _lte(rule1.from_principal, rule2.from_principal)
-	is_static_subset &= _lte(rule1.from_gateway, rule2.from_gateway)
-	is_static_subset &= _lte(rule1.to_principal, rule2.to_principal)
-	is_static_subset &= _lte(rule1.to_gateway, rule2.to_gateway)
-	is_static_subset &= _lte(rule1.service, rule2.service)
-	is_static_subset &= _lte(rule1.characteristic, rule2.characteristic)
-	is_static_subset &= rule1.cron_expression == rule2.cron_expression
-	
-	is_access_subset = True
-	is_access_subset &= set(rule1.properties) == set(rule2.properties)
-	is_access_subset &= rule1.exclusive == rule2.exclusive
-	is_access_subset &= rule1.integrity == rule2.integrity
-	is_access_subset &= rule1.encryption == rule2.encryption
-	is_access_subset &= rule1.lease_duration == rule2.lease_duration
-
-	return is_static_subset, is_access_subset
-
 def _get_applicable_rules(from_gateway, from_principal, to_gateway, 
 	to_principal, timestamp=None):
 	"""

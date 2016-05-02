@@ -40,3 +40,4 @@ class PasscodeAuthInstanceAdmin(admin.ModelAdmin):
 class ExclusiveLeaseAdmin(admin.ModelAdmin):
 	list_display = ("principal", "group", "timestamp", "expire")
 	search_fields = ("principal", "group")
+	readonly_fields = list_display
