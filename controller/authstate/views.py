@@ -57,19 +57,22 @@ def view_form_passcode(request, rule, principal):
 	try:
 		rule = Rule.objects.get(name=rule)
 		principal = Principal.objects.get(name=principal)
-		passcode_auth = DynamicAuth.objects.instance_of(PasscodeAuth).get(rule=rule)
+		passcode_auth = DynamicAuth.objects.instance_of(PasscodeAuth).get(
+			rule=rule)
 	except DynamicAuth.DoesNotExist:
 		context_dict = {
 			"title" : "An error occurred...",
 			"message" : "%s does not require passcode auth." % (rule.name,),
 		}
-		return render_to_response('authstate/empty_response.html', context_dict, context)
+		return render_to_response('authstate/empty_response.html', 
+			context_dict, context)
 	except Exception, err:
 		context_dict = {
 			"title" : "An error occurred...",
 			"message" : str(err),
 		}
-		return render_to_response('authstate/empty_response.html', context_dict, context)
+		return render_to_response('authstate/empty_response.html', 
+			context_dict, context)
 
 	now = timezone.now()
 
@@ -164,19 +167,22 @@ def view_form_passcode_generic(request, rule):
 
 	try:
 		rule = Rule.objects.get(name=rule)
-		passcode_auth = DynamicAuth.objects.instance_of(PasscodeAuth).get(rule=rule)
+		passcode_auth = DynamicAuth.objects.instance_of(PasscodeAuth).get(
+			rule=rule)
 	except DynamicAuth.DoesNotExist:
 		context_dict = {
 			"title" : "An error occurred...",
 			"message" : "%s does not require passcode auth." % (rule.name,),
 		}
-		return render_to_response('authstate/empty_response.html', context_dict, context)
+		return render_to_response('authstate/empty_response.html', 
+			context_dict, context)
 	except Exception, err:
 		context_dict = {
 			"title" : "An error occurred...",
 			"message" : str(err),
 		}
-		return render_to_response('authstate/empty_response.html', context_dict, context)
+		return render_to_response('authstate/empty_response.html', 
+			context_dict, context)
 
 	now = timezone.now()
 
@@ -196,7 +202,8 @@ def view_form_passcode_generic(request, rule):
 			principals = Principal.objects.all().exclude(name="*")
 		else:
 			principals = [rule.to_principal]
-		principals = [x for x in principals if not _is_rule_exempt_helper(rule, x)]
+		principals = [x for x in principals if not _is_rule_exempt_helper(
+			rule, x)]
 
 		context_dict["principals"] = principals
 
@@ -210,13 +217,15 @@ def view_form_passcode_generic(request, rule):
 		principal = request.POST["principal"]
 		principal = Principal.objects.get(name=principal)
 
-		if (rule.to_principal.name != "*" and rule.to_principal != principal) or \
-			_is_rule_exempt_helper(rule, principal):
+		if (rule.to_principal.name != "*" and rule.to_principal != principal) \
+			or _is_rule_exempt_helper(rule, principal):
 			context_dict = {
 				"title" : "An error occurred...",
-				"message" : "%s does not apply for %s." % (rule.name, principal.name),
+				"message" : "%s does not apply for %s." % (rule.name, 
+					principal.name),
 			}
-			return render_to_response('authstate/empty_response.html', context_dict, context)
+			return render_to_response('authstate/empty_response.html', 
+				context_dict, context)
 
 		context_dict["principal"] = principal
 
@@ -290,7 +299,7 @@ SMS_GATEWAYS = {
 }
 
 EMAIL_REPLY_REGEX = re.compile(
-	r"X-OPWV-Extra-Message-Type:Reply\s+[oO][kK]\s+-----Original Message-----")
+	r"X-OPWV-Extra-Message-Type:Reply\s+(\w+?)\s+-----Original Message-----")
 
 def _generate_rand_string(otp_len=6):
 	return ''.join(random.choice(string.ascii_uppercase + string.digits) 
@@ -299,7 +308,8 @@ def _generate_rand_string(otp_len=6):
 #-------------------------------------------------------------------------------
 
 def _format_admin_auth_body(rule, principal, auth):
-	msg = "'%s' is requesting access for rule '%s'." % (principal.name, rule.name)
+	msg = "'%s' is requesting access for rule '%s'." % (principal.name, 
+		rule.name)
 	if auth.message:
 		msg += " %s." % (auth.message,) 
 	msg += " Text OK to approve."
@@ -347,7 +357,8 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 		return HttpResponse("no sender address set up at server", status=500)
 
 	# TODO fix this to not be AT&T
-	email = admin_auth.admin.phone_number.replace("-","") + "@" + SMS_GATEWAYS[ATT]
+	email = admin_auth.admin.phone_number.replace("-","") + "@" \
+		+ SMS_GATEWAYS[ATT]
 	email = email.encode('ascii','ignore')
 
 	server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -380,20 +391,52 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 		ids = data[0].split()
 
 		if not ids:
-			print "no response"
+			print "still waiting..."
 			continue
 		
 		latest_email_id = ids[-1]
 		result, data = mail.fetch(latest_email_id, "(RFC822)") 
 		raw_email = data[0][1]
 		
-		if EMAIL_REPLY_REGEX.search(raw_email) is not None:
-			auth_instance = AdminAuthInstance(
-				rule=rule, 
-				principal=to_principal,
-				expire=current_time + admin_auth.session_length)
-			auth_instance.save()
-			return HttpResponse(auth_instance.expire.strftime("%s"), status=202)
+		email_match = EMAIL_REPLY_REGEX.search(raw_email)
+		if email_match is not None:
+			reply = email_match.group(1).lower()
+			if reply == "ok":
+				##############
+				# Allow once #
+				##############
+				auth_instance = AdminAuthInstance(
+					rule=rule, 
+					principal=to_principal,
+					expire=current_time + admin_auth.session_length)
+				auth_instance.save()
+				return HttpResponse(auth_instance.expire.strftime("%s"), 
+					status=202)
+			elif reply == "always":
+				################
+				# Allow always #
+				################
+				auth_instance = AdminAuthInstance(
+					rule=rule, 
+					principal=to_principal,
+					expire=current_time + relativedelta(years=1))
+				auth_instance.save()
+				return HttpResponse(auth_instance.expire.strftime("%s"), 
+					status=202)
+			elif reply == "never":
+				###############
+				# Deny always #
+				###############
+				wildcard_gateway = Gateway.objects.get(name="*")
+				wildcard_principal = Principal.objects.get(name="*")
+				rule_exception, created = RuleException.objects.get_or_create(
+					rule=rule,
+					from_gateway=wildcard_gateway,
+					from_principal=wildcard_principal,
+					to_principal=to_principal,
+					to_gateway=wildcard_gateway)
+				rule_exception.save()
+				return HttpResponse("denied permanently", status=403)
 		else:
 			print "no match"
 
@@ -450,7 +493,8 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 		return HttpResponse("no sender address set up at server", status=500)
 
 	# TODO fix this to not be AT&T
-	email = to_principal.owner.phone_number.replace("-","") + "@" + SMS_GATEWAYS[ATT]
+	email = to_principal.owner.phone_number.replace("-","") + "@" \
+		+ SMS_GATEWAYS[ATT]
 	email = email.encode('ascii','ignore')
 
 	server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -483,18 +527,43 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 		ids = data[0].split()
 
 		if not ids:
+			print "still waiting..."
 			continue
 		
 		latest_email_id = ids[-1]
 		result, data = mail.fetch(latest_email_id, "(RFC822)") 
 		raw_email = data[0][1]
 		
-		if EMAIL_REPLY_REGEX.search(raw_email) is not None:
-			auth_instance = UserAuthInstance(
-				rule=rule, 
-				principal=to_principal,
-				expire=current_time + user_auth.session_length)
-			auth_instance.save()
-			return HttpResponse(auth_instance.expire.strftime("%s"), status=202)
+		email_match = EMAIL_REPLY_REGEX.search(raw_email)
+		if email_match is not None:
+			reply = email_match.group(1).lower()
+			if reply == "ok":
+				##############
+				# Allow once #
+				##############
+				auth_instance = UserAuthInstance(
+					rule=rule, 
+					principal=to_principal,
+					expire=current_time + user_auth.session_length)
+				auth_instance.save()
+				return HttpResponse(auth_instance.expire.strftime("%s"), 
+					status=202)
+			elif reply == "never":
+				###############
+				# Deny always #
+				###############
+				wildcard_gateway = Gateway.objects.get(name="*")
+				wildcard_principal = Principal.objects.get(name="*")
+				rule_exception, created = RuleException.objects.get_or_create(
+					rule=rule,
+					from_gateway=wildcard_gateway,
+					from_principal=wildcard_principal,
+					to_principal=to_principal,
+					to_gateway=wildcard_gateway)
+				rule_exception.save()
+				return HttpResponse("denied permanently", status=403)
+		else:
+			print "no match"
+
 
 	return HttpResponse("no response from user", status=408)

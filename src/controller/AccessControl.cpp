@@ -166,9 +166,13 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 	json rules = access["rules"];
 	json services = access["services"];
 
-	bool satisfiable = true;
+	// Is at least one rule satisfiable
+	bool mappingSatisfiable = false;
+
 	cached_mapping_info_t cacheEntry;
 	for (json::iterator it = rules.begin(); it != rules.end(); ++it) {
+		// Is this rule satisfiable
+		bool ruleSatisfiable = true;
 
 		std::string ruleIdStr = it.key();
 		json ruleValue = it.value();
@@ -226,18 +230,27 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 					if (auth->when == DynamicAuth::ON_MAP) {
 						auth->evaluate(client, from, to);
 						if (auth->state != DynamicAuth::SATISFIED) {
-							satisfiable = false;
+							ruleSatisfiable = false;
 						}
 					}
 					rule.additionalAuth.push_back(std::shared_ptr<DynamicAuth>(auth));
 				}
+
+				/*
+				 * Stop evaluating
+				 */
+				if (!ruleSatisfiable) {
+					break;
+				}
 			}
+
+			mappingSatisfiable |= ruleSatisfiable;
 		}
 
 		cacheEntry.rules[ruleId] = rule;
 	}
 
-	if (satisfiable == false) {
+	if (mappingSatisfiable == false) {
 		/*
 		 * All rules are on evalualated onMap and none are satisfiable
 		 */

@@ -65,5 +65,5 @@ def query_can_map_static(from_gateway, from_principal, to_gateway, to_principal,
 	for rule in rules:
 		if _is_rule_exception(rule, from_gateway, from_principal, to_gateway, 
 			to_principal):
-			rules = rules.exclude(rule)
+			rules = rules.exclude(id=rule.id)
 	return rules.exists(), rules

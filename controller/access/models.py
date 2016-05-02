@@ -168,6 +168,11 @@ class DynamicAuth(PolymorphicModel):
 		choices=REQUIRE_WHEN_CHOICES,
 		help_text="When to trigger authentication.")
 
+	priority = models.IntegerField(
+		default=0,
+		editable=False,
+		help_text="A hidden field to ensure envaluation order")
+
 #-------------------------------------------------------------------------------
 
 class AdminAuth(DynamicAuth):
@@ -186,6 +191,10 @@ class AdminAuth(DynamicAuth):
 	admin = models.ForeignKey("beetle.Contact",	
 		help_text="User with authority over this rule")
 
+	def save(self, *args, **kwargs):
+		self.priority = 4
+		super(AdminAuth, self).save(*args, **kwargs)
+
 	def __unicode__(self):
 		return ""
 
@@ -203,6 +212,10 @@ class UserAuth(DynamicAuth):
 		max_length=100, 
 		blank=True,
 		help_text="Any additional message to present to the user.")
+
+	def save(self, *args, **kwargs):
+		self.priority = 3
+		super(UserAuth, self).save(*args, **kwargs)
 
 	def __unicode__(self):
 		return ""
@@ -237,6 +250,7 @@ class PasscodeAuth(DynamicAuth):
 			self.code = "*" * len(self.code)
 		elif self.code == "":
 			self.chash = ""
+		self.priority = 2
 		super(PasscodeAuth, self).save(*args, **kwargs)
 
 	def __unicode__(self):
@@ -260,6 +274,10 @@ class NetworkAuth(DynamicAuth):
 		max_length=45, 
 		default="127.0.0.1",
 		help_text="IP address to be matched exactly.")
+
+	def save(self, *args, **kwargs):
+		self.priority = 1
+		super(NetworkAuth, self).save(*args, **kwargs)
 
 	def __unicode__(self):
 		return self.ip_address

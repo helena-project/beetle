@@ -23,7 +23,7 @@ import base64
 
 def _get_dynamic_auth(rule, principal):
 	result = []
-	for auth in DynamicAuth.objects.filter(rule=rule):
+	for auth in DynamicAuth.objects.filter(rule=rule).order_by("priority"):
 		auth_obj = {
 			"when" : auth.require_when,
 		}
@@ -31,19 +31,21 @@ def _get_dynamic_auth(rule, principal):
 			auth_obj["type"] = "network"
 			auth_obj["ip"] = auth.ip_address
 			auth_obj["priv"] = auth.is_private
-		elif isinstance(auth, AdminAuth):
-			auth_obj["type"] = "admin"
-			if auth.admin.id == Contact.NULL:
-				# Rule is unsatisfiable: there is no admin
-				return False, []
+		elif isinstance(auth, PasscodeAuth):
+			auth_obj["type"] = "passcode"
 		elif isinstance(auth, UserAuth):
 			auth_obj["type"] = "user"
 			if principal.owner.id == Contact.NULL:
 				# Rule is unsatisfiable: there is user to 
 				# authenticate
 				return False, []
-		elif isinstance(auth, PasscodeAuth):
-			auth_obj["type"] = "passcode"
+		elif isinstance(auth, AdminAuth):
+			auth_obj["type"] = "admin"
+			if auth.admin.id == Contact.NULL:
+				# Rule is unsatisfiable: there is no admin
+				return False, []
+		else:
+			continue
 		result.append(auth_obj)
 	
 	return True, result
