@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'gatt.apps.GattConfig',
     'network.apps.NetworkConfig',
     'access.apps.AccessConfig',
-    'authstate.apps.AuthstateConfig',
+    'acstate.apps.AcstateConfig',
     'sslserver',
     'jet',
     'polymorphic',
@@ -150,8 +150,8 @@ JET_SIDE_MENU_CUSTOM_APPS = [
     # ]),
     ('beetle', [
         'Contact',
-        'Principal',
         'Gateway',
+        'Principal',
     ]),
     ('gatt', [
         'Service',
@@ -159,18 +159,17 @@ JET_SIDE_MENU_CUSTOM_APPS = [
     ]),
     ('access', [
         'Rule',
-        # 'ExclusiveGroup',
+        'Exclusive',
     ]),
-    ('authstate', [
+    ('acstate', [
         'BeetleEmailAccount',
         'AdminAuthInstance',
         'UserAuthInstance',
         'PasscodeAuthInstance',
-        # 'ExclusiveGroup',
+        'ExclusiveLease',
     ]),
     ('network', [
         'ConnectedGateway',
         'ConnectedPrincipal',
-        # 'ExclusiveLease',
     ]),
 ]

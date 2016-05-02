@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django import forms
 
-from .models import BeetleEmailAccount, AdminAuthInstance, PasscodeAuthInstance, UserAuthInstance
+from .models import BeetleEmailAccount, AdminAuthInstance, PasscodeAuthInstance, UserAuthInstance, ExclusiveLease
 
 from solo.admin import SingletonModelAdmin
 
@@ -35,3 +35,8 @@ class PasscodeAuthInstanceAdmin(admin.ModelAdmin):
 	list_searchable = ("rule", "principal")
 	list_filter = ("rule", "principal")
 	readonly_fields = list_display
+
+@admin.register(ExclusiveLease)
+class ExclusiveLeaseAdmin(admin.ModelAdmin):
+	list_display = ("principal", "group", "timestamp", "expire")
+	search_fields = ("principal", "group")

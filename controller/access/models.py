@@ -36,6 +36,13 @@ class Rule(models.Model):
 		help_text="Description of the rule.")
 
 	# fields queried using SQL
+	service = models.ForeignKey(
+		"gatt.Service", 
+		default="")
+	characteristic = models.ForeignKey(
+		"gatt.Characteristic",
+		default="")
+
 	from_principal = models.ForeignKey(
 		"beetle.Principal", 
 		related_name="rule_from",
@@ -53,13 +60,6 @@ class Rule(models.Model):
 		related_name="rule_to_gateway",
 		help_text="Gateway connected to client.")
 
-	service = models.ForeignKey(
-		"gatt.Service", 
-		default="")
-	characteristic = models.ForeignKey(
-		"gatt.Characteristic",
-		default="")
-
 	# fields verified programatically
 	cron_expression = models.CharField(
 		max_length=100, 
@@ -73,9 +73,11 @@ class Rule(models.Model):
 		blank=True,
 		default="brwni",
 		help_text="Hint: brwni (broadcast, read, write, notify, indicate)")
-	exclusive = models.BooleanField(
-		default=False,
-		help_text="Enforce exclusive access.")
+	exclusive = models.ForeignKey("Exclusive",
+		default=None,
+		null=True,
+		blank=True,
+		help_text="Identifier to enforce exclusive access under.")
 	integrity = models.BooleanField(
 		help_text="Link layer integrity required.")
 	encryption = models.BooleanField(
@@ -124,25 +126,29 @@ class RuleException(models.Model):
 	def __unicode__(self):
 		return "(except) %s" % self.rule
 
-class ExclusiveGroup(models.Model):
+class Exclusive(models.Model):
 	"""
 	Group rules by exclusive access.
 	"""
 
+	NULL = -1
+
 	class Meta:
-		verbose_name_plural = "Exclusive rule groups"
+		verbose_name_plural = "Exclusive"
 
 	description = models.CharField(
-		max_length=500,
-		help_text="Logical description of this group.")
-	rules = models.ManyToManyField("Rule",
+		max_length=200,
 		blank=True,
-		help_text="Rules which belong to this exclusive group.")
+		help_text="Logical description of this group.")
+
+	default_lease = models.DurationField(
+		default=timedelta(hours=1), 
+		help_text="Length of the lease. Hint: HH:mm:ss")
 
 	def __unicode__(self):
 		return self.description
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 class DynamicAuth(PolymorphicModel):
 	"""
@@ -173,7 +179,7 @@ class DynamicAuth(PolymorphicModel):
 		editable=False,
 		help_text="A hidden field to ensure envaluation order")
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 class AdminAuth(DynamicAuth):
 	"""
@@ -198,7 +204,7 @@ class AdminAuth(DynamicAuth):
 	def __unicode__(self):
 		return ""
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 class UserAuth(DynamicAuth):
 	"""
@@ -220,7 +226,7 @@ class UserAuth(DynamicAuth):
 	def __unicode__(self):
 		return ""
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 class PasscodeAuth(DynamicAuth):
 	"""
@@ -256,7 +262,7 @@ class PasscodeAuth(DynamicAuth):
 	def __unicode__(self):
 		return ""
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 class NetworkAuth(DynamicAuth):
 	"""

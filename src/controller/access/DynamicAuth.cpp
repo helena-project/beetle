@@ -84,7 +84,7 @@ void PasscodeAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 	case Device::IPC_APPLICATION:
 	case Device::TCP_CLIENT: {
 		std::stringstream resource;
-		resource << "authstate/passcode/isLive/" << std::fixed << ruleId
+		resource << "acstate/passcode/isLive/" << std::fixed << ruleId
 				<< "/" << cc.getName() << "/" << std::fixed << to->getId();
 		std::string url = cc.getUrl(resource.str());
 
@@ -136,7 +136,7 @@ void AdminAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 		case Device::IPC_APPLICATION:
 		case Device::TCP_CLIENT: {
 			std::stringstream resource;
-			resource << "authstate/admin/request/" << std::fixed << ruleId
+			resource << "acstate/admin/request/" << std::fixed << ruleId
 					<< "/" << cc.getName() << "/" << std::fixed << to->getId();
 			std::string url = cc.getUrl(resource.str());
 
@@ -189,7 +189,7 @@ void UserAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 		case Device::IPC_APPLICATION:
 		case Device::TCP_CLIENT: {
 			std::stringstream resource;
-			resource << "authstate/user/request/" << std::fixed << ruleId
+			resource << "acstate/user/request/" << std::fixed << ruleId
 					<< "/" << cc.getName() << "/" << std::fixed << to->getId();
 			std::string url = cc.getUrl(resource.str());
 

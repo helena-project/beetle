@@ -32,6 +32,8 @@ class Handle;
 typedef uint64_t rule_info_t;
 typedef std::set<rule_info_t> rule_info_set;
 
+typedef int exclusive_lease_t;
+
 typedef struct {
 	std::map<rule_t, Rule> rules;
 
@@ -86,6 +88,11 @@ private:
 	boost::shared_mutex cacheMutex;
 
 	bool handleCanMapResponse(Device *from, Device *to, std::stringstream &response);
+
+	std::map<device_t, std::map<exclusive_lease_t, time_t>> leases;
+	std::mutex leasesMutex;
+	bool acquireExclusiveLease(Device *to, exclusive_lease_t id, bool &newlyAcquired);
+	void releaseExclusiveLease(Device *to, exclusive_lease_t id);
 };
 
 #endif /* CONTROLLER_ACCESSCONTROL_H_ */

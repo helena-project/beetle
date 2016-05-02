@@ -15,6 +15,7 @@ from .models import ConnectedGateway, ConnectedPrincipal, CharInstance, \
 	ServiceInstance
 
 from beetle.models import Gateway, Principal
+from acstate.models import ExclusiveLease
 from gatt.models import Service, Characteristic
 from gatt.shared import convert_uuid, check_uuid
 from access.shared import query_can_map_static

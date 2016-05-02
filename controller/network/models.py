@@ -6,7 +6,6 @@ from datetime import timedelta
 
 from beetle.models import Principal, Gateway
 from gatt.models import Service, Characteristic
-from access.models import ExclusiveGroup
 
 # Create your models here.
 
@@ -67,10 +66,3 @@ class CharInstance(models.Model):
 
 	def __unicode__(self):
 		return self.char.__unicode__()
-
-class ExclusiveLease(models.Model):
-	"""
-	A lease of exlusitivity
-	"""
-	group = models.ForeignKey("access.ExclusiveGroup")
-	gateway = models.ForeignKey("ConnectedGateway")

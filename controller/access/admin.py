@@ -6,13 +6,13 @@ import re
 # Register your models here.
 
 from .models import Rule, RuleException, AdminAuth, UserAuth, PasscodeAuth, \
-	NetworkAuth, ExclusiveGroup
+	NetworkAuth, Exclusive
 
 from beetle.models import Principal, Gateway
 from gatt.models import Service, Characteristic
 
 class RuleAdminForm(forms.ModelForm):
-	description = forms.CharField(widget=forms.Textarea)
+	description = forms.CharField(widget=forms.Textarea, required=False)
 
 	def clean_cron_expression(self):
 		try:
@@ -23,7 +23,8 @@ class RuleAdminForm(forms.ModelForm):
 	def clean_name(self):
 		name = self.cleaned_data["name"]
 		if re.match(r"^\w+", name) is None:
-			raise forms.ValidationError("Name can only contain alphanumeric characters.")
+			raise forms.ValidationError(
+				"Name can only contain alphanumeric characters.")
 		return name
 
 def make_active(ruleadmin, request, queryset):
@@ -116,21 +117,19 @@ class RuleAdmin(admin.ModelAdmin):
 	get_exceptions_link.short_description = "except"
 	get_exceptions_link.allow_tags = True
 
-# @admin.register(ExclusiveGroup)
-# class ExclusiveGroupAdmin(admin.ModelAdmin):
-# 	list_display = (
-# 		"id",
-# 		"description",
-# 		"get_rule_list",
-# 	)
-# 	search_fields = (
-# 		"id",
-# 		"description",
-# 		"get_rule_list",
-# 	)
+@admin.register(Exclusive)
+class ExclusiveAdmin(admin.ModelAdmin):
+	list_display = (
+		"id",
+		"description",
+	)
+	search_fields = (
+		"id",
+		"description",
+	)
 
-# 	def get_rule_list(self, obj):
-# 		rules = ["%d. %s" % (rule.id, rule.name) for rule in obj.rules.all()]
-# 		return "<br>".join(rules)
-# 	get_rule_list.short_description = "rules"
-# 	get_rule_list.allow_tags = True
+	def get_rule_list(self, obj):
+		rules = Rule.objects.filter(exclusive=obj)
+		return "<br>".join(rules)
+	get_rule_list.short_description = "rules"
+	get_rule_list.allow_tags = True

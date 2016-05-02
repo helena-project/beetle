@@ -11,13 +11,13 @@ from django.views.decorators.csrf import csrf_exempt
 
 from passlib.apps import django_context as pwd_context
 
-from .models import AdminAuthInstance, UserAuthInstance, PasscodeAuthInstance, \
-	BeetleEmailAccount
+from .models import AdminAuthInstance, UserAuthInstance, \
+	PasscodeAuthInstance, BeetleEmailAccount, ExclusiveLease
 
 from beetle.models import Principal, Gateway, Contact
 from gatt.models import Service, Characteristic
 from access.models import Rule, RuleException, DynamicAuth, PasscodeAuth, \
-	AdminAuth, UserAuth, NetworkAuth
+	AdminAuth, UserAuth, NetworkAuth, Exclusive
 from network.models import ConnectedGateway, ConnectedPrincipal, \
 	ServiceInstance, CharInstance
 from network.shared import get_gateway_and_principal_helper, get_gateway_helper
@@ -37,14 +37,14 @@ import imaplib
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 def _is_rule_exempt_helper(rule, principal):
 	return bool(RuleException.objects.filter(
 		Q(to_principal=principal) | Q(to_principal__name="*"),
 		rule=rule))
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 @require_http_methods(["GET","POST"])
 @transaction.atomic
@@ -284,7 +284,7 @@ def query_passcode_liveness(request, rule_id, to_gateway, to_id):
 	else:
 		return HttpResponse(auth_instance.expire.strftime("%s"), status=200)
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 ATT = "att"
 TMOBILE = "tmobile"
@@ -305,7 +305,7 @@ def _generate_rand_string(otp_len=6):
 	return ''.join(random.choice(string.ascii_uppercase + string.digits) 
 		for _ in range(otp_len))
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 def _format_admin_auth_body(rule, principal, auth):
 	msg = "'%s' is requesting access for rule '%s'." % (principal.name, 
@@ -442,7 +442,7 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 
 	return HttpResponse("no response from admin", status=408)
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 def _format_user_auth_body(rule, principal, auth):
 	msg = "Confirm access for '%s' to rule '%s'." % (principal.name, rule.name)
@@ -567,3 +567,64 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 
 
 	return HttpResponse("no response from user", status=408)
+
+#------------------------------------------------------------------------------
+
+@csrf_exempt
+@require_http_methods(["POST", "DELETE"])
+@transaction.atomic
+def request_exclusive_lease(request, exclusive_id, to_gateway, to_id):
+	"""
+	Acquire or release a lease on an exclusive group.
+	"""
+	exclusive_id = int(exclusive_id)
+	to_id = int(to_id)
+	current_time = timezone.now()
+
+	_, _, _, to_principal_conn = get_gateway_and_principal_helper(to_gateway, to_id)
+
+	exclusive = Exclusive.objects.get(id=exclusive_id)
+
+	if request.method == "POST":
+		###########
+		# Acquire #
+		###########
+		success = False
+		try:
+			exclusive_lease = ExclusiveLease.objects.get(group=exclusive)
+			if current_time > exclusive_lease.expire:
+				exclusive_lease.expire = current_time + exclusive.default_lease
+				exclusive_lease.principal = to_principal_conn
+				exclusive_lease.timestamp = current_time
+				exclusive_lease.save()
+				success = True
+			elif exclusive_lease.principal == to_principal_conn:
+				success = True
+		except ExclusiveLease.DoesNotExist:
+			exclusive_lease = ExclusiveLease(
+				group=exclusive,
+				principal=to_principal_conn,
+				expire=current_time + exclusive.default_lease)
+			exclusive_lease.save()
+			success = True
+
+		if success:
+			return HttpResponse(exclusive_lease.expire.strftime("%s"), status=202)
+		else:
+			return HttpResponse("denied", status=403)
+
+	elif request.method == "DELETE":
+		###########
+		# Release #
+		###########
+		try:
+			exclusive_lease = ExclusiveLease.objects.get(group=exclusive)
+			if exclusive_lease.principal == to_principal_conn:
+				exclusive_lease.delete()
+		except ExclusiveLease.DoesNotExist:
+			pass
+		return HttpResponse(status=200)
+
+	else:
+		return HttpResponse(status=403)
+

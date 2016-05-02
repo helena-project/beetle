@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from beetle.models import Principal
 from access.models import Rule
+from network.models import ConnectedPrincipal
 
 from solo.models import SingletonModel
 from dateutil.relativedelta import relativedelta
@@ -81,3 +82,15 @@ class PasscodeAuthInstance(models.Model):
 
 	def __unicode__(self):
 		return "%d %s" % (self.rule.id, self.principal.name)
+
+class ExclusiveLease(models.Model):
+	"""
+	A lease of exlusitivity
+	"""
+	group = models.OneToOneField("access.Exclusive")
+	principal = models.ForeignKey("network.ConnectedPrincipal")
+	timestamp = models.DateTimeField(auto_now_add=True)
+	expire = models.DateTimeField(default=timezone.now)
+
+	def __unicode__(self):
+		return "%d %s" % (self.group.id, self.principal.name)

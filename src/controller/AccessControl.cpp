@@ -149,6 +149,93 @@ RemoveDeviceHandler AccessControl::getRemoveDeviceHandler() {
 	};
 }
 
+bool AccessControl::acquireExclusiveLease(Device *to, exclusive_lease_t exclusiveId,
+		bool &newlyAcquired) {
+	std::unique_lock<std::mutex> leasesLk(leasesMutex);
+	if (leases[to->getId()].find(exclusiveId) != leases[to->getId()].end()) {
+		newlyAcquired = false;
+		return true;
+	}
+	leasesLk.unlock();
+
+	std::stringstream resource;
+	resource << "acstate/exclusive/" << std::fixed << exclusiveId
+			<< "/" << beetle.name << "/" << std::fixed << to->getId();
+
+	std::string url = client.getUrl(resource.str());
+	using namespace boost::network;
+	http::client::request request(url);
+	request << header("User-Agent", "linux");
+
+	if (debug_controller) {
+		pdebug("post: " + url);
+	}
+
+	try {
+		auto response = client.getClient()->post(request);
+		if (response.status() == 202) {
+			std::stringstream ss;
+			ss << body(response);
+			time_t expire = static_cast<time_t>(std::stod(ss.str()));
+
+			leasesLk.lock();
+			leases[to->getId()][exclusiveId] = expire;
+			leasesLk.unlock();
+
+			newlyAcquired = true;
+			return true;
+		} else {
+			std::stringstream ss;
+			ss << "exclusive lease denied: " << body(response);
+			if (debug_controller) {
+				pdebug(ss.str());
+			}
+			newlyAcquired = false;
+			return false;
+		}
+	} catch (std::exception &e) {
+		std::stringstream ss;
+		ss << "caught exception: " <<  e.what();
+		pwarn(ss.str());
+		newlyAcquired = false;
+		return false;
+	}
+}
+
+void AccessControl::releaseExclusiveLease(Device *to, exclusive_lease_t exclusiveId) {
+	std::unique_lock<std::mutex> leasesLk(leasesMutex);
+	leases[to->getId()].erase(exclusiveId);
+	leasesLk.unlock();
+
+	std::stringstream resource;
+	resource << "acstate/exclusive/" << std::fixed << exclusiveId
+			<< "/" << beetle.name << "/" << std::fixed << to->getId();
+
+	std::string url = client.getUrl(resource.str());
+	using namespace boost::network;
+	http::client::request request(url);
+	request << header("User-Agent", "linux");
+
+	if (debug_controller) {
+		pdebug("delete: " + url);
+	}
+
+	try {
+		auto response = client.getClient()->delete_(request);
+		if (response.status() != 200) {
+			std::stringstream ss;
+			ss << "failed to release lease : " << body(response);
+			if (debug_controller) {
+				pdebug(ss.str());
+			}
+		}
+	} catch (std::exception &e) {
+		std::stringstream ss;
+		ss << "caught exception: " <<  e.what();
+		pwarn(ss.str());
+	}
+}
+
 /*
  * Unpacks the controller response and returns whether the mapping is allowed.
  */
@@ -183,11 +270,16 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 		rule.setProperties(ruleValue["prop"]);
 		rule.encryption = ruleValue["enc"];
 		rule.integrity = ruleValue["int"];
-		rule.exclusive = ruleValue["excl"];
+		rule.exclusiveId = ruleValue["excl"];
 		std::string tStr = ruleValue["lease"];
 		rule.lease = static_cast<time_t>(std::stod(tStr));
 		rule.priority = 0;
 		json dAuthValues = ruleValue["dauth"];
+
+		bool acquiredNewLease = false;
+		if (rule.exclusiveId > 0 && !acquireExclusiveLease(to, rule.exclusiveId, acquiredNewLease)) {
+			continue; // cannot use this rule
+		}
 
 		if (dAuthValues.size() > 0) {
 			for (json::iterator it2 = dAuthValues.begin(); it2 != dAuthValues.end(); ++it2) {
@@ -243,11 +335,19 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 					break;
 				}
 			}
-
-			mappingSatisfiable |= ruleSatisfiable;
 		}
 
-		cacheEntry.rules[ruleId] = rule;
+		mappingSatisfiable |= ruleSatisfiable;
+		if (ruleSatisfiable) {
+			cacheEntry.rules[ruleId] = rule;
+		} else {
+			/*
+			 * Rule is not satisfiable, release the lease.
+			 */
+			if (acquiredNewLease) {
+				releaseExclusiveLease(to, rule.exclusiveId);
+			}
+		}
 	}
 
 	if (mappingSatisfiable == false) {
@@ -280,9 +380,11 @@ bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringst
 			rule_info_set charRulesSet;
 			for (json::iterator it3 = ruleIds.begin(); it3 != ruleIds.end(); ++it3) {
 				rule_t ruleId = *it3;
-				rule_info_t ruleInfo = ((uint64_t)cacheEntry.rules[ruleId].priority) << 32;
-				ruleInfo |= ruleId;
-				charRulesSet.insert(ruleInfo);
+				if (cacheEntry.rules.find(ruleId) != cacheEntry.rules.end()) {
+					rule_info_t ruleInfo = ((uint64_t)cacheEntry.rules[ruleId].priority) << 32;
+					ruleInfo |= ruleId;
+					charRulesSet.insert(ruleInfo);
+				}
 			}
 
 			cacheEntry.service_char_rules[serviceUuid][charUuid] = charRulesSet;

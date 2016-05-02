@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import ConnectedGateway, ConnectedPrincipal, ServiceInstance, \
-	CharInstance, ExclusiveLease
+	CharInstance
 
 # Register your models here.
 
@@ -70,8 +70,3 @@ class ConnectedPrincipalAdmin(admin.ModelAdmin):
 		return '<a href="/network/view/%s" target="_blank">link</a>' % (obj.principal.name)
 	get_principal_link.short_description = "detail"
 	get_principal_link.allow_tags = True
-
-@admin.register(ExclusiveLease)
-class ExclusiveLeaseAdmin(admin.ModelAdmin):
-	list_display = ("gateway", "group",)
-	search_fields = ("gateway", "group")

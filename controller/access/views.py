@@ -8,7 +8,7 @@ from django.views.decorators.http import require_GET
 
 from .shared import query_can_map_static
 from .models import Rule, RuleException, DynamicAuth, AdminAuth, UserAuth, \
-	PasscodeAuth, NetworkAuth
+	PasscodeAuth, NetworkAuth, Exclusive
 
 from beetle.models import Principal, Gateway, Contact
 from gatt.models import Service, Characteristic
@@ -131,14 +131,20 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 				if characteristic.uuid not in services[service.uuid]:
 					services[service.uuid][characteristic.uuid] = []
 				if char_rule.id not in rules:
-					satisfiable, dauth = _get_dynamic_auth(char_rule, to_principal)
+					satisfiable, dauth = _get_dynamic_auth(char_rule, 
+						to_principal)
 					if not satisfiable:
 						continue
+
+					if char_rule.exclusive:
+ 						exclusive_id = char_rule.exclusive.id
+ 					else:
+ 						exclusive_id = Exclusive.NULL
 
 					# Put the rule in the result
 					rules[char_rule.id] = {
 						"prop" : char_rule.properties,
-						"excl" : char_rule.exclusive,
+						"excl" : exclusive_id,
 						"int" : char_rule.integrity,
 						"enc" : char_rule.encryption,
 						"lease" : (timestamp + char_rule.lease_duration
@@ -146,7 +152,8 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 						"dauth" : dauth,
 					}
 
-				services[service.uuid][characteristic.uuid].append(char_rule.id)
+				services[service.uuid][characteristic.uuid].append(
+					char_rule.id)
 				
 	if not rules:
 		response["result"] = False

@@ -26,7 +26,7 @@ public:
 	uint8_t properties;
 	bool integrity;
 	bool encryption;
-	bool exclusive;
+	int exclusiveId;
 	time_t lease;
 	int priority = 0;
 	std::list<std::shared_ptr<DynamicAuth>> additionalAuth;

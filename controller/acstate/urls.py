@@ -18,4 +18,7 @@ urlpatterns = [
 	url(r'^user/request/(?P<rule_id>\d+)/(?P<to_gateway>[\w_\-@\']+)/(?P<to_id>\d+)',
 		views.request_user_auth,
 		name="send request to user for authorization"),
+	url(r'^exclusive/(?P<exclusive_id>\d+)/(?P<to_gateway>[\w_\-@\']+)/(?P<to_id>\d+)',
+		views.request_exclusive_lease,
+		name="send request to acquire/release lease"),
 ]
