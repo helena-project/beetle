@@ -173,3 +173,16 @@ JET_SIDE_MENU_CUSTOM_APPS = [
         'ConnectedPrincipal',
     ]),
 ]
+
+JET_THEMES = [
+    {
+        'theme': 'light-violet',
+        'color': '#a464c4',
+        'title': 'Light Violet'
+    },
+    {
+        'theme': 'light-gray',
+        'color': '#222',
+        'title': 'Light Gray'
+    }
+]

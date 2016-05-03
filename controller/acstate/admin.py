@@ -1,5 +1,7 @@
 from django.contrib import admin
+from django.core.validators import validate_email
 from django import forms
+
 
 from .models import BeetleEmailAccount, AdminAuthInstance, PasscodeAuthInstance, UserAuthInstance, ExclusiveLease
 
@@ -8,6 +10,10 @@ from solo.admin import SingletonModelAdmin
 # Register your models here.
 
 class BeetleEmailAccountForm(forms.ModelForm):
+	def clean_address(self):
+		address = self.cleaned_data["address"]
+		validate_email(address)
+		return address
 	password = forms.CharField(widget=forms.PasswordInput())
 
 class BeetleEmailAccountAdmin(SingletonModelAdmin):

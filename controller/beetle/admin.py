@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.core.validators import validate_email
 from django import forms
 
 import re
@@ -28,14 +29,22 @@ class GatewayAdmin(admin.ModelAdmin):
 class ContactAdminForm(forms.ModelForm):
 	def clean_phone_number(self):
 		number = self.cleaned_data["phone_number"]
-		if re.match(r"^\d{3}-?\d{3}-?\d{4}", number) is None:
+		regex_match = re.match(r"^(\d{3})-?(\d{3})-?(\d{4})", number)
+		if regex_match is None:
 			raise forms.ValidationError("Invalid phone number.")
-		return number
+		else:
+			return "%s-%s-%s" % (regex_match.group(1), regex_match.group(2), 
+				regex_match.group(3))
 	def clean_first_name(self):
 		first_name = self.cleaned_data["first_name"]
 		if re.match(r"^\w+", first_name) is None:
 			raise forms.ValidationError("Invalid first name.")
 		return first_name
+
+	def clean_email_address(self):
+		email_address = self.cleaned_data["email_address"]
+		validate_email(email_address)
+		return email_address
 
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
