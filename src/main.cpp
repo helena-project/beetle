@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 			("no-verify", po::value<bool>(&noVerifyPeers)
 					->default_value(true)	// TODO fix this
 					->implicit_value(true),
-					"Gateway certificate file")
+					"Disable certificate verification")
 			("no-reset-hci", po::value<bool>(&noResetHci)
 					->default_value(false)
 					->implicit_value(true),
