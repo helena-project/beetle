@@ -46,6 +46,7 @@ class Rule(models.Model):
 	from_principal = models.ForeignKey(
 		"beetle.Principal", 
 		related_name="rule_from",
+		verbose_name="Server Principal",
 		help_text="Application or peripheral acting as server.")
 	from_gateway = models.ForeignKey(
 		"beetle.Gateway", 
@@ -54,6 +55,7 @@ class Rule(models.Model):
 	to_principal = models.ForeignKey(
 		"beetle.Principal", 
 		related_name="rule_to",
+		verbose_name="Client Principal",
 		help_text="Application or peripheral acting as client.")
 	to_gateway = models.ForeignKey(
 		"beetle.Gateway", 
@@ -64,6 +66,7 @@ class Rule(models.Model):
 	cron_expression = models.CharField(
 		max_length=100, 
 		default="* * * * *",
+		verbose_name="Cron",
 		help_text="Standard crontab expression for when rule applies. \
 					Format: Min Hour Day-of-Month Month Day-of-Week")
 
@@ -72,21 +75,26 @@ class Rule(models.Model):
 		max_length=100, 
 		blank=True,
 		default="brwni",
+		verbose_name="Props",
 		help_text="Hint: brwni (broadcast, read, write, notify, indicate)")
 	exclusive = models.ForeignKey("Exclusive",
 		default=None,
 		null=True,
 		blank=True,
+		verbose_name="Excl",
 		help_text="Identifier to enforce exclusive access under.")
 	integrity = models.BooleanField(
 		default=True,
+		verbose_name="MAC",
 		help_text="Link layer integrity required.")
 	encryption = models.BooleanField(
 		default=True,
+		verbose_name="ENC",
 		help_text="Link layer encryption required.")
 	lease_duration = models.DurationField(
 		default=timedelta(minutes=15), 
-		help_text="Maximum amount of time before reevaluation. Hint: HH:mm:ss")
+		verbose_name="Lease",
+		help_text="Maximum amount of time results may be cached. Hint: HH:mm:ss")
 
 	# administrative fields
 	start = models.DateTimeField(
@@ -137,6 +145,7 @@ class RuleException(models.Model):
 	from_principal = models.ForeignKey(
 		"beetle.Principal", 
 		related_name="except_from",
+		verbose_name="Server Principal",
 		help_text="Application or peripheral acting as server.")
 	from_gateway = models.ForeignKey(
 		"beetle.Gateway", 
@@ -145,6 +154,7 @@ class RuleException(models.Model):
 	to_principal = models.ForeignKey(
 		"beetle.Principal", 
 		related_name="except_to",
+		verbose_name="Client Principal",
 		help_text="Application or peripheral acting as client.")
 	to_gateway = models.ForeignKey(
 		"beetle.Gateway", 

@@ -38,7 +38,7 @@ class ConnectedPrincipal(models.Model):
 	CONNECTION_TIMEOUT = timedelta(minutes=15)
 
 	principal = models.ForeignKey("beetle.Principal")
-	gateway = models.ForeignKey("ConnectedGateway")
+	gateway = models.ForeignKey("ConnectedGateway")			# TODO bad naming
 	remote_id = models.IntegerField(
 		help_text="id of the device on the gateway")
 	last_seen = models.DateTimeField(auto_now_add=True)
@@ -50,7 +50,7 @@ class ServiceInstance(models.Model):
 	"""
 	An instance of a service
 	"""
-	principal = models.ForeignKey("ConnectedPrincipal")
+	principal = models.ForeignKey("ConnectedPrincipal") 	# TODO bad naming
 	service = models.ForeignKey("gatt.Service") 
 
 	def __unicode__(self):
@@ -61,7 +61,7 @@ class CharInstance(models.Model):
 	An instance of a characterisic
 	"""
 	principal = models.ForeignKey("ConnectedPrincipal")
-	service = models.ForeignKey("ServiceInstance")
+	service = models.ForeignKey("ServiceInstance")			# TODO bad naming
 	char = models.ForeignKey("gatt.Characteristic")
 
 	def __unicode__(self):
