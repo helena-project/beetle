@@ -118,18 +118,13 @@ class Rule(models.Model):
 		is_domain_subset = True
 		is_domain_subset &= _lte(self.service, rhs.service)
 		is_domain_subset &= _lte(self.characteristic, rhs.characteristic)
-		is_domain_subset &= _lte_principal(self.from_principal, rhs.from_principal)
+		is_domain_subset &= _lte_principal(self.from_principal, 
+			rhs.from_principal)
 		is_domain_subset &= _lte(self.from_gateway, rhs.from_gateway)
 		is_domain_subset &= _lte_principal(self.to_principal, rhs.to_principal)
 		is_domain_subset &= _lte(self.to_gateway, rhs.to_gateway)
 
 		return is_domain_subset
-
-	def properties_lte(self, rhs):
-		"""
-		Returns whether self's properties a subset of rhs.
-		"""
-		return set(self.properties) <= set(rhs.properties)
 
 	def __unicode__(self):
 		return self.name
