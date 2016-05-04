@@ -1,30 +1,50 @@
 from django.contrib import admin
-from django.core.validators import validate_email
+from django.core.validators import validate_email, ValidationError
 from django import forms
 
 import re
+import json
 
 from .models import Principal, Gateway, Contact
 
 # Register your models here.
 
 class PrincipalAdminForm(forms.ModelForm):
-	def __init__(self, *args, **kwargs):
-		super(PrincipalAdminForm, self).__init__(*args, **kwargs)
-		self.initial["verified"] = True 
+	def clean_members(self):
+		members = self.cleaned_data["members"]
+		ptype = self.cleaned_data["ptype"]
+		if ptype != Principal.GROUP and len(members) > 0:
+			raise ValidationError("Non group type cannot have any members.")
+		return members
+	def clean_owner(self):
+		owner = self.cleaned_data["owner"]
+		ptype = self.cleaned_data["ptype"]
+		print owner, type(owner)
+		if ptype == Principal.GROUP and owner.id != Contact.NULL:
+			raise ValidationError("Groups cannot have owners. Must be null.")
+		return owner
 
 @admin.register(Principal)
 class PrincipalAdmin(admin.ModelAdmin):
-	list_display = ("name", "owner", "ptype", "verified")
-	search_fields = ("name", "owner",)
-	list_editable = ("verified",)
-	list_filter = ("ptype", "verified")
+	form = PrincipalAdminForm
+	list_display = ("name", "owner", "ptype", "get_member_list")
+	search_fields = ("name", "owner", "get_member_list")
+	list_filter = ("ptype",)
+
+	def get_member_list(self, obj):
+		if obj.ptype == Principal.GROUP:
+			members = ["%s" % (m.name,) 
+				for m in obj.members.all()]
+			return json.dumps(members)
+		else:
+			return ""
+	get_member_list.short_description = "members"
 
 @admin.register(Gateway)
 class GatewayAdmin(admin.ModelAdmin):
-	list_display = ("name", "os", "trusted")
-	search_fields = ("name", "trusted")
-	list_filter = ("os", "trusted")
+	list_display = ("name", "os")
+	search_fields = ("name",)
+	list_filter = ("os",)
 
 class ContactAdminForm(forms.ModelForm):
 	def clean_phone_number(self):

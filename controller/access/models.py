@@ -79,12 +79,14 @@ class Rule(models.Model):
 		blank=True,
 		help_text="Identifier to enforce exclusive access under.")
 	integrity = models.BooleanField(
+		default=True,
 		help_text="Link layer integrity required.")
 	encryption = models.BooleanField(
+		default=True,
 		help_text="Link layer encryption required.")
 	lease_duration = models.DurationField(
 		default=timedelta(minutes=15), 
-		help_text="Hint: HH:mm:ss")
+		help_text="Maximum amount of time before reevaluation. Hint: HH:mm:ss")
 
 	# administrative fields
 	start = models.DateTimeField(
@@ -101,13 +103,16 @@ class Rule(models.Model):
 		"""
 		def _lte(a, b):
 			return a == b or b.name == "*"
+		def _lte_principal(a, b):
+			return a == b or (b.ptype == Principal.GROUP and b.members.filter(
+				name=a.name).exists()) or b.name == "*"
 
 		is_domain_subset = True
 		is_domain_subset &= _lte(self.service, rhs.service)
 		is_domain_subset &= _lte(self.characteristic, rhs.characteristic)
-		is_domain_subset &= _lte(self.from_principal, rhs.from_principal)
+		is_domain_subset &= _lte_principal(self.from_principal, rhs.from_principal)
 		is_domain_subset &= _lte(self.from_gateway, rhs.from_gateway)
-		is_domain_subset &= _lte(self.to_principal, rhs.to_principal)
+		is_domain_subset &= _lte_principal(self.to_principal, rhs.to_principal)
 		is_domain_subset &= _lte(self.to_gateway, rhs.to_gateway)
 
 		return is_domain_subset

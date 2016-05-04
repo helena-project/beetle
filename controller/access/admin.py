@@ -73,14 +73,15 @@ class RuleAdmin(admin.ModelAdmin):
 	save_as = True
 	list_display = (
 		"name",
-		"get_description",
+		"id",
+		# "get_description",
 		"service",
 		"characteristic",
 		"from_principal", 
 		"from_gateway", 
 		"to_principal", 
 		"to_gateway",
-		"get_exceptions_link",
+		# "get_exceptions_link",
 		"cron_expression",
 		"properties",
 		"exclusive",

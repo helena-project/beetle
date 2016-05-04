@@ -13,10 +13,13 @@ class Service(models.Model):
 		blank=True, 
 		primary_key=True,
 		help_text="16 or 128-bit UUID.")
-	stype = models.CharField(max_length=200, blank=True)
+	stype = models.CharField(
+		max_length=200, 
+		blank=True,
+		verbose_name="type")
 	verified = models.BooleanField(
 		default=False,
-		help_text="Has this service been verified by a human?")
+		help_text="Is this a standard service or added manually by a human?")
 
 	def __unicode__(self):
 		if self.name != "":
@@ -34,10 +37,13 @@ class Characteristic(models.Model):
 		blank=True, 
 		primary_key=True,
 		help_text="16 or 128-bit UUID.")
-	ctype = models.CharField(max_length=200, blank=True)
+	ctype = models.CharField(
+		max_length=200, 
+		blank=True, 
+		verbose_name="type")
 	verified = models.BooleanField(
 		default=False,
-		help_text="Has this characteristic been verified by a human?")
+		help_text="Is this a standard characteristic or added manually by a human?")
 
 	def __unicode__(self):
 		if self.name != "":

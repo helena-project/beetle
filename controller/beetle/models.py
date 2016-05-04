@@ -34,18 +34,20 @@ class Principal(models.Model):
 	"""
 	
 	class Meta:
-		verbose_name = "GATT principal"
-		verbose_name_plural = "GATT principals"
+		verbose_name = "Principal"
+		verbose_name_plural = "Principals"
 
 	# allowed types
-	APP = "app"
+	LOCAL = "local"
+	REMOTE = "remote"
 	DEVICE = "device"
-	GATEWAY = "gateway"
+	GROUP = "group"
 	UNKNOWN = "unknown"
 	TYPE_CHOICES = (
-		(APP, "app"),
+		(LOCAL, "local"),
+		(REMOTE, "remote"),
 		(DEVICE, "device"),
-		(GATEWAY, "gateway"),
+		(GROUP, "group"),
 		(UNKNOWN, "unknown"),
 	)
 
@@ -55,12 +57,17 @@ class Principal(models.Model):
 	ptype = models.CharField(
 		max_length=20, 
 		choices=TYPE_CHOICES,
-		default=UNKNOWN)	
-	verified = models.BooleanField(
-		default=False,
-		help_text="Has this principal been verified by a human?")
+		default=UNKNOWN,
+		verbose_name="type")
 
-	owner = models.ForeignKey("Contact", default=Contact.NULL)
+	owner = models.ForeignKey("Contact", 
+		default=Contact.NULL,
+		help_text="Contact associated with this device.")
+
+	members = models.ManyToManyField("self", 
+		symmetrical=False,
+		blank=True,
+		help_text="For group type only.")
 
 	def __unicode__(self):
 		return self.name
@@ -91,7 +98,6 @@ class Gateway(models.Model):
 		max_length=20, 
 		default=LINUX, 
 		choices=OS_CHOICES)
-	trusted = models.BooleanField(default=True)
 
 	def __unicode__(self):
 		return self.name

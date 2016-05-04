@@ -50,7 +50,7 @@ def _get_dynamic_auth(rule, principal):
 	
 	return True, result
 
-def _get_minimal_rules(rules, cached_relations, ignore_properties=False):
+def _get_minimal_rules(rules, cached_relations, ignore_properties=True):
 	"""
 	Returns the rules that are 'minimal'.
 	"""
@@ -58,8 +58,8 @@ def _get_minimal_rules(rules, cached_relations, ignore_properties=False):
 		return rules
 
 	not_minimal_ids = set()
-	# TODO: this is not efficient... filling in upper triangular matrix of 
-	# strict partial order.
+	# TODO: this is not particularly efficient... 
+	# filling in upper triangular matrix of strict partial order.
 	for lhs in rules.order_by("id"):
 		for rhs in rules.filter(id__gte=lhs.id):
 			key = (lhs.id, rhs.id)
