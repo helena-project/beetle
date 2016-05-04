@@ -54,7 +54,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE_CLASSES = [
-    'sslify.middleware.SSLifyMiddleware',
+    # 'sslify.middleware.SSLifyMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -139,7 +139,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # SSL settings
-SSLIFY_DISABLE = False
+SECURE_SSL_REDIRECT = True
 
 # Jet admin interface settings
 JET_SIDE_MENU_COMPACT = True
