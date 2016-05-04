@@ -60,7 +60,7 @@ class CharInstance(models.Model):
 	"""
 	An instance of a characterisic
 	"""
-	principal = models.ForeignKey("ConnectedPrincipal")
+	principal = models.ForeignKey("ConnectedPrincipal")		# TODO bad naming
 	service = models.ForeignKey("ServiceInstance")			# TODO bad naming
 	char = models.ForeignKey("gatt.Characteristic")
 
