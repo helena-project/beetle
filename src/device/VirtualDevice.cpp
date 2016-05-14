@@ -10,11 +10,9 @@
 #include <assert.h>
 #include <bluetooth/bluetooth.h>
 #include <cstring>
-#include <list>
 #include <map>
 #include <string>
 #include <thread>
-#include <vector>
 #include <time.h>
 
 #include "ble/att.h"
@@ -27,6 +25,8 @@
 #include "Router.h"
 #include "sync/Semaphore.h"
 #include "UUID.h"
+
+static const int maxTransactionLatencies = 50;
 
 static int64_t getCurrentTimeMillis(void) {
     struct timespec spec;
@@ -83,6 +83,13 @@ void VirtualDevice::start() {
 	handlesMutex.unlock();
 
 	beetle.updateDevice(getId());
+}
+
+std::vector<uint64_t> VirtualDevice::getTransactionLatencies() {
+	std::lock_guard<std::mutex> lg(transactionMutex);
+	auto ret = transactionLatencies;
+	transactionLatencies.clear();
+	return ret;
 }
 
 void VirtualDevice::startNd() {
@@ -187,6 +194,8 @@ int VirtualDevice::getMTU() {
 }
 
 void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
+	std::unique_lock<std::mutex> lk(transactionMutex);
+
 	if (debug_performance) {
 		int64_t currentTimeMillis = getCurrentTimeMillis();
 		int64_t elapsed = currentTimeMillis - lastTransactionMillis;
@@ -195,9 +204,14 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 				<< "Transaction end: " << std::fixed << currentTimeMillis << "\n"
 				<< "Transaction length: "<< std::fixed << elapsed;
 		pdebug(ss.str());
+
+		if (transactionLatencies.size() < maxTransactionLatencies) {
+			transactionLatencies.push_back(elapsed);
+		} else {
+			pwarn("max latency log capacity reached");
+		}
 	}
 
-	std::unique_lock<std::mutex> lk(transactionMutex);
 	if (!currentTransaction) {
 		pwarn("unexpected transaction response when none existed!");
 		return;

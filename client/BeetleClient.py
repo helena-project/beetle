@@ -15,6 +15,7 @@ import struct
 import threading
 import time
 import traceback
+import random
 import numpy as np
 
 import lib.att as att
@@ -121,7 +122,7 @@ outputThread.start()
 # Regexes to match convenience commands.
 writePattern = re.compile(r"^write (?P<handle>[\d+]+) (?P<value>.*)$")
 readPattern = re.compile(r"^read (?P<handle>[\d+]+)$")
-repeatPattern = re.compile(r"^repeat (?P<ntimes>\d*) (?P<value>.*)$")
+repeatPattern = re.compile(r"^repeat (?P<ntimes>\d+) (?P<minPause>\d+)-(?P<maxPause>\d+) (?P<value>.*)$")
 
 def sendMessage(s, message):
 	opcode = message[0]
@@ -149,7 +150,8 @@ def inputReader(s):
 		else:
 			previousLine = line
 		
-		nTimes = 1
+		ntimes = 1
+		pause = (0, 0)
 		try: 
 			writeRequest = writePattern.match(line)
 			readRequest = readPattern.match(line)
@@ -174,7 +176,8 @@ def inputReader(s):
 				message.append(handle >> 8)
 			elif repeatRequest is not None:
 				command = repeatRequest.groupdict()
-				nTimes = int(command["ntimes"])
+				ntimes = int(command["ntimes"])
+				pause = (int(command["minPause"]), int(command["maxPause"]))
 				value = command["value"]
 				value = value.replace(" ", "")
 				message = bytearray.fromhex(value)
@@ -188,12 +191,16 @@ def inputReader(s):
 		if len(message) == 0:
 			continue
 
-		if nTimes > 1:
+		if ntimes > 1:
 			isRequest = att.isRequest(message[0])
 			latencies = []
 
 			startTime = getTimeMillis()
-			for _ in xrange(nTimes):
+			for i in xrange(ntimes):
+				# wait before sending next message
+				if i > 0 and pause[0] > 0:
+					time.sleep(random.randint(*pause))
+
 				sendMessage(s, message)
 				if isRequest == True:
 					transactSema.acquire()

@@ -25,6 +25,17 @@ TCPClientProxy::TCPClientProxy(Beetle &beetle, SSL *ssl, int sockfd, std::string
 		throw new DeviceException("no device for " + std::to_string(localProxyFor_));
 	}
 
+	switch (beetle.devices[localProxyFor_]->getType()) {
+	case LE_PERIPHERAL:
+	case TCP_CLIENT:
+	case TCP_SERVER_PROXY:
+	case IPC_APPLICATION:
+	case BEETLE_INTERNAL:
+		break;
+	default:
+		throw new DeviceException("cannot proxy to device type");
+	}
+
 	name = "Proxy for " +  std::to_string(localProxyFor_) + " to " + clientGateway_;
 	type = TCP_CLIENT_PROXY;
 	clientGateway = clientGateway_;

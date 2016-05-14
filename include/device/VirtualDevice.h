@@ -13,9 +13,11 @@
 #include <functional>
 #include <mutex>
 #include <queue>
+#include <vector>
 
 #include "Beetle.h"
 #include "Device.h"
+#include "UUID.h"
 
 // Debug the GATT handle discovery.
 extern bool debug_discovery;
@@ -44,6 +46,8 @@ public:
 	int writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp);
 
 	int getMTU();
+
+	std::vector<uint64_t> getTransactionLatencies();
 protected:
 	/*
 	 * Cannot instantiate a VirtualDevice
@@ -87,6 +91,7 @@ private:
 	void handleTransactionResponse(uint8_t *buf, int len);
 	transaction_t *currentTransaction;
 	std::queue<transaction_t *> pendingTransactions;
+	std::vector<uint64_t> transactionLatencies;
 	std::mutex transactionMutex;
 
 	/*

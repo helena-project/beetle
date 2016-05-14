@@ -88,6 +88,7 @@ static void printMessage(std::string message) {
 
 void CLI::cmdLineDaemon() {
 	printMessage("Welcome to Beetle CLI. Use 'help' for a list of commands.");
+
 	while (true) {
 		std::vector<std::string> cmd;
 		if (!getCommand(cmd)) return;
@@ -122,6 +123,8 @@ void CLI::cmdLineDaemon() {
 			doSetMaxConnectionInterval(cmd);
 		} else if (c1 == "q" || c1 == "quit") {
 			break;
+		} else if (c1 == "dump") {
+			doDumpData(cmd);
 		} else if (c1 == "name") {
 			printMessage(beetle.name);
 		} else if (c1 == "port") {
@@ -563,6 +566,33 @@ void CLI::doSetMaxConnectionInterval(const std::vector<std::string>& cmd) {
 			struct l2cap_conninfo connInfo = peripheral->getL2capConnInfo();
 			beetle.hci.setConnectionInterval(connInfo.hci_handle, newInterval, newInterval, 0, 0x0C80, 0);
 		}
+	}
+}
+
+void CLI::doDumpData(const std::vector<std::string>& cmd) {
+	if (cmd.size() != 2) {
+		printUsage("dump latency");
+		return;
+	}
+
+	if (cmd[1] == "latency") {
+		std::stringstream ss;
+		std::string delim = "";
+
+		boost::shared_lock<boost::shared_mutex> lk(beetle.devicesMutex);
+		for (auto &kv : beetle.devices) {
+			VirtualDevice *vd = dynamic_cast<VirtualDevice *>(kv.second);
+			if (vd) {
+				std::cout << vd->getId() << "\t";
+				for (uint64_t latency : vd->getTransactionLatencies()) {
+					std::cout << delim << std::fixed << latency;
+					delim = ",";
+				}
+				std::cout << std::endl;
+			}
+		}
+	} else {
+		printUsageError(cmd[1] + " not recognized");
 	}
 }
 
