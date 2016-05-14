@@ -583,12 +583,15 @@ void CLI::doDumpData(const std::vector<std::string>& cmd) {
 		for (auto &kv : beetle.devices) {
 			VirtualDevice *vd = dynamic_cast<VirtualDevice *>(kv.second);
 			if (vd) {
-				std::cout << vd->getId() << "\t";
-				for (uint64_t latency : vd->getTransactionLatencies()) {
-					std::cout << delim << std::fixed << latency;
-					delim = ",";
+				auto latencies = vd->getTransactionLatencies();
+				if (latencies.size() > 0) {
+					std::cout << vd->getId() << "\t";
+					for (uint64_t latency : latencies) {
+						std::cout << delim << std::fixed << latency;
+						delim = ",";
+					}
+					std::cout << std::endl;
 				}
-				std::cout << std::endl;
 			}
 		}
 	} else {
