@@ -28,7 +28,7 @@
 #include "sync/Semaphore.h"
 #include "UUID.h"
 
-static long getCurrentTimeMillis(void) {
+static int64_t getCurrentTimeMillis(void) {
     struct timespec spec;
     clock_gettime(CLOCK_REALTIME, &spec);
     return 1000 * spec.tv_sec + round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
@@ -188,8 +188,8 @@ int VirtualDevice::getMTU() {
 
 void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 	if (debug_performance) {
-		long currentTimeMillis = getCurrentTimeMillis();
-		long elapsed = currentTimeMillis - lastTransactionMillis;
+		int64_t currentTimeMillis = getCurrentTimeMillis();
+		int64_t elapsed = currentTimeMillis - lastTransactionMillis;
 		std::stringstream ss;
 		ss << "Transaction start: " << std::fixed << lastTransactionMillis << "\n"
 				<< "Transaction end: " << std::fixed << currentTimeMillis << "\n"
