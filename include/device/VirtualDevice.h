@@ -79,6 +79,7 @@ private:
 	 * TODO: use this to detect misbehaving clients
 	 */
 	int unfinishedClientTransactions;
+	long lastTransactionMillis;
 
 	/*
 	 * Server transactions

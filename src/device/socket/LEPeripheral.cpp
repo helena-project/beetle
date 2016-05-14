@@ -67,7 +67,7 @@ LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType
     /*
      * Set default connection interval.
      */
-    beetle.hci.setConnectionInterval(connInfo.hci_handle, 40, 100, 10, 100, 5);
+    beetle.hci.setConnectionInterval(connInfo.hci_handle, 10, 40, 0, 0x0C80, 0);
 }
 
 LEPeripheral::~LEPeripheral() {
@@ -90,6 +90,10 @@ LEPeripheral::AddrType LEPeripheral::getAddrType() {
 
 void LEPeripheral::startInternal() {
     readThread = std::thread(&LEPeripheral::readDaemon, this);
+}
+
+struct l2cap_conninfo LEPeripheral::getL2capConnInfo() {
+	return connInfo;
 }
 
 bool LEPeripheral::write(uint8_t *buf, int len) {

@@ -24,6 +24,8 @@ def getArguments():
 		help="hostname of the Beetle server")
 	parser.add_argument("--port", "-p", type=int, default=3002, 
 		help="port the server is runnng on")
+	parser.add_argument("--measure", "-m", action='store_true', 
+		help="print performance measurements")
 	return parser.parse_args()
 
 args = getArguments()
@@ -31,6 +33,8 @@ args = getArguments()
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s = ssl.wrap_socket(s, cert_reqs=ssl.CERT_NONE)	# TODO fix this
 s.connect((args.host, args.port))
+
+lastRequestTime = 0.0
 
 def outputPrinter(s):
 	"""
@@ -51,6 +55,12 @@ def outputPrinter(s):
 				received += len(chunk)
 				chunks.append(" ".join(x.encode('hex') for x in chunk))
 			print " ".join(chunks)
+
+			if args.measure: # TODO check if response
+				now = int(time.time() * 1000)
+				print "request at: %d" % (lastRequestTime,)
+				print "response at: %d" % (now,)
+				print "elapsed: %d" % (now - lastRequestTime,)
 	except Exception, err:
 		print "Exception in output thread:", err
 		os.kill(os.getpid(), signal.SIGTERM)
@@ -99,9 +109,15 @@ def inputReader(s):
 	"""
 	Consume user input in the main thread.
 	"""
+	previousLine = ""
 	while True:
 		line = raw_input("> ")
 		line = line.strip().lower()
+
+		if line == "r":
+			line = previousLine
+		else:
+			previousLine = line
 		
 		try: 
 			writeRequest = writePattern.match(line)
@@ -130,6 +146,10 @@ def inputReader(s):
 		except Exception, err:
 			print "Invalid input:", err
 			continue
+
+		if True: # TODO check if request
+			global lastRequestTime
+			lastRequestTime = int(time.time() * 1000)
 
 		if len(message) == 0:
 			continue

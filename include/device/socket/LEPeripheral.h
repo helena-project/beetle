@@ -28,6 +28,7 @@ public:
 
 	bdaddr_t getBdaddr();
 	AddrType getAddrType();
+	struct l2cap_conninfo getL2capConnInfo();
 protected:
 	bool write(uint8_t *buf, int len);
 	void startInternal();

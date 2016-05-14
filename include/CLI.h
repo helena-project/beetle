@@ -57,7 +57,8 @@ private:
 	void doUnmap(const std::vector<std::string>& cmd);
 	void doListDevices(const std::vector<std::string>& cmd);
 	void doListHandles(const std::vector<std::string>& cmd);
-	void doListOffsets(std::vector<std::string>& cmd);
+	void doListOffsets(const std::vector<std::string>& cmd);
+	void doSetMaxConnectionInterval(const std::vector<std::string>& cmd);
 
 	/*
 	 * Matches a device string, which may be an address, device id, or name (case-insensitive).

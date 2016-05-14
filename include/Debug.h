@@ -22,6 +22,9 @@ extern bool debug_socket;
 // Print debug information about the control-plane
 extern bool debug_controller;
 
+// Print debug information performance
+extern bool debug_performance;
+
 inline void pdebug(std::string mesg) {
 	std::cerr << mesg << std::endl;
 }

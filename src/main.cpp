@@ -37,6 +37,7 @@ bool debug_discovery;	// VirtualDevice.h
 bool debug_router;		// Router.h
 bool debug_socket;		// Debug.h
 bool debug_controller;	// Debug.h
+bool debug_performance; // Debug.h
 
 void setDebugAll() {
 	debug = true;
@@ -45,6 +46,7 @@ void setDebugAll() {
 	debug_socket = true;
 	debug_discovery = true;
 	debug_controller = true;
+	debug_performance = true;
 }
 
 std::string getDefaultName() {

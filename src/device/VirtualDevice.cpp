@@ -15,6 +15,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <time.h>
 
 #include "ble/att.h"
 #include "ble/gatt.h"
@@ -27,6 +28,12 @@
 #include "sync/Semaphore.h"
 #include "UUID.h"
 
+static long getCurrentTimeMillis(void) {
+    struct timespec spec;
+    clock_gettime(CLOCK_REALTIME, &spec);
+    return 1000 * spec.tv_sec + round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
+}
+
 VirtualDevice::VirtualDevice(Beetle &beetle, bool isEndpoint_, HandleAllocationTable *hat)
 : Device(beetle, hat) {
 	isEndpoint = isEndpoint_;
@@ -35,6 +42,7 @@ VirtualDevice::VirtualDevice(Beetle &beetle, bool isEndpoint_, HandleAllocationT
 	currentTransaction = NULL;
 	mtu = ATT_DEFAULT_LE_MTU;
 	unfinishedClientTransactions = 0;
+	lastTransactionMillis = 0;
 }
 
 VirtualDevice::~VirtualDevice() {
@@ -143,6 +151,7 @@ bool VirtualDevice::writeTransaction(uint8_t *buf, int len, std::function<void(u
 	std::lock_guard<std::mutex> lg(transactionMutex);
 	if (currentTransaction == NULL) {
 		currentTransaction = t;
+		lastTransactionMillis = getCurrentTimeMillis();
 		assert(write(t->buf, t->len));
 	} else {
 		pendingTransactions.push(t);
@@ -178,6 +187,16 @@ int VirtualDevice::getMTU() {
 }
 
 void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
+	if (debug_performance) {
+		long currentTimeMillis = getCurrentTimeMillis();
+		long elapsed = currentTimeMillis - lastTransactionMillis;
+		std::stringstream ss;
+		ss << "Transaction start: " << std::fixed << lastTransactionMillis << "\n"
+				<< "Transaction end: " << std::fixed << currentTimeMillis << "\n"
+				<< "Transaction length: "<< std::fixed << elapsed;
+		pdebug(ss.str());
+	}
+
 	std::unique_lock<std::mutex> lk(transactionMutex);
 	if (!currentTransaction) {
 		pwarn("unexpected transaction response when none existed!");

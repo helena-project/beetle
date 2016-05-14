@@ -118,6 +118,8 @@ void CLI::cmdLineDaemon() {
 			doListHandles(cmd);
 		} else if (c1 == "offsets") {
 			doListOffsets(cmd);
+		} else if (c1 == "interval") {
+			doSetMaxConnectionInterval(cmd);
 		} else if (c1 == "q" || c1 == "quit") {
 			break;
 		} else if (c1 == "name") {
@@ -170,6 +172,7 @@ void CLI::doHelp(const std::vector<std::string>& cmd) {
 	printMessage("  devices\t\tPrint connected devices.");
 	printMessage("  handles\t\tPrint a device's handles.");
 	printMessage("  offsets\t\tPrint mappings for a device.");
+	printMessage("  interval\t\tSet max-connection interval for all devices.");
 	printMessage("  quit,q");
 }
 
@@ -444,46 +447,47 @@ void CLI::doUnmap(const std::vector<std::string>& cmd) {
 void CLI::doListDevices(const std::vector<std::string>& cmd) {
 	if (cmd.size() != 1) {
 		printUsage("devices");
-	} else {
-		boost::shared_lock<boost::shared_mutex> lg(beetle.devicesMutex);
-		if (beetle.devices.size() == 0) {
-			printMessage("no devices connected");
-			return;
+		return;
+	}
+
+	boost::shared_lock<boost::shared_mutex> lg(beetle.devicesMutex);
+	if (beetle.devices.size() == 0) {
+		printMessage("no devices connected");
+		return;
+	}
+
+	for (auto &kv : beetle.devices) {
+		Device *d = kv.second;
+		printMessage(d->getName());
+		printMessage("  id : " + std::to_string(d->getId()));
+		printMessage("  type : " + d->getTypeStr());
+		printMessage("  mtu : " + std::to_string(d->getMTU()));
+		printMessage("  highestHandle : " + std::to_string(d->getHighestHandle()));
+
+		LEPeripheral *le =  dynamic_cast<LEPeripheral *>(d);
+		if (le) {
+			printMessage("  deviceAddr : " + ba2str_cpp(le->getBdaddr()));
+			std::stringstream ss;
+			ss << "  addrType : " << ((le->getAddrType() == LEPeripheral::AddrType::PUBLIC) ?
+					"public" : "random");
+			printMessage(ss.str());
 		}
 
-		for (auto &kv : beetle.devices) {
-			Device *d = kv.second;
-			printMessage(d->getName());
-			printMessage("  id : " + std::to_string(d->getId()));
-			printMessage("  type : " + d->getTypeStr());
-			printMessage("  mtu : " + std::to_string(d->getMTU()));
-			printMessage("  highestHandle : " + std::to_string(d->getHighestHandle()));
+		TCPConnection *tcp = dynamic_cast<TCPConnection *>(d);
+		if (tcp) {
+			struct sockaddr_in sockaddr = tcp->getSockaddr();
+			printMessage("  addr : " + std::string(inet_ntoa(sockaddr.sin_addr)));
+			printMessage("  port : " + std::to_string(sockaddr.sin_port));
+		}
 
-			LEPeripheral *le =  dynamic_cast<LEPeripheral *>(d);
-			if (le) {
-				printMessage("  deviceAddr : " + ba2str_cpp(le->getBdaddr()));
-				std::stringstream ss;
-				ss << "  addrType : " << ((le->getAddrType() == LEPeripheral::AddrType::PUBLIC) ?
-						"public" : "random");
-				printMessage(ss.str());
-			}
+		TCPClientProxy *rcp = dynamic_cast<TCPClientProxy *>(d);
+		if (rcp) {
+			printMessage("  client-gateway : " + rcp->getClientGateway());
+		}
 
-			TCPConnection *tcp = dynamic_cast<TCPConnection *>(d);
-			if (tcp) {
-				struct sockaddr_in sockaddr = tcp->getSockaddr();
-				printMessage("  addr : " + std::string(inet_ntoa(sockaddr.sin_addr)));
-				printMessage("  port : " + std::to_string(sockaddr.sin_port));
-			}
-
-			TCPClientProxy *rcp = dynamic_cast<TCPClientProxy *>(d);
-			if (rcp) {
-				printMessage("  client-gateway : " + rcp->getClientGateway());
-			}
-
-			TCPServerProxy *rsp = dynamic_cast<TCPServerProxy *>(d);
-			if (rsp) {
-				printMessage("  server-gateway : " + rsp->getServerGateway());
-			}
+		TCPServerProxy *rsp = dynamic_cast<TCPServerProxy *>(d);
+		if (rsp) {
+			printMessage("  server-gateway : " + rsp->getServerGateway());
 		}
 	}
 }
@@ -507,32 +511,57 @@ void CLI::doListHandles(const std::vector<std::string>& cmd) {
 	}
 }
 
-void CLI::doListOffsets(std::vector<std::string>& cmd) {
+void CLI::doListOffsets(const std::vector<std::string>& cmd) {
 	if (cmd.size() != 2) {
 		printUsage("offsets device");
-	} else {
-		boost::shared_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
-		Device *device = matchDevice(cmd[1]);
+		return;
+	}
 
-		if (device) {
-			std::lock_guard<std::mutex> hatLg(device->hatMutex);
+	boost::shared_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
+	Device *device = matchDevice(cmd[1]);
 
-			std::map<uint16_t, std::pair<uint16_t, Device *>> tmp; // use a map to sort by start handle
-			for (device_t from : device->hat->getDevices()) {
-				handle_range_t handleRange = device->hat->getDeviceRange(from);
-				if (handleRange.isNull()) {
-					continue;
-				}
-				tmp[handleRange.start] = std::pair<uint16_t, Device *>(handleRange.end, beetle.devices[from]);
+	if (device) {
+		std::lock_guard<std::mutex> hatLg(device->hatMutex);
+
+		std::map<uint16_t, std::pair<uint16_t, Device *>> tmp; // use a map to sort by start handle
+		for (device_t from : device->hat->getDevices()) {
+			handle_range_t handleRange = device->hat->getDeviceRange(from);
+			if (handleRange.isNull()) {
+				continue;
 			}
+			tmp[handleRange.start] = std::pair<uint16_t, Device *>(handleRange.end, beetle.devices[from]);
+		}
 
-			printMessage("start\tend\tid\tname");
-			for (auto &kv : tmp) {
-				std::stringstream ss;
-				ss << kv.first << '\t' << kv.second.first << '\t' << kv.second.second->getId()
-						<< '\t' << kv.second.second->getName();
-				printMessage(ss.str());
-			}
+		printMessage("start\tend\tid\tname");
+		for (auto &kv : tmp) {
+			std::stringstream ss;
+			ss << kv.first << '\t' << kv.second.first << '\t' << kv.second.second->getId()
+								<< '\t' << kv.second.second->getName();
+			printMessage(ss.str());
+		}
+	}
+}
+
+void CLI::doSetMaxConnectionInterval(const std::vector<std::string>& cmd) {
+	if (cmd.size() != 2) {
+		printUsage("interval milliseconds");
+		return;
+	}
+
+	uint16_t newInterval;
+	try {
+		newInterval = std::stoul(cmd[1]);
+	} catch (std::invalid_argument &e) {
+		printUsageError("invalid interval");
+		return;
+	}
+
+	boost::unique_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
+	for (auto &kv : beetle.devices) {
+		LEPeripheral *peripheral = dynamic_cast<LEPeripheral *>(kv.second);
+		if (peripheral) {
+			struct l2cap_conninfo connInfo = peripheral->getL2capConnInfo();
+			beetle.hci.setConnectionInterval(connInfo.hci_handle, newInterval, newInterval, 0, 0x0C80, 0);
 		}
 	}
 }
