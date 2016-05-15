@@ -62,13 +62,20 @@ class Rule(models.Model):
 		related_name="rule_to_gateway",
 		help_text="Gateway connected to client.")
 
+	NUM_HIGH_PRIORITY_LEVELS = 1
+	PRIORITY_CHOICES = [("NORMAL",0)].extend(
+		[("HIGH-%d" % i, i) for i in xrange(1, NUM_HIGH_PRIORITY_LEVELS+1)])
+
+	priority = models.IntegerField(
+		default=0,
+		choices=PRIORITY_CHOICES)
+
 	# fields verified programatically
 	cron_expression = models.CharField(
 		max_length=100, 
 		default="* * * * *",
 		verbose_name="Cron",
-		help_text="Standard crontab expression for when rule applies. \
-					Format: Min Hour Day-of-Month Month Day-of-Week")
+		help_text="Standard crontab expression for when rule applies. Format: Min Hour Day-of-Month Month Day-of-Week")
 
 	# permissions and connection information
 	properties = models.CharField(

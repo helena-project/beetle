@@ -75,6 +75,7 @@ class RuleAdmin(admin.ModelAdmin):
 		"name",
 		"id",
 		# "get_description",
+		"priority",
 		"service",
 		"characteristic",
 		"from_principal", 
@@ -99,7 +100,7 @@ class RuleAdmin(admin.ModelAdmin):
 		"from_gateway",
 		"service",
 		"characteristic")
-	list_filter = ("active", "integrity", "encryption")
+	list_filter = ("active", "priority", "integrity", "encryption")
 	inlines = (
 		RuleExceptionInline,
 		AdminAuthInline, 
