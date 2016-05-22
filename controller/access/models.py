@@ -63,8 +63,7 @@ class Rule(models.Model):
 		help_text="Gateway connected to client.")
 
 	NUM_HIGH_PRIORITY_LEVELS = 1
-	PRIORITY_CHOICES = [("NORMAL",0)].extend(
-		[("HIGH-%d" % i, i) for i in xrange(1, NUM_HIGH_PRIORITY_LEVELS+1)])
+	PRIORITY_CHOICES = ((0, "Normal"),) + tuple((i, "High-%d" % i) for i in xrange(1, NUM_HIGH_PRIORITY_LEVELS+1))
 
 	priority = models.IntegerField(
 		default=0,

@@ -89,8 +89,8 @@ class RuleAdmin(admin.ModelAdmin):
 		"integrity",
 		"encryption",
 		"lease_duration",
-		"start",
-		"expire",
+		# "start",
+		# "expire",
 		"active")
 	actions = [make_active, make_inactive]
 	search_fields = (
