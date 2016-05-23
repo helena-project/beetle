@@ -1,8 +1,7 @@
-/Debug/
-/Release/
+/Debug/Beetle
+/Release/Beetle
 *~
 /.settings/
 *.o
 *.d
-RPi2/Beetle
 /RPi2/

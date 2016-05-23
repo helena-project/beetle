@@ -37,10 +37,8 @@
 #include "hat/HandleAllocationTable.h"
 #include "Handle.h"
 
-CLI::CLI(Beetle &beetle, int port_, std::string path_, NetworkDiscoveryClient *discovery)
-: beetle(beetle), networkDiscovery(discovery), t() {
-	port = port_;
-	path = path_;
+CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, NetworkDiscoveryClient *discovery)
+: beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), t() {
 	aliasCounter = 0;
 	t = std::thread(&CLI::cmdLineDaemon, this);
 }
@@ -128,9 +126,9 @@ void CLI::cmdLineDaemon() {
 		} else if (c1 == "name") {
 			printMessage(beetle.name);
 		} else if (c1 == "port") {
-			printMessage(std::to_string(port));
+			printMessage(std::to_string(beetleConfig.tcpPort));
 		} else if (c1 == "path") {
-			printMessage(path);
+			printMessage(beetleConfig.ipcPath);
 		} else {
 			printMessage("unknown command");
 		}

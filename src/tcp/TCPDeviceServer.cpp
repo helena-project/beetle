@@ -25,7 +25,7 @@
 #include "tcp/SSLConfig.h"
 #include "util/write.h"
 
-TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig &sslConfig, int port)
+TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig sslConfig, int port)
 : beetle(beetle), sslConfig(sslConfig) {
 	running = true;
 	sockfd = -1;

@@ -14,20 +14,21 @@
 #include <cassert>
 #include <memory>
 
-#include "AutoConnect.h"
 #include "Beetle.h"
-#include "controller/AccessControl.h"
-#include "controller/NetworkStateClient.h"
-#include "controller/NetworkDiscoveryClient.h"
-#include "controller/ControllerClient.h"
+#include "BeetleConfig.h"
 #include "CLI.h"
+#include "controller/AccessControl.h"
+#include "controller/ControllerClient.h"
+#include "controller/NetworkDiscoveryClient.h"
+#include "controller/NetworkStateClient.h"
 #include "Debug.h"
-#include "ipc/UnixDomainSocketServer.h"
-#include "Scanner.h"
 #include "device/socket/tcp/TCPServerProxy.h"
-#include "tcp/TCPDeviceServer.h"
-#include "tcp/SSLConfig.h"
 #include "HCI.h"
+#include "ipc/UnixDomainSocketServer.h"
+#include "scan/AutoConnect.h"
+#include "scan/Scanner.h"
+#include "tcp/SSLConfig.h"
+#include "tcp/TCPDeviceServer.h"
 
 
 /* Global debug variables */
@@ -49,10 +50,13 @@ void setDebugAll() {
 	debug_performance = true;
 }
 
-std::string getDefaultName() {
-	char name[100];
-	assert(gethostname(name, sizeof(name)) == 0);
-	return "btl@" + std::string(name);
+void setDebug(BeetleConfig btlConfig) {
+	debug_scan = btlConfig.debugScan;
+	debug_router = btlConfig.debugRouter;
+	debug_socket = btlConfig.debugSocket;
+	debug_discovery = btlConfig.debugDiscovery;
+	debug_controller = btlConfig.debugController;
+	debug_performance = btlConfig.debugPerformance;
 }
 
 void sigpipe_handler_ignore(int unused) {
@@ -62,103 +66,45 @@ void sigpipe_handler_ignore(int unused) {
 }
 
 int main(int argc, char *argv[]) {
-	int tcpPort;
-	bool scanningEnabled;
-	bool debugAll;
+	std::string configFile;
 	bool autoConnectAll;
-	bool noResetHci;
-	bool noController;
-	bool noTcp;
-	bool noIpc;
-	std::string name;
-	std::string path;
-	std::string beetleControllerHostPort;
-	std::string certificate;
-	std::string key;
-	bool noVerifyPeers;
+	bool resetHci;
+	bool debugAll;
 
 	namespace po = boost::program_options;
 	po::options_description desc("Options");
 	desc.add_options()
 			("help,h", "")
-			("name,n", po::value<std::string>(&name)->default_value(getDefaultName()),
-					"Name this Beetle gateway")
-			("scan,s", po::value<bool>(&scanningEnabled)
-					->implicit_value(true)
-					->default_value(false),
-					"Enable scanning for BLE devices")
-			("tcp-port,p", po::value<int>(&tcpPort)
-					->default_value(3002),
-					"Specify remote TCP server port")
-			("ipc,u", po::value<std::string>(&path)
-					->default_value("/tmp/beetle"),
-					"Unix domain socket path")
-			("controller,c", po::value<std::string>(&beetleControllerHostPort)
-					->default_value("localhost:443"),
-					"Host and port of the Beetle control")
-			("debug,d", po::value<bool>(&debug)
-					->implicit_value(true),
-					"Enable general debugging")
-			("auto-connect-all", po::value<bool>(&autoConnectAll)
-					->implicit_value(true)
-					->default_value(false),
-					"Connect to all nearby BLE devices")
-			("cert", po::value<std::string>(&certificate)
-					->default_value("../certs/cert.pem"),
-					"Gateway certificate file")
-			("key", po::value<std::string>(&key)
-					->default_value("../certs/key.pem"),
-					"Gateway private key file")
-			("no-verify", po::value<bool>(&noVerifyPeers)
-					->default_value(true)	// TODO fix this
-					->implicit_value(true),
-					"Disable certificate verification")
-			("no-reset-hci", po::value<bool>(&noResetHci)
-					->default_value(false)
-					->implicit_value(true),
+			("defaults,d", "Print default configuration")
+			("config-file,c", po::value<std::string>(&configFile)
+					->default_value(""),
+					"Beetle configuration file")
+			("connect-all,a", "Connect to all nearby BLE peripherals")
+			("reset-hci", po::value<bool>(&resetHci)
+					->default_value(true),
 					"Set hci down/up at start-up")
-			("no-controller", po::value<bool>(&noController)
-					->default_value(false)
-					->implicit_value(true),
-					"Disable network state, discovery, and access control")
-			("no-tcp", po::value<bool>(&noTcp)
-					->default_value(false)
-					->implicit_value(true),
-					"Disable remote access over tcp")
-			("no-ipc", po::value<bool>(&noIpc)
-					->default_value(false)
-					->implicit_value(true),
-					"Disable access over unix domain sockets")
-			("debug-discovery", po::value<bool>(&debug_discovery)
-					->implicit_value(true)
-					->default_value(false),
-					"Enable debugging for GATT discovery")
-			("debug-scan", po::value<bool>(&debug_scan)
-					->implicit_value(true)
-					->default_value(false),
-					"Enable debugging for BLE scanning")
-			("debug-socket", po::value<bool>(&debug_socket)
-					->implicit_value(true)
-					->default_value(false),
-					"Enable debugging for sockets")
-			("debug-router", po::value<bool>(&debug_router)
-					->implicit_value(true)
-					->default_value(false),
-					"Enable debugging for router")
-			("debug-controller", po::value<bool>(&debug_controller)
-					->implicit_value(true)
-					->default_value(false),
-					"Enable debugging for the control plane")
-			("debug-all", po::value<bool>(&debugAll)
-					->implicit_value(true)
-					->default_value(false),
-					"Enable ALL debugging");
+			("debug", "")
+			("debug-all", "");
+
 	po::variables_map vm;
 	try {
 		po::store(po::parse_command_line(argc, argv, desc), vm);
 		if (vm.count("help")) {
 			std::cout << "Beetle Linux" << std::endl << desc << std::endl;
 			return 0;
+		}
+		if (vm.count("defaults")) {
+			std::cout << BeetleConfig().str() << std::endl;
+			return 0;
+		}
+		if (vm.count("debug")) {
+			debug = true;
+		}
+		if (vm.count("debug-all")) {
+			debugAll = true;
+		}
+		if (vm.count("connect-all")) {
+			autoConnectAll = true;
 		}
 		po::notify(vm);
 	} catch (po::error& e) {
@@ -167,34 +113,37 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
+	BeetleConfig btlConfig(configFile);
+
 	if (debugAll) {
 		setDebugAll();
+	} else {
+		setDebug(btlConfig);
 	}
 
-	if (!noResetHci) {
+	if (resetHci) {
 		HCI::resetHCI();
 	}
 
-	SSLConfig clientSSLConfig(!noVerifyPeers);
+	SSLConfig clientSSLConfig(btlConfig.sslVerifyPeers);
 	TCPServerProxy::initSSL(&clientSSLConfig);
+	signal(SIGPIPE, sigpipe_handler_ignore);
 
 	try {
-		signal(SIGPIPE, sigpipe_handler_ignore);
+		Beetle btl(btlConfig.name);
 
-		Beetle btl(name);
-
-		std::unique_ptr<SSLConfig> serverSSLConfig;
 		std::unique_ptr<TCPDeviceServer> tcpServer;
-		if (!noTcp) {
-			std::cout << "using certificate: " << certificate << std::endl;
-			std::cout << "using key: " << key << std::endl;
-			serverSSLConfig.reset(new SSLConfig(!noVerifyPeers, true, certificate, key));
-			tcpServer.reset(new TCPDeviceServer(btl, *serverSSLConfig, tcpPort));
+		if (btlConfig.tcpEnabled) {
+			std::cout << "using certificate: " << btlConfig.sslServerCert << std::endl;
+			std::cout << "using key: " << btlConfig.sslServerKey << std::endl;
+			tcpServer.reset(new TCPDeviceServer(btl,
+					SSLConfig(btlConfig.sslVerifyPeers, true, btlConfig.sslServerCert, btlConfig.sslServerKey),
+					btlConfig.tcpPort));
 		}
 
 		std::unique_ptr<UnixDomainSocketServer> ipcServer;
-		if (!noIpc) {
-			ipcServer.reset(new UnixDomainSocketServer(btl, path));
+		if (btlConfig.ipcEnabled) {
+			ipcServer.reset(new UnixDomainSocketServer(btl, btlConfig.ipcPath));
 		}
 
 		AutoConnect autoConnect(btl, autoConnectAll);
@@ -203,10 +152,11 @@ int main(int argc, char *argv[]) {
 		std::unique_ptr<NetworkStateClient> networkState;
 		std::unique_ptr<AccessControl> accessControl;
 		std::unique_ptr<NetworkDiscoveryClient> networkDiscovery;
-		if (!noController) {
-			controllerClient.reset(new ControllerClient(btl, beetleControllerHostPort, !noVerifyPeers));
+		if (btlConfig.controllerEnabled) {
+			controllerClient.reset(new ControllerClient(btl, btlConfig.getControllerHostAndPort(),
+					btlConfig.sslVerifyPeers));
 
-			networkState.reset(new NetworkStateClient(btl, *controllerClient, tcpPort));
+			networkState.reset(new NetworkStateClient(btl, *controllerClient, btlConfig.tcpPort));
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());
 			btl.registerRemoveDeviceHandler(networkState->getRemoveDeviceHandler());
 			btl.registerUpdateDeviceHandler(networkState->getUpdateDeviceHandler());
@@ -218,10 +168,10 @@ int main(int argc, char *argv[]) {
 			btl.setAccessControl(accessControl.get());
 		}
 
-		CLI cli(btl, tcpPort, path, networkDiscovery.get());
+		CLI cli(btl, btlConfig, networkDiscovery.get());
 
 		std::unique_ptr<Scanner> scanner;
-		if (scanningEnabled) {
+		if (btlConfig.scanEnabled) {
 			scanner.reset(new Scanner());
 			scanner->registerHandler(cli.getDiscoveryHander());
 			scanner->registerHandler(autoConnect.getDiscoveryHandler());

@@ -15,7 +15,7 @@
 
 #include "Beetle.h"
 #include "sync/Semaphore.h"
-#include "Scanner.h"
+#include "scan/Scanner.h"
 
 typedef struct {
 	std::string addr;

@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "AutoConnect.h"
+#include <scan/AutoConnect.h>
 
 #include <cassert>
 #include <iostream>
