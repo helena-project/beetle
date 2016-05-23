@@ -70,30 +70,36 @@ int main(int argc, char *argv[]) {
 	bool autoConnectAll;
 	bool resetHci;
 	bool debugAll;
+	bool enableController;
+	bool enableTcp;
+	bool enableIpc;
 
 	namespace po = boost::program_options;
 	po::options_description desc("Options");
 	desc.add_options()
 			("help,h", "")
-			("defaults,d", "Print default configuration")
-			("config-file,c", po::value<std::string>(&configFile)
+			("print-defaults,p", "Print default configuration")
+			("config,c", po::value<std::string>(&configFile)
 					->default_value(""),
 					"Beetle configuration file")
+			("tcp,t", "Enable tcp sockets, overriding config if necessary.")
+			("ipc,i", "Enable ipc sockets, overriding config if necessary.")
+			("controller,C", "Enable controller, overriding config if necessary.")
 			("connect-all,a", "Connect to all nearby BLE peripherals")
 			("reset-hci", po::value<bool>(&resetHci)
 					->default_value(true),
 					"Set hci down/up at start-up")
-			("debug", "")
-			("debug-all", "");
+			("debug,d", "")
+			("debug-all,D", "");
 
 	po::variables_map vm;
 	try {
 		po::store(po::parse_command_line(argc, argv, desc), vm);
 		if (vm.count("help")) {
-			std::cout << "Beetle Linux" << std::endl << desc << std::endl;
+			std::cout << "Beetle Gateway Linux" << std::endl << desc << std::endl;
 			return 0;
 		}
-		if (vm.count("defaults")) {
+		if (vm.count("print-defaults")) {
 			std::cout << BeetleConfig().str() << std::endl;
 			return 0;
 		}
@@ -105,6 +111,15 @@ int main(int argc, char *argv[]) {
 		}
 		if (vm.count("connect-all")) {
 			autoConnectAll = true;
+		}
+		if (vm.count("tcp")) {
+			enableTcp = true;
+		}
+		if (vm.count("ipc")) {
+			enableIpc = true;
+		}
+		if (vm.count("controller")) {
+			enableController = true;
 		}
 		po::notify(vm);
 	} catch (po::error& e) {
@@ -133,7 +148,7 @@ int main(int argc, char *argv[]) {
 		Beetle btl(btlConfig.name);
 
 		std::unique_ptr<TCPDeviceServer> tcpServer;
-		if (btlConfig.tcpEnabled) {
+		if (btlConfig.tcpEnabled || enableTcp) {
 			std::cout << "using certificate: " << btlConfig.sslServerCert << std::endl;
 			std::cout << "using key: " << btlConfig.sslServerKey << std::endl;
 			tcpServer.reset(new TCPDeviceServer(btl,
@@ -142,7 +157,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		std::unique_ptr<UnixDomainSocketServer> ipcServer;
-		if (btlConfig.ipcEnabled) {
+		if (btlConfig.ipcEnabled || enableIpc) {
 			ipcServer.reset(new UnixDomainSocketServer(btl, btlConfig.ipcPath));
 		}
 
@@ -152,7 +167,7 @@ int main(int argc, char *argv[]) {
 		std::unique_ptr<NetworkStateClient> networkState;
 		std::unique_ptr<AccessControl> accessControl;
 		std::unique_ptr<NetworkDiscoveryClient> networkDiscovery;
-		if (btlConfig.controllerEnabled) {
+		if (btlConfig.controllerEnabled || enableController) {
 			controllerClient.reset(new ControllerClient(btl, btlConfig.getControllerHostAndPort(),
 					btlConfig.sslVerifyPeers));
 

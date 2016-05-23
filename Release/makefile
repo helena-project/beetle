@@ -10,6 +10,7 @@ RM := rm -rf
 -include sources.mk
 -include src/tcp/subdir.mk
 -include src/sync/subdir.mk
+-include src/scan/subdir.mk
 -include src/ipc/subdir.mk
 -include src/hat/subdir.mk
 -include src/device/socket/tcp/subdir.mk

@@ -5,3 +5,4 @@
 *.o
 *.d
 /RPi2/
+/Release/

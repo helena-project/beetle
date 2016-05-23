@@ -45,7 +45,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 	if (config.count("scan")) {
 		json scanConfig = config["scan"];
 		for (json::iterator it = scanConfig.begin(); it != scanConfig.end(); ++it) {
-			if (it.key() == "on") {
+			if (it.key() == "enable") {
 				scanEnabled = it.value();
 			} else {
 				throw std::invalid_argument("unknown scan param: " + it.key());
@@ -56,7 +56,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 	if (config.count("tcp")) {
 		json tcpConfig = config["tcp"];
 		for (json::iterator it = tcpConfig.begin(); it != tcpConfig.end(); ++it) {
-			if (it.key() ==  "on") {
+			if (it.key() ==  "enable") {
 				tcpEnabled = it.value();
 			} else if (it.key() == "port") {
 				tcpPort = it.value();
@@ -69,7 +69,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 	if (config.count("ipc")) {
 		json ipcConfig = config["ipc"];
 		for (json::iterator it = ipcConfig.begin(); it != ipcConfig.end(); ++it) {
-			if (it.key() ==  "on") {
+			if (it.key() ==  "enable") {
 				ipcEnabled = it.value();
 			} else if (it.key() == "path") {
 				ipcPath = it.value();
@@ -82,7 +82,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 	if (config.count("controller")) {
 		json controllerConfig = config["controller"];
 		for (json::iterator it = controllerConfig.begin(); it != controllerConfig.end(); ++it) {
-			if (it.key() ==  "on") {
+			if (it.key() ==  "enable") {
 				controllerEnabled = it.value();
 			} else if (it.key() == "host") {
 				controllerHost = it.value();
@@ -150,21 +150,21 @@ std::string BeetleConfig::str() const {
 	config["name"] = name;
 
 	json scan;
-	scan["on"] = scanEnabled;
+	scan["enable"] = scanEnabled;
 	config["scan"] = scan;
 
 	json tcp;
-	tcp["on"] = tcpEnabled;
+	tcp["enable"] = tcpEnabled;
 	tcp["port"] = tcpPort;
 	config["tcp"] = tcp;
 
 	json ipc;
-	ipc["on"] = ipcEnabled;
+	ipc["enable"] = ipcEnabled;
 	ipc["path"] = ipcPath;
 	config["ipc"] = ipc;
 
 	json controller;
-	controller["on"] = controllerEnabled;
+	controller["enable"] = controllerEnabled;
 	controller["host"] = controllerHost;
 	controller["port"] = controllerPort;
 	config["controller"] = controller;

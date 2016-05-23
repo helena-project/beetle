@@ -31,6 +31,7 @@ src/device/socket \
 src/device/socket/tcp \
 src/hat \
 src/ipc \
+src/scan \
 src/sync \
 src/tcp \
 
