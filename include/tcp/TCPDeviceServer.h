@@ -14,7 +14,7 @@
 #include <thread>
 
 #include "Beetle.h"
-#include "SSLConfig.h"
+#include "tcp/SSLConfig.h"
 
 class ServerException : public std::exception {
   public:
