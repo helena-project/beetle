@@ -66,13 +66,13 @@ void sigpipe_handler_ignore(int unused) {
 }
 
 int main(int argc, char *argv[]) {
-	std::string configFile;
-	bool autoConnectAll;
-	bool resetHci;
-	bool debugAll;
-	bool enableController;
-	bool enableTcp;
-	bool enableIpc;
+	std::string configFile = "";
+	bool autoConnectAll = false;
+	bool resetHci = false;
+	bool debugAll = false;
+	bool enableController = false;
+	bool enableTcp = false;
+	bool enableIpc = false;
 
 	namespace po = boost::program_options;
 	po::options_description desc("Options");

@@ -151,7 +151,7 @@ void Scanner::scanDaemon() {
 				i += len + 1;
 			}
 
-			if (debug) {
+			if (debug_scan) {
 				std::stringstream ss;
 				ss << "discovered " << addr << "\t" << ((addrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random")
 						<< "\t" << name;

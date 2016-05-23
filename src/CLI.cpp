@@ -29,13 +29,14 @@
 #include <utility>
 
 #include "ble/helper.h"
+#include "Debug.h"
+#include "Device.h"
 #include "device/socket/LEPeripheral.h"
 #include "device/socket/tcp/TCPClientProxy.h"
 #include "device/socket/tcp/TCPServerProxy.h"
-#include "Debug.h"
-#include "Device.h"
-#include "hat/HandleAllocationTable.h"
 #include "Handle.h"
+#include "hat/HandleAllocationTable.h"
+#include "Router.h"
 
 CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, NetworkDiscoveryClient *discovery)
 : beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), t() {
@@ -119,6 +120,8 @@ void CLI::cmdLineDaemon() {
 			doListOffsets(cmd);
 		} else if (c1 == "interval") {
 			doSetMaxConnectionInterval(cmd);
+		} else if (c1 == "debug") {
+			doSetDebug(cmd);
 		} else if (c1 == "q" || c1 == "quit") {
 			break;
 		} else if (c1 == "dump") {
@@ -174,6 +177,7 @@ void CLI::doHelp(const std::vector<std::string>& cmd) {
 	printMessage("  handles\t\tPrint a device's handles.");
 	printMessage("  offsets\t\tPrint mappings for a device.");
 	printMessage("  interval\t\tSet max-connection interval for all devices.");
+	printMessage("  debug\t\tSet debugging level.");
 	printMessage("  quit,q");
 }
 
@@ -569,7 +573,7 @@ void CLI::doSetMaxConnectionInterval(const std::vector<std::string>& cmd) {
 
 void CLI::doDumpData(const std::vector<std::string>& cmd) {
 	if (cmd.size() != 2) {
-		printUsage("dump latency");
+		printUsage("dump latency|config");
 		return;
 	}
 
@@ -592,8 +596,66 @@ void CLI::doDumpData(const std::vector<std::string>& cmd) {
 				}
 			}
 		}
+	} else if (cmd[1] == "config") {
+		std::cout << beetleConfig.str() << std::endl;
 	} else {
 		printUsageError(cmd[1] + " not recognized");
+	}
+}
+
+void CLI::doSetDebug(const std::vector<std::string>& cmd) {
+	if (cmd.size() != 2 && cmd.size() != 3) {
+		printUsage("debug on|off");
+		printUsage("debug category on|off");
+		return;
+	}
+
+	bool value;
+	std::string setting = cmd[cmd.size() - 1];
+	if (setting == "on") {
+		value = true;
+	} else if (setting == "off") {
+		value = false;
+	} else {
+		printUsageError("unrecognized setting: " + setting);
+		return;
+	}
+
+	if (cmd.size() == 2) {
+		debug = value;
+	} else {
+		bool isAll = cmd[1] == "all";
+		bool isValid = isAll;
+		if (isAll) {
+			debug = value;
+		}
+		if (isAll || cmd[1] == "scan") {
+			debug_scan = value;
+			isValid |= true;
+		}
+		if (isAll || cmd[1] == "router") {
+			debug_router = value;
+			isValid |= true;
+		}
+		if (isAll || cmd[1] == "socket") {
+			debug_socket = value;
+			isValid |= true;
+		}
+		if (isAll || cmd[1] == "discovery") {
+			debug_discovery = value;
+			isValid |= true;
+		}
+		if (isAll || cmd[1] == "controller") {
+			debug_controller = value;
+			isValid |= true;
+		}
+		if (isAll || cmd[1] == "performance") {
+			debug_performance = value;
+			isValid |= true;
+		}
+		if (!isValid) {
+			printUsageError("unrecognized category: " + cmd[1]);
+		}
 	}
 }
 
@@ -641,4 +703,6 @@ Device *CLI::matchDevice(const std::string &input) {
 	}
 	return device;
 }
+
+
 
