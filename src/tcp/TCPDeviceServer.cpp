@@ -22,7 +22,6 @@
 #include "device/socket/tcp/TCPClientProxy.h"
 #include "Debug.h"
 #include "tcp/TCPConnParams.h"
-#include "tcp/SSLConfig.h"
 #include "util/write.h"
 
 TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig sslConfig, int port)
