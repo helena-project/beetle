@@ -31,9 +31,8 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.1427675632" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.other.other.554480537" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.include.paths.492841921" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/home/james/workspace/Beetle/lib/include"/>
-									<listOptionValue builtIn="false" value="/home/james/workspace/Beetle/include"/>
-									<listOptionValue builtIn="false" value="/home/james/workspace/Beetle/lib"/>
+									<listOptionValue builtIn="false" value="../lib/include"/>
+									<listOptionValue builtIn="false" value="../include"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1143028777" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__cplusplus=201402L"/>
@@ -45,9 +44,8 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.1543245331" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.1418283097" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.1115546482" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/home/james/workspace/Beetle/lib/include"/>
-									<listOptionValue builtIn="false" value="/home/james/workspace/Beetle/include"/>
-									<listOptionValue builtIn="false" value="/home/james/workspace/Beetle/lib"/>
+									<listOptionValue builtIn="false" value="../lib/include"/>
+									<listOptionValue builtIn="false" value="../include"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1681092595" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__cplusplus=201402L"/>
@@ -77,11 +75,7 @@
 								</inputType>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.836697790" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug">
-								<option id="gnu.both.asm.option.include.paths.17548882" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/home/james/workspace/Beetle/lib/include"/>
-									<listOptionValue builtIn="false" value="/home/james/workspace/Beetle/include"/>
-									<listOptionValue builtIn="false" value="/home/james/workspace/Beetle/lib"/>
-								</option>
+								<option id="gnu.both.asm.option.include.paths.17548882" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath"/>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.2000949690" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -135,6 +129,10 @@
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1179493961" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__cplusplus=201402L"/>
 								</option>
+								<option id="gnu.c.compiler.option.include.paths.367484533" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="../lib/include"/>
+									<listOptionValue builtIn="false" value="../include"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.613843193" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.release.1703371375" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.release"/>
@@ -158,7 +156,6 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.exe.release.1763582538" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.release">
 								<option id="gnu.both.asm.option.include.paths.609877500" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="../include"/>
 									<listOptionValue builtIn="false" value="../lib"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1118977815" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
