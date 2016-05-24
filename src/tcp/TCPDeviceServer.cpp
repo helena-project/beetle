@@ -24,17 +24,18 @@
 #include "tcp/TCPConnParams.h"
 #include "util/write.h"
 
-TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig sslConfig, int port)
+TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig, int port)
 : beetle(beetle), sslConfig(sslConfig) {
-	running = true;
+	serverRunning = true;
 	sockfd = -1;
 	t = std::thread(&TCPDeviceServer::serverDaemon, this, port);
 }
 
 TCPDeviceServer::~TCPDeviceServer() {
-	running = false;
+	serverRunning = false;
 	shutdown(sockfd, SHUT_RDWR);
 	t.join();
+	delete sslConfig;
 }
 
 void TCPDeviceServer::serverDaemon(int port) {
@@ -56,20 +57,20 @@ void TCPDeviceServer::serverDaemon(int port) {
 	}
 
 	listen(sockfd, 5);
-	while (running) {
+	while (serverRunning) {
 		struct sockaddr_in client_addr;
 		socklen_t clilen = sizeof(client_addr);
 
 		int clifd = accept(sockfd, (struct sockaddr *)&client_addr, &clilen);
 		if (clifd < 0) {
-			if (!running) {
+			if (!serverRunning) {
 				break;
 			}
 			pwarn("error on accept");
 			continue;
 		}
 
-		SSL *ssl = SSL_new(sslConfig.getCtx());
+		SSL *ssl = SSL_new(sslConfig->getCtx());
 		SSL_set_fd(ssl, clifd);
 		if (SSL_accept(ssl) <= 0) {
 			pwarn("error on ssl accept");

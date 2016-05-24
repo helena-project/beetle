@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
 			std::cout << "using certificate: " << btlConfig.sslServerCert << std::endl;
 			std::cout << "using key: " << btlConfig.sslServerKey << std::endl;
 			tcpServer.reset(new TCPDeviceServer(btl,
-					SSLConfig(btlConfig.sslVerifyPeers, true, btlConfig.sslServerCert, btlConfig.sslServerKey),
+					new SSLConfig(btlConfig.sslVerifyPeers, true, btlConfig.sslServerCert, btlConfig.sslServerKey),
 					btlConfig.tcpPort));
 		}
 

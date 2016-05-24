@@ -9,7 +9,7 @@
 1. clone and import the project into Eclipse
 2. build
 3. in a terminal, ``` cd Debug ```
-4. ``` sudo ./Beetle --no-controller``` 
+4. ``` sudo ./Beetle``` 
 
 ##### Python tcp client
 In ```client``` subdirectory. 

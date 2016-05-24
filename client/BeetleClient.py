@@ -111,6 +111,7 @@ s.send(clientParams.encode('utf-8'))
 
 # Read parameters in plaintext from server
 serverParamsLength = struct.unpack("!i", s.recv(4))[0]
+print "Server response:"
 for serverParam in s.recv(serverParamsLength).split("\n"):
 	print "$ %s" % serverParam.rstrip()
 
@@ -122,9 +123,23 @@ outputThread.start()
 # Regexes to match convenience commands.
 writePattern = re.compile(r"^write (?P<handle>[\d+]+) (?P<value>.*)$")
 readPattern = re.compile(r"^read (?P<handle>[\d+]+)$")
-repeatPattern = re.compile(r"^repeat (?P<ntimes>\d+) (?P<minPause>\d+)-(?P<maxPause>\d+) (?P<value>.*)$")
+repeatPattern = re.compile(r"^repeat (?P<ntimes>\d+) (?P<minPause>\d+)-\(?P<maxPause>\d+) (?P<value>.*)$")
+
+def printHelp():
+	"""
+	Print a list of commands.
+	"""
+	print "  help,h"
+	print "  r\t\t\t\tRepeat last line."
+	print "  read h|h+ofs\t\t\tRead handle h."
+	print "  write h|h+ofs hexVal\t\tWrite (with resp) handle h."
+	print "  de ad be ef\t\t\tSend 'deadbeef'. (spaces optional)"
+	print "  repeat n min-maxPause pdu\tRepeat the packet n times."
 
 def sendMessage(s, message):
+	"""
+	Helper to send a ATT packet.
+	"""
 	opcode = message[0]
 	if att.isRequest(opcode):
 		transactSema.acquire()
@@ -140,6 +155,8 @@ def inputReader(s):
 	"""
 	Consume user input in the main thread.
 	"""
+	print "Connection ready (type 'help' for usage):"
+
 	previousLine = ""
 	while True:
 		line = raw_input("> ")
@@ -150,6 +167,10 @@ def inputReader(s):
 		else:
 			previousLine = line
 		
+		if line == "h" or line == "help":
+			printHelp()
+			continue
+
 		ntimes = 1
 		pause = (0, 0)
 		try: 
