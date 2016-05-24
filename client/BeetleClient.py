@@ -47,7 +47,7 @@ s.connect((args.host, args.port))
 lastRequestTime = 0.0
 
 # Allow only one transaction at a time
-transactSema = threading.Semaphore(1)
+transactSema = threading.BoundedSemaphore(1)
 
 def outputPrinter(s):
 	"""
