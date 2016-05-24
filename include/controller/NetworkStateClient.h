@@ -8,15 +8,18 @@
 #ifndef INCLUDE_CONTROLLER_NETWORKREPORTER_H_
 #define INCLUDE_CONTROLLER_NETWORKREPORTER_H_
 
+#include <memory>
+
 #include "Beetle.h"
-#include "ControllerClient.h"
+
+class ControllerClient;
 
 /*
  * Reports devices connected and disconnected.
  */
 class NetworkStateClient {
 public:
-	NetworkStateClient(Beetle &beetle, ControllerClient &client, int tcpPort);
+	NetworkStateClient(Beetle &beetle, std::shared_ptr<ControllerClient> client, int tcpPort);
 	virtual ~NetworkStateClient();
 
 	AddDeviceHandler getAddDeviceHandler();
@@ -25,7 +28,7 @@ public:
 private:
 	Beetle &beetle;
 
-	ControllerClient &client;
+	std::shared_ptr<ControllerClient> client;
 
 	void addDeviceHelper(Device *device);
 	void updateDeviceHelper(Device *device);

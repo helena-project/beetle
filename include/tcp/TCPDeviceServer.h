@@ -37,12 +37,11 @@ private:
 	Beetle &beetle;
 	SSLConfig *sslConfig;
 
-	bool serverRunning;
-
-	void serverDaemon(int port);
-	std::thread t;
-
 	int sockfd;
+
+	bool serverRunning;
+	std::thread daemonThread;
+	void serverDaemon(int port);
 
 	void startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_in cliaddr);
 };

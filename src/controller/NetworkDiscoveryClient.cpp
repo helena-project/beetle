@@ -7,22 +7,21 @@
 
 #include "controller/NetworkDiscoveryClient.h"
 
-#include <boost/network/message/directives.hpp>
-#include <boost/network/message/wrappers/body.hpp>
-#include <boost/network/message.hpp>
 #include <boost/network/message/directives/header.hpp>
 #include <boost/network/protocol/http/client/facade.hpp>
-#include <boost/network/protocol/http/client/options.hpp>
+#include <exception>
+#include <iostream>
 #include <json/json.hpp>
 #include <sstream>
 
 #include "Debug.h"
+#include "controller/ControllerClient.h"
 
 using json = nlohmann::json;
 
-NetworkDiscoveryClient::NetworkDiscoveryClient(Beetle &beetle, ControllerClient &client)
-: beetle(beetle), client(client) {
-
+NetworkDiscoveryClient::NetworkDiscoveryClient(Beetle &beetle, std::shared_ptr<ControllerClient> client_)
+: beetle(beetle) {
+	client = client_;
 }
 
 NetworkDiscoveryClient::~NetworkDiscoveryClient() {
@@ -46,14 +45,14 @@ bool NetworkDiscoveryClient::discoverByUuid(UUID uuid, std::list<discovery_resul
 }
 
 bool NetworkDiscoveryClient::findGatewayByName(std::string name, std::string &ip, int &port) {
-	std::string url = client.getUrl("network/find/gateway/" + name);
+	std::string url = client->getUrl("network/find/gateway/" + name);
 
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
 
 	try {
-		auto response = client.getClient()->get(request);
+		auto response = client->getClient()->get(request);
 		if (response.status() == 200) {
 			std::stringstream ss;
 			ss << body(response);
@@ -79,14 +78,14 @@ bool NetworkDiscoveryClient::findGatewayByName(std::string name, std::string &ip
 }
 
 bool NetworkDiscoveryClient::queryHelper(std::string resource, std::list<discovery_result_t> &ret) {
-	std::string url = client.getUrl(resource);
+	std::string url = client->getUrl(resource);
 
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
 
 	try {
-		auto response = client.getClient()->get(request);
+		auto response = client->getClient()->get(request);
 		if (response.status() == 200) {
 			std::stringstream ss;
 			ss << body(response);

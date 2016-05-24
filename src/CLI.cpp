@@ -29,6 +29,7 @@
 #include <utility>
 
 #include "ble/helper.h"
+#include "controller/NetworkDiscoveryClient.h"
 #include "Debug.h"
 #include "Device.h"
 #include "device/socket/LEPeripheral.h"
@@ -38,14 +39,14 @@
 #include "hat/HandleAllocationTable.h"
 #include "Router.h"
 
-CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, NetworkDiscoveryClient *discovery)
-: beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), t() {
+CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery)
+: beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), inputDaemon() {
 	aliasCounter = 0;
-	t = std::thread(&CLI::cmdLineDaemon, this);
+	inputDaemon = std::thread(&CLI::cmdLineDaemon, this);
 }
 
 CLI::~CLI() {
-	if (t.joinable()) t.join();
+	if (inputDaemon.joinable()) inputDaemon.join();
 }
 
 DiscoveryHandler CLI::getDiscoveryHander() {
@@ -68,8 +69,8 @@ DiscoveryHandler CLI::getDiscoveryHander() {
 }
 
 void CLI::join() {
-	assert(t.joinable());
-	t.join();
+	assert(inputDaemon.joinable());
+	inputDaemon.join();
 }
 
 static void printUsage(std::string usage) {

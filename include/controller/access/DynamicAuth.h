@@ -9,11 +9,13 @@
 #define CONTROLLER_ACCESS_DYNAMICAUTH_H_
 
 #include <string>
-
-#include <controller/access/Rule.h>
-#include <controller/AccessControl.h>
-#include <controller/ControllerClient.h>
 #include <ctime>
+#include <memory>
+
+#include "controller/access/Rule.h"
+
+class ControllerClient;
+class Device;
 
 class DynamicAuth {
 public:
@@ -30,7 +32,7 @@ public:
 	State state = UNATTEMPTED;
 	When when = ON_MAP;
 
-	virtual void evaluate(ControllerClient &cc, Device *server, Device *client) = 0;
+	virtual void evaluate(std::shared_ptr<ControllerClient> cc, Device *server, Device *client) = 0;
 protected:
 	rule_t ruleId;
 };
@@ -39,7 +41,7 @@ class NetworkAuth : public DynamicAuth {
 public:
 	NetworkAuth(rule_t r, std::string ip, bool isPrivate);
 	virtual ~NetworkAuth() {};
-	void evaluate(ControllerClient &cc, Device *from, Device *to);
+	void evaluate(std::shared_ptr<ControllerClient> cc, Device *from, Device *to);
 private:
 	bool isPrivate;
 	std::string ip;
@@ -49,7 +51,7 @@ class AdminAuth : public DynamicAuth {
 public:
 	AdminAuth(rule_t r);
 	virtual ~AdminAuth() {};
-	void evaluate(ControllerClient &cc, Device *from, Device *to);
+	void evaluate(std::shared_ptr<ControllerClient> cc, Device *from, Device *to);
 private:
 	time_t expire = 0;
 };
@@ -58,7 +60,7 @@ class UserAuth : public DynamicAuth {
 public:
 	UserAuth(rule_t r);
 	virtual ~UserAuth() {};
-	void evaluate(ControllerClient &cc, Device *from, Device *to);
+	void evaluate(std::shared_ptr<ControllerClient> cc, Device *from, Device *to);
 private:
 	time_t expire = 0;
 };
@@ -67,7 +69,7 @@ class PasscodeAuth : public DynamicAuth {
 public:
 	PasscodeAuth(rule_t r);
 	virtual ~PasscodeAuth() {};
-	void evaluate(ControllerClient &cc, Device *from, Device *to);
+	void evaluate(std::shared_ptr<ControllerClient> cc, Device *from, Device *to);
 private:
 	time_t expire = 0;
 };

@@ -164,27 +164,27 @@ int main(int argc, char *argv[]) {
 			ipcServer.reset(new UnixDomainSocketServer(btl, btlConfig.ipcPath));
 		}
 
-		std::unique_ptr<ControllerClient> controllerClient;
-		std::unique_ptr<NetworkStateClient> networkState;
-		std::unique_ptr<AccessControl> accessControl;
-		std::unique_ptr<NetworkDiscoveryClient> networkDiscovery;
+		std::shared_ptr<ControllerClient> controllerClient;
+		std::shared_ptr<NetworkStateClient> networkState;
+		std::shared_ptr<AccessControl> accessControl;
+		std::shared_ptr<NetworkDiscoveryClient> networkDiscovery;
 		if (btlConfig.controllerEnabled || enableController) {
 			controllerClient.reset(new ControllerClient(btl, btlConfig.getControllerHostAndPort(),
 					btlConfig.sslVerifyPeers));
 
-			networkState.reset(new NetworkStateClient(btl, *controllerClient, btlConfig.tcpPort));
+			networkState.reset(new NetworkStateClient(btl, controllerClient, btlConfig.tcpPort));
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());
 			btl.registerRemoveDeviceHandler(networkState->getRemoveDeviceHandler());
 			btl.registerUpdateDeviceHandler(networkState->getUpdateDeviceHandler());
 
-			networkDiscovery.reset(new NetworkDiscoveryClient(btl, *controllerClient));
-			btl.setDiscoveryClient(networkDiscovery.get());
+			networkDiscovery.reset(new NetworkDiscoveryClient(btl, controllerClient));
+			btl.setDiscoveryClient(networkDiscovery);
 
-			accessControl.reset(new AccessControl(btl, *controllerClient));
-			btl.setAccessControl(accessControl.get());
+			accessControl.reset(new AccessControl(btl, controllerClient));
+			btl.setAccessControl(accessControl);
 		}
 
-		CLI cli(btl, btlConfig, networkDiscovery.get());
+		CLI cli(btl, btlConfig, networkDiscovery);
 
 		std::unique_ptr<AutoConnect> autoConnect;
 		std::unique_ptr<Scanner> scanner;

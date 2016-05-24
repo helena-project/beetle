@@ -9,6 +9,7 @@
 #define INCLUDE_CLI_H_
 
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -16,12 +17,13 @@
 
 #include "Beetle.h"
 #include "BeetleConfig.h"
-#include "controller/NetworkDiscoveryClient.h"
 #include "scan/Scanner.h"
+
+class NetworkDiscoveryClient;
 
 class CLI {
 public:
-	CLI(Beetle &beetle, BeetleConfig beetleConfig, NetworkDiscoveryClient *discovery = NULL);
+	CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery = NULL);
 	virtual ~CLI();
 	/*
 	 * Block program exit with CLI.
@@ -41,9 +43,9 @@ private:
 	Beetle &beetle;
 	BeetleConfig beetleConfig;
 
-	NetworkDiscoveryClient *networkDiscovery;
+	std::shared_ptr<NetworkDiscoveryClient> networkDiscovery;
 
-	std::thread t;
+	std::thread inputDaemon;
 	void cmdLineDaemon();
 
 	void doHelp(const std::vector<std::string>& cmd);

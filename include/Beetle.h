@@ -11,6 +11,7 @@
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -115,14 +116,14 @@ public:
 	/*
 	 * Set the access control mechanism.
 	 */
-	void setAccessControl(AccessControl *ac);
-	AccessControl *accessControl = NULL;
+	void setAccessControl(std::shared_ptr<AccessControl> ac);
+	std::shared_ptr<AccessControl> accessControl = NULL;
 
 	/*
 	 * Set the discovery client.
 	 */
-	void setDiscoveryClient(NetworkDiscoveryClient *nd);
-	NetworkDiscoveryClient *discoveryClient = NULL;
+	void setDiscoveryClient(std::shared_ptr<NetworkDiscoveryClient> nd);
+	std::shared_ptr<NetworkDiscoveryClient> discoveryClient = NULL;
 
 	/*
 	 * Workers for callbacks.

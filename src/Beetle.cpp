@@ -166,13 +166,13 @@ void Beetle::registerUpdateDeviceHandler(UpdateDeviceHandler h) {
 	updateHandlers.push_back(h);
 }
 
-void Beetle::setAccessControl(AccessControl *ac) {
+void Beetle::setAccessControl(std::shared_ptr<AccessControl> ac) {
 	assert(accessControl == NULL && ac != NULL);
 	accessControl = ac;
 	registerRemoveDeviceHandler(ac->getRemoveDeviceHandler());
 }
 
-void Beetle::setDiscoveryClient(NetworkDiscoveryClient *nd) {
+void Beetle::setDiscoveryClient(std::shared_ptr<NetworkDiscoveryClient> nd) {
 	assert(discoveryClient == NULL && nd != NULL);
 	discoveryClient = nd;
 }

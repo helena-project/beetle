@@ -21,14 +21,11 @@ public:
 private:
 	Beetle &beetle;
 
-	bool running;
-
-	std::string path;
-
 	int fd;
 
-	std::thread t;
-	void serverDaemon();
+	bool daemonRunning;
+	std::thread daemonThread;
+	void serverDaemon(std::string path);
 
 	void startIPCDeviceHelper(int clifd, struct sockaddr_un cliaddr, struct ucred clicred);
 };

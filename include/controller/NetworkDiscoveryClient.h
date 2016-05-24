@@ -10,10 +10,12 @@
 
 #include <string>
 #include <list>
+#include <memory>
 
 #include "Beetle.h"
-#include "controller/ControllerClient.h"
 #include "UUID.h"
+
+class ControllerClient;
 
 typedef struct {
 	std::string name;
@@ -25,7 +27,7 @@ typedef struct {
 
 class NetworkDiscoveryClient {
 public:
-	NetworkDiscoveryClient(Beetle &beetle, ControllerClient &client);
+	NetworkDiscoveryClient(Beetle &beetle, std::shared_ptr<ControllerClient> client);
 	virtual ~NetworkDiscoveryClient();
 
 	/*
@@ -46,7 +48,7 @@ public:
 private:
 	Beetle &beetle;
 
-	ControllerClient &client;
+	std::shared_ptr<ControllerClient> client;
 
 	bool queryHelper(std::string resource, std::list<discovery_result_t> &ret);
 };

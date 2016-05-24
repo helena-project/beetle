@@ -28,9 +28,9 @@
 
 using json = nlohmann::json;
 
-AccessControl::AccessControl(Beetle &beetle, ControllerClient &client)
-: beetle(beetle), client(client) {
-
+AccessControl::AccessControl(Beetle &beetle, std::shared_ptr<ControllerClient> client_)
+: beetle(beetle) {
+	client = client_;
 }
 
 AccessControl::~AccessControl() {
@@ -86,7 +86,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	resource << "access/canMap/" << fromGateway << "/" << std::fixed << fromId
 			<< "/" << toGateway << "/" << std::fixed << toId;
 
-	std::string url = client.getUrl(resource.str());
+	std::string url = client->getUrl(resource.str());
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
@@ -96,7 +96,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	}
 
 	try {
-		auto response = client.getClient()->get(request);
+		auto response = client->getClient()->get(request);
 
 		switch (response.status()) {
 		case 200: {
@@ -162,7 +162,7 @@ bool AccessControl::acquireExclusiveLease(Device *to, exclusive_lease_t exclusiv
 	resource << "acstate/exclusive/" << std::fixed << exclusiveId
 			<< "/" << beetle.name << "/" << std::fixed << to->getId();
 
-	std::string url = client.getUrl(resource.str());
+	std::string url = client->getUrl(resource.str());
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
@@ -172,7 +172,7 @@ bool AccessControl::acquireExclusiveLease(Device *to, exclusive_lease_t exclusiv
 	}
 
 	try {
-		auto response = client.getClient()->post(request);
+		auto response = client->getClient()->post(request);
 		if (response.status() == 202) {
 			std::stringstream ss;
 			ss << body(response);
@@ -211,7 +211,7 @@ void AccessControl::releaseExclusiveLease(Device *to, exclusive_lease_t exclusiv
 	resource << "acstate/exclusive/" << std::fixed << exclusiveId
 			<< "/" << beetle.name << "/" << std::fixed << to->getId();
 
-	std::string url = client.getUrl(resource.str());
+	std::string url = client->getUrl(resource.str());
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
@@ -221,7 +221,7 @@ void AccessControl::releaseExclusiveLease(Device *to, exclusive_lease_t exclusiv
 	}
 
 	try {
-		auto response = client.getClient()->delete_(request);
+		auto response = client->getClient()->delete_(request);
 		if (response.status() != 200) {
 			std::stringstream ss;
 			ss << "failed to release lease : " << body(response);

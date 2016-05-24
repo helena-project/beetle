@@ -18,20 +18,19 @@
 #include "device/socket/IPCApplication.h"
 #include "Debug.h"
 
-UnixDomainSocketServer::UnixDomainSocketServer(Beetle &beetle, std::string path_) : beetle(beetle), t() {
-	path = path_;
-	running = true;
+UnixDomainSocketServer::UnixDomainSocketServer(Beetle &beetle, std::string path) : beetle(beetle), daemonThread() {
+	daemonRunning = true;
 	fd = -1;
-	t = std::thread(&UnixDomainSocketServer::serverDaemon, this);
+	daemonThread = std::thread(&UnixDomainSocketServer::serverDaemon, this, path);
 }
 
 UnixDomainSocketServer::~UnixDomainSocketServer() {
-	running = false;
+	daemonRunning = false;
 	shutdown(fd, SHUT_RDWR);
-	t.join();
+	daemonThread.join();
 }
 
-void UnixDomainSocketServer::serverDaemon() {
+void UnixDomainSocketServer::serverDaemon(std::string path) {
 	if (debug) pdebug("ipc serverDaemon started at path: " + path);
 
 	unlink(path.c_str());
@@ -53,13 +52,13 @@ void UnixDomainSocketServer::serverDaemon() {
 	}
 
 	listen(fd, 5);
-	while (running) {
+	while (daemonRunning) {
 		struct sockaddr_un cliaddr;
 		socklen_t clilen = sizeof(cliaddr);
 
 		int clifd = accept(fd, (struct sockaddr *)&cliaddr, &clilen);
 		if (clifd < 0) {
-			if (!running) {
+			if (!daemonRunning) {
 				break;
 			}
 			pwarn("error on accept");

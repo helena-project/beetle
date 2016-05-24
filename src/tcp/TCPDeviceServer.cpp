@@ -28,13 +28,13 @@ TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig, int port)
 : beetle(beetle), sslConfig(sslConfig) {
 	serverRunning = true;
 	sockfd = -1;
-	t = std::thread(&TCPDeviceServer::serverDaemon, this, port);
+	daemonThread = std::thread(&TCPDeviceServer::serverDaemon, this, port);
 }
 
 TCPDeviceServer::~TCPDeviceServer() {
 	serverRunning = false;
 	shutdown(sockfd, SHUT_RDWR);
-	t.join();
+	daemonThread.join();
 	delete sslConfig;
 }
 

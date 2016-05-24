@@ -16,6 +16,7 @@
 #include <queue>
 #include <string>
 #include <utility>
+#include <memory>
 
 #include "ble/gatt.h"
 #include "Beetle.h"
@@ -46,7 +47,7 @@ typedef struct {
 
 class AccessControl {
 public:
-	AccessControl(Beetle &beetle, ControllerClient &client);
+	AccessControl(Beetle &beetle, std::shared_ptr<ControllerClient> client);
 	virtual ~AccessControl();
 
 	/*
@@ -82,7 +83,7 @@ public:
 private:
 	Beetle &beetle;
 
-	ControllerClient &client;
+	std::shared_ptr<ControllerClient> client;
 
 	std::map<std::pair<device_t, device_t>, cached_mapping_info_t> cache;
 	boost::shared_mutex cacheMutex;

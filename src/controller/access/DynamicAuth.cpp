@@ -16,10 +16,10 @@
 #include <iostream>
 #include <sstream>
 
+#include "controller/ControllerClient.h"
 #include "Debug.h"
-#include "device/socket/tcp/TCPClient.h"
 #include "Device.h"
-
+#include "device/socket/tcp/TCPClient.h"
 
 DynamicAuth::DynamicAuth(rule_t ruleId_) {
 	ruleId = ruleId_;
@@ -46,7 +46,7 @@ NetworkAuth::NetworkAuth(rule_t r, std::string ip_, bool isPrivate_) : DynamicAu
 	ip = ip_;
 }
 
-void NetworkAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
+void NetworkAuth::evaluate(std::shared_ptr<ControllerClient> cc, Device *from, Device *to) {
 	TCPClient *tcpTo = dynamic_cast<TCPClient *>(to);
 	if (tcpTo) {
 		struct sockaddr_in addr = tcpTo->getSockaddr();
@@ -71,7 +71,7 @@ PasscodeAuth::PasscodeAuth(rule_t r) : DynamicAuth(r) {
 
 }
 
-void PasscodeAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
+void PasscodeAuth::evaluate(std::shared_ptr<ControllerClient> cc, Device *from, Device *to) {
 	if (state == SATISFIED) {
 		return;
 	}
@@ -85,15 +85,15 @@ void PasscodeAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 	case Device::TCP_CLIENT: {
 		std::stringstream resource;
 		resource << "acstate/passcode/isLive/" << std::fixed << ruleId
-				<< "/" << cc.getName() << "/" << std::fixed << to->getId();
-		std::string url = cc.getUrl(resource.str());
+				<< "/" << cc->getName() << "/" << std::fixed << to->getId();
+		std::string url = cc->getUrl(resource.str());
 
 		using namespace boost::network;
 		http::client::request request(url);
 		request << header("User-Agent", "linux");
 
 		try {
-			auto response = cc.getClient()->get(request);
+			auto response = cc->getClient()->get(request);
 			if (response.status() == 200) {
 				std::stringstream ss;
 				ss << body(response);
@@ -125,7 +125,7 @@ AdminAuth::AdminAuth(rule_t r) : DynamicAuth(r) {
 
 }
 
-void AdminAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
+void AdminAuth::evaluate(std::shared_ptr<ControllerClient> cc, Device *from, Device *to) {
 	if (state == SATISFIED) {
 		return;
 	}
@@ -137,15 +137,15 @@ void AdminAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 		case Device::TCP_CLIENT: {
 			std::stringstream resource;
 			resource << "acstate/admin/request/" << std::fixed << ruleId
-					<< "/" << cc.getName() << "/" << std::fixed << to->getId();
-			std::string url = cc.getUrl(resource.str());
+					<< "/" << cc->getName() << "/" << std::fixed << to->getId();
+			std::string url = cc->getUrl(resource.str());
 
 			using namespace boost::network;
 			http::client::request request(url);
 			request << header("User-Agent", "linux");
 
 			try {
-				auto response = cc.getClient()->post(request);
+				auto response = cc->getClient()->post(request);
 				if (response.status() == 202) {
 					std::stringstream ss;
 					ss << body(response);
@@ -178,7 +178,7 @@ UserAuth::UserAuth(rule_t r) : DynamicAuth(r) {
 
 }
 
-void UserAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
+void UserAuth::evaluate(std::shared_ptr<ControllerClient> cc, Device *from, Device *to) {
 	if (state == SATISFIED) {
 		return;
 	}
@@ -190,15 +190,15 @@ void UserAuth::evaluate(ControllerClient &cc, Device *from, Device *to) {
 		case Device::TCP_CLIENT: {
 			std::stringstream resource;
 			resource << "acstate/user/request/" << std::fixed << ruleId
-					<< "/" << cc.getName() << "/" << std::fixed << to->getId();
-			std::string url = cc.getUrl(resource.str());
+					<< "/" << cc->getName() << "/" << std::fixed << to->getId();
+			std::string url = cc->getUrl(resource.str());
 
 			using namespace boost::network;
 			http::client::request request(url);
 			request << header("User-Agent", "linux");
 
 			try {
-				auto response = cc.getClient()->post(request);
+				auto response = cc->getClient()->post(request);
 				if (response.status() == 202) {
 					std::stringstream ss;
 					ss << body(response);

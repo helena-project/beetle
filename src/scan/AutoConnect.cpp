@@ -120,9 +120,10 @@ void AutoConnect::connect(peripheral_info_t info, autoconnect_config_t config) {
 
 void AutoConnect::daemon(int seconds) {
 	if (debug_scan) {
-		pdebug("auto-connect daemon started");
+		pdebug("autoConnectDaemon started");
 	}
 
+	// semi-busy wait to reduce shutdown latency
 	int ticks = 1;
 	while (daemonRunning) {
 		if (ticks % seconds == 0) {
@@ -142,6 +143,6 @@ void AutoConnect::daemon(int seconds) {
 	}
 
 	if (debug_scan) {
-		pdebug("auto-connect daemon exited");
+		pdebug("autoConnectDaemon exited");
 	}
 }
