@@ -96,7 +96,7 @@ void CLI::cmdLineDaemon() {
 		std::string c1 = cmd[0];
 		if (c1 == "h" || c1 == "help") {
 			doHelp(cmd);
-		} else if (c1 == "scan") {
+		} else if (c1 == "s" || c1 == "scan") {
 			doScan(cmd);
 		} else if (c1 == "connect") {
 			doConnect(cmd, true);
@@ -104,27 +104,24 @@ void CLI::cmdLineDaemon() {
 			doConnect(cmd, false);
 		} else if (c1 == "disconnect") {
 			doDisconnect(cmd);
-		} else if (c1 == "remote") {
+		} else if (c1 == "r" || c1 == "remote") {
 			doRemote(cmd);
-		} else if (c1 == "discover") {
-			doDiscover(cmd);
+		} else if (c1 == "network") {
+			doNetworkDiscover(cmd);
 		} else if (c1 == "map") {
 			doMap(cmd);
 		} else if (c1 == "unmap") {
 			doUnmap(cmd);
-		} else if (c1 == "devices") {
+		} else if (c1 == "d" || c1 == "devices") {
 			doListDevices(cmd);
 		} else if (c1 == "handles") {
 			doListHandles(cmd);
-		} else if (c1 == "offsets") {
+		} else if (c1 == "o" || c1 == "offsets") {
 			doListOffsets(cmd);
 		} else if (c1 == "interval") {
 			doSetMaxConnectionInterval(cmd);
 		} else if (c1 == "debug") {
 			doSetDebug(cmd);
-		} else if (c1 == "q" || c1 == "quit") {
-			printMessage("CLI exiting...");
-			break;
 		} else if (c1 == "dump") {
 			doDumpData(cmd);
 		} else if (c1 == "name") {
@@ -133,6 +130,9 @@ void CLI::cmdLineDaemon() {
 			printMessage(std::to_string(beetleConfig.tcpPort));
 		} else if (c1 == "path") {
 			printMessage(beetleConfig.ipcPath);
+		} else if (c1 == "q" || c1 == "quit") {
+			printMessage("CLI exiting...");
+			break;
 		} else {
 			printUsageError("unknown command");
 		}
@@ -166,18 +166,24 @@ void CLI::doHelp(const std::vector<std::string>& cmd) {
 	printMessage("  name\t\tPrint the name of this instance.");
 	printMessage("  port\t\tPrint the tcp port for remote connections.");
 	printMessage("  path\t\tPrint the unix domain socket path.");
-	printMessage("  scan\t\tPrint results from background scan.");
-	printMessage("  discover\t\tPerform network-wide discovery.");
+	printMessage("");
+	printMessage("  scan,s\t\tPrint results from background scan.");
 	printMessage("  connect\t\tConnect to a peripheral.");
 	printMessage("  connect-nd\t\tConnect without handle discovery.");
-	printMessage("  remote\t\tConnect to a device at a remote gateway.");
+	printMessage("  network\t\tPerform network-wide discovery.");
+	printMessage("  remote,r\t\tConnect to a device at a remote gateway.");
 	printMessage("  disconnect");
+	printMessage("");
 	printMessage("  map\t\t\tMap handles from one virtual device to another.");
 	printMessage("  unmap");
-	printMessage("  devices\t\tPrint connected devices.");
+	printMessage("");
+	printMessage("  devices,d\t\tPrint connected devices.");
 	printMessage("  handles\t\tPrint a device's handles.");
-	printMessage("  offsets\t\tPrint mappings for a device.");
+	printMessage("  offsets,o\t\tPrint mappings for a device.");
+	printMessage("");
 	printMessage("  interval\t\tSet max-connection interval for all devices.");
+	printMessage("  dump\t\tDump data into console.");
+	printMessage("");
 	printMessage("  debug\t\tSet debugging level.");
 	printMessage("  quit,q");
 }
@@ -337,16 +343,16 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 	}
 }
 
-void CLI::doDiscover(const std::vector<std::string>& cmd) {
+void CLI::doNetworkDiscover(const std::vector<std::string>& cmd) {
 	if (!networkDiscovery) {
 		printUsageError("Beetle controller not enabled. Network discovery unavailable.");
 		return;
 	}
 
 	if (cmd.size() != 2 && cmd.size() != 3) {
-		printUsage("discover d");
-		printUsage("discover s uuid");
-		printUsage("discover c uuid");
+		printUsage("network d");
+		printUsage("network s uuid");
+		printUsage("network c uuid");
 		return;
 	}
 

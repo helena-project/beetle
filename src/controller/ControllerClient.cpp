@@ -14,11 +14,9 @@
 #include <cassert>
 #include <sstream>
 
-static const int CLIENT_TIMEOUT = 180;
+#include "util/file.h"
 
-inline bool fileExists(const std::string& name) {
-    return (access(name.c_str(), F_OK) != -1);
-}
+static const int CLIENT_TIMEOUT = 180;
 
 ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, bool verifyPeers)
 : beetle(beetle), hostAndPort(hostAndPort) {
@@ -36,8 +34,8 @@ ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, bool
 
 ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, std::string cert,
 		std::string caCerts, bool verifyPeers) : beetle(beetle), hostAndPort(hostAndPort) {
-	assert(fileExists(cert));
-	assert(fileExists(caCerts));
+	assert(file_exists(cert));
+	assert(file_exists(caCerts));
 
 	using namespace boost::network;
 	http::client::options options;

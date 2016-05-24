@@ -91,6 +91,14 @@ void TCPConnection::readDaemon() {
 				pdebug("tcp expecting " + std::to_string(len) + " bytes");
 			}
 
+			if (len == 0) { // terminate the connection
+				if (!isStopped()) {
+					stop();
+					beetle.removeDevice(getId());
+				}
+				break;
+			}
+
 			// read payload ATT message
 			bytesRead = 0;
 			while (!isStopped() && bytesRead < len) {
@@ -113,6 +121,7 @@ void TCPConnection::readDaemon() {
 			if (debug_socket) {
 				pdebug(buf, bytesRead);
 			}
+
 			readHandler(buf, bytesRead);
 		}
 	}

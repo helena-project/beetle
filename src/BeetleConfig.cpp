@@ -14,9 +14,7 @@
 #include <fstream>
 #include <stdexcept>
 
-inline bool fileExists(const std::string& name) {
-    return (access(name.c_str(), F_OK) != -1);
-}
+#include "util/file.h"
 
 static std::string getDefaultName() {
 	char name[100];
@@ -29,7 +27,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 
 	json config;
 	if (filename != "") {
-		if (!fileExists(filename)) {
+		if (!file_exists(filename)) {
 			throw std::invalid_argument("configuration file not found");
 		}
 		std::ifstream ifs(filename);

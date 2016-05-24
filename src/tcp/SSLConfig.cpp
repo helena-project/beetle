@@ -15,12 +15,10 @@
 #include <unistd.h>
 #include <cassert>
 
+#include "util/file.h"
+
 bool SSLConfig::initialized = false;
 std::mutex SSLConfig::initMutex;
-
-inline bool fileExists(const std::string& name) {
-    return (access(name.c_str(), F_OK) != -1);
-}
 
 SSLConfig::SSLConfig(bool verifyPeers, bool isServer, std::string cert, std::string key) {
 	initMutex.lock();
@@ -49,8 +47,12 @@ SSLConfig::SSLConfig(bool verifyPeers, bool isServer, std::string cert, std::str
 	SSL_CTX_set_options(ctx, SSL_OP_SINGLE_DH_USE);
 
 	if (isServer) {
-		assert(fileExists(cert));
-		assert(fileExists(key));
+		if (!file_exists(cert)) {
+			throw std::invalid_argument("cert not found: " + cert);
+		}
+		if (!file_exists(key)) {
+			throw std::invalid_argument("key not found: " + key);
+		}
 
 	    /* Set the key and cert */
 	    if (SSL_CTX_use_certificate_file(ctx, cert.c_str(), SSL_FILETYPE_PEM) < 0) {

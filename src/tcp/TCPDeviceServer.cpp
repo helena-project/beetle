@@ -172,7 +172,6 @@ void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_
 
 		beetle.addDevice(device);
 
-		pdebug("connected to " + device->getName());
 		if (debug) {
 			pdebug(device->getName() + " has handle range [0,"
 					+ std::to_string(device->getHighestHandle()) + "]");

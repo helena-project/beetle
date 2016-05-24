@@ -123,7 +123,7 @@ outputThread.start()
 # Regexes to match convenience commands.
 writePattern = re.compile(r"^write (?P<handle>[\d+]+) (?P<value>.*)$")
 readPattern = re.compile(r"^read (?P<handle>[\d+]+)$")
-repeatPattern = re.compile(r"^repeat (?P<ntimes>\d+) (?P<minPause>\d+)-\(?P<maxPause>\d+) (?P<value>.*)$")
+repeatPattern = re.compile(r"^repeat (?P<ntimes>\d+) (?P<minPause>\d+)-(?P<maxPause>\d+) (?P<value>.*)$")
 
 def printHelp():
 	"""
@@ -249,7 +249,10 @@ def inputReader(s):
 
 try: 
 	inputReader(s)
+except KeyboardInterrupt, err:
+	s.send(chr(0))
 except RuntimeError, err:
 	print "Exception in input thread:", err
+finally:
 	print "Exiting..."
 	s.close()
