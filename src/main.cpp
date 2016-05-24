@@ -144,6 +144,9 @@ int main(int argc, char *argv[]) {
 	TCPServerProxy::initSSL(&clientSSLConfig);
 	signal(SIGPIPE, sigpipe_handler_ignore);
 
+	/*
+	 * TODO there is probably an cleaner way than using unique pointers here.
+	 */
 	try {
 		Beetle btl(btlConfig.name);
 
@@ -160,8 +163,6 @@ int main(int argc, char *argv[]) {
 		if (btlConfig.ipcEnabled || enableIpc) {
 			ipcServer.reset(new UnixDomainSocketServer(btl, btlConfig.ipcPath));
 		}
-
-		AutoConnect autoConnect(btl, autoConnectAll);
 
 		std::unique_ptr<ControllerClient> controllerClient;
 		std::unique_ptr<NetworkStateClient> networkState;
@@ -185,11 +186,13 @@ int main(int argc, char *argv[]) {
 
 		CLI cli(btl, btlConfig, networkDiscovery.get());
 
+		std::unique_ptr<AutoConnect> autoConnect;
 		std::unique_ptr<Scanner> scanner;
 		if (btlConfig.scanEnabled) {
 			scanner.reset(new Scanner());
+			autoConnect.reset(new AutoConnect(btl, autoConnectAll));
 			scanner->registerHandler(cli.getDiscoveryHander());
-			scanner->registerHandler(autoConnect.getDiscoveryHandler());
+			scanner->registerHandler(autoConnect->getDiscoveryHandler());
 			scanner->start();
 		}
 
