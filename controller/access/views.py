@@ -68,8 +68,8 @@ def _get_minimal_rules(rules, cached_relations, ignore_properties=True):
 			key = (lhs.id, rhs.id)
 			if key not in cached_relations:
 				if ignore_properties or _properties_equal(lhs, rhs):
-					lhs_lte_rhs = lhs.domain_lte(rhs)
-					rhs_lte_lhs = rhs.domain_lte(lhs)
+					lhs_lte_rhs = lhs.static_lte(rhs)
+					rhs_lte_lhs = rhs.static_lte(lhs)
 					if lhs_lte_rhs and rhs_lte_lhs:
 						cached_relations[key] = 0
 					elif lhs_lte_rhs:
