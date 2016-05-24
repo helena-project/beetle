@@ -91,7 +91,7 @@ public:
 };
 
 class CharacteristicValue : public Handle {
-
+	/* just for understandability */
 };
 
 class ClientCharCfg : public Handle {

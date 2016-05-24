@@ -21,30 +21,41 @@
 #define EIR_NAME_SHORT		0x08
 #define EIR_NAME_COMPLETE  	0x09
 
-Scanner::Scanner() : t() {
-	stopped = false;
-	started = false;
+Scanner::Scanner() : daemonThread() {
+	daemonRunning = false;
 
 	/*
 	 * Set these intervals high since we are filtering duplicates manually.
 	 */
  	scanInterval = 0x0100;	// TODO these should be configurable
  	scanWindow = 0x0010;
+
+ 	int deviceId = hci_get_route(NULL);
+ 	if (deviceId < 0) {
+ 		throw ScannerException("could not get hci device");
+ 	}
+
+ 	deviceHandle = hci_open_dev(deviceId);
+ 	if (deviceHandle < 0) {
+ 		throw ScannerException("could not get handle to hci device");
+ 	}
 }
 
 Scanner::~Scanner() {
-	stopped = true;
+	daemonRunning = false;
+	shutdown(deviceHandle, SHUT_RDWR);
+
+	if (daemonThread.joinable()) {
+		daemonThread.join();
+	}
+
+	hci_close_dev(deviceHandle);
 }
 
 void Scanner::start() {
-	assert(started == false);
-	started = true;
-	t = std::thread(&Scanner::scanDaemon, this);
-	t.detach();
-}
-
-void Scanner::stop() {
-	stopped = true;
+	assert(daemonRunning == false);
+	daemonRunning = true;
+	daemonThread = std::thread(&Scanner::scanDaemon, this);
 }
 
 void Scanner::registerHandler(DiscoveryHandler handler) {
@@ -90,42 +101,35 @@ static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval
  	return oldFilter;
 }
 
-static void stopScanHelper(int deviceHandle, struct hci_filter oldFilter) {
-	int result = hci_le_set_scan_enable(deviceHandle,
-			0, 		// disable
-			1, 		// filter_dup
-			1000);	// to
-	if (result < 0) {
-		throw ScannerException("failed to disable scan");
-	}
-
-	result = setsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &oldFilter, sizeof(oldFilter));
-	if (result < 0) {
-		throw ScannerException("failed to replace old hci filter");
-	}
-}
+//static void stopScanHelper(int deviceHandle, struct hci_filter oldFilter) {
+//	int result = hci_le_set_scan_enable(deviceHandle,
+//			0, 		// disable
+//			1, 		// filter_dup
+//			1000);	// to
+//	if (result < 0) {
+//		throw ScannerException("failed to disable scan");
+//	}
+//
+//	result = setsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &oldFilter, sizeof(oldFilter));
+//	if (result < 0) {
+//		throw ScannerException("failed to replace old hci filter");
+//	}
+//}
 
 void Scanner::scanDaemon() {
 	if (debug) {
 		pdebug("scanDaemon started");
 	}
 
- 	int deviceId = hci_get_route(NULL);
- 	if (deviceId < 0) {
- 		throw ScannerException("could not get hci device");
- 	}
-
- 	int deviceHandle = hci_open_dev(deviceId);
- 	if (deviceHandle < 0) {
- 		throw ScannerException("could not get handle to hci device");
- 	}
-
- 	struct hci_filter oldFilter = startScanHelper(deviceHandle, scanInterval, scanWindow);
+// 	struct hci_filter oldFilter = startScanHelper(deviceHandle, scanInterval, scanWindow);
+	startScanHelper(deviceHandle, scanInterval, scanWindow);
 
   	uint8_t buf[HCI_MAX_EVENT_SIZE];
-  	while (!stopped) {
+  	while (daemonRunning) {
   		int n = read(deviceHandle, buf, sizeof(buf));
-  		if (n < (1 + HCI_EVENT_HDR_SIZE)) {
+  		if (n < 0) {
+  			continue;
+  		} else if (n < (1 + HCI_EVENT_HDR_SIZE)) {
   			continue;
   		}
 
@@ -169,8 +173,10 @@ void Scanner::scanDaemon() {
   		}
   	}
 
-  	stopScanHelper(deviceHandle, oldFilter);
-  	hci_close_dev(deviceHandle);
+  	/*
+  	 * Since RW is shutdown, the following line does nothing.
+  	 */
+//  	stopScanHelper(deviceHandle, oldFilter);
 
 	if (debug) {
 		pdebug("scanDaemon exited");

@@ -56,24 +56,19 @@ public:
 	void start();
 
 	/*
-	 * Stop BLE scanning.
-	 */
-	void stop();
-
-	/*
 	 * Register a callback to be called upon discovery.
 	 */
 	void registerHandler(DiscoveryHandler);
 private:
-	bool started;
-	bool stopped;
-
 	uint16_t scanInterval;
 	uint16_t scanWindow;
 
+	int deviceHandle;
+
 	std::vector<DiscoveryHandler> handlers;
 
-	std::thread t;
+	bool daemonRunning;
+	std::thread daemonThread;
 	void scanDaemon();
 };
 

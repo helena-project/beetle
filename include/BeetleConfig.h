@@ -12,9 +12,16 @@
 
 class BeetleConfig {
 public:
+	/*
+	 * Load configuration from json file.
+	 */
 	BeetleConfig(std::string filename = "");
 	virtual ~BeetleConfig();
-	std::string str() const;
+
+	/*
+	 * Dump configuration as a json object.
+	 */
+	std::string str(unsigned int indent = 4) const;
 
 	/*
 	 * Gateway name

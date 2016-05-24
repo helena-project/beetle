@@ -123,6 +123,7 @@ void CLI::cmdLineDaemon() {
 		} else if (c1 == "debug") {
 			doSetDebug(cmd);
 		} else if (c1 == "q" || c1 == "quit") {
+			printMessage("CLI exiting...");
 			break;
 		} else if (c1 == "dump") {
 			doDumpData(cmd);
@@ -133,7 +134,7 @@ void CLI::cmdLineDaemon() {
 		} else if (c1 == "path") {
 			printMessage(beetleConfig.ipcPath);
 		} else {
-			printMessage("unknown command");
+			printUsageError("unknown command");
 		}
 	}
 }

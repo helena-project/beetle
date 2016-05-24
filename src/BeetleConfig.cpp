@@ -143,7 +143,7 @@ std::string BeetleConfig::getControllerHostAndPort() const {
 	return controllerHost + ":" + std::to_string(controllerPort);
 }
 
-std::string BeetleConfig::str() const {
+std::string BeetleConfig::str(unsigned int indent) const {
 	using json = nlohmann::json;
 
 	json config;
@@ -186,5 +186,5 @@ std::string BeetleConfig::str() const {
 	debug["socket"] = debugSocket;
 	config["debug"] = debug;
 
-	return config.dump(4);
+	return config.dump(indent);
 }

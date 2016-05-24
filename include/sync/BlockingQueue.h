@@ -15,9 +15,9 @@
 #include <queue>
 
 struct QueueDestroyedException : public std::exception {
-  const char *what() const throw() {
-    return "the queue no longer exists";
-  }
+	const char *what() const throw() {
+		return "the queue no longer exists";
+	}
 };
 
 template <typename T>
