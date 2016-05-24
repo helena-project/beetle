@@ -111,26 +111,45 @@ class Rule(models.Model):
 		default=True,
 		help_text="Rule will be considered?")
 
-	def domain_lte(self, rhs):
+	def static_lte(self, rhs):
 		"""
-		Returns whether self is a subset of rhs.
+		Returns whether self is more specific than rhs.
 		"""
 		def _lte(a, b):
-			return a == b or b.name == "*"
+			return a.name == b.name or b.name == "*"
+		def _eq(a, b):
+			return a.name == b.name
 		def _lte_principal(a, b):
 			return a == b or (b.ptype == Principal.GROUP and b.members.filter(
 				name=a.name).exists()) or b.name == "*"
+		def _eq_principal(a. b):
+			return a == b
 
-		is_domain_subset = True
-		is_domain_subset &= _lte(self.service, rhs.service)
-		is_domain_subset &= _lte(self.characteristic, rhs.characteristic)
-		is_domain_subset &= _lte_principal(self.from_principal, 
-			rhs.from_principal)
-		is_domain_subset &= _lte(self.from_gateway, rhs.from_gateway)
-		is_domain_subset &= _lte_principal(self.to_principal, rhs.to_principal)
-		is_domain_subset &= _lte(self.to_gateway, rhs.to_gateway)
+		if self.priority <= rhs.priority:
+			return True
 
-		return is_domain_subset
+		svc_char_lte = False
+		if _lte(self.characteristic, rhs.characteristic):
+			if not _eq(self.characteristic, rhs.characteristic):
+				svc_char_lte = True
+			else:
+				svc_char_lte = _lte(self.service, rhs.service)
+
+		from_lte = False
+		if _lte_principal(self.from_principal, rhs.from_principal):
+			if not _eq_principal(self.from_principal, rhs.from_principal):
+				from_lte = True
+			else:
+				from_lte = _lte(self.from_gateway, rhs.from_gateway)
+
+		to_lte = False
+		if _lte_principal(self.to_principal, rhs.to_principal):
+			if not _eq_principal(self.to_principal, rhs.to_principal):
+				to_lte = True
+			else:
+				to_lte = _lte(self.to_gateway, rhs.to_gateway)
+
+		return svc_char_lte and from_lte and to_lte
 
 	def __unicode__(self):
 		return self.name
