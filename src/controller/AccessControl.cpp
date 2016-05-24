@@ -7,11 +7,9 @@
 
 #include "controller/AccessControl.h"
 
-#include <boost/network/message/directives/header.hpp>
-#include <boost/network/protocol/http/client/facade.hpp>
+#define BOOST_NETWORK_ENABLE_HTTPS
+
 #include <boost/network/protocol/http/client.hpp>
-#include <boost/network/protocol/http/message/async_message.hpp>
-#include <boost/network/protocol/http/message/wrappers/body.hpp>
 #include <boost/network/protocol/http/request.hpp>
 #include <boost/thread/lock_types.hpp>
 #include <cassert>
@@ -28,7 +26,6 @@
 #include "device/socket/tcp/TCPClientProxy.h"
 #include "device/socket/tcp/TCPServerProxy.h"
 #include "Handle.h"
-
 
 using json = nlohmann::json;
 

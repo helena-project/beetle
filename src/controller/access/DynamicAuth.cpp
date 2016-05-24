@@ -7,6 +7,8 @@
 
 #include <controller/access/DynamicAuth.h>
 
+#define BOOST_NETWORK_ENABLE_HTTPS
+
 #include <boost/network/protocol/http/client.hpp>
 #include <boost/network/protocol/http/request.hpp>
 #include <arpa/inet.h>
