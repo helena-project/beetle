@@ -24,7 +24,6 @@ from network.shared import get_gateway_and_principal_helper, get_gateway_helper
 
 import dateutil.parser
 from dateutil.relativedelta import relativedelta
-import cronex
 import json
 import base64
 import random
@@ -338,14 +337,17 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 		auth_instance = AdminAuthInstance.objects.get(
 			rule=rule, principal=to_principal)
 		if auth_instance is not None:
-			if auth_instance.expire >= current_time:
-				######################
-				# Already authorized #
-				######################
-				return HttpResponse(auth_instance.expire.strftime("%s"), 
-					status=202)
+			if auth_instance.allow:
+				if auth_instance.expire >= current_time:
+					######################
+					# Already authorized #
+					######################
+					return HttpResponse(auth_instance.expire.strftime("%s"), 
+						status=202)
+				else:
+					auth_instance.delete()
 			else:
-				auth_instance.delete() 
+				return HttpResponse("denied permanently", status=403)
 	except AdminAuthInstance.DoesNotExist:
 		pass
 
@@ -427,15 +429,12 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 				###############
 				# Deny always #
 				###############
-				wildcard_gateway = Gateway.objects.get(name="*")
-				wildcard_principal = Principal.objects.get(name="*")
-				rule_exception, created = RuleException.objects.get_or_create(
+				auth_instance = AdminAuthInstance(
 					rule=rule,
-					from_gateway=wildcard_gateway,
-					from_principal=wildcard_principal,
-					to_principal=to_principal,
-					to_gateway=wildcard_gateway)
-				rule_exception.save()
+					allow=False,
+					principal=to_principal,
+					expire=current_time + relativedelta(years=100))
+				auth_instance.save()
 				return HttpResponse("denied permanently", status=403)
 		else:
 			print "no match"
@@ -474,14 +473,17 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 		auth_instance = UserAuthInstance.objects.get(
 			rule=rule, principal=to_principal)
 		if auth_instance is not None:
-			if auth_instance.expire >= current_time:
-				######################
-				# Already authorized #
-				######################
-				return HttpResponse(auth_instance.expire.strftime("%s"), 
-					status=202)
+			if auth_instance.allow:
+				if auth_instance.expire >= current_time:
+					######################
+					# Already authorized #
+					######################
+					return HttpResponse(auth_instance.expire.strftime("%s"), 
+						status=202)
+				else:
+					auth_instance.delete()
 			else:
-				auth_instance.delete() 
+				return HttpResponse("denied permanently", status=403)
 	except UserAuthInstance.DoesNotExist:
 		pass
 
@@ -552,19 +554,15 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 				###############
 				# Deny always #
 				###############
-				wildcard_gateway = Gateway.objects.get(name="*")
-				wildcard_principal = Principal.objects.get(name="*")
-				rule_exception, created = RuleException.objects.get_or_create(
-					rule=rule,
-					from_gateway=wildcard_gateway,
-					from_principal=wildcard_principal,
-					to_principal=to_principal,
-					to_gateway=wildcard_gateway)
-				rule_exception.save()
+				auth_instance = UserAuthInstance(
+					rule=rule, 
+					allow=False,
+					principal=to_principal,
+					expire=current_time + relativedelta(years=100))
+				auth_instance.save()
 				return HttpResponse("denied permanently", status=403)
 		else:
 			print "no match"
-
 
 	return HttpResponse("no response from user", status=408)
 

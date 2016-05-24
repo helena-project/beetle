@@ -226,7 +226,7 @@ class DynamicAuth(PolymorphicModel):
 
 	session_length = models.DurationField(
 		default=timedelta(hours=1), 
-		help_text="Time before reauthenticaton. Hint: HH:mm:ss")
+		help_text="Time before reauthentication. Hint: HH:mm:ss")
 	require_when = models.IntegerField(
 		default=ON_MAP,
 		choices=REQUIRE_WHEN_CHOICES,
@@ -235,7 +235,7 @@ class DynamicAuth(PolymorphicModel):
 	priority = models.IntegerField(
 		default=0,
 		editable=False,
-		help_text="A hidden field to ensure envaluation order")
+		help_text="A hidden field to ensure evaluation order")
 
 #------------------------------------------------------------------------------
 

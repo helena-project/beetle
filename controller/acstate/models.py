@@ -41,6 +41,7 @@ class AdminAuthInstance(models.Model):
 
 	rule = models.ForeignKey("access.Rule")
 	principal = models.ForeignKey("beetle.Principal")
+	allow = models.BooleanField(default=True)
 
 	timestamp = models.DateTimeField(auto_now_add=True)
 	expire = models.DateTimeField(default=timezone.now)
@@ -59,6 +60,7 @@ class UserAuthInstance(models.Model):
 
 	rule = models.ForeignKey("access.Rule")
 	principal = models.ForeignKey("beetle.Principal")
+	allow = models.BooleanField(default=True)
 
 	timestamp = models.DateTimeField(auto_now_add=True)
 	expire = models.DateTimeField(default=timezone.now)
@@ -85,7 +87,7 @@ class PasscodeAuthInstance(models.Model):
 
 class ExclusiveLease(models.Model):
 	"""
-	A lease of exlusitivity
+	A lease of exclusivity
 	"""
 	group = models.OneToOneField("access.Exclusive")
 	principal = models.ForeignKey("network.ConnectedPrincipal")
