@@ -33,7 +33,7 @@ HCI::HCI() {
 }
 
 HCI::~HCI() {
-	// TODO Auto-gen
+	hci_close_dev(dd);
 }
 
 void HCI::resetHCI() {
