@@ -247,13 +247,25 @@ class AdminAuth(DynamicAuth):
 		verbose_name = "Admin"
 		verbose_name_plural = "Admin Auth"
 
+	RULE_SCOPE = 1
+	SERVER_SCOPE = 2
+	SCOPE_CHOICES = (
+		(RULE_SCOPE, "rule"),
+		(SERVER_SCOPE, "server"),
+	)
+
 	message = models.CharField(
 		max_length=100, 
 		blank=True,
 		help_text="Any additional message to present to the admin.")
 
-	admin = models.ForeignKey("beetle.Contact",	
+	admin = models.ForeignKey("beetle.Contact",
 		help_text="User with authority over this rule")
+
+	scope = models.IntegerField(
+		choices=SCOPE_CHOICES, 
+		default=RULE_SCOPE,
+		help_text="Scope of the permission granted.")
 
 	def save(self, *args, **kwargs):
 		self.priority = 4
@@ -272,10 +284,22 @@ class UserAuth(DynamicAuth):
 		verbose_name = "User Auth"
 		verbose_name_plural = "User Auth"
 
+	RULE_SCOPE = 1
+	SERVER_SCOPE = 2
+	SCOPE_CHOICES = (
+		(RULE_SCOPE, "rule"),
+		(SERVER_SCOPE, "server"),
+	)
+
 	message = models.CharField(
 		max_length=100, 
 		blank=True,
 		help_text="Any additional message to present to the user.")
+
+	scope = models.IntegerField(
+		choices=SCOPE_CHOICES, 
+		default=RULE_SCOPE,
+		help_text="Scope of the permission granted.")
 
 	def save(self, *args, **kwargs):
 		self.priority = 3
