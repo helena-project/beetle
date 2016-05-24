@@ -50,10 +50,7 @@ def _get_dynamic_auth(rule, principal):
 	
 	return True, result
 
-def _properties_equal(lhs, rhs):
-	return set(lhs.properties) == set(rhs.properties)
-
-def _get_minimal_rules(rules, cached_relations, ignore_properties=True):
+def _get_minimal_rules(rules, cached_relations):
 	"""
 	Returns the rules that are 'minimal'.
 	"""
@@ -66,18 +63,15 @@ def _get_minimal_rules(rules, cached_relations, ignore_properties=True):
 	for lhs in rules.order_by("id"):
 		for rhs in rules.filter(id__gte=lhs.id):
 			key = (lhs.id, rhs.id)
-			if key not in cached_relations:
-				if ignore_properties or _properties_equal(lhs, rhs):
-					lhs_lte_rhs = lhs.static_lte(rhs)
-					rhs_lte_lhs = rhs.static_lte(lhs)
-					if lhs_lte_rhs and rhs_lte_lhs:
-						cached_relations[key] = 0
-					elif lhs_lte_rhs:
-						cached_relations[key] = -1
-					elif rhs_lte_lhs:
-						cached_relations[key] = 1
-					else:
-						cached_relations[key] = 0
+			if key not in cached_relations:				
+				lhs_lte_rhs = lhs.static_lte(rhs)
+				rhs_lte_lhs = rhs.static_lte(lhs)
+				if lhs_lte_rhs and rhs_lte_lhs:
+					cached_relations[key] = 0
+				elif lhs_lte_rhs:
+					cached_relations[key] = -1
+				elif rhs_lte_lhs:
+					cached_relations[key] = 1
 				else:
 					cached_relations[key] = 0
 			cached_val = cached_relations[key]
@@ -92,6 +86,24 @@ def _get_minimal_rules(rules, cached_relations, ignore_properties=True):
 		rules = rules.exclude(id=rule_id)
 
 	return rules
+
+def _evaluate_cron(rule, timestamp, cached_cron):
+	"""
+	Returns whether the timestamp is in the trigger window of the rule
+	"""
+	if rule.id in cached_cron:
+		return cached_cron[rule.id]:
+
+	result = False
+	try:
+		cron = cronex.CronExpression(rule.cron_expression)
+		result = cron.check_trigger(timestamp.timetuple()[:5], 
+			utc_offset=timestamp.utcoffset()):
+	except:
+		result = False
+
+	cached_cron[rule.id] = result
+	return result
 
 @gzip_page
 @require_GET
@@ -148,6 +160,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 
 	# Cached already computed relations for a strict partial order
 	cached_relations = {}
+	cached_cron = {}
 
 	services = {}
 	rules = {}
@@ -171,6 +184,10 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 				#####################################
 				# Compute access per characteristic #
 				#####################################
+
+				# Evaluate the cron expression
+				if not _evaluate_cron(char_rule, timestamp, cached_cron):
+					continue
 
 				# Access allowed
 				if service.uuid not in services:
