@@ -7,7 +7,13 @@
 
 #include <controller/NetworkStateClient.h>
 
+#include <boost/network/message/directives/header.hpp>
+#include <boost/network/message/directives.hpp>
+#include <boost/network/protocol/http/client/facade.hpp>
 #include <boost/network/protocol/http/client.hpp>
+#include <boost/network/protocol/http/message/async_message.hpp>
+#include <boost/network/protocol/http/message/wrappers/body.hpp>
+#include <boost/network/protocol/http/request.hpp>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <iostream>

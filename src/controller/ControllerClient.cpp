@@ -8,11 +8,10 @@
 #include "controller/ControllerClient.h"
 
 #include <boost/network/protocol/http/client/options.hpp>
-#include <boost/optional/optional.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <unistd.h>
 #include <cassert>
 #include <sstream>
+#include <memory>
 
 #include "Beetle.h"
 #include "util/file.h"
