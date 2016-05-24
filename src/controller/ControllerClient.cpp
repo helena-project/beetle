@@ -14,6 +14,7 @@
 #include <cassert>
 #include <sstream>
 
+#include "Beetle.h"
 #include "util/file.h"
 
 static const int CLIENT_TIMEOUT = 180;

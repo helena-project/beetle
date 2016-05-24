@@ -11,7 +11,6 @@
 #include <string>
 #include <openssl/ossl_typ.h>
 
-#include "Beetle.h"
 #include "device/socket/TCPConnection.h"
 
 

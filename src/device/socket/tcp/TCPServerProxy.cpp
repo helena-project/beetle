@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <utility>
 
+#include "Beetle.h"
 #include "Debug.h"
 #include "Device.h"
 #include "hat/SingleAllocator.h"

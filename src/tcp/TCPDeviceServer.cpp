@@ -18,6 +18,8 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
+#include "Beetle.h"
+#include "BeetleTypes.h"
 #include "device/socket/tcp/TCPClient.h"
 #include "device/socket/tcp/TCPClientProxy.h"
 #include "Debug.h"

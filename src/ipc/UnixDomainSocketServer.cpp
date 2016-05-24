@@ -15,6 +15,7 @@
 #include <iostream>
 #include <thread>
 
+#include "Beetle.h"
 #include "device/socket/IPCApplication.h"
 #include "Debug.h"
 

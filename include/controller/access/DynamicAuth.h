@@ -12,10 +12,11 @@
 #include <ctime>
 #include <memory>
 
+#include "BeetleTypes.h"
 #include "controller/access/Rule.h"
 
+/* Forward declarations */
 class ControllerClient;
-class Device;
 
 class DynamicAuth {
 public:

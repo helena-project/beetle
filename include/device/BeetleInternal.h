@@ -13,7 +13,7 @@
 #include <string>
 
 #include "ble/att.h"
-#include "Beetle.h"
+#include "BeetleTypes.h"
 #include "Device.h"
 #include "hat/HandleAllocationTable.h"
 

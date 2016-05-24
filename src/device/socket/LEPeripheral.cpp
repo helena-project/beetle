@@ -16,6 +16,7 @@
 #include <sstream>
 #include <unistd.h>
 
+#include "Beetle.h"
 #include "ble/att.h"
 #include "Debug.h"
 #include "Device.h"

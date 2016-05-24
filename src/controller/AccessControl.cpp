@@ -17,14 +17,15 @@
 #include <memory>
 #include <sstream>
 
+#include "Beetle.h"
 #include "ble/att.h"
+#include "controller/ControllerClient.h"
+#include "controller/access/DynamicAuth.h"
+#include "Device.h"
 #include "device/socket/tcp/TCPClient.h"
 #include "device/socket/tcp/TCPClientProxy.h"
 #include "device/socket/tcp/TCPServerProxy.h"
-#include "Device.h"
-#include "controller/access/DynamicAuth.h"
 #include "Handle.h"
-
 
 using json = nlohmann::json;
 

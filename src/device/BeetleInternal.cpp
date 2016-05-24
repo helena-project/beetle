@@ -13,6 +13,7 @@
 #include <mutex>
 #include <set>
 
+#include "Beetle.h"
 #include "ble/gatt.h"
 #include "ble/helper.h"
 #include "Debug.h"

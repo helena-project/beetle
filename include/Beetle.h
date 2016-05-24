@@ -9,32 +9,21 @@
 #define INCLUDE_BEETLE_H_
 
 #include <boost/thread/pthread/shared_mutex.hpp>
-#include <functional>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "BeetleTypes.h"
 #include "sync/OrderedThreadPool.h"
 #include "sync/ThreadPool.h"
 #include "HCI.h"
 
+/* Forward declarations */
 class AccessControl;
-class NetworkDiscoveryClient;
 class BeetleInternal;
-class Device;
+class NetworkDiscoveryClient;
 class Router;
-
-/*
- * Id representing a local virtual device instance.
- */
-typedef long device_t;
-const device_t BEETLE_RESERVED_DEVICE = 0;
-const device_t NULL_RESERVED_DEVICE = -1;
-
-typedef std::function<void(device_t d)> AddDeviceHandler;
-typedef std::function<void(device_t d)> RemoveDeviceHandler;
-typedef std::function<void(device_t d)> UpdateDeviceHandler;
 
 class Beetle {
 public:

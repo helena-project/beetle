@@ -13,19 +13,21 @@
 #include <ctime>
 #include <iostream>
 #include <map>
-#include <queue>
-#include <string>
-#include <utility>
 #include <memory>
+#include <queue>
+#include <set>
+#include <string>
+#include <mutex>
+#include <utility>
 
 #include "ble/gatt.h"
-#include "Beetle.h"
-#include "controller/ControllerClient.h"
+#include "BeetleTypes.h"
 #include "Debug.h"
 #include "UUID.h"
 #include "controller/access/Rule.h"
 
-class Handle;
+/* Forward declarations */
+class ControllerClient;
 
 /*
  * Use upper 32 bits to encode priority, lower 32 bits to encode rule id.

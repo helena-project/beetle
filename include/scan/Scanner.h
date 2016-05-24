@@ -22,13 +22,13 @@
 extern bool debug_scan;
 
 class ScannerException : public std::exception {
-  public:
+public:
 	ScannerException(std::string msg) : msg(msg) {};
 	ScannerException(const char *msg) : msg(msg) {};
-    ~ScannerException() throw() {};
-    const char *what() const throw() { return this->msg.c_str(); };
-  private:
-    std::string msg;
+	~ScannerException() throw() {};
+	const char *what() const throw() { return this->msg.c_str(); };
+private:
+	std::string msg;
 };
 
 /*

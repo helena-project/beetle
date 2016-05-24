@@ -11,10 +11,10 @@
 #include <iostream>
 #include <thread>
 
+#include "Beetle.h"
 #include "device/socket/LEPeripheral.h"
 #include "Debug.h"
 #include "Device.h"
-
 
 AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_) : beetle{beetle}, daemonThread() {
 	connectAll = connectAll_;

@@ -13,12 +13,14 @@
 #include <cassert>
 #include <cstring>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <set>
 #include <sstream>
 #include <string>
 #include <utility>
 
+#include "Beetle.h"
 #include "ble/att.h"
 #include "ble/gatt.h"
 #include "ble/helper.h"

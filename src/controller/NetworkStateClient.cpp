@@ -22,6 +22,7 @@
 #include <string>
 #include <thread>
 
+#include "Beetle.h"
 #include "controller/ControllerClient.h"
 #include "Debug.h"
 #include "Device.h"

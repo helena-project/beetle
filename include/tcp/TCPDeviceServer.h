@@ -13,7 +13,7 @@
 #include <string>
 #include <thread>
 
-#include "Beetle.h"
+#include "BeetleTypes.h"
 #include "tcp/SSLConfig.h"
 
 class ServerException : public std::exception {

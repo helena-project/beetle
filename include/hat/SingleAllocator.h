@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <set>
 
-#include "Beetle.h"
+#include "BeetleTypes.h"
 #include "HandleAllocationTable.h"
 
 /*

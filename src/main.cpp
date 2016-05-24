@@ -16,6 +16,7 @@
 
 #include "Beetle.h"
 #include "BeetleConfig.h"
+#include "BeetleTypes.h"
 #include "CLI.h"
 #include "controller/AccessControl.h"
 #include "controller/ControllerClient.h"

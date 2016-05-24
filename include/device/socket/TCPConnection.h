@@ -15,7 +15,6 @@
 #include <thread>
 #include <openssl/ossl_typ.h>
 
-#include "Beetle.h"
 #include "sync/Countdown.h"
 #include "device/VirtualDevice.h"
 

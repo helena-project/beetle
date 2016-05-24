@@ -10,7 +10,7 @@
 
 #include <cstdint>
 
-#include "Beetle.h"
+#include "BeetleTypes.h"
 
 /* Extra debugging when routing. */
 extern bool debug_router;

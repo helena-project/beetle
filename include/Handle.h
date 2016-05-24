@@ -13,7 +13,7 @@
 #include <set>
 #include <string>
 
-#include "Beetle.h"
+#include "BeetleTypes.h"
 #include "UUID.h"
 
 class CachedHandle {

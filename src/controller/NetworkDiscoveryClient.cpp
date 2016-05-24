@@ -14,6 +14,7 @@
 #include <json/json.hpp>
 #include <sstream>
 
+#include "Beetle.h"
 #include "Debug.h"
 #include "controller/ControllerClient.h"
 

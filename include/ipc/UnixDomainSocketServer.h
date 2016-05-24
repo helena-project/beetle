@@ -11,7 +11,7 @@
 #include <string>
 #include <thread>
 
-#include "Beetle.h"
+#include "BeetleTypes.h"
 
 class UnixDomainSocketServer {
 public:

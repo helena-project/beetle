@@ -13,7 +13,7 @@
 #include <mutex>
 #include <string>
 
-#include "Beetle.h"
+#include "BeetleTypes.h"
 #include "sync/Semaphore.h"
 #include "scan/Scanner.h"
 

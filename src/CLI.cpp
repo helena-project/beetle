@@ -28,6 +28,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "Beetle.h"
 #include "ble/helper.h"
 #include "controller/NetworkDiscoveryClient.h"
 #include "Debug.h"

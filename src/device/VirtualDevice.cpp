@@ -15,6 +15,7 @@
 #include <thread>
 #include <time.h>
 
+#include "Beetle.h"
 #include "ble/att.h"
 #include "ble/gatt.h"
 #include "ble/helper.h"

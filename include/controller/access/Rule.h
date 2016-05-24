@@ -14,12 +14,13 @@
 #include <string>
 #include <memory>
 
-#include <ble/gatt.h>
-#include <Debug.h>
+#include "ble/gatt.h"
+#include "Debug.h"
+
+/* Forward declarations */
+class DynamicAuth;
 
 typedef uint32_t rule_t;
-
-class DynamicAuth;
 
 class Rule {
 public:

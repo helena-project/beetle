@@ -15,7 +15,7 @@
 #include <queue>
 #include <vector>
 
-#include "Beetle.h"
+#include "BeetleTypes.h"
 #include "Device.h"
 #include "UUID.h"
 

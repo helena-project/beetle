@@ -10,8 +10,9 @@
 
 #include <memory>
 
-#include "Beetle.h"
+#include "BeetleTypes.h"
 
+/* Forward declarations */
 class ControllerClient;
 
 /*

@@ -16,6 +16,7 @@
 #include <openssl/ossl_typ.h>
 #include <sstream>
 
+#include "Beetle.h"
 #include "ble/att.h"
 #include "Debug.h"
 #include "sync/OrderedThreadPool.h"

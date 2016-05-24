@@ -14,6 +14,7 @@
 #include <sstream>
 #include <unistd.h>
 
+#include "Beetle.h"
 #include "Debug.h"
 #include "sync/OrderedThreadPool.h"
 #include "util/write.h"

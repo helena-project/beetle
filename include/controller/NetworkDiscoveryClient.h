@@ -12,9 +12,10 @@
 #include <list>
 #include <memory>
 
-#include "Beetle.h"
+#include "BeetleTypes.h"
 #include "UUID.h"
 
+/* Forward declarations */
 class ControllerClient;
 
 typedef struct {

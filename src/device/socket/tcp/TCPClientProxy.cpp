@@ -12,6 +12,7 @@
 #include <netinet/in.h>
 #include <map>
 
+#include "Beetle.h"
 #include "hat/SingleAllocator.h"
 
 TCPClientProxy::TCPClientProxy(Beetle &beetle, SSL *ssl, int sockfd, std::string clientGateway_,

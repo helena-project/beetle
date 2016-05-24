@@ -14,7 +14,7 @@
 #include <exception>
 #include <string>
 
-#include "Beetle.h"
+#include "BeetleTypes.h"
 
 class ControllerException : public std::exception {
   public:

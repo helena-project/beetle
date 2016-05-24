@@ -15,10 +15,11 @@
 #include <thread>
 #include <vector>
 
-#include "Beetle.h"
+#include "BeetleTypes.h"
 #include "BeetleConfig.h"
 #include "scan/Scanner.h"
 
+/* Forward declarations */
 class NetworkDiscoveryClient;
 
 class CLI {

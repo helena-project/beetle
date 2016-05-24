@@ -13,7 +13,6 @@
 #include <cstdint>
 #include <thread>
 
-#include "Beetle.h"
 #include "sync/Countdown.h"
 #include "device/VirtualDevice.h"
 

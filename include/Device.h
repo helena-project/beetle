@@ -16,18 +16,19 @@
 #include <mutex>
 #include <string>
 
-#include "Beetle.h"
-#include "Handle.h"
-#include "hat/HandleAllocationTable.h"
+#include "BeetleTypes.h"
+
+/* Forward declarations */
+class HandleAllocationTable;
 
 class DeviceException : public std::exception {
-  public:
-    DeviceException(std::string msg) : msg(msg) {};
-    DeviceException(const char *msg) : msg(msg) {};
-    ~DeviceException() throw() {};
-    const char *what() const throw() { return this->msg.c_str(); };
-  private:
-    std::string msg;
+public:
+	DeviceException(std::string msg) : msg(msg) {};
+	DeviceException(const char *msg) : msg(msg) {};
+	~DeviceException() throw() {};
+	const char *what() const throw() { return this->msg.c_str(); };
+private:
+	std::string msg;
 };
 
 class Device {

@@ -12,9 +12,11 @@
 #include <set>
 #include <utility>
 
+#include "Beetle.h"
 #include "ble/att.h"
-#include "ble/gatt.h"
+#include "Handle.h"
 #include "hat/BlockAllocator.h"
+#include "UUID.h"
 
 std::atomic_int Device::idCounter(1);
 
