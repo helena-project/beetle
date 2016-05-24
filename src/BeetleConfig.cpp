@@ -99,12 +99,24 @@ BeetleConfig::BeetleConfig(std::string filename) {
 				sslVerifyPeers = it.value();
 			} else if (it.key() == "serverKey") {
 				sslServerKey = it.value();
+				if (!file_exists(sslServerKey)) {
+					throw std::invalid_argument("file does not exist: " + sslServerKey);
+				}
 			} else if (it.key() == "serverCert") {
 				sslServerCert = it.value();
+				if (!file_exists(sslServerCert)) {
+					throw std::invalid_argument("file does not exist: " + sslServerCert);
+				}
 			} else if (it.key() == "clientKey") {
 				sslClientKey = it.value();
+				if (!file_exists(sslClientKey)) {
+					throw std::invalid_argument("file does not exist: " + sslClientKey);
+				}
 			} else if (it.key() == "clientCert") {
 				sslClientCert = it.value();
+				if (!file_exists(sslClientCert)) {
+					throw std::invalid_argument("file does not exist: " + sslClientCert);
+				}
 			} else {
 				throw std::invalid_argument("unknown ssl param: " + it.key());
 			}
