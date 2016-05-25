@@ -3,6 +3,10 @@ import lib.att_pdu as att_pdu
 import lib.gatt as gatt
 from lib.uuid import UUID
 
+class ServerError(Exception):
+    def __init__(self, arg):
+        self.msg = arg
+
 class _Handle:
 	def __init__(self, server, owner, uuid):
 		assert type(server) is GattServer
@@ -22,13 +26,14 @@ class _Handle:
 	def read(self):
 		try:
 			return self.readCallback()
-		except:
+		except ServerError, err:
 			return None
 
-	def write(self):
+	def write(self, value):
+		assert type(value) is bytearray
 		try:
-			self.writeCallback()
-		except:
+			self.writeCallback(value)
+		except ServerError, err:
 			pass
 
 	def setReadCallback(self, cb):
@@ -97,7 +102,7 @@ class _Characteristic:
 			def cccd_cb(value):
 				assert type(value) is bytearray
 				if len(value) != 2:
-					raise att.ECODE_INVALID_PDU
+					raise ServerError("invalid cccd pdu")
 				else:
 					self._cccd.write(value)
 
@@ -397,7 +402,7 @@ class GattServer:
 					return resp
 				except int, ecode:
 					return att_pdu.new_error_resp(op, handleNo, ecode)
-				except Exception, err:
+				except ServerError, err:
 					return att_pdu.new_error_resp(op, handleNo, 
 						att.ECODE_UNLIKELY)
 			else:
@@ -424,7 +429,7 @@ class GattServer:
 					return bytearray([att.OP_WRITE_RESP])
 				except int, ecode:
 					return att_pdu.new_error_resp(op, handleNo, ecode)
-				except Exception, err:
+				except ServerError, err:
 					return att_pdu.new_error_resp(op, handleNo, 
 						att.ECODE_UNLIKELY)
 			else:

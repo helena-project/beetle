@@ -5,14 +5,14 @@ import lib.att_pdu as att_pdu
 import lib.gatt as gatt
 from lib.uuid import UUID
 
-class ClientError(Exception):
-    def __init__(self, arg):
-        self.msg = arg
-
 def __handle_to_bytearray(handle):
 	assert handle <= 0xFFFF
 	assert handle >= 0
 	return bytearray([handle & 0xFF, (handle >> 8) & 0xFF])
+
+class ClientError(Exception):
+    def __init__(self, arg):
+        self.msg = arg
 
 class _Service:
 	def __init__(self, client, uuid, handleNo, endGroup):
