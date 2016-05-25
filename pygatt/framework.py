@@ -42,11 +42,11 @@ class ManagedSocket:
 		self._teardown()
 
 	def _setServer(self, server):
-		assert type(server) is GattServer
+		assert server.__class__ is GattServer
 		self._server = server
 
 	def _setClient(self, client):
-		assert type(client) is GattClient
+		assert client.__class__ is GattClient
 		self._client = client
 
 	def _teardown(self, err=None):
@@ -132,3 +132,4 @@ class ManagedSocket:
 		
 		finally:
 			self._sock.close()
+

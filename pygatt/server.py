@@ -9,9 +9,9 @@ class ServerError(Exception):
 
 class _Handle:
 	def __init__(self, server, owner, uuid):
-		assert type(server) is GattServer
-		assert type(uuid) is UUID
-		assert owner
+		assert server.__class__ is GattServer
+		assert uuid.__class__ is UUID
+		assert owner is not None
 		assert owner._get_end_group_handle is not None
 		assert owner._get_start_group_handle is not None
 
@@ -53,8 +53,8 @@ class _Handle:
 
 class _Service:
 	def __init__(self, server, uuid):
-		assert type(server) is GattServer
-		assert type(uuid) is UUID
+		assert server.__class__ is GattServer
+		assert uuid.__class__ is UUID
 
 		self.uuid = uuid
 		self.characteristics = []
@@ -80,8 +80,8 @@ class _Service:
 
 class _Characteristic:
 	def __init__(self, server, uuid, allowNotify=False, allowIndicate=False):
-		assert type(server) is GattServer
-		assert type(uuid) is UUID
+		assert server.__class__ is GattServer
+		assert uuid.__class__ is UUID
 
 		self.server = server
 		self.uuid = uuid
@@ -173,8 +173,8 @@ class _Characteristic:
 
 class _Descriptor:
 	def __init__(self, server, uuid):
-		assert type(uuid) is UUID
-		assert type(server) is GattServer
+		assert uuid.__class__ is UUID
+		assert server.__class__ is GattServer
 
 		self.uuid = uuid
 		self.char = server.services[-1].chars[-1]

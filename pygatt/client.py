@@ -16,8 +16,8 @@ class ClientError(Exception):
 
 class _Service:
 	def __init__(self, client, uuid, handleNo, endGroup):
-		assert type(uuid) is UUID
-		assert type(client) is GattClient
+		assert uuid.__class__ is UUID
+		assert client.__class__ is GattClient
 		assert type(handleNo) is int
 		assert type(endGroup) is int
 
@@ -104,8 +104,8 @@ class _Service:
 class _Characteristic:
 	def __init__(self, client, service, uuid, handleNo, properties, 
 		valHandleNo, endGroup=None):
-		assert type(uuid) is UUID
-		assert type(client) is GattClient
+		assert uuid.__class__ is UUID
+		assert client.__class__ is GattClient
 		assert type(service) is _Service
 		assert type(handleNo) is int
 		assert type(valHandleNo) is int
@@ -262,8 +262,8 @@ class _Characteristic:
 
 class _Descriptor:
 	def __init__(self, client, characteristic, uuid, handleNo):
-		assert type(uuid) is UUID
-		assert type(client) is GattClient
+		assert uuid.__class__ is UUID
+		assert client.__class__ is GattClient
 		assert type(characteristic) is _Characteristic
 		assert type(handleNo) is int
 
