@@ -1,7 +1,7 @@
 # Beetle for Linux
 
 ##### Beetle C++ gateway
-In ```gateway''' subdirectory.
+In ```gateway``` subdirectory.
 
 ##### Python tcp client
 In ```pyclient``` subdirectory. 
