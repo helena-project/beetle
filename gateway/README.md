@@ -1,4 +1,4 @@
-# Beetle for Linux
+# Beetle C++ Gateway for Linux
 
 ##### Requirements
 - libboost-all-dev, libbluetooth-dev, libcppnetlib-dev, libasio-dev, openssl
@@ -10,15 +10,6 @@
 2. build
 3. in a terminal, ``` cd Debug ```
 4. ``` sudo ./Beetle``` 
-
-##### Python tcp client
-In ```pyclient``` subdirectory. 
-
-##### Python gatt library
-In ```pygatt``` subdirectory. 
-
-##### Python controller
-In ```controller``` subdirectory. Needed to run with the controller enabled.
 
 ##### TCP connection protocol
 Parameters are key value pairs sent at the beginning of the connection in ASCII text. 
