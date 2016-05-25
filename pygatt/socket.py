@@ -5,16 +5,21 @@ from server import GattServer
 from client import GattClient
 
 class ManagedSocket:
-	def __init__(self, stream=True):
+	def __init__(self, stream=True, recv_mtu=23, send_mtu=23):
 		self._server = None
 		self._client = None
 		self._sock = None
 		self._stream = stream
 		self._lock = threading.Lock()
+		self._recv_mtu = recv_mtu
+		self._send_mtu = send_mtu
 
 		self._readThread = threading.Thread(target=self.__recv, 
 			name="read thread", args=(self,))
 		self._readThread.setDaemon(True)
+
+	def getSendMtu(self):
+		return self.send_mtu
 
 	def bind(self, sock):
 		self._sock = sock
@@ -22,6 +27,13 @@ class ManagedSocket:
 
 	def shutdown(self):
 		self._running = False
+		self._sock.shutdown(socket.SHUT_RD)
+
+		if self._stream:
+			self._lock.acquire()
+			self._sock.write(bytearray([0]))
+			self._lock.release()
+
 		self._sock.shutdown(socket.SHUT_RD)
 		self._teardown()
 
@@ -41,7 +53,9 @@ class ManagedSocket:
 
 	def _send(self, pdu):
 		assert type(pdu) is bytearray
-		
+		assert len(pdu) > 0
+		assert len(pdu) <= self._send_mtu
+
 		self._lock.acquire()
 		try:
 			if self._stream and self.sock._send(chr(len(pdu))) != 1:
@@ -79,7 +93,15 @@ class ManagedSocket:
 					pdu = bytearray(ord(x) for x in pdu)
 				
 				op = pdu[0]
-				if (att.isRequest(op) 
+
+				if op == att.OP_MTU_REQ:
+					resp = bytearray(3)
+					resp[0] = att.OP_MTU_RESP
+					resp[1] = self.mtu & 0xFF
+					resp[2] = (self.mtu >> 8) & 0xFF
+					self._send(resp)
+
+				elif (att.isRequest(op) 
 					or op == att.OP_WRITE_CMD 
 					or op == att.OP_SIGNED_WRITE_CMD 
 					or att.OP_HANDLE_CNF):
@@ -91,7 +113,7 @@ class ManagedSocket:
 					elif att.isRequest(op):
 						resp = att_pdu.new_error_resp(op, 0, 
 							att.ECODE_REQ_NOT_SUPP)
-						self._send(pdu)
+						self._send(resp)
 
 				elif (att.isResponse(op) 
 					or op == att.OP_HANDLE_IND 

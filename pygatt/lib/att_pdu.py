@@ -38,3 +38,6 @@ def parse_read_by_type_req(pdu):
 def parse_read_by_group_req(pdu):
 	return pdu[0], __unpack_handle(pdu, 1), __unpack_handle(pdu, 3), \
 		uuid.UUID(pdu[5:])
+
+def parse_notify_indicate(pdu):
+	return pdu[0], __unpack_handle(pdu, 1), pdu[3:]

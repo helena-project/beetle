@@ -82,6 +82,7 @@ class _Characteristic:
 		self.uuid = uuid
 		self.descriptors = []
 		self.properties = 0
+
 		if allowIndicate:
 			self.properties |= gatt.CHARAC_PROP_IND
 		if allowNotify:
@@ -189,14 +190,13 @@ class _Descriptor:
 		return "Descriptor - %s" % str(self.uuid)
 
 class GattServer:
-	def __init__(self, socket, mtu=23, onDisconnect=None):
+	def __init__(self, socket, onDisconnect=None):
 		self._socket = socket
 		self._socket._setServer(self)
 
 		self._handles = [None,]
 		self._currHandleOfs = 0
 		
-		self.mtu = mtu
 		self.services = []
 
 		self._indicateQueue = []
@@ -235,14 +235,7 @@ class GattServer:
 
 	def _handle_packet(self, pdu):
 		op = pdu[0]
-		if op == att.OP_MTU_REQ:
-			resp = bytearray(3)
-			resp[0] = att.OP_MTU_RESP
-			resp[1] = self.mtu & 0xFF
-			resp[2] = (self.mtu >> 8) & 0xFF
-			return resp
-
-		elif op == att.OP_FIND_INFO_REQ:
+		if op == att.OP_FIND_INFO_REQ:
 			if len(pdu) != 5:
 				return att_pdu.new_error_resp(op, 0, att.ECODE_INVALID_PDU)
 
@@ -261,7 +254,7 @@ class GattServer:
 					resp.append(1 if respFmt == 2 else 2)
 				if len(handle.uuid) != respFmt:
 					break
-				if len(resp) + 2 + respFmt > self.mtu:
+				if len(resp) + 2 + respFmt > self._server._socket.getSendMtu():
 					break
 				resp += handle.getHandleAsBytearray()
 				resp += handle.uuid.raw()
@@ -289,7 +282,7 @@ class GattServer:
 			for handle in self._handles[startHandle:endHandle+1]:
 				if handle.uuid != uuid:
 					continue
-				if len(resp) + 4 > self.mtu:
+				if len(resp) + 4 > self._server._socket.getSendMtu():
 					break
 				resp += handle.getHandleAsBytearray()
 				resp += handle.owner._get_end_group_handle().getHandleAsBytearray()
@@ -331,7 +324,7 @@ class GattServer:
 					resp[1] = valLen + 2
 				if valLen != len(valRead):
 					break
-				if len(resp) + 2 + valLen > self.mtu:
+				if len(resp) + 2 + valLen > self._server._socket.getSendMtu():
 					break
 				resp += handle.getHandleAsBytearray()
 				resp += valRead
@@ -373,7 +366,7 @@ class GattServer:
 					resp[1] = valLen + 4
 				if valLen != len(valRead):
 					break
-				if len(resp) + 4 + valLen > self.mtu:
+				if len(resp) + 4 + valLen > self._server._socket.getSendMtu():
 					break
 				resp += handle.getHandleAsBytearray()
 				resp += handle.owner._get_end_group_handle().getHandleAsBytearray()
