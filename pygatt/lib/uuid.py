@@ -1,3 +1,4 @@
+import uuid as pyuuid
 
 class UUID:
 	def __init__(self, value):
@@ -21,4 +22,13 @@ class UUID:
 		return len(self._raw)
 
 	def __str__(self):
-		return ""
+		if self.__len__() == 2:
+			return ''.join('{:02x}'.format(x) for x in self._raw.reverse())
+		else:
+			return uuid.UUID(bytes_le=self._raw).hex
+
+	def __eq__(self, other):
+		return isinstance(other, self.__class__) and self._raw == other._raw
+
+	def __ne__(self, other):
+		return not self.__eq__(other)

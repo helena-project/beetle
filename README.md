@@ -12,7 +12,10 @@
 4. ``` sudo ./Beetle``` 
 
 ##### Python tcp client
-In ```client``` subdirectory. 
+In ```pyclient``` subdirectory. 
+
+##### Python gatt library
+In ```pygatt``` subdirectory. 
 
 ##### Python controller
 In ```controller``` subdirectory. Needed to run with the controller enabled.
