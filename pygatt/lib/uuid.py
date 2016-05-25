@@ -25,7 +25,7 @@ class UUID:
 		if self.__len__() == 2:
 			return ''.join('{:02x}'.format(x) for x in self._raw.reverse())
 		else:
-			return uuid.UUID(bytes_le=self._raw).hex
+			return pyuuid.UUID(bytes_le=self._raw).hex
 
 	def __eq__(self, other):
 		return isinstance(other, self.__class__) and self._raw == other._raw

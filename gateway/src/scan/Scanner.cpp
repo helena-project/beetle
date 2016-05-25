@@ -64,7 +64,7 @@ void Scanner::registerHandler(DiscoveryHandler handler) {
 
 static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval, uint16_t scanWindow) {
  	int result = hci_le_set_scan_parameters(deviceHandle,
-			0,						// type (not sure how this works, was 1 before)
+			0,						// type (0 is passive)
 			htobs(scanInterval),	// interval
  			htobs(scanWindow), 		// window
 			0, 						// own_type
