@@ -4,8 +4,8 @@ import lib.gatt as gatt
 from lib.uuid import UUID
 
 class ServerError(Exception):
-    def __init__(self, arg):
-        self.msg = arg
+	def __init__(self, arg):
+		self.msg = arg
 
 class _Handle:
 	def __init__(self, server, owner, uuid):

@@ -4,18 +4,22 @@ import socket
 from server import GattServer
 from client import GattClient
 
+import lib.att as att
+
 class ManagedSocket:
-	def __init__(self, stream=True, recv_mtu=23, send_mtu=23):
+	def __init__(self, stream=True, recv_mtu=att.DEFAULT_LE_MTU, 
+		send_mtu=att.DEFAULT_LE_MTU):
 		self._server = None
 		self._client = None
-		self._sock = None
+
 		self._stream = stream
+		self._sock = None
 		self._lock = threading.Lock()
+		
 		self._recv_mtu = recv_mtu
 		self._send_mtu = send_mtu
 
-		self._readThread = threading.Thread(target=self.__recv, 
-			name="read thread", args=(self,))
+		self._readThread = threading.Thread(target=self.__recv, args=(self,))
 		self._readThread.setDaemon(True)
 
 	def getSendMtu(self):
@@ -101,10 +105,8 @@ class ManagedSocket:
 					resp[2] = (self.mtu >> 8) & 0xFF
 					self._send(resp)
 
-				elif (att.isRequest(op) 
-					or op == att.OP_WRITE_CMD 
-					or op == att.OP_SIGNED_WRITE_CMD 
-					or att.OP_HANDLE_CNF):
+				elif (att.isRequest(op) or op == att.OP_WRITE_CMD 
+					or op == att.OP_SIGNED_WRITE_CMD or att.OP_HANDLE_CNF):
 
 					if self._server is not None:
 						resp = self._handle_packet(pdu)
@@ -116,8 +118,7 @@ class ManagedSocket:
 						self._send(resp)
 
 				elif (att.isResponse(op) 
-					or op == att.OP_HANDLE_IND 
-					or op == att.OP_HANDLE_IND):
+					or op == att.OP_HANDLE_IND or op == att.OP_HANDLE_IND):
 					if self._client is not None:
 						self._client._handle_packet(pdu)
 
