@@ -122,7 +122,7 @@ class Rule(models.Model):
 		def _lte_principal(a, b):
 			return a == b or (b.ptype == Principal.GROUP and b.members.filter(
 				name=a.name).exists()) or b.name == "*"
-		def _eq_principal(a. b):
+		def _eq_principal(a, b):
 			return a == b
 
 		if self.priority <= rhs.priority:

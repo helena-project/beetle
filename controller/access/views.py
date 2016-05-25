@@ -92,13 +92,13 @@ def _evaluate_cron(rule, timestamp, cached_cron):
 	Returns whether the timestamp is in the trigger window of the rule
 	"""
 	if rule.id in cached_cron:
-		return cached_cron[rule.id]:
+		return cached_cron[rule.id]
 
 	result = False
 	try:
 		cron = cronex.CronExpression(rule.cron_expression)
 		result = cron.check_trigger(timestamp.timetuple()[:5], 
-			utc_offset=timestamp.utcoffset()):
+			utc_offset=timestamp.utcoffset())
 	except:
 		result = False
 
