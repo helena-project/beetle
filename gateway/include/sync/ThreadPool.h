@@ -2,7 +2,7 @@
  * ThreadPool.h
  *
  *  Created on: Apr 15, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_SYNC_THREADPOOL_H_

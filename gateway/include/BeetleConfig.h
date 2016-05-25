@@ -2,7 +2,7 @@
  * BeetleConfig.h
  *
  *  Created on: May 23, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef BEETLECONFIG_H_

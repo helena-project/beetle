@@ -2,7 +2,7 @@
  * Debug.h
  *
  *  Created on: Apr 2, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_DEBUG_H_

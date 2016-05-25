@@ -2,7 +2,7 @@
  * Autoconnect.h
  *
  *  Created on: Apr 6, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_AUTOCONNECT_H_

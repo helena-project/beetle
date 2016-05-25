@@ -2,7 +2,7 @@
  * BlockAllocator.cpp
  *
  *  Created on: Mar 29, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include "hat/BlockAllocator.h"

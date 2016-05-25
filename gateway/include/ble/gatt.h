@@ -2,7 +2,7 @@
  * gatt.h
  *
  *  Created on: Mar 28, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_BLE_GATT_H_

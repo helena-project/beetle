@@ -2,7 +2,7 @@
  * SSLConfig.cpp
  *
  *  Created on: May 1, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include "tcp/SSLConfig.h"

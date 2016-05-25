@@ -2,7 +2,7 @@
  * TCPServer.cpp
  *
  *  Created on: Apr 4, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include "tcp/TCPDeviceServer.h"

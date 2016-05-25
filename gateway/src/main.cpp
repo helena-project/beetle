@@ -2,7 +2,7 @@
  * main.cpp
  *
  *  Created on: Apr 18, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include <boost/program_options.hpp>

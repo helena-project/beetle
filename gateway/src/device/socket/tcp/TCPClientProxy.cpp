@@ -2,7 +2,7 @@
  * TCPClientProxy.cpp
  *
  *  Created on: Apr 10, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include "device/socket/tcp/TCPClientProxy.h"

@@ -2,7 +2,7 @@
  * Device.h
  *
  *  Created on: Mar 28, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_DEVICE_H_

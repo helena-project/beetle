@@ -2,7 +2,7 @@
  * TCPClient.h
  *
  *  Created on: May 1, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef DEVICE_SOCKET_TCP_TCPCLIENT_H_

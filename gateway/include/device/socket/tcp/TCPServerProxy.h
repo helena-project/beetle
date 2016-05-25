@@ -2,7 +2,7 @@
  * TCPServerProxy.h
  *
  *  Created on: Apr 10, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef BLE_REMOTESERVERPROXY_H_

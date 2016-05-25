@@ -2,7 +2,7 @@
  * Ruled.h
  *
  *  Created on: Apr 24, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef CONTROLLER_ACCESS_RULE_H_

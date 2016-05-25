@@ -2,7 +2,7 @@
  * AccessControl.h
  *
  *  Created on: Apr 18, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef CONTROLLER_ACCESSCONTROL_H_

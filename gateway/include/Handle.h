@@ -2,7 +2,7 @@
  * Handle.h
  *
  *  Created on: Mar 24, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_HANDLE_H_

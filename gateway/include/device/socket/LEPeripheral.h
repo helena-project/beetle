@@ -2,7 +2,7 @@
  * LEPeripheral.h
  *
  *  Created on: Mar 28, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_DEVICE_SOCKET_LEPERIPHERAL_H_

@@ -2,7 +2,7 @@
  * helper.h
  *
  *  Created on: Mar 31, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_BLE_HELPER_H_

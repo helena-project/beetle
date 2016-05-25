@@ -2,7 +2,7 @@
  * AccessControl.cpp
  *
  *  Created on: Apr 18, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include "controller/AccessControl.h"

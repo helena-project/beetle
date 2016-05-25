@@ -2,7 +2,7 @@
  * HciManager.cpp
  *
  *  Created on: Apr 24, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include <HCI.h>

@@ -2,7 +2,7 @@
  * TCPClientProxy.h
  *
  *  Created on: Apr 10, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_DEVICE_SOCKET_TCP_TCPCLIENTPROXY_H_

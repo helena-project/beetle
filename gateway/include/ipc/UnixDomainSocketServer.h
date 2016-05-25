@@ -2,7 +2,7 @@
  * UnixDomainSocketServer.h
  *
  *  Created on: Apr 15, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_IPC_UNIXDOMAINSOCKETSERVER_H_

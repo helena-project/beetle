@@ -2,7 +2,7 @@
  * UnixDomainSocketServer.cpp
  *
  *  Created on: Apr 15, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include "ipc/UnixDomainSocketServer.h"

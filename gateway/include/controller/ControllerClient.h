@@ -2,7 +2,7 @@
  * NetworkClient.h
  *
  *  Created on: Apr 23, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef CONTROLLER_CONTROLLERCLIENT_H_

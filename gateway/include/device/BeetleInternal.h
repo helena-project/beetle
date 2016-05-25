@@ -2,7 +2,7 @@
  * BeetleDevice.h
  *
  *  Created on: Apr 3, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_DEVICE_BEETLEINTERNAL_H_

@@ -2,7 +2,7 @@
  * SSLConfig.h
  *
  *  Created on: May 1, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef TCP_SSLCONFIG_H_

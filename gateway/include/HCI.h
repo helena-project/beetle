@@ -2,7 +2,7 @@
  * HciManager.h
  *
  *  Created on: Apr 24, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef HCI_H_

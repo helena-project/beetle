@@ -2,7 +2,7 @@
  * VirtualDevice.cpp
  *
  *  Created on: Mar 28, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include "device/VirtualDevice.h"
@@ -405,6 +405,9 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 		if (resp[0] == ATT_OP_READ_BY_GROUP_RESP) {
 			int attDataLen = resp[1];
 			for (int i = 2; i < respLen; i += attDataLen) {
+				if (i + attDataLen > respLen) {
+					break;
+				}
 				group_t group;
 				group.handle = btohs(*(uint16_t *)(resp + i));
 				group.endGroup = btohs(*(uint16_t *)(resp + i + 2));
@@ -421,6 +424,10 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 			if (currHandle == 0) break;
 		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_GROUP_REQ
 				&& resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
+			delete[] resp;
+			break;
+		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_GROUP_REQ
+				&& resp[4] == ATT_ECODE_REQ_NOT_SUPP) {
 			delete[] resp;
 			break;
 		} else {
@@ -464,6 +471,9 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 		if (resp[0] == ATT_OP_READ_BY_TYPE_RESP) {
 			int attDataLen = resp[1];
 			for (int i = 2; i < respLen; i += attDataLen) {
+				if (i + attDataLen > respLen) {
+					break;
+				}
 				handle_value_t handleValue;
 				handleValue.handle = btohs(*(uint16_t *)(resp + i));
 				handleValue.len = attDataLen - 2;
@@ -481,6 +491,10 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 			currHandle = nextHandle;
 		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_TYPE_REQ
 				&& resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
+			delete[] resp;
+			break;
+		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_TYPE_REQ
+				&& resp[4] == ATT_ECODE_REQ_NOT_SUPP) {
 			delete[] resp;
 			break;
 		} else {
@@ -524,6 +538,9 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 			uint8_t format = resp[1];
 			int attDataLen = (format == ATT_FIND_INFO_RESP_FMT_16BIT) ? 4 : 18;
 			for (int i = 2; i < respLen; i += attDataLen) {
+				if (i + attDataLen > respLen) {
+					break;
+				}
 				handle_info_t handleInfo;
 				handleInfo.format = format;
 				handleInfo.handle = btohs(*(uint16_t *)(resp + i));
@@ -545,6 +562,10 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 			if (currHandle == 0 || currHandle >= endGroup) break;
 		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_FIND_INFO_REQ
 				&& resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
+			delete[] resp;
+			break;
+		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_FIND_INFO_REQ
+				&& resp[4] == ATT_ECODE_REQ_NOT_SUPP) {
 			delete[] resp;
 			break;
 		} else {

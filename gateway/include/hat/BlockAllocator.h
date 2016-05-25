@@ -2,7 +2,7 @@
  * BlockAllocator.h
  *
  *  Created on: Mar 29, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_HAT_BLOCKALLOCATOR_H_

@@ -2,7 +2,7 @@
  * OrderedThreadPool.h
  *
  *  Created on: Apr 16, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_SYNC_ORDEREDTHREADPOOL_H_

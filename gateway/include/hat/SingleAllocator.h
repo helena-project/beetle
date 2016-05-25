@@ -2,7 +2,7 @@
  * SingleAllocator.h
  *
  *  Created on: Apr 10, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_HAT_SINGLEALLOCATOR_H_

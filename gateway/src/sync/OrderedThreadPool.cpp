@@ -2,7 +2,7 @@
  * OrderedThreadPool.cpp
  *
  *  Created on: Apr 16, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include "sync/OrderedThreadPool.h"

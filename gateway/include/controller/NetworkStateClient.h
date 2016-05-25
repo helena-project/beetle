@@ -2,7 +2,7 @@
  * NetworkReporter.h
  *
  *  Created on: Apr 16, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_CONTROLLER_NETWORKREPORTER_H_

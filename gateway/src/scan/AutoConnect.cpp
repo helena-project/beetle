@@ -2,7 +2,7 @@
  * Autoconnect.cpp
  *
  *  Created on: Apr 6, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include <scan/AutoConnect.h>

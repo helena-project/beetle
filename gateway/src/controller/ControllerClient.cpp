@@ -2,7 +2,7 @@
  * NetworkClient.cpp
  *
  *  Created on: Apr 23, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include "controller/ControllerClient.h"

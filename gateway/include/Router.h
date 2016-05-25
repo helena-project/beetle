@@ -2,7 +2,7 @@
  * Router.h
  *
  *  Created on: Mar 24, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef INCLUDE_ROUTER_H_
