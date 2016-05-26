@@ -7,20 +7,56 @@
 
 #include <scan/AutoConnect.h>
 
-#include <cassert>
+#include <bluetooth/bluetooth.h>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/pthread/shared_mutex.hpp>
+#include <cstring>
 #include <iostream>
-#include <thread>
+#include <fstream>
+#include <memory>
+#include <unistd.h>
+#include <utility>
 
 #include "Beetle.h"
+#include "ble/helper.h"
 #include "device/socket/LEPeripheral.h"
 #include "Debug.h"
 #include "Device.h"
+#include "sync/ThreadPool.h"
+#include "util/file.h"
+#include "util/trim.h"
 
-AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_) :
+static inline double min(double x, double y) {
+	return ((x > y) ? y : x);
+}
+
+AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, std::string autoConnectBlacklist) :
 		beetle { beetle }, daemonThread() {
 	connectAll = connectAll_;
+	minBackoff = minBackoff_;
 	daemonRunning = true;
-	daemonThread = std::thread(&AutoConnect::daemon, this, 60);
+	daemonThread = std::thread(&AutoConnect::daemon, this, min(60, minBackoff_));
+
+	if (autoConnectBlacklist != "") {
+		if (!file_exists(autoConnectBlacklist)) {
+			throw std::invalid_argument("blacklist file does not exist - " + autoConnectBlacklist);
+		} else {
+			std::ifstream ifs(autoConnectBlacklist);
+			std::string line;
+			while (std::getline(ifs, line)) {
+				std::string addr = trimmed(line);
+				if (addr == "") {
+					continue;
+				}
+
+				if (isBdAddr(addr)) {
+					blacklist.insert(addr);
+				} else {
+					throw std::invalid_argument("invalid address in blacklist file - " + addr);
+				}
+			}
+		}
+	}
 }
 
 AutoConnect::~AutoConnect() {
@@ -32,12 +68,12 @@ AutoConnect::~AutoConnect() {
 
 DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 	return [this](std::string addr, peripheral_info_t info) {
-		if (maxConcurrentAttempts.try_wait()) {
+		std::unique_lock<std::mutex> connectLk(connectMutex, std::try_to_lock);
+		if (connectLk.owns_lock()) {
 			/*
-			 * Consult whitelist
+			 * Consult blacklist
 			 */
-			if (!connectAll && configEntries.find(addr) == configEntries.end()) {
-				maxConcurrentAttempts.notify();
+			if (!connectAll || blacklist.find(addr) != blacklist.end()) {
 				return;
 			}
 
@@ -46,7 +82,6 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 			 */
 			std::unique_lock<std::mutex> lastAttemptLk(lastAttemptMutex);
 			if (lastAttempt.find(addr) != lastAttempt.end()) {
-				maxConcurrentAttempts.notify();
 				return;
 			} else {
 				time_t now = time(NULL);
@@ -65,7 +100,6 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 						(le = std::dynamic_pointer_cast<LEPeripheral>(kv.second))) {
 					if (le->getAddrType() == info.bdaddrType &&
 							memcmp(le->getBdaddr().b, info.bdaddr.b, sizeof(bdaddr_t))) {
-						maxConcurrentAttempts.notify();
 						return;
 					}
 				}
@@ -76,18 +110,13 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 				pdebug("trying to auto-connect to " + addr);
 			}
 
-			autoconnect_config_t config;
-			if (configEntries.find(addr) != configEntries.end()) {
-				config = configEntries[addr];
-			} else {
-				assert(connectAll);
-				config.discover = true;
-				config.name = info.name;
-				config.addr = addr;
-			}
+			beetle.workers.schedule([this, info]{
+				std::lock_guard<std::mutex> connectLg(connectMutex, std::adopt_lock);
+				connect(info, true);
+			});
 
-			std::thread t(&AutoConnect::connect, this, info, config);
-			t.detach();
+			// do not unlock
+			connectLk.release();
 		} else {
 			if (debug_scan) {
 				pdebug("auto-connect in progress, skipping");
@@ -96,7 +125,7 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 	};
 }
 
-void AutoConnect::connect(peripheral_info_t info, autoconnect_config_t config) {
+void AutoConnect::connect(peripheral_info_t info, bool discover) {
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
 		device.reset(new LEPeripheral(beetle, info.bdaddr, info.bdaddrType));
@@ -104,7 +133,7 @@ void AutoConnect::connect(peripheral_info_t info, autoconnect_config_t config) {
 		boost::shared_lock<boost::shared_mutex> devicesLk;
 		beetle.addDevice(device, devicesLk);
 
-		device->start(config.discover);
+		device->start(discover);
 
 		if (debug_scan) {
 			pdebug("auto-connected to " + device->getName());
@@ -113,13 +142,12 @@ void AutoConnect::connect(peripheral_info_t info, autoconnect_config_t config) {
 	} catch (DeviceException& e) {
 		pexcept(e);
 		if (debug) {
-			pdebug("auto-connection attempt failed");
+			pdebug("failed to connect to " + ba2str_cpp(info.bdaddr));
 		}
 		if (device) {
 			beetle.removeDevice(device->getId());
 		}
 	}
-	maxConcurrentAttempts.notify();
 }
 
 void AutoConnect::daemon(int seconds) {
@@ -135,7 +163,7 @@ void AutoConnect::daemon(int seconds) {
 
 			std::lock_guard<std::mutex> lg(lastAttemptMutex);
 			for (auto it = lastAttempt.cbegin(); it != lastAttempt.cend();) {
-				if (difftime(now, it->second) > minAttemptInterval) {
+				if (difftime(now, it->second) > minBackoff) {
 					if (debug_scan) {
 						pdebug("can try connecting to '" + it->first + "' again");
 					}

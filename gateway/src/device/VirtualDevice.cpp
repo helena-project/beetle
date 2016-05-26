@@ -57,7 +57,7 @@ VirtualDevice::~VirtualDevice() {
 		transaction_t *t = pendingTransactions.front();
 		uint8_t err[ATT_ERROR_PDU_LEN];
 		pack_error_pdu(t->buf[0], 0, ATT_ECODE_ABORTED, err);
-		currentTransaction->cb(err, ATT_ERROR_PDU_LEN);
+		t->cb(err, ATT_ERROR_PDU_LEN);
 		delete[] t->buf;
 		delete t;
 		pendingTransactions.pop();
@@ -133,6 +133,8 @@ void VirtualDevice::writeTransaction(uint8_t *buf, int len, std::function<void(u
 		lastTransactionMillis = getCurrentTimeMillis();
 		if (!write(t->buf, t->len)) {
 			cb(NULL, -1);
+			delete t->buf;
+			delete t;
 		}
 	} else {
 		pendingTransactions.push(t);
@@ -190,9 +192,18 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 	} else {
 		transaction_t *t = currentTransaction;
 		if (pendingTransactions.size() > 0) {
-			currentTransaction = pendingTransactions.front();
-			pendingTransactions.pop();
-			assert(write(t->buf, t->len));
+			while (pendingTransactions.size() > 0) {
+				currentTransaction = pendingTransactions.front();
+				pendingTransactions.pop();
+				if(!write(currentTransaction->buf, currentTransaction->len)) {
+					currentTransaction->cb(NULL, -1);
+					delete currentTransaction->buf;
+					delete currentTransaction;
+					currentTransaction = NULL;
+				} else {
+					break;
+				}
+			}
 		} else {
 			currentTransaction = NULL;
 		}

@@ -34,6 +34,13 @@ public:
 	bool scanEnabled = true;
 
 	/*
+	 * Autoconnect settings
+	 */
+	bool autoConnectAll = false;
+	double autoConnectMinBackoff = 1.0;
+	std::string autoConnectBlacklist = "";
+
+	/*
 	 * TCP settings
 	 */
 	bool tcpEnabled = false;

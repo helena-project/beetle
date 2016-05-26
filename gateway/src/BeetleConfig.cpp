@@ -51,6 +51,24 @@ BeetleConfig::BeetleConfig(std::string filename) {
 		}
 	}
 
+	if (config.count("autoConnect")) {
+		json scanConfig = config["scan"];
+		for (json::iterator it = scanConfig.begin(); it != scanConfig.end(); ++it) {
+			if (it.key() == "all") {
+				autoConnectAll = it.value();
+			} else if (it.key() == "minBackoff") {
+				autoConnectMinBackoff = it.value();
+			} else if (it.key() == "blacklist") {
+				autoConnectBlacklist = it.value();
+				if (autoConnectBlacklist != "" && !file_exists(autoConnectBlacklist)) {
+					throw std::invalid_argument("file does not exist: " + autoConnectBlacklist);
+				}
+			} else {
+				throw std::invalid_argument("unknown scan param: " + it.key());
+			}
+		}
+	}
+
 	if (config.count("tcp")) {
 		json tcpConfig = config["tcp"];
 		for (json::iterator it = tcpConfig.begin(); it != tcpConfig.end(); ++it) {
@@ -99,22 +117,22 @@ BeetleConfig::BeetleConfig(std::string filename) {
 				sslVerifyPeers = it.value();
 			} else if (it.key() == "serverKey") {
 				sslServerKey = it.value();
-				if (!file_exists(sslServerKey)) {
+				if (sslServerKey != "" && !file_exists(sslServerKey)) {
 					throw std::invalid_argument("file does not exist: " + sslServerKey);
 				}
 			} else if (it.key() == "serverCert") {
 				sslServerCert = it.value();
-				if (!file_exists(sslServerCert)) {
+				if (sslServerCert != "" && !file_exists(sslServerCert)) {
 					throw std::invalid_argument("file does not exist: " + sslServerCert);
 				}
 			} else if (it.key() == "clientKey") {
 				sslClientKey = it.value();
-				if (!file_exists(sslClientKey)) {
+				if (sslClientKey != "" && !file_exists(sslClientKey)) {
 					throw std::invalid_argument("file does not exist: " + sslClientKey);
 				}
 			} else if (it.key() == "clientCert") {
 				sslClientCert = it.value();
-				if (!file_exists(sslClientCert)) {
+				if (sslClientCert != "" && !file_exists(sslClientCert)) {
 					throw std::invalid_argument("file does not exist: " + sslClientCert);
 				}
 			} else {
@@ -162,6 +180,12 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	json scan;
 	scan["enable"] = scanEnabled;
 	config["scan"] = scan;
+
+	json autoConnect;
+	autoConnect["all"] = autoConnectAll;
+	autoConnect["minBackoff"] = autoConnectMinBackoff;
+	autoConnect["blacklist"] = autoConnectBlacklist;
+	config["autoConnect"] = autoConnect;
 
 	json tcp;
 	tcp["enable"] = tcpEnabled;

@@ -12,20 +12,26 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include <set>
+#include <thread>
 
 #include "BeetleTypes.h"
-#include "sync/Semaphore.h"
 #include "scan/Scanner.h"
 
-typedef struct {
-	std::string addr;
-	std::string name;
-	bool discover;		// start with discover
-} autoconnect_config_t;
+struct ci_less : std::binary_function<std::string, std::string, bool> {
+	struct nocase_compare : public std::binary_function<unsigned char,unsigned char,bool> {
+		bool operator() (const unsigned char& c1, const unsigned char& c2) const {
+			return tolower(c1) < tolower(c2);
+		}
+	};
+	bool operator() (const std::string & s1, const std::string & s2) const {
+		return std::lexicographical_compare(s1.begin(), s1.end(), s2.begin(), s2.end(), nocase_compare());
+	}
+};
 
 class AutoConnect {
 public:
-	AutoConnect(Beetle &beetle, bool connectAll = false);
+	AutoConnect(Beetle &beetle, bool connectAll = false, double minBackoff = 60.0, std::string blacklist = "");
 	virtual ~AutoConnect();
 
 	/*
@@ -36,26 +42,35 @@ private:
 	Beetle &beetle;
 
 	/*
-	 * Attempt to connect to a peripheral in separate thread.
+	 * Attempt to connect to a peripheral in a worker thread.
 	 */
-	void connect(peripheral_info_t info, autoconnect_config_t config);
+	void connect(peripheral_info_t info, bool discover);
 
-	// TODO this should probably be from a database or something
-	std::map<std::string, autoconnect_config_t> configEntries;
-
-	// TODO these should be configurable
-	bool connectAll = false;	// this is a bad idea
-	Semaphore maxConcurrentAttempts{1};
-	double minAttemptInterval = 60;
+	bool connectAll;
 
 	/*
-	 * Time out entries in lastAttempt.
+	 * Minimum number of seconds between connection attempts
+	 */
+	double minBackoff;
+
+	/*
+	 * Bluetooth addresses to ignore
+	 */
+	std::set<std::string, ci_less> blacklist;
+
+	/*
+	 * Only one connection attempt at a time
+	 */
+	std::mutex connectMutex;
+
+	/*
+	 * Time out entries in lastAttempt
 	 */
 	bool daemonRunning;
 	std::thread daemonThread;
 	void daemon(int seconds);
 
-	std::map<std::string, time_t> lastAttempt;
+	std::map<std::string, time_t, ci_less> lastAttempt;
 	std::mutex lastAttemptMutex;
 };
 

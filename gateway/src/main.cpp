@@ -191,7 +191,8 @@ int main(int argc, char *argv[]) {
 		std::unique_ptr<Scanner> scanner;
 		if (btlConfig.scanEnabled) {
 			scanner.reset(new Scanner());
-			autoConnect.reset(new AutoConnect(btl, autoConnectAll));
+			autoConnect.reset(new AutoConnect(btl, autoConnectAll || btlConfig.autoConnectAll,
+					btlConfig.autoConnectMinBackoff, btlConfig.autoConnectBlacklist));
 			scanner->registerHandler(cli.getDiscoveryHander());
 			scanner->registerHandler(autoConnect->getDiscoveryHandler());
 			scanner->start();
