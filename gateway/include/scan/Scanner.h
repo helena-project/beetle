@@ -63,13 +63,9 @@ private:
 	uint16_t scanInterval;
 	uint16_t scanWindow;
 
-	int deviceHandle;
-
 	std::vector<DiscoveryHandler> handlers;
 
-	bool daemonRunning;
-	std::thread daemonThread;
-	void scanDaemon();
+	std::shared_ptr<std::atomic_flag> running;
 };
 
 #endif /* INCLUDE_SCANNER_H_ */

@@ -88,6 +88,10 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 
 			std::thread t(&AutoConnect::connect, this, info, config);
 			t.detach();
+		} else {
+			if (debug_scan) {
+				pdebug("auto-connect in progress, skipping");
+			}
 		}
 	};
 }

@@ -139,7 +139,10 @@ void LEPeripheral::readDaemon() {
 			pdebug(getName() + " read " + std::to_string(n) + " bytes");
 		}
 		if (n <= 0) {
-			std::cerr << "socket errno: " << strerror(errno) << std::endl;
+			if (debug_socket) {
+				std::stringstream ss;
+				ss << "socket errno: " << strerror(errno);
+			}
 			terminate();
 			break;
 		} else {
