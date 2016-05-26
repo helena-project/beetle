@@ -25,7 +25,6 @@ BlockAllocator::BlockAllocator(int size) {
 }
 
 BlockAllocator::~BlockAllocator() {
-	// should never get called
 	delete[] blocks;
 }
 

@@ -62,7 +62,8 @@ void Scanner::registerHandler(DiscoveryHandler handler) {
 	handlers.push_back(handler);
 }
 
-static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval, uint16_t scanWindow) {
+static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval,
+		uint16_t scanWindow) {
  	int result = hci_le_set_scan_parameters(deviceHandle,
 			0,						// type (0 is passive)
 			htobs(scanInterval),	// interval
@@ -157,7 +158,8 @@ void Scanner::scanDaemon() {
 
 			if (debug_scan) {
 				std::stringstream ss;
-				ss << "discovered " << addr << "\t" << ((addrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random")
+				ss << "advertisement for " << addr << "\t"
+						<< ((addrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random")
 						<< "\t" << name;
 				pdebug(ss.str());
 			}

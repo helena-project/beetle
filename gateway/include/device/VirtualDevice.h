@@ -35,8 +35,7 @@ class VirtualDevice: public Device {
 public:
 	virtual ~VirtualDevice();
 
-	void start();
-	void startNd();
+	void start(bool discoverHandles = true);
 	void stop();
 	bool isStopped();
 
@@ -71,7 +70,6 @@ protected:
 
 private:
 	bool stopped;
-	bool started;
 
 	bool isEndpoint;
 

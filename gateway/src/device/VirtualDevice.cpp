@@ -38,7 +38,6 @@ static int64_t getCurrentTimeMillis(void) {
 VirtualDevice::VirtualDevice(Beetle &beetle, bool isEndpoint_, HandleAllocationTable *hat)
 : Device(beetle, hat) {
 	isEndpoint = isEndpoint_;
-	started = false;
 	stopped = false;
 	currentTransaction = NULL;
 	mtu = ATT_DEFAULT_LE_MTU;
@@ -47,72 +46,6 @@ VirtualDevice::VirtualDevice(Beetle &beetle, bool isEndpoint_, HandleAllocationT
 }
 
 VirtualDevice::~VirtualDevice() {
-
-}
-
-bool VirtualDevice::isStopped() {
-	return stopped;
-}
-
-static std::string discoverDeviceName(VirtualDevice *d);
-static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d);
-void VirtualDevice::start() {
-	if (debug) pdebug("starting");
-
-	assert(started == false);
-	started = true;
-
-	startInternal();
-
-//	std::string discoveredName = discoverDeviceName(this);
-//	if (name != "") {
-//		if (discoveredName != name) {
-//			pwarn("discovered name " + discoveredName + " does not equal " + name);
-//		}
-//	} else {
-//		name = discoveredName;
-//	}
-
-	if (name == "") {
-		name = discoverDeviceName(this);;
-	}
-
-	std::map<uint16_t, Handle *> handlesTmp = discoverAllHandles(this);
-
-	handlesMutex.lock();
-	handles = handlesTmp;
-	handlesMutex.unlock();
-
-	beetle.updateDevice(getId());
-}
-
-std::vector<uint64_t> VirtualDevice::getTransactionLatencies() {
-	std::lock_guard<std::mutex> lg(transactionMutex);
-	auto ret = transactionLatencies;
-	transactionLatencies.clear();
-	return ret;
-}
-
-void VirtualDevice::startNd() {
-	if (debug) pdebug("starting");
-
-	assert(started == false);
-	started = true;
-
-	startInternal();
-
-	if (name == "") {
-		name = "<unknown>";
-	}
-}
-
-
-void VirtualDevice::stop() {
-	if (debug) pdebug("stopping " + getName());
-
-	assert(stopped == false);
-	stopped = true;
-
 	transactionMutex.lock();
 	if (currentTransaction) {
 		uint8_t err[ATT_ERROR_PDU_LEN];
@@ -131,10 +64,59 @@ void VirtualDevice::stop() {
 		pendingTransactions.pop();
 	}
 	transactionMutex.unlock();
+}
 
-	handlesMutex.lock();
-	handles.clear();
-	handlesMutex.unlock();
+bool VirtualDevice::isStopped() {
+	return stopped;
+}
+
+static std::string discoverDeviceName(VirtualDevice *d);
+static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d);
+void VirtualDevice::start(bool discoverHandles) {
+	if (debug) pdebug("starting");
+
+	if (discoverHandles) {
+		startInternal();
+
+	//	std::string discoveredName = discoverDeviceName(this);
+	//	if (name != "") {
+	//		if (discoveredName != name) {
+	//			pwarn("discovered name " + discoveredName + " does not equal " + name);
+	//		}
+	//	} else {
+	//		name = discoveredName;
+	//	}
+
+		if (name == "") {
+			name = discoverDeviceName(this);;
+		}
+
+		std::map<uint16_t, Handle *> handlesTmp = discoverAllHandles(this);
+
+		handlesMutex.lock();
+		handles = handlesTmp;
+		handlesMutex.unlock();
+
+		beetle.updateDevice(getId());
+	} else {
+		startInternal();
+
+		if (name == "") {
+			name = "<unknown>";
+		}
+	}
+}
+
+std::vector<uint64_t> VirtualDevice::getTransactionLatencies() {
+	std::lock_guard<std::mutex> lg(transactionMutex);
+	auto ret = transactionLatencies;
+	transactionLatencies.clear();
+	return ret;
+}
+
+void VirtualDevice::stop() {
+	if (debug) pdebug("stopping " + getName());
+	stopped = true;
 }
 
 bool VirtualDevice::writeCommand(uint8_t *buf, int len) {
@@ -173,20 +155,27 @@ int VirtualDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&res
 		return -1;
 	}
 
-	Semaphore sema(0);
-	int respLen;
-	bool success = writeTransaction(buf, len, [&sema, &resp, &respLen](uint8_t *resp_, int respLen_) {
-		resp = new uint8_t[respLen_];
-		memcpy(resp, resp_, respLen_);
-		respLen = respLen_;
-		sema.notify();
+	std::shared_ptr<Semaphore> sema(new Semaphore(0));
+	std::shared_ptr<int> respLenPtr(new int);
+	std::shared_ptr<std::unique_ptr<uint8_t>> respPtr(new std::unique_ptr<uint8_t>());
+	bool scheduled = writeTransaction(buf, len, [sema, respPtr, respLenPtr](uint8_t *resp_, int respLen_) {
+		respPtr->reset(new uint8_t[respLen_]);
+		memcpy(respPtr->get(), resp_, respLen_);
+		*respLenPtr = respLen_;
+		sema->notify();
 	});
-	if (!success) {
+
+	if (!scheduled) {
 		resp = NULL;
 		return -1;
 	} else {
-		sema.wait();
-		return respLen;
+		if (sema->try_wait(30)) {
+			resp = respPtr->release();
+			return *respLenPtr;
+		} else {
+			resp = NULL;
+			return -1;
+		}
 	}
 }
 
@@ -351,7 +340,7 @@ static std::string discoverDeviceName(VirtualDevice *d) {
 	std::string name;
 	int reqLen = pack_read_by_type_req_pdu(GATT_GAP_CHARAC_DEVICE_NAME_UUID, 0x1, 0xFFFF, req);
 	int respLen = d->writeTransactionBlocking(req, reqLen, resp);
-	if (resp == NULL || resp[0] != ATT_OP_READ_BY_TYPE_RESP) {
+	if (resp == NULL || respLen < 4 || resp[0] != ATT_OP_READ_BY_TYPE_RESP) {
 		name = "unknown";
 	} else {
 		char cName[respLen - 4 + 1];
@@ -398,7 +387,7 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 		uint8_t *resp;
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
 
-		if (resp == NULL) {
+		if (resp == NULL || respLen < 2) {
 			throw DeviceException("error on transaction");
 		}
 
@@ -464,7 +453,7 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 		uint8_t *resp;
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
 
-		if (resp == NULL) {
+		if (resp == NULL || respLen < 2) {
 			throw DeviceException("error on transaction");
 		}
 
@@ -530,7 +519,7 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 		uint8_t *resp;
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
 
-		if (resp == NULL) {
+		if (resp == NULL || respLen < 2) {
 			throw DeviceException("error on transaction");
 		}
 

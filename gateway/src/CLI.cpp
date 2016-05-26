@@ -259,11 +259,7 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 
 		beetle.addDevice(device);
 
-		if (discoverHandles) {
-			device->start();
-		} else {
-			device->startNd();
-		}
+		device->start(discoverHandles);
 
 		printMessage("connected to " + std::to_string(device->getId())
 			+ " : " + device->getName());

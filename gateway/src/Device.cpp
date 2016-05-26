@@ -41,11 +41,16 @@ Device::Device(Beetle &beetle_, device_t id_, HandleAllocationTable *hat_) : bee
 }
 
 Device::~Device() {
+	handlesMutex.lock();
 	for (auto &kv : handles) {
 		delete kv.second;
 	}
 	handles.clear();
+	handlesMutex.unlock();
+
+	hatMutex.lock();
 	delete hat;
+	hatMutex.lock();
 }
 
 device_t Device::getId() {

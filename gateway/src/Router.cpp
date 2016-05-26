@@ -340,10 +340,6 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 
 						if (respLen + 4 > srcMTU) {
 							done = true;
-							// cutShort = true;
-							// TODO not convinced that this is in the standard
-//							resp[respLen - 1] = 0xFF;
-//							resp[respLen - 2] = 0xFF;
 							break;
 						}
 					}

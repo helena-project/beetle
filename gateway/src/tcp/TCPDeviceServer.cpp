@@ -166,11 +166,7 @@ void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_
 			device = new TCPClientProxy(beetle, ssl, clifd, client, cliaddr, deviceId);
 		}
 
-		if (clientParams[TCP_PARAM_SERVER] == "true") {
-			device->start();
-		} else {
-			device->startNd();
-		}
+		device->start(clientParams[TCP_PARAM_SERVER] == "true");
 
 		beetle.addDevice(device);
 

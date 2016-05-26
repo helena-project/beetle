@@ -97,11 +97,7 @@ void AutoConnect::connect(peripheral_info_t info, autoconnect_config_t config) {
 		device = new LEPeripheral(beetle, info.bdaddr, info.bdaddrType);
 		beetle.addDevice(device);
 
-		if (config.discover) {
-			device->start();
-		} else {
-			device->startNd();
-		}
+		device->start(config.discover);
 
 		if (debug_scan) {
 			pdebug("auto-connected to " + device->getName());
@@ -130,7 +126,10 @@ void AutoConnect::daemon(int seconds) {
 			time_t now = time(NULL);
 			std::lock_guard<std::mutex> lg(lastAttemptMutex);
 			for (auto it = lastAttempt.cbegin(); it != lastAttempt.cend();) {
-				if (difftime(now, it->second) < minAttemptInterval) {
+				if (difftime(now, it->second) > minAttemptInterval) {
+					if (debug_scan) {
+						pdebug("can try connecting to '" + it->first + "' again");
+					}
 					lastAttempt.erase(it++);
 				} else {
 					++it;
