@@ -18,33 +18,30 @@
 
 static const int CLIENT_TIMEOUT = 180;
 
-ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, bool verifyPeers)
-: beetle(beetle), hostAndPort(hostAndPort) {
+ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, bool verifyPeers) :
+		beetle(beetle), hostAndPort(hostAndPort) {
 	using namespace boost::network;
 	http::client::options options;
-	options.follow_redirects(false)
-	       .cache_resolved(true)
-		   .always_verify_peer(verifyPeers)
+	options.follow_redirects(false).cache_resolved(true).always_verify_peer(verifyPeers)
 //	       .openssl_certificate(defaultVerifyFile)
 //	       .openssl_verify_path(defaultCertPath)
-	       .timeout(CLIENT_TIMEOUT);
+	.timeout(CLIENT_TIMEOUT);
 	// TODO use certs
 	client.reset(new http::client(options));
 }
 
-ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, std::string cert,
-		std::string caCerts, bool verifyPeers) : beetle(beetle), hostAndPort(hostAndPort) {
+ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, std::string cert, std::string caCerts,
+		bool verifyPeers) :
+		beetle(beetle), hostAndPort(hostAndPort) {
 	assert(file_exists(cert));
 	assert(file_exists(caCerts));
 
 	using namespace boost::network;
 	http::client::options options;
-	options.follow_redirects(false)
-	       .cache_resolved(true)
-		   .always_verify_peer(verifyPeers)
+	options.follow_redirects(false).cache_resolved(true).always_verify_peer(verifyPeers)
 //	       .openssl_certificate(cert)
 //	       .openssl_verify_path(caCerts)
-	       .timeout(CLIENT_TIMEOUT);
+	.timeout(CLIENT_TIMEOUT);
 	client.reset(new http::client(options));
 }
 

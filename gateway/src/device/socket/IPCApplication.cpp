@@ -19,9 +19,9 @@
 #include "sync/OrderedThreadPool.h"
 #include "util/write.h"
 
-IPCApplication::IPCApplication(Beetle &beetle, int sockfd_, std::string name_,
-		struct sockaddr_un sockaddr_, struct ucred ucred_)
-: VirtualDevice(beetle, true), readThread() {
+IPCApplication::IPCApplication(Beetle &beetle, int sockfd_, std::string name_, struct sockaddr_un sockaddr_,
+		struct ucred ucred_) :
+		VirtualDevice(beetle, true), readThread() {
 	type = IPC_APPLICATION;
 	name = name_;
 	sockfd = sockfd_;
@@ -35,12 +35,14 @@ IPCApplication::~IPCApplication() {
 		pdebug("shutting down socket");
 	}
 	shutdown(sockfd, SHUT_RDWR);
-	if (readThread.joinable()) readThread.join();
+	if (readThread.joinable()) {
+		readThread.join();
+	}
 	close(sockfd);
 }
 
 void IPCApplication::startInternal() {
-    readThread = std::thread(&IPCApplication::readDaemon, this);
+	readThread = std::thread(&IPCApplication::readDaemon, this);
 }
 
 bool IPCApplication::write(uint8_t *buf, int len) {

@@ -19,7 +19,8 @@
 #include "device/socket/IPCApplication.h"
 #include "Debug.h"
 
-UnixDomainSocketServer::UnixDomainSocketServer(Beetle &beetle, std::string path) : beetle(beetle), daemonThread() {
+UnixDomainSocketServer::UnixDomainSocketServer(Beetle &beetle, std::string path) :
+		beetle(beetle), daemonThread() {
 	daemonRunning = true;
 	fd = -1;
 	daemonThread = std::thread(&UnixDomainSocketServer::serverDaemon, this, path);
@@ -45,9 +46,9 @@ void UnixDomainSocketServer::serverDaemon(std::string path) {
 	struct sockaddr_un addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path, path.c_str(), sizeof(addr.sun_path)-1);
+	strncpy(addr.sun_path, path.c_str(), sizeof(addr.sun_path) - 1);
 
-	if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+	if (bind(fd, (struct sockaddr*) &addr, sizeof(addr)) < 0) {
 		if (debug) pdebug("failed to bind ipc socket");
 		return;
 	}
@@ -57,7 +58,7 @@ void UnixDomainSocketServer::serverDaemon(std::string path) {
 		struct sockaddr_un cliaddr;
 		socklen_t clilen = sizeof(cliaddr);
 
-		int clifd = accept(fd, (struct sockaddr *)&cliaddr, &clilen);
+		int clifd = accept(fd, (struct sockaddr *) &cliaddr, &clilen);
 		if (clifd < 0) {
 			if (!daemonRunning) {
 				break;
@@ -81,8 +82,7 @@ void UnixDomainSocketServer::serverDaemon(std::string path) {
 	if (debug) pdebug("ipc serverDaemon exited");
 }
 
-void UnixDomainSocketServer::startIPCDeviceHelper(int clifd, struct sockaddr_un cliaddr,
-		struct ucred clicred) {
+void UnixDomainSocketServer::startIPCDeviceHelper(int clifd, struct sockaddr_un cliaddr, struct ucred clicred) {
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
 		/*
@@ -95,8 +95,7 @@ void UnixDomainSocketServer::startIPCDeviceHelper(int clifd, struct sockaddr_un 
 
 		pdebug("connected to " + device->getName());
 		if (debug) {
-			pdebug(device->getName() + " has handle range [0,"
-					+ std::to_string(device->getHighestHandle()) + "]");
+			pdebug(device->getName() + " has handle range [0," + std::to_string(device->getHighestHandle()) + "]");
 		}
 	} catch (std::exception& e) {
 		std::cout << "caught exception: " << e.what() << std::endl;

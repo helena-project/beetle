@@ -85,10 +85,8 @@ void Handle::setUuid(UUID uuid_) {
 
 std::string Handle::str() const {
 	std::stringstream ss;
-	ss << handle << "\t" << uuid.str()
-			<< "\tsH=" << serviceHandle
-			<< "\tcH=" << charHandle
-			<< "\tnSub=" << subscribers.size();
+	ss << handle << "\t" << uuid.str() << "\tsH=" << serviceHandle << "\tcH=" << charHandle << "\tnSub="
+			<< subscribers.size();
 	if (subscribers.size() > 0) {
 		ss << "\tsub=[";
 		std::string sep = "";
@@ -120,9 +118,8 @@ UUID PrimaryService::getServiceUuid() const {
 
 std::string PrimaryService::str() const {
 	std::stringstream ss;
-	ss << handle << "\t" << "[PrimaryService]"
-			<< "\tuuid=" << UUID(cache.value, cache.len).str()
-			<< "\tend=" << endGroupHandle;
+	ss << handle << "\t" << "[PrimaryService]" << "\tuuid=" << UUID(cache.value, cache.len).str() << "\tend="
+			<< endGroupHandle;
 	return ss.str();
 }
 
@@ -131,7 +128,7 @@ Characteristic::Characteristic() {
 }
 
 uint16_t Characteristic::getAttrHandle() const {
-	return *(uint16_t *)(cache.value + 1);
+	return *(uint16_t *) (cache.value + 1);
 }
 
 UUID Characteristic::getCharUuid() const {
@@ -157,14 +154,11 @@ static std::string getPropertiesString(uint8_t properties) {
 
 std::string Characteristic::str() const {
 	std::stringstream ss;
-	ss << handle << "\t" << "[Characteristic]"
-			<< "\tsH=" << serviceHandle << "\t";
+	ss << handle << "\t" << "[Characteristic]" << "\tsH=" << serviceHandle << "\t";
 	if (cache.value != NULL && cache.len >= 5) {
 		uint8_t properties = cache.value[0];
-		ss << "uuid=" << UUID(cache.value + 3, cache.len - 3).str()
-				<< "\tvH=" << btohs(*(uint16_t *)(cache.value + 1))
-				<< "\t" << getPropertiesString(properties)
-				<< "\tend=" << endGroupHandle;
+		ss << "uuid=" << UUID(cache.value + 3, cache.len - 3).str() << "\tvH=" << btohs(*(uint16_t * )(cache.value + 1))
+				<< "\t" << getPropertiesString(properties) << "\tend=" << endGroupHandle;
 	} else {
 		ss << "unknown or malformed";
 	}
@@ -177,10 +171,7 @@ ClientCharCfg::ClientCharCfg() {
 
 std::string ClientCharCfg::str() const {
 	std::stringstream ss;
-	ss << handle << "\t" << "[ClientCharCfg]"
-			<< "\tsH=" << serviceHandle
-			<< "\tcH=" << charHandle;
+	ss << handle << "\t" << "[ClientCharCfg]" << "\tsH=" << serviceHandle << "\tcH=" << charHandle;
 	return ss.str();
 }
-
 

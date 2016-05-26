@@ -26,8 +26,8 @@
 #include "tcp/TCPConnParams.h"
 #include "util/write.h"
 
-TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig, int port)
-: beetle(beetle), sslConfig(sslConfig) {
+TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig, int port) :
+		beetle(beetle), sslConfig(sslConfig) {
 	serverRunning = true;
 	sockfd = -1;
 	daemonThread = std::thread(&TCPDeviceServer::serverDaemon, this, port);
@@ -49,7 +49,7 @@ void TCPDeviceServer::serverDaemon(int port) {
 		throw ServerException("error creating socket");
 	}
 
-	struct sockaddr_in server_addr = {0};
+	struct sockaddr_in server_addr = { 0 };
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = INADDR_ANY;
 	server_addr.sin_port = htons(port);
@@ -63,7 +63,7 @@ void TCPDeviceServer::serverDaemon(int port) {
 		struct sockaddr_in client_addr;
 		socklen_t clilen = sizeof(client_addr);
 
-		int clifd = accept(sockfd, (struct sockaddr *)&client_addr, &clilen);
+		int clifd = accept(sockfd, (struct sockaddr *) &client_addr, &clilen);
 		if (clifd < 0) {
 			if (!serverRunning) {
 				break;
@@ -127,30 +127,30 @@ void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_
 	/*
 	 * Send params to the client.
 	 */
-    std::stringstream ss;
-    ss << TCP_PARAM_GATEWAY << " " << beetle.name;
-    std::string serverParams = ss.str();
-    uint32_t serverParamsLen = htonl(serverParams.length());
+	std::stringstream ss;
+	ss << TCP_PARAM_GATEWAY << " " << beetle.name;
+	std::string serverParams = ss.str();
+	uint32_t serverParamsLen = htonl(serverParams.length());
 
-    if (SSL_write_all(ssl, (uint8_t *)&serverParamsLen, sizeof(serverParamsLen)) == false) {
-    	ERR_print_errors_fp(stderr);
-    	SSL_shutdown(ssl);
-    	SSL_free(ssl);
-    	close(clifd);
-    	if (debug) pdebug("could not write server params length");
-    }
+	if (SSL_write_all(ssl, (uint8_t *) &serverParamsLen, sizeof(serverParamsLen)) == false) {
+		ERR_print_errors_fp(stderr);
+		SSL_shutdown(ssl);
+		SSL_free(ssl);
+		close(clifd);
+		if (debug) pdebug("could not write server params length");
+	}
 
-    if (SSL_write_all(ssl, (uint8_t *)serverParams.c_str(), serverParams.length()) == false) {
-    	ERR_print_errors_fp(stderr);
-    	SSL_shutdown(ssl);
-    	SSL_free(ssl);
-    	close(clifd);
-    	if (debug) pdebug("could not write server params");
-    }
+	if (SSL_write_all(ssl, (uint8_t *) serverParams.c_str(), serverParams.length()) == false) {
+		ERR_print_errors_fp(stderr);
+		SSL_shutdown(ssl);
+		SSL_free(ssl);
+		close(clifd);
+		if (debug) pdebug("could not write server params");
+	}
 
-    /*
-     * Instantiate the virtual device around the client socket.
-     */
+	/*
+	 * Instantiate the virtual device around the client socket.
+	 */
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
 		/*
@@ -171,8 +171,7 @@ void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_
 		beetle.addDevice(device);
 
 		if (debug) {
-			pdebug(device->getName() + " has handle range [0,"
-					+ std::to_string(device->getHighestHandle()) + "]");
+			pdebug(device->getName() + " has handle range [0," + std::to_string(device->getHighestHandle()) + "]");
 		}
 	} catch (std::exception& e) {
 		std::cout << "caught exception: " << e.what() << std::endl;

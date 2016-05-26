@@ -23,52 +23,51 @@
 #include "sync/OrderedThreadPool.h"
 #include "util/write.h"
 
-
-LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType
-		) : VirtualDevice(beetle, true), readThread() {
+LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType) :
+		VirtualDevice(beetle, true), readThread() {
 	type = LE_PERIPHERAL;
 
 	bdaddr = addr;
 	bdaddrType = addrType;
 
-    struct sockaddr_l2 loc_addr = {0};
-    loc_addr.l2_family = AF_BLUETOOTH;
-    bdaddr_t tmp = {0, 0, 0, 0, 0, 0}; // BDADDR_ANY
-    bacpy(&loc_addr.l2_bdaddr, &tmp);
-    loc_addr.l2_psm = 0;
-    loc_addr.l2_cid = htobs(ATT_CID);
-    loc_addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
+	struct sockaddr_l2 loc_addr = { 0 };
+	loc_addr.l2_family = AF_BLUETOOTH;
+	bdaddr_t tmp = { 0, 0, 0, 0, 0, 0 }; // BDADDR_ANY
+	bacpy(&loc_addr.l2_bdaddr, &tmp);
+	loc_addr.l2_psm = 0;
+	loc_addr.l2_cid = htobs(ATT_CID);
+	loc_addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
 
-    struct sockaddr_l2 rem_addr = {0};
-    rem_addr.l2_family = AF_BLUETOOTH;
-    bacpy(&rem_addr.l2_bdaddr, &bdaddr);
-    rem_addr.l2_psm = 0;
-    rem_addr.l2_cid = htobs(ATT_CID);
-    rem_addr.l2_bdaddr_type = (addrType == PUBLIC) ? BDADDR_LE_PUBLIC : BDADDR_LE_RANDOM;
+	struct sockaddr_l2 rem_addr = { 0 };
+	rem_addr.l2_family = AF_BLUETOOTH;
+	bacpy(&rem_addr.l2_bdaddr, &bdaddr);
+	rem_addr.l2_psm = 0;
+	rem_addr.l2_cid = htobs(ATT_CID);
+	rem_addr.l2_bdaddr_type = (addrType == PUBLIC) ? BDADDR_LE_PUBLIC : BDADDR_LE_RANDOM;
 
-    sockfd = socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
-    if (sockfd < 0) {
-        throw DeviceException("could not create socket");
-    }
-    if (bind(sockfd, (struct sockaddr *)&loc_addr, sizeof(loc_addr)) < 0) {
-        close(sockfd);
-        throw DeviceException("could not bind");
-    }
-    if (connect(sockfd, (struct sockaddr *)&rem_addr, sizeof(rem_addr)) < 0) {
-        close(sockfd);
-        throw DeviceException("could not connect");
-    }
+	sockfd = socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
+	if (sockfd < 0) {
+		throw DeviceException("could not create socket");
+	}
+	if (bind(sockfd, (struct sockaddr *) &loc_addr, sizeof(loc_addr)) < 0) {
+		close(sockfd);
+		throw DeviceException("could not bind");
+	}
+	if (connect(sockfd, (struct sockaddr *) &rem_addr, sizeof(rem_addr)) < 0) {
+		close(sockfd);
+		throw DeviceException("could not connect");
+	}
 
-    unsigned int connInfoLen = sizeof(connInfo);
-    if (getsockopt(sockfd, SOL_L2CAP, L2CAP_CONNINFO, &connInfo, &connInfoLen) < 0) {
-    	close(sockfd);
-    	throw DeviceException("could not get l2cap conn info");
-    }
+	unsigned int connInfoLen = sizeof(connInfo);
+	if (getsockopt(sockfd, SOL_L2CAP, L2CAP_CONNINFO, &connInfo, &connInfoLen) < 0) {
+		close(sockfd);
+		throw DeviceException("could not get l2cap conn info");
+	}
 
-    /*
-     * Set default connection interval.
-     */
-    beetle.hci.setConnectionInterval(connInfo.hci_handle, 10, 40, 0, 0x0C80, 0);
+	/*
+	 * Set default connection interval.
+	 */
+	beetle.hci.setConnectionInterval(connInfo.hci_handle, 10, 40, 0, 0x0C80, 0);
 }
 
 LEPeripheral::~LEPeripheral() {
@@ -77,20 +76,22 @@ LEPeripheral::~LEPeripheral() {
 		pdebug("shutting down socket");
 	}
 	shutdown(sockfd, SHUT_RDWR);
-	if (readThread.joinable()) readThread.join();
+	if (readThread.joinable()) {
+		readThread.join();
+	}
 	close(sockfd);
 }
 
 bdaddr_t LEPeripheral::getBdaddr() {
 	return bdaddr;
-};
+}
 
 LEPeripheral::AddrType LEPeripheral::getAddrType() {
 	return bdaddrType;
-};
+}
 
 void LEPeripheral::startInternal() {
-    readThread = std::thread(&LEPeripheral::readDaemon, this);
+	readThread = std::thread(&LEPeripheral::readDaemon, this);
 }
 
 struct l2cap_conninfo LEPeripheral::getL2capConnInfo() {
@@ -124,7 +125,10 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 }
 
 void LEPeripheral::readDaemon() {
-	if (debug) pdebug(getName() + " readDaemon started");
+	if (debug) {
+		pdebug(getName() + " readDaemon started");
+	}
+
 	uint8_t buf[32];
 	while (!isStopped()) {
 		int n = read(sockfd, buf, sizeof(buf));
@@ -147,6 +151,9 @@ void LEPeripheral::readDaemon() {
 			readHandler(buf, n);
 		}
 	}
-	if (debug) pdebug(getName() + " readDaemon exited");
+
+	if (debug) {
+		pdebug(getName() + " readDaemon exited");
+	}
 }
 

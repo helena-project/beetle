@@ -28,27 +28,29 @@ DynamicAuth::DynamicAuth(rule_t ruleId_) {
 }
 
 static bool isPrivateAddress(uint32_t ip) {
-    uint8_t b1, b2;
-    b1 = (uint8_t)(ip >> 24);
-    b2 = (uint8_t)((ip >> 16) & 0x0ff);
-    if (b1 == 10) {
-    	return true;
-    }
-    if ((b1 == 172) && (b2 >= 16) && (b2 <= 31)) {
-    	return true;
-    }
-    if ((b1 == 192) && (b2 == 168)) {
-    	return true;
-    }
-    return false;
+	uint8_t b1, b2;
+	b1 = (uint8_t) (ip >> 24);
+	b2 = (uint8_t) ((ip >> 16) & 0x0ff);
+	if (b1 == 10) {
+		return true;
+	}
+	if ((b1 == 172) && (b2 >= 16) && (b2 <= 31)) {
+		return true;
+	}
+	if ((b1 == 192) && (b2 == 168)) {
+		return true;
+	}
+	return false;
 }
 
-NetworkAuth::NetworkAuth(rule_t r, std::string ip_, bool isPrivate_) : DynamicAuth(r) {
+NetworkAuth::NetworkAuth(rule_t r, std::string ip_, bool isPrivate_) :
+		DynamicAuth(r) {
 	isPrivate = isPrivate_;
 	ip = ip_;
 }
 
-void NetworkAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<Device> from, std::shared_ptr<Device> to) {
+void NetworkAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<Device> from,
+		std::shared_ptr<Device> to) {
 	auto tcpTo = std::dynamic_pointer_cast<TCPClient>(to);
 	if (tcpTo) {
 		struct sockaddr_in addr = tcpTo->getSockaddr();
@@ -69,11 +71,13 @@ void NetworkAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr
 	}
 }
 
-PasscodeAuth::PasscodeAuth(rule_t r) : DynamicAuth(r) {
+PasscodeAuth::PasscodeAuth(rule_t r) :
+		DynamicAuth(r) {
 
 }
 
-void PasscodeAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<Device> from, std::shared_ptr<Device> to) {
+void PasscodeAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<Device> from,
+		std::shared_ptr<Device> to) {
 	if (state == SATISFIED) {
 		return;
 	}
@@ -86,8 +90,8 @@ void PasscodeAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_pt
 	case Device::IPC_APPLICATION:
 	case Device::TCP_CLIENT: {
 		std::stringstream resource;
-		resource << "acstate/passcode/isLive/" << std::fixed << ruleId
-				<< "/" << cc->getName() << "/" << std::fixed << to->getId();
+		resource << "acstate/passcode/isLive/" << std::fixed << ruleId << "/" << cc->getName() << "/" << std::fixed
+				<< to->getId();
 		std::string url = cc->getUrl(resource.str());
 
 		using namespace boost::network;
@@ -106,7 +110,7 @@ void PasscodeAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_pt
 			}
 		} catch (std::exception &e) {
 			std::stringstream ss;
-			ss << "caught exception: " <<  e.what();
+			ss << "caught exception: " << e.what();
 			pwarn(ss.str());
 			state = DENIED;
 		}
@@ -123,7 +127,8 @@ void PasscodeAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_pt
 	}
 }
 
-AdminAuth::AdminAuth(rule_t r) : DynamicAuth(r) {
+AdminAuth::AdminAuth(rule_t r) :
+		DynamicAuth(r) {
 
 }
 
@@ -139,8 +144,8 @@ void AdminAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<D
 		case Device::IPC_APPLICATION:
 		case Device::TCP_CLIENT: {
 			std::stringstream resource;
-			resource << "acstate/admin/request/" << std::fixed << ruleId
-					<< "/" << cc->getName() << "/" << std::fixed << to->getId();
+			resource << "acstate/admin/request/" << std::fixed << ruleId << "/" << cc->getName() << "/" << std::fixed
+					<< to->getId();
 			std::string url = cc->getUrl(resource.str());
 
 			using namespace boost::network;
@@ -159,7 +164,7 @@ void AdminAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<D
 				}
 			} catch (std::exception &e) {
 				std::stringstream ss;
-				ss << "caught exception: " <<  e.what();
+				ss << "caught exception: " << e.what();
 				pwarn(ss.str());
 				state = DENIED;
 			}
@@ -177,7 +182,8 @@ void AdminAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<D
 	}
 }
 
-UserAuth::UserAuth(rule_t r) : DynamicAuth(r) {
+UserAuth::UserAuth(rule_t r) :
+		DynamicAuth(r) {
 
 }
 
@@ -193,8 +199,8 @@ void UserAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<De
 		case Device::IPC_APPLICATION:
 		case Device::TCP_CLIENT: {
 			std::stringstream resource;
-			resource << "acstate/user/request/" << std::fixed << ruleId
-					<< "/" << cc->getName() << "/" << std::fixed << to->getId();
+			resource << "acstate/user/request/" << std::fixed << ruleId << "/" << cc->getName() << "/" << std::fixed
+					<< to->getId();
 			std::string url = cc->getUrl(resource.str());
 
 			using namespace boost::network;
@@ -213,7 +219,7 @@ void UserAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<De
 				}
 			} catch (std::exception &e) {
 				std::stringstream ss;
-				ss << "caught exception: " <<  e.what();
+				ss << "caught exception: " << e.what();
 				pwarn(ss.str());
 				state = DENIED;
 			}

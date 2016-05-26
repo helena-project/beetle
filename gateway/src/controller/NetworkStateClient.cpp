@@ -34,8 +34,8 @@
 
 using json = nlohmann::json;
 
-NetworkStateClient::NetworkStateClient(Beetle &beetle, std::shared_ptr<ControllerClient> client_, int tcpPort)
-: beetle(beetle) {
+NetworkStateClient::NetworkStateClient(Beetle &beetle, std::shared_ptr<ControllerClient> client_, int tcpPort) :
+		beetle(beetle) {
 	client = client_;
 
 	std::string postParams = "port=" + std::to_string(tcpPort);
@@ -50,13 +50,12 @@ NetworkStateClient::NetworkStateClient(Beetle &beetle, std::shared_ptr<Controlle
 	http::client::response response = client->getClient()->post(request);
 	if (response.status() != 200) {
 		std::stringstream ss;
-		ss << "error connecting to beetle controller (" << response.status() << "): "
-				<< body(response);
+		ss << "error connecting to beetle controller (" << response.status() << "): " << body(response);
 		throw ControllerException(ss.str());
 	} else {
 		if (debug_controller) {
 			std::stringstream ss;
-			ss << "beetle controller: " <<  body(response);
+			ss << "beetle controller: " << body(response);
 			pdebug(ss.str());
 		}
 	}
@@ -65,14 +64,13 @@ NetworkStateClient::NetworkStateClient(Beetle &beetle, std::shared_ptr<Controlle
 NetworkStateClient::~NetworkStateClient() {
 	using namespace boost::network;
 	http::client::request request(client->getUrl("network/connect/" + beetle.name));
-		request << header("User-Agent", "linux");
+	request << header("User-Agent", "linux");
 
 	try {
 		auto response = client->getClient()->delete_(request);
 		if (response.status() != 200) {
 			std::stringstream ss;
-					ss << "error disconnecting from controller (" << response.status() << "): "
-							<< body(response);
+			ss << "error disconnecting from controller (" << response.status() << "): " << body(response);
 			pwarn(ss.str());
 		} else {
 			if (debug_controller) {
@@ -83,7 +81,7 @@ NetworkStateClient::~NetworkStateClient() {
 		}
 	} catch (std::exception &e) {
 		std::stringstream ss;
-		ss << "caught exception: " <<  e.what();
+		ss << "caught exception: " << e.what();
 		pwarn(ss.str());
 	}
 }
@@ -99,32 +97,32 @@ AddDeviceHandler NetworkStateClient::getAddDeviceHandler() {
 		}
 		std::shared_ptr<Device> device = beetle.devices[d];
 		switch (device->getType()) {
-		case Device::IPC_APPLICATION:
-		case Device::LE_PERIPHERAL:
-		case Device::TCP_CLIENT: {
-			if (debug_controller) {
-				pdebug("informing controller of new connection");
-			}
+			case Device::IPC_APPLICATION:
+			case Device::LE_PERIPHERAL:
+			case Device::TCP_CLIENT: {
+				if (debug_controller) {
+					pdebug("informing controller of new connection");
+				}
 
-			int maxWait = 60000;
-			int waitInterval = 100;
-			while (device->getName() == "" && maxWait > 0) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(waitInterval));
-				maxWait -= waitInterval;
-			}
+				int maxWait = 60000;
+				int waitInterval = 100;
+				while (device->getName() == "" && maxWait > 0) {
+					std::this_thread::sleep_for(std::chrono::milliseconds(waitInterval));
+					maxWait -= waitInterval;
+				}
 
-			if (device->getName() == "") {
-				pwarn("informing controller of unnamed device");
-			}
+				if (device->getName() == "") {
+					pwarn("informing controller of unnamed device");
+				}
 
-			try {
-				addDeviceHelper(device);
-			} catch (std::exception &e) {
-				std::cerr << "caught exception: " << e.what() << std::endl;
+				try {
+					addDeviceHelper(device);
+				} catch (std::exception &e) {
+					std::cerr << "caught exception: " << e.what() << std::endl;
+				}
+				break;
 			}
-			break;
-		}
-		default:
+			default:
 			if (debug_controller) {
 				pdebug("not reporting " + device->getTypeStr());
 			}
@@ -144,9 +142,9 @@ UpdateDeviceHandler NetworkStateClient::getUpdateDeviceHandler() {
 		}
 		std::shared_ptr<Device> device = beetle.devices[d];
 		switch (device->getType()) {
-		case Device::IPC_APPLICATION:
-		case Device::LE_PERIPHERAL:
-		case Device::TCP_CLIENT:
+			case Device::IPC_APPLICATION:
+			case Device::LE_PERIPHERAL:
+			case Device::TCP_CLIENT:
 			if (debug_controller) {
 				pdebug("informing controller of new connection");
 			}
@@ -156,7 +154,7 @@ UpdateDeviceHandler NetworkStateClient::getUpdateDeviceHandler() {
 				std::cerr << "caught exception: " << e.what() << std::endl;
 			}
 			break;
-		default:
+			default:
 			if (debug_controller) {
 				pdebug("not reporting " + device->getTypeStr());
 			}
@@ -166,7 +164,7 @@ UpdateDeviceHandler NetworkStateClient::getUpdateDeviceHandler() {
 }
 
 RemoveDeviceHandler NetworkStateClient::getRemoveDeviceHandler() {
-	return [this](device_t d){
+	return [this](device_t d) {
 		try {
 			removeDeviceHelper(d);
 		} catch (std::exception &e) {
@@ -241,14 +239,13 @@ void NetworkStateClient::addDeviceHelper(std::shared_ptr<Device> d) {
 		}
 	} catch (std::exception &e) {
 		std::stringstream ss;
-		ss << "caught exception: " <<  e.what();
+		ss << "caught exception: " << e.what();
 		pwarn(ss.str());
 	}
 }
 
 void NetworkStateClient::updateDeviceHelper(std::shared_ptr<Device> d) {
-	std::string url = client->getUrl(
-			"network/connect/" + beetle.name + "/" + std::to_string(d->getId()));
+	std::string url = client->getUrl("network/connect/" + beetle.name + "/" + std::to_string(d->getId()));
 	if (debug_controller) {
 		pdebug("put: " + url);
 	}
@@ -274,7 +271,7 @@ void NetworkStateClient::updateDeviceHelper(std::shared_ptr<Device> d) {
 		}
 	} catch (std::exception &e) {
 		std::stringstream ss;
-		ss << "caught exception: " <<  e.what();
+		ss << "caught exception: " << e.what();
 		pwarn(ss.str());
 	}
 }
@@ -302,7 +299,7 @@ void NetworkStateClient::removeDeviceHelper(device_t d) {
 		}
 	} catch (std::exception &e) {
 		std::stringstream ss;
-		ss << "caught exception: " <<  e.what();
+		ss << "caught exception: " << e.what();
 		pwarn(ss.str());
 	}
 }

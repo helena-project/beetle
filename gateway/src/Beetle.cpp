@@ -1,4 +1,3 @@
-
 #include "Beetle.h"
 
 #include <boost/thread/lock_types.hpp>
@@ -13,7 +12,8 @@
 #include "hat/HandleAllocationTable.h"
 #include "Router.h"
 
-Beetle::Beetle(std::string name_) : workers(4), writers(4) {
+Beetle::Beetle(std::string name_) :
+		workers(4), writers(4) {
 	router.reset(new Router(*this));
 	beetleDevice.reset(new BeetleInternal(*this, name_));
 	devices[BEETLE_RESERVED_DEVICE] = std::dynamic_pointer_cast<Device>(beetleDevice);
@@ -32,7 +32,7 @@ void Beetle::addDevice(std::shared_ptr<Device> d) {
 	deviceslk.unlock();
 
 	for (auto &h : addHandlers) {
-		workers.schedule([h,id] { h(id); });
+		workers.schedule([h,id] {h(id);});
 	}
 }
 
@@ -73,13 +73,13 @@ void Beetle::removeDevice(device_t id) {
 	}
 
 	for (auto &h : removeHandlers) {
-		workers.schedule([h,id] { h(id); });
+		workers.schedule([h,id] {h(id);});
 	}
 }
 
 void Beetle::updateDevice(device_t id) {
 	for (auto &h : updateHandlers) {
-		workers.schedule([h,id] { h(id); });
+		workers.schedule([h,id] {h(id);});
 	}
 }
 
@@ -100,7 +100,7 @@ void Beetle::mapDevices(device_t from, device_t to) {
 		pwarn(std::to_string(from) + " does not id a device");
 		return;
 	} else if (devices.find(to) == devices.end()) {
-		pwarn(std::to_string(to) +" does not id a device");
+		pwarn(std::to_string(to) + " does not id a device");
 		return;
 	}
 
@@ -140,7 +140,7 @@ void Beetle::unmapDevices(device_t from, device_t to) {
 		pwarn(std::to_string(from) + " does not id a device");
 		return;
 	} else if (devices.find(to) == devices.end()) {
-		pwarn(std::to_string(to) +" does not id a device");
+		pwarn(std::to_string(to) + " does not id a device");
 		return;
 	}
 

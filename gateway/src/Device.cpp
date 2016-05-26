@@ -20,21 +20,23 @@
 
 std::atomic_int Device::idCounter(1);
 
-const std::string Device::deviceType2Str[] = {
-		"BeetleInternal", 	// 0
+const std::string Device::deviceType2Str[] = { "BeetleInternal", 	// 0
 		"LePeripheral", 	// 1
 		"TcpClient",		// 2
 		"IpcApplication",	// 3
 		"TcpClientProxy",	// 4
 		"TcpServerProxy",	// 5
-};
+		};
 
-Device::Device(Beetle &beetle_, HandleAllocationTable *hat_) : Device(beetle_, idCounter++, hat_) {};
+Device::Device(Beetle &beetle_, HandleAllocationTable *hat_) :
+		Device(beetle_, idCounter++, hat_) {
+}
 
-Device::Device(Beetle &beetle_, device_t id_, HandleAllocationTable *hat_) : beetle(beetle_) {
+Device::Device(Beetle &beetle_, device_t id_, HandleAllocationTable *hat_) :
+		beetle(beetle_) {
 	id = id_;
 	if (!hat_) {
-		hat_= new BlockAllocator(256);
+		hat_ = new BlockAllocator(256);
 	}
 	hat.reset(hat_);
 	type = UNKNOWN;
@@ -51,19 +53,19 @@ Device::~Device() {
 
 device_t Device::getId() {
 	return id;
-};
+}
 
 std::string Device::getName() {
 	return name;
-};
+}
 
 Device::DeviceType Device::getType() {
 	return type;
-};
+}
 
 std::string Device::getTypeStr() {
 	return deviceType2Str[type];
-};
+}
 
 int Device::getHighestHandle() {
 	std::lock_guard<std::recursive_mutex> lg(handlesMutex);
@@ -79,8 +81,7 @@ void Device::unsubscribeAll(device_t d) {
 	std::set<uint16_t> charCccdsToWrite;
 	for (auto &kv : handles) {
 		CharacteristicValue *cvH = dynamic_cast<CharacteristicValue *>(kv.second);
-		if (cvH && cvH->getUuid().isShort() &&
-				cvH->subscribers.find(d) != cvH->subscribers.end()) {
+		if (cvH && cvH->getUuid().isShort() && cvH->subscribers.find(d) != cvH->subscribers.end()) {
 			cvH->subscribers.erase(d);
 			if (cvH->subscribers.size() == 0) {
 				charCccdsToWrite.insert(cvH->getCharHandle());
@@ -95,7 +96,7 @@ void Device::unsubscribeAll(device_t d) {
 			uint8_t req[reqLen];
 			memset(req, 0, reqLen);
 			req[0] = ATT_OP_WRITE_REQ;
-			*(uint16_t *)(req + 1) = htobs(cccdH->getHandle());
+			*(uint16_t *) (req + 1) = htobs(cccdH->getHandle());
 			writeTransaction(req, reqLen, [](uint8_t *resp, int respLen) {});
 		}
 	}

@@ -54,7 +54,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 	if (config.count("tcp")) {
 		json tcpConfig = config["tcp"];
 		for (json::iterator it = tcpConfig.begin(); it != tcpConfig.end(); ++it) {
-			if (it.key() ==  "enable") {
+			if (it.key() == "enable") {
 				tcpEnabled = it.value();
 			} else if (it.key() == "port") {
 				tcpPort = it.value();
@@ -67,7 +67,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 	if (config.count("ipc")) {
 		json ipcConfig = config["ipc"];
 		for (json::iterator it = ipcConfig.begin(); it != ipcConfig.end(); ++it) {
-			if (it.key() ==  "enable") {
+			if (it.key() == "enable") {
 				ipcEnabled = it.value();
 			} else if (it.key() == "path") {
 				ipcPath = it.value();
@@ -80,7 +80,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 	if (config.count("controller")) {
 		json controllerConfig = config["controller"];
 		for (json::iterator it = controllerConfig.begin(); it != controllerConfig.end(); ++it) {
-			if (it.key() ==  "enable") {
+			if (it.key() == "enable") {
 				controllerEnabled = it.value();
 			} else if (it.key() == "host") {
 				controllerHost = it.value();

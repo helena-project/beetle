@@ -74,14 +74,14 @@ protected:
 	bool cacheInfinite = false;
 };
 
-class PrimaryService : public Handle {
+class PrimaryService: public Handle {
 public:
 	PrimaryService();
 	UUID getServiceUuid() const;
 	std::string str() const;
 };
 
-class Characteristic : public Handle {
+class Characteristic: public Handle {
 public:
 	Characteristic();
 	uint16_t getAttrHandle() const;
@@ -90,11 +90,11 @@ public:
 	std::string str() const;
 };
 
-class CharacteristicValue : public Handle {
+class CharacteristicValue: public Handle {
 	/* just for understandability */
 };
 
-class ClientCharCfg : public Handle {
+class ClientCharCfg: public Handle {
 public:
 	ClientCharCfg();
 	std::string str() const;

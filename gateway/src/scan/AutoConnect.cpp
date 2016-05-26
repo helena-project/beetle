@@ -16,7 +16,8 @@
 #include "Debug.h"
 #include "Device.h"
 
-AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_) : beetle{beetle}, daemonThread() {
+AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_) :
+		beetle { beetle }, daemonThread() {
 	connectAll = connectAll_;
 	daemonRunning = true;
 	daemonThread = std::thread(&AutoConnect::daemon, this, 60);
@@ -101,8 +102,7 @@ void AutoConnect::connect(peripheral_info_t info, autoconnect_config_t config) {
 
 		if (debug_scan) {
 			pdebug("auto-connected to " + device->getName());
-			pdebug(device->getName() + " has handle range [0,"
-					+ std::to_string(device->getHighestHandle()) + "]");
+			pdebug(device->getName() + " has handle range [0," + std::to_string(device->getHighestHandle()) + "]");
 		}
 	} catch (DeviceException& e) {
 		std::cerr << "caught exception: " << e.what() << std::endl;

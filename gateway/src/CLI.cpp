@@ -40,8 +40,8 @@
 #include "hat/HandleAllocationTable.h"
 #include "Router.h"
 
-CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery)
-: beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), inputDaemon() {
+CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery) :
+		beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), inputDaemon() {
 	aliasCounter = 0;
 	inputDaemon = std::thread(&CLI::cmdLineDaemon, this);
 }
@@ -85,7 +85,6 @@ static void printUsageError(std::string error) {
 static void printMessage(std::string message) {
 	std::cout << "  " << message << std::endl;
 }
-
 
 void CLI::cmdLineDaemon() {
 	printMessage("Welcome to Beetle CLI. Use 'help' for a list of commands.");
@@ -153,8 +152,8 @@ bool CLI::getCommand(std::vector<std::string> &ret) {
 	} else if (std::cin.bad()) {
 		throw "Error";
 	} else {
-		boost::char_separator<char> sep{" "};
-		boost::tokenizer<boost::char_separator<char>> tokenizer{line, sep};
+		boost::char_separator<char> sep { " " };
+		boost::tokenizer<boost::char_separator<char>> tokenizer { line, sep };
 		for (const auto &t : tokenizer) {
 			ret.push_back(t);
 		}
@@ -200,9 +199,9 @@ void CLI::doScan(const std::vector<std::string>& cmd) {
 	std::lock_guard<std::mutex> lg(discoveredMutex);
 	for (auto &d : discovered) {
 		std::stringstream ss;
-		ss << aliases[d.first] << "\t" << d.first
-				<< "\t" << ((d.second.bdaddrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random")
-				<< "\t" << d.second.name;
+		ss << aliases[d.first] << "\t" << d.first << "\t"
+				<< ((d.second.bdaddrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random") << "\t"
+				<< d.second.name;
 		printMessage(ss.str());
 	}
 }
@@ -261,12 +260,11 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 
 		device->start(discoverHandles);
 
-		printMessage("connected to " + std::to_string(device->getId())
-			+ " : " + device->getName());
+		printMessage("connected to " + std::to_string(device->getId()) + " : " + device->getName());
 
 		if (debug) {
-			printMessage(device->getName() + " has handle range [0,"
-					+ std::to_string(device->getHighestHandle()) + "]");
+			printMessage(
+					device->getName() + " has handle range [0," + std::to_string(device->getHighestHandle()) + "]");
 		}
 	} catch (DeviceException& e) {
 		std::cout << "caught exception: " << e.what() << std::endl;
@@ -326,11 +324,10 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 
 		device->start();
 
-		printMessage("connected to remote " + std::to_string(device->getId())
-			+ " : " + device->getName());
+		printMessage("connected to remote " + std::to_string(device->getId()) + " : " + device->getName());
 		if (debug) {
-			printMessage(device->getName() + " has handle range [0,"
-					+ std::to_string(device->getHighestHandle()) + "]");
+			printMessage(
+					device->getName() + " has handle range [0," + std::to_string(device->getHighestHandle()) + "]");
 		}
 	} catch (DeviceException& e) {
 		std::cout << "caught exception: " << e.what() << std::endl;
@@ -358,7 +355,7 @@ void CLI::doNetworkDiscover(const std::vector<std::string>& cmd) {
 	std::list<discovery_result_t> discovered;
 	if (cmd[1] == "d") {
 		success = networkDiscovery->discoverDevices(discovered);
-	} else if (cmd[1] == "s"){
+	} else if (cmd[1] == "s") {
 		if (cmd.size() != 3) {
 			printUsageError("no uuid specified");
 			return;
@@ -478,8 +475,7 @@ void CLI::doListDevices(const std::vector<std::string>& cmd) {
 		if (le) {
 			printMessage("  deviceAddr : " + ba2str_cpp(le->getBdaddr()));
 			std::stringstream ss;
-			ss << "  addrType : " << ((le->getAddrType() == LEPeripheral::AddrType::PUBLIC) ?
-					"public" : "random");
+			ss << "  addrType : " << ((le->getAddrType() == LEPeripheral::AddrType::PUBLIC) ? "public" : "random");
 			printMessage(ss.str());
 		}
 
@@ -533,20 +529,21 @@ void CLI::doListOffsets(const std::vector<std::string>& cmd) {
 	if (device) {
 		std::lock_guard<std::mutex> hatLg(device->hatMutex);
 
-		std::map<uint16_t, std::pair<uint16_t, std::shared_ptr<Device>>> tmp; // use a map to sort by start handle
+		std::map<uint16_t, std::pair<uint16_t, std::shared_ptr<Device>>>tmp; // use a map to sort by start handle
 		for (device_t from : device->hat->getDevices()) {
 			handle_range_t handleRange = device->hat->getDeviceRange(from);
 			if (handleRange.isNull()) {
 				continue;
 			}
-			tmp[handleRange.start] = std::pair<uint16_t,std::shared_ptr<Device>>(handleRange.end, beetle.devices[from]);
+			tmp[handleRange.start] = std::pair<uint16_t, std::shared_ptr<Device>>(handleRange.end,
+					beetle.devices[from]);
 		}
 
 		printMessage("start\tend\tid\tname");
 		for (auto &kv : tmp) {
 			std::stringstream ss;
-			ss << kv.first << '\t' << kv.second.first << '\t' << kv.second.second->getId()
-								<< '\t' << kv.second.second->getName();
+			ss << kv.first << '\t' << kv.second.first << '\t' << kv.second.second->getId() << '\t'
+					<< kv.second.second->getName();
 			printMessage(ss.str());
 		}
 	}
@@ -708,6 +705,4 @@ std::shared_ptr<Device> CLI::matchDevice(const std::string &input) {
 	}
 	return device;
 }
-
-
 

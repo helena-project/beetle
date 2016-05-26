@@ -22,8 +22,8 @@
 
 using json = nlohmann::json;
 
-NetworkDiscoveryClient::NetworkDiscoveryClient(Beetle &beetle, std::shared_ptr<ControllerClient> client_)
-: beetle(beetle) {
+NetworkDiscoveryClient::NetworkDiscoveryClient(Beetle &beetle, std::shared_ptr<ControllerClient> client_) :
+		beetle(beetle) {
 	client = client_;
 }
 
@@ -37,8 +37,7 @@ bool NetworkDiscoveryClient::discoverDevices(std::list<discovery_result_t> &ret)
 	return queryHelper(resource.str(), ret);
 }
 
-bool NetworkDiscoveryClient::discoverByUuid(UUID uuid, std::list<discovery_result_t> &ret,
-		bool isService, device_t d) {
+bool NetworkDiscoveryClient::discoverByUuid(UUID uuid, std::list<discovery_result_t> &ret, bool isService, device_t d) {
 	std::stringstream resource;
 	resource << "network/discover/" << ((isService) ? "service" : "char") << "/" << uuid.str();
 	if (d != -1) {
@@ -74,7 +73,7 @@ bool NetworkDiscoveryClient::findGatewayByName(std::string name, std::string &ip
 		}
 	} catch (std::exception &e) {
 		std::stringstream ss;
-		ss << "caught exception: " <<  e.what();
+		ss << "caught exception: " << e.what();
 		pwarn(ss.str());
 		return false;
 	}
@@ -114,7 +113,7 @@ bool NetworkDiscoveryClient::queryHelper(std::string resource, std::list<discove
 		}
 	} catch (std::exception &e) {
 		std::stringstream ss;
-		ss << "caught exception: " <<  e.what();
+		ss << "caught exception: " << e.what();
 		pwarn(ss.str());
 		return false;
 	}

@@ -29,8 +29,8 @@
 
 using json = nlohmann::json;
 
-AccessControl::AccessControl(Beetle &beetle, std::shared_ptr<ControllerClient> client_)
-: beetle(beetle) {
+AccessControl::AccessControl(Beetle &beetle, std::shared_ptr<ControllerClient> client_) :
+		beetle(beetle) {
 	client = client_;
 }
 
@@ -84,8 +84,8 @@ bool AccessControl::canMap(std::shared_ptr<Device> from, std::shared_ptr<Device>
 	}
 
 	std::stringstream resource;
-	resource << "access/canMap/" << fromGateway << "/" << std::fixed << fromId
-			<< "/" << toGateway << "/" << std::fixed << toId;
+	resource << "access/canMap/" << fromGateway << "/" << std::fixed << fromId << "/" << toGateway << "/" << std::fixed
+			<< toId;
 
 	std::string url = client->getUrl(resource.str());
 	using namespace boost::network;
@@ -128,24 +128,24 @@ bool AccessControl::canMap(std::shared_ptr<Device> from, std::shared_ptr<Device>
 		}
 	} catch (std::exception &e) {
 		std::stringstream ss;
-		ss << "caught exception: " <<  e.what();
+		ss << "caught exception: " << e.what();
 		pwarn(ss.str());
 		return false;
 	}
 }
 
 RemoveDeviceHandler AccessControl::getRemoveDeviceHandler() {
-	return [this](device_t d){
+	return [this](device_t d) {
 		boost::unique_lock<boost::shared_mutex> cacheLk(cacheMutex);
 		for (auto it = cache.cbegin(); it != cache.cend();) {
 			/*
 			 * Remove any cached rules regarding this device.
 			 */
-		  if (it->first.first == d || it->first.second == d) {
-			  cache.erase(it++);
-		  } else {
-		    ++it;
-		  }
+			if (it->first.first == d || it->first.second == d) {
+				cache.erase(it++);
+			} else {
+				++it;
+			}
 		}
 	};
 }
@@ -160,8 +160,8 @@ bool AccessControl::acquireExclusiveLease(std::shared_ptr<Device> to, exclusive_
 	leasesLk.unlock();
 
 	std::stringstream resource;
-	resource << "acstate/exclusive/" << std::fixed << exclusiveId
-			<< "/" << beetle.name << "/" << std::fixed << to->getId();
+	resource << "acstate/exclusive/" << std::fixed << exclusiveId << "/" << beetle.name << "/" << std::fixed
+			<< to->getId();
 
 	std::string url = client->getUrl(resource.str());
 	using namespace boost::network;
@@ -196,7 +196,7 @@ bool AccessControl::acquireExclusiveLease(std::shared_ptr<Device> to, exclusive_
 		}
 	} catch (std::exception &e) {
 		std::stringstream ss;
-		ss << "caught exception: " <<  e.what();
+		ss << "caught exception: " << e.what();
 		pwarn(ss.str());
 		newlyAcquired = false;
 		return false;
@@ -209,8 +209,8 @@ void AccessControl::releaseExclusiveLease(std::shared_ptr<Device> to, exclusive_
 	leasesLk.unlock();
 
 	std::stringstream resource;
-	resource << "acstate/exclusive/" << std::fixed << exclusiveId
-			<< "/" << beetle.name << "/" << std::fixed << to->getId();
+	resource << "acstate/exclusive/" << std::fixed << exclusiveId << "/" << beetle.name << "/" << std::fixed
+			<< to->getId();
 
 	std::string url = client->getUrl(resource.str());
 	using namespace boost::network;
@@ -232,7 +232,7 @@ void AccessControl::releaseExclusiveLease(std::shared_ptr<Device> to, exclusive_
 		}
 	} catch (std::exception &e) {
 		std::stringstream ss;
-		ss << "caught exception: " <<  e.what();
+		ss << "caught exception: " << e.what();
 		pwarn(ss.str());
 	}
 }
@@ -240,7 +240,8 @@ void AccessControl::releaseExclusiveLease(std::shared_ptr<Device> to, exclusive_
 /*
  * Unpacks the controller response and returns whether the mapping is allowed.
  */
-bool AccessControl::handleCanMapResponse(std::shared_ptr<Device> from, std::shared_ptr<Device> to, std::stringstream &response) {
+bool AccessControl::handleCanMapResponse(std::shared_ptr<Device> from, std::shared_ptr<Device> to,
+		std::stringstream &response) {
 	json j;
 	j << response;
 
@@ -382,7 +383,7 @@ bool AccessControl::handleCanMapResponse(std::shared_ptr<Device> from, std::shar
 			for (json::iterator it3 = ruleIds.begin(); it3 != ruleIds.end(); ++it3) {
 				rule_t ruleId = *it3;
 				if (cacheEntry.rules.find(ruleId) != cacheEntry.rules.end()) {
-					rule_info_t ruleInfo = ((uint64_t)cacheEntry.rules[ruleId].priority) << 32;
+					rule_info_t ruleInfo = ((uint64_t) cacheEntry.rules[ruleId].priority) << 32;
 					ruleInfo |= ruleId;
 					charRulesSet.insert(ruleInfo);
 				}
@@ -485,7 +486,7 @@ bool AccessControl::canAccessHandle(std::shared_ptr<Device> client, std::shared_
 	 */
 	ClientCharCfg *ccc = dynamic_cast<ClientCharCfg *>(handle);
 	if (ccc) {
-		if(!isWriteReq(op)) {
+		if (!isWriteReq(op)) {
 			return true;
 		} else {
 			for (rule_info_t rInfo : charMap->second) {
@@ -546,7 +547,8 @@ bool AccessControl::canAccessHandle(std::shared_ptr<Device> client, std::shared_
 	}
 }
 
-bool AccessControl::getCharAccessProperties(std::shared_ptr<Device> client, std::shared_ptr<Device> server, Handle *handle, uint8_t &properties) {
+bool AccessControl::getCharAccessProperties(std::shared_ptr<Device> client, std::shared_ptr<Device> server,
+		Handle *handle, uint8_t &properties) {
 	boost::shared_lock<boost::shared_mutex> lk(cacheMutex);
 	if (client->getType() == Device::TCP_CLIENT_PROXY) {
 		properties = 0xFF;
@@ -592,8 +594,7 @@ bool AccessControl::getCharAccessProperties(std::shared_ptr<Device> client, std:
 	return false;
 }
 
-bool AccessControl::canReadType(std::shared_ptr<Device> client, std::shared_ptr<Device> server,
-		UUID &attType) {
+bool AccessControl::canReadType(std::shared_ptr<Device> client, std::shared_ptr<Device> server, UUID &attType) {
 	if (std::dynamic_pointer_cast<TCPClientProxy>(client)) {
 		return true;
 	} else if (std::dynamic_pointer_cast<TCPServerProxy>(client)) {

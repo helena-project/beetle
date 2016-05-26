@@ -12,8 +12,8 @@
 
 #include "Beetle.h"
 
-TCPClient::TCPClient(Beetle &beetle, SSL *ssl, int sockfd, std::string name_, struct sockaddr_in sockaddr)
-: TCPConnection(beetle, ssl, sockfd, sockaddr, true) {
+TCPClient::TCPClient(Beetle &beetle, SSL *ssl, int sockfd, std::string name_, struct sockaddr_in sockaddr) :
+		TCPConnection(beetle, ssl, sockfd, sockaddr, true) {
 	type = TCP_CLIENT;
 	name = name_;
 }

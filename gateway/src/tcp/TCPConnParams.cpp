@@ -74,5 +74,3 @@ bool readParamsHelper(SSL *ssl, int paramsLen, std::map<std::string, std::string
 	return true;
 }
 
-
-

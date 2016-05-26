@@ -41,11 +41,11 @@ UUID::UUID(std::string s) {
 		memset(uuid.value, 0, UUID_LEN);
 		memcpy(uuid.value + 4, BLUETOOTH_BASE_UUID, 12);
 		for (char i = 0; i < (int) s.length(); i += 2) {
-			uuid.value[3 - (i / 2)] = (char)std::stoi(s.substr(i, 2), NULL, 16);
+			uuid.value[3 - (i / 2)] = (char) std::stoi(s.substr(i, 2), NULL, 16);
 		}
 	} else if (s.length() == UUID_LEN * 2) {
 		for (int i = 0; i < (int) s.length(); i += 2) {
-			uuid.value[i / 2] = (char)std::stoi(s.substr(i, 2), NULL, 16);
+			uuid.value[i / 2] = (char) std::stoi(s.substr(i, 2), NULL, 16);
 		}
 		char c = uuid.value[0];
 		uuid.value[0] = uuid.value[1];
@@ -72,17 +72,16 @@ UUID::~UUID() {
 
 }
 
-uuid_t UUID::get() const{
+uuid_t UUID::get() const {
 	return uuid;
 }
 
 uint16_t UUID::getShort() const {
-	return *(uint16_t *)(uuid.value + 2);
+	return *(uint16_t *) (uuid.value + 2);
 }
 
 bool UUID::isShort() const {
-	return uuid.value[0] == 0 && uuid.value[1] == 0 &&
-			memcmp(uuid.value + 4, BLUETOOTH_BASE_UUID, 12) == 0;
+	return uuid.value[0] == 0 && uuid.value[1] == 0 && memcmp(uuid.value + 4, BLUETOOTH_BASE_UUID, 12) == 0;
 }
 
 std::string UUID::str() const {

@@ -30,13 +30,13 @@
 static const int maxTransactionLatencies = 50;
 
 static int64_t getCurrentTimeMillis(void) {
-    struct timespec spec;
-    clock_gettime(CLOCK_REALTIME, &spec);
-    return 1000 * spec.tv_sec + round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
+	struct timespec spec;
+	clock_gettime(CLOCK_REALTIME, &spec);
+	return 1000 * spec.tv_sec + round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
 }
 
-VirtualDevice::VirtualDevice(Beetle &beetle, bool isEndpoint_, HandleAllocationTable *hat)
-: Device(beetle, hat) {
+VirtualDevice::VirtualDevice(Beetle &beetle, bool isEndpoint_, HandleAllocationTable *hat) :
+		Device(beetle, hat) {
 	isEndpoint = isEndpoint_;
 	stopped = false;
 	currentTransaction = NULL;
@@ -73,22 +73,24 @@ bool VirtualDevice::isStopped() {
 static std::string discoverDeviceName(VirtualDevice *d);
 static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d);
 void VirtualDevice::start(bool discoverHandles) {
-	if (debug) pdebug("starting");
+	if (debug) {
+		pdebug("starting");
+	}
 
 	if (discoverHandles) {
 		startInternal();
 
-	//	std::string discoveredName = discoverDeviceName(this);
-	//	if (name != "") {
-	//		if (discoveredName != name) {
-	//			pwarn("discovered name " + discoveredName + " does not equal " + name);
-	//		}
-	//	} else {
-	//		name = discoveredName;
-	//	}
+		//	std::string discoveredName = discoverDeviceName(this);
+		//	if (name != "") {
+		//		if (discoveredName != name) {
+		//			pwarn("discovered name " + discoveredName + " does not equal " + name);
+		//		}
+		//	} else {
+		//		name = discoveredName;
+		//	}
 
 		if (name == "") {
-			name = discoverDeviceName(this);;
+			name = discoverDeviceName(this);
 		}
 
 		std::map<uint16_t, Handle *> handlesTmp = discoverAllHandles(this);
@@ -115,7 +117,9 @@ std::vector<uint64_t> VirtualDevice::getTransactionLatencies() {
 }
 
 void VirtualDevice::stop() {
-	if (debug) pdebug("stopping " + getName());
+	if (debug) {
+		pdebug("stopping " + getName());
+	}
 	stopped = true;
 }
 
@@ -193,9 +197,8 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 		int64_t currentTimeMillis = getCurrentTimeMillis();
 		int64_t elapsed = currentTimeMillis - lastTransactionMillis;
 		std::stringstream ss;
-		ss << "Transaction start: " << std::fixed << lastTransactionMillis << "\n"
-				<< "Transaction end: " << std::fixed << currentTimeMillis << "\n"
-				<< "Transaction length: "<< std::fixed << elapsed;
+		ss << "Transaction start: " << std::fixed << lastTransactionMillis << "\n" << "Transaction end: " << std::fixed
+				<< currentTimeMillis << "\n" << "Transaction length: " << std::fixed << elapsed;
 		pdebug(ss.str());
 
 		if (transactionLatencies.size() < maxTransactionLatencies) {
@@ -225,14 +228,13 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 	}
 }
 
-
 void VirtualDevice::readHandler(uint8_t *buf, int len) {
 	uint8_t opCode = buf[0];
 	if (opCode == ATT_OP_MTU_REQ) {
-		mtu = btohs(*(uint16_t *)(buf + 1));
+		mtu = btohs(*(uint16_t * )(buf + 1));
 		uint8_t resp[3];
 		resp[0] = ATT_OP_MTU_RESP;
-		*(uint16_t *)(resp + 1) = htobs(ATT_DEFAULT_LE_MTU);
+		*(uint16_t *) (resp + 1) = htobs(ATT_DEFAULT_LE_MTU);
 		write(resp, sizeof(resp));
 	} else if (((opCode & 1) == 1 && opCode != ATT_OP_HANDLE_NOTIFY && opCode != ATT_OP_HANDLE_IND)
 			|| opCode == ATT_OP_HANDLE_CNF) {
@@ -287,10 +289,9 @@ void VirtualDevice::discoverNetworkServices(UUID serviceUuid) {
 			 * Check if the remote device is already mapped locally.
 			 */
 			beetle.devicesMutex.lock_shared();
-			for (auto &kv: beetle.devices) {
+			for (auto &kv : beetle.devices) {
 				auto tcpSp = std::dynamic_pointer_cast<TCPServerProxy>(kv.second);
-				if (tcpSp && tcpSp->getServerGateway() == d.gateway
-						&& tcpSp->getRemoteDeviceId() == d.id) {
+				if (tcpSp && tcpSp->getServerGateway() == d.gateway && tcpSp->getRemoteDeviceId() == d.id) {
 					localId = tcpSp->getId();
 				}
 			}
@@ -314,7 +315,7 @@ void VirtualDevice::discoverNetworkServices(UUID serviceUuid) {
 
 						if (debug_controller) {
 							pdebug("connected to remote " + std::to_string(device->getId())
-							+ " : " + device->getName());
+									+ " : " + device->getName());
 						}
 					} catch (DeviceException &e) {
 						std::cout << "caught exception: " << e.what() << std::endl;
@@ -379,13 +380,13 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 	int reqLen = 7;
 	uint8_t req[reqLen];
 	req[0] = ATT_OP_READ_BY_GROUP_REQ;
-	*(uint16_t *)(req + 3) = htobs(endHandle);
-	*(uint16_t *)(req + 5) = htobs(GATT_PRIM_SVC_UUID);
+	*(uint16_t *) (req + 3) = htobs(endHandle);
+	*(uint16_t *) (req + 5) = htobs(GATT_PRIM_SVC_UUID);
 
 	std::vector<group_t> groups;
 	uint16_t currHandle = startHandle;
 	while (true) {
-		*(uint16_t *)(req + 1) = htobs(currHandle);
+		*(uint16_t *) (req + 1) = htobs(currHandle);
 
 		uint8_t *resp;
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
@@ -401,25 +402,27 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 					break;
 				}
 				group_t group;
-				group.handle = btohs(*(uint16_t *)(resp + i));
-				group.endGroup = btohs(*(uint16_t *)(resp + i + 2));
+				group.handle = btohs(*(uint16_t * )(resp + i));
+				group.endGroup = btohs(*(uint16_t * )(resp + i + 2));
 				group.len = attDataLen - 4;
 				group.value = new uint8_t[group.len];
 				memcpy(group.value, resp + i + 4, group.len);
 				groups.push_back(group);
 				if (debug_discovery) {
-					pdebug("found service at handles " + std::to_string(group.handle) + " - " + std::to_string(group.endGroup));
+					pdebug(
+							"found service at handles " + std::to_string(group.handle) + " - "
+									+ std::to_string(group.endGroup));
 				}
 			}
 			delete[] resp;
 			currHandle = groups.rbegin()->endGroup + 1;
-			if (currHandle == 0) break;
-		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_GROUP_REQ
-				&& resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
+			if (currHandle == 0) {
+				break;
+			}
+		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_GROUP_REQ && resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
 			delete[] resp;
 			break;
-		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_GROUP_REQ
-				&& resp[4] == ATT_ECODE_REQ_NOT_SUPP) {
+		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_GROUP_REQ && resp[4] == ATT_ECODE_REQ_NOT_SUPP) {
 			delete[] resp;
 			break;
 		} else {
@@ -446,12 +449,12 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 	int reqLen = 7;
 	uint8_t req[reqLen];
 	req[0] = ATT_OP_READ_BY_TYPE_REQ;
-	*(uint16_t *)(req + 3) = htobs(endHandle);
-	*(uint16_t *)(req + 5) = htobs(GATT_CHARAC_UUID);
+	*(uint16_t *) (req + 3) = htobs(endHandle);
+	*(uint16_t *) (req + 5) = htobs(GATT_CHARAC_UUID);
 
 	uint16_t currHandle = startHandle;
 	while (true) {
-		*(uint16_t *)(req + 1) = htobs(currHandle);
+		*(uint16_t *) (req + 1) = htobs(currHandle);
 
 		uint8_t *resp;
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
@@ -467,7 +470,7 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 					break;
 				}
 				handle_value_t handleValue;
-				handleValue.handle = btohs(*(uint16_t *)(resp + i));
+				handleValue.handle = btohs(*(uint16_t * )(resp + i));
 				handleValue.len = attDataLen - 2;
 				handleValue.value = new uint8_t[handleValue.len];
 				memcpy(handleValue.value, resp + i + 2, handleValue.len);
@@ -479,14 +482,14 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 			delete[] resp;
 
 			uint16_t nextHandle = handles.rbegin()->handle + 1;
-			if (nextHandle <= currHandle || nextHandle >= endHandle) break;
+			if (nextHandle <= currHandle || nextHandle >= endHandle) {
+				break;
+			}
 			currHandle = nextHandle;
-		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_TYPE_REQ
-				&& resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
+		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_TYPE_REQ && resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
 			delete[] resp;
 			break;
-		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_TYPE_REQ
-				&& resp[4] == ATT_ECODE_REQ_NOT_SUPP) {
+		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_TYPE_REQ && resp[4] == ATT_ECODE_REQ_NOT_SUPP) {
 			delete[] resp;
 			break;
 		} else {
@@ -513,11 +516,11 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 	int reqLen = 5;
 	uint8_t req[reqLen];
 	req[0] = ATT_OP_FIND_INFO_REQ;
-	*(uint16_t *)(req + 3) = htobs(endGroup);
+	*(uint16_t *) (req + 3) = htobs(endGroup);
 
 	uint16_t currHandle = startGroup;
 	while (true) {
-		*(uint16_t *)(req + 1) = htobs(currHandle);
+		*(uint16_t *) (req + 1) = htobs(currHandle);
 
 		uint8_t *resp;
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
@@ -535,7 +538,7 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 				}
 				handle_info_t handleInfo;
 				handleInfo.format = format;
-				handleInfo.handle = btohs(*(uint16_t *)(resp + i));
+				handleInfo.handle = btohs(*(uint16_t * )(resp + i));
 				if (format == ATT_FIND_INFO_RESP_FMT_16BIT) {
 					memset(handleInfo.uuid.value, 0, 2);
 					memcpy(handleInfo.uuid.value + 2, resp + i + 2, attDataLen - 2);
@@ -551,13 +554,13 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 			delete[] resp;
 
 			currHandle = handles.rbegin()->handle + 1;
-			if (currHandle == 0 || currHandle >= endGroup) break;
-		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_FIND_INFO_REQ
-				&& resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
+			if (currHandle == 0 || currHandle >= endGroup) {
+				break;
+			}
+		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_FIND_INFO_REQ && resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
 			delete[] resp;
 			break;
-		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_FIND_INFO_REQ
-				&& resp[4] == ATT_ECODE_REQ_NOT_SUPP) {
+		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_FIND_INFO_REQ && resp[4] == ATT_ECODE_REQ_NOT_SUPP) {
 			delete[] resp;
 			break;
 		} else {
@@ -585,8 +588,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 		assert(handles.find(service.handle) == handles.end());
 		handles[service.handle] = serviceHandle;
 
-		std::vector<handle_value_t> characteristics = discoverCharacterisics(d,
-				serviceHandle->getHandle(),
+		std::vector<handle_value_t> characteristics = discoverCharacterisics(d, serviceHandle->getHandle(),
 				serviceHandle->getEndGroupHandle());
 		for (handle_value_t &characteristic : characteristics) {
 			Handle *charHandle = new Characteristic();
@@ -604,7 +606,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 		}
 
 		if (characteristics.size() > 0) {
-			for (int i = 0; i < (int)(characteristics.size() - 1); i++) {
+			for (int i = 0; i < (int) (characteristics.size() - 1); i++) {
 				handle_value_t characteristic = characteristics[i];
 				uint16_t startGroup = characteristic.handle + 1;
 				uint16_t endGroup = characteristics[i + 1].handle - 1;

@@ -48,7 +48,7 @@ handle_range_t BlockAllocator::getDeviceRange(device_t d) {
 			return ret;
 		}
 	}
-	return handle_range_t{0, 0};
+	return handle_range_t { 0, 0 };
 }
 
 device_t BlockAllocator::getDeviceForHandle(uint16_t handle) {
@@ -70,10 +70,10 @@ handle_range_t BlockAllocator::reserve(device_t d, int n) {
 			blocks[i] = d;
 			uint16_t base = i * (uint16_t) blockSize;
 			uint16_t ceil = base + (uint16_t) blockSize - 1;
-			return handle_range_t{base, ceil};
+			return handle_range_t { base, ceil };
 		}
 	}
-	return handle_range_t{0,0};
+	return handle_range_t { 0, 0 };
 }
 
 handle_range_t BlockAllocator::free(device_t d) {
@@ -82,8 +82,8 @@ handle_range_t BlockAllocator::free(device_t d) {
 			blocks[i] = NULL_RESERVED_DEVICE;
 			uint16_t base = i * (uint16_t) blockSize;
 			uint16_t ceil = base + (uint16_t) blockSize - 1;
-			return handle_range_t{base, ceil};
+			return handle_range_t { base, ceil };
 		}
 	}
-	return handle_range_t{0,0};
+	return handle_range_t { 0, 0 };
 }

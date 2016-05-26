@@ -22,8 +22,9 @@
 #include "sync/OrderedThreadPool.h"
 #include "util/write.h"
 
-TCPConnection::TCPConnection(Beetle &beetle, SSL *ssl_, int sockfd_, struct sockaddr_in sockaddr_,
-		bool isEndpoint, HandleAllocationTable *hat) : VirtualDevice(beetle, isEndpoint, hat), readThread() {
+TCPConnection::TCPConnection(Beetle &beetle, SSL *ssl_, int sockfd_, struct sockaddr_in sockaddr_, bool isEndpoint,
+		HandleAllocationTable *hat) :
+		VirtualDevice(beetle, isEndpoint, hat), readThread() {
 	ssl = ssl_;
 	sockfd = sockfd_;
 	sockaddr = sockaddr_;
@@ -37,12 +38,13 @@ TCPConnection::~TCPConnection() {
 	SSL_shutdown(ssl);
 	SSL_free(ssl);
 	shutdown(sockfd, SHUT_RDWR);
-	if (readThread.joinable()) readThread.join();
+	if (readThread.joinable())
+		readThread.join();
 	close(sockfd);
 }
 
 void TCPConnection::startInternal() {
-    readThread = std::thread(&TCPConnection::readDaemon, this);
+	readThread = std::thread(&TCPConnection::readDaemon, this);
 }
 
 bool TCPConnection::write(uint8_t *buf, int len) {
@@ -73,7 +75,8 @@ bool TCPConnection::write(uint8_t *buf, int len) {
 }
 
 void TCPConnection::readDaemon() {
-	if (debug) pdebug(getName() + " readDaemon started");
+	if (debug)
+		pdebug(getName() + " readDaemon started");
 	uint8_t buf[256];
 	uint8_t len;
 	while (!isStopped()) {
@@ -116,7 +119,9 @@ void TCPConnection::readDaemon() {
 				}
 			}
 
-			if (isStopped()) break;
+			if (isStopped()) {
+				break;
+			}
 
 			assert(bytesRead == len);
 			if (debug_socket) {
@@ -126,7 +131,9 @@ void TCPConnection::readDaemon() {
 			readHandler(buf, bytesRead);
 		}
 	}
-	if (debug) pdebug(getName() + " readDaemon exited");
+	if (debug) {
+		pdebug(getName() + " readDaemon exited");
+	}
 }
 
 int TCPConnection::getMTU() {

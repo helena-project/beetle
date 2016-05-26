@@ -28,13 +28,12 @@
 #include "tcp/TCPConnParams.h"
 #include "util/write.h"
 
-
 TCPServerProxy::TCPServerProxy(Beetle &beetle, SSL *ssl, int sockfd, std::string serverGateway_,
-		struct sockaddr_in serverGatewaySockAddr_, device_t remoteProxyTo_)
-: TCPConnection(beetle, ssl, sockfd, serverGatewaySockAddr_, new SingleAllocator(NULL_RESERVED_DEVICE)) {
+		struct sockaddr_in serverGatewaySockAddr_, device_t remoteProxyTo_) :
+		TCPConnection(beetle, ssl, sockfd, serverGatewaySockAddr_, new SingleAllocator(NULL_RESERVED_DEVICE)) {
 	type = TCP_SERVER_PROXY;
 
-	name = "Proxy to " +  std::to_string(remoteProxyTo_) + " from " + serverGateway_;
+	name = "Proxy to " + std::to_string(remoteProxyTo_) + " from " + serverGateway_;
 	serverGateway = serverGateway_;
 	remoteProxyTo = remoteProxyTo_;
 }
@@ -62,8 +61,7 @@ void TCPServerProxy::initSSL(SSLConfig *sslConfig_) {
 	sslConfig = sslConfig_;
 }
 
-TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host,
-		int port, device_t remoteProxyTo) {
+TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, int port, device_t remoteProxyTo) {
 	struct hostent *server;
 	server = gethostbyname(host.c_str());
 	if (server == NULL) {
@@ -75,52 +73,51 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host,
 		throw DeviceException("error opening socket");
 	}
 
-	struct sockaddr_in serv_addr = {0};
+	struct sockaddr_in serv_addr = { 0 };
 	serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr,
-         (char *)&serv_addr.sin_addr.s_addr,
-         server->h_length);
-    serv_addr.sin_port = htons(port);
+	bcopy((char *) server->h_addr,
+	(char *)&serv_addr.sin_addr.s_addr,
+	server->h_length);
+	serv_addr.sin_port = htons(port);
 
-    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) {
-    	close(sockfd);
-    	throw DeviceException("error connecting");
-    }
+	if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+		close(sockfd);
+		throw DeviceException("error connecting");
+	}
 
-    SSL *ssl = SSL_new(sslConfig->getCtx());
-    SSL_set_fd(ssl, sockfd);
-    if (SSL_connect(ssl) <= 0) {
-    	ERR_print_errors_fp(stderr);
-    	SSL_shutdown(ssl);
-    	SSL_free(ssl);
-    	close(sockfd);
-    	throw DeviceException("error on ssl connect");
-    }
+	SSL *ssl = SSL_new(sslConfig->getCtx());
+	SSL_set_fd(ssl, sockfd);
+	if (SSL_connect(ssl) <= 0) {
+		ERR_print_errors_fp(stderr);
+		SSL_shutdown(ssl);
+		SSL_free(ssl);
+		close(sockfd);
+		throw DeviceException("error on ssl connect");
+	}
 
-    /*
-     * Format the plaintext parameters.
-     */
-    std::stringstream ss;
-    ss << TCP_PARAM_GATEWAY << " " << beetle.name << "\n"
-    		<< TCP_PARAM_DEVICE << " " << std::to_string(remoteProxyTo);
+	/*
+	 * Format the plaintext parameters.
+	 */
+	std::stringstream ss;
+	ss << TCP_PARAM_GATEWAY << " " << beetle.name << "\n" << TCP_PARAM_DEVICE << " " << std::to_string(remoteProxyTo);
 
-    std::string clientParams = ss.str();
-    uint32_t clientParamsLen = htonl(clientParams.length());
-    if (SSL_write_all(ssl, (uint8_t *)&clientParamsLen, sizeof(clientParamsLen)) == false) {
-    	ERR_print_errors_fp(stderr);
-    	SSL_shutdown(ssl);
-    	SSL_free(ssl);
-    	close(sockfd);
-    	throw DeviceException("could not write params length");
-    }
+	std::string clientParams = ss.str();
+	uint32_t clientParamsLen = htonl(clientParams.length());
+	if (SSL_write_all(ssl, (uint8_t *) &clientParamsLen, sizeof(clientParamsLen)) == false) {
+		ERR_print_errors_fp(stderr);
+		SSL_shutdown(ssl);
+		SSL_free(ssl);
+		close(sockfd);
+		throw DeviceException("could not write params length");
+	}
 
-    if (SSL_write_all(ssl, (uint8_t *)clientParams.c_str(), clientParams.length()) == false) {
-    	ERR_print_errors_fp(stderr);
-    	SSL_shutdown(ssl);
-    	SSL_free(ssl);
-    	close(sockfd);
-    	throw DeviceException("could not write all the params");
-    }
+	if (SSL_write_all(ssl, (uint8_t *) clientParams.c_str(), clientParams.length()) == false) {
+		ERR_print_errors_fp(stderr);
+		SSL_shutdown(ssl);
+		SSL_free(ssl);
+		close(sockfd);
+		throw DeviceException("could not write all the params");
+	}
 
 	/*
 	 * Read params from the server.
@@ -163,9 +160,9 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host,
 		throw DeviceException("server gateway did not respond with name");
 	}
 
-    /*
-     * Instantiate the virtual device around the client socket.
-     */
-    return new TCPServerProxy(beetle, ssl, sockfd, serverParams[TCP_PARAM_GATEWAY], serv_addr, remoteProxyTo);
+	/*
+	 * Instantiate the virtual device around the client socket.
+	 */
+	return new TCPServerProxy(beetle, ssl, sockfd, serverParams[TCP_PARAM_GATEWAY], serv_addr, remoteProxyTo);
 }
 

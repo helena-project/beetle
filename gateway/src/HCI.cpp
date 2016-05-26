@@ -19,7 +19,6 @@
 
 #include "Debug.h"
 
-
 HCI::HCI() {
 	int deviceId = hci_get_route(NULL);
 	if (deviceId < 0) {
@@ -51,11 +50,10 @@ void HCI::resetHCI() {
 	sleep(1);
 }
 
-bool HCI::setConnectionInterval(uint16_t hciHandle, uint16_t minInterval,
-		uint16_t maxInterval, uint16_t latency, uint16_t supervisionTimeout, int to) {
+bool HCI::setConnectionInterval(uint16_t hciHandle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency,
+		uint16_t supervisionTimeout, int to) {
 	std::lock_guard<std::mutex> lg(m);
-	if (hci_le_conn_update(dd, hciHandle, minInterval, maxInterval, latency,
-			supervisionTimeout, to) < 0) {
+	if (hci_le_conn_update(dd, hciHandle, minInterval, maxInterval, latency, supervisionTimeout, to) < 0) {
 		std::stringstream ss;
 		ss << "error setting HCI connection interval : " << strerror(errno);
 		pwarn(ss.str());
@@ -63,7 +61,4 @@ bool HCI::setConnectionInterval(uint16_t hciHandle, uint16_t minInterval,
 	}
 	return true;
 }
-
-
-
 

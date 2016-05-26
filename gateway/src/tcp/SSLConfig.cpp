@@ -54,27 +54,26 @@ SSLConfig::SSLConfig(bool verifyPeers, bool isServer, std::string cert, std::str
 			throw std::invalid_argument("key not found: " + key);
 		}
 
-	    /* Set the key and cert */
-	    if (SSL_CTX_use_certificate_file(ctx, cert.c_str(), SSL_FILETYPE_PEM) < 0) {
-	    	ERR_print_errors_fp(stderr);
-	    	exit(EXIT_FAILURE);
-	    }
+		/* Set the key and cert */
+		if (SSL_CTX_use_certificate_file(ctx, cert.c_str(), SSL_FILETYPE_PEM) < 0) {
+			ERR_print_errors_fp(stderr);
+			exit(EXIT_FAILURE);
+		}
 
-	    if (SSL_CTX_use_PrivateKey_file(ctx, key.c_str(), SSL_FILETYPE_PEM) < 0 ) {
-	        ERR_print_errors_fp(stderr);
-	        exit(EXIT_FAILURE);
-	    }
+		if (SSL_CTX_use_PrivateKey_file(ctx, key.c_str(), SSL_FILETYPE_PEM) < 0) {
+			ERR_print_errors_fp(stderr);
+			exit(EXIT_FAILURE);
+		}
 	}
 }
 
 SSLConfig::~SSLConfig() {
-    SSL_CTX_free(ctx);
-    ERR_free_strings();
-    EVP_cleanup();
+	SSL_CTX_free(ctx);
+	ERR_free_strings();
+	EVP_cleanup();
 }
 
 SSL_CTX *SSLConfig::getCtx() {
 	return ctx;
 }
-
 
