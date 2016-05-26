@@ -888,7 +888,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 						return;
 					}
 
-					if (resp == NULL) {
+					if (resp == NULL || respLen <= 0) {
 						uint8_t err[ATT_ERROR_PDU_LEN];
 						pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);
 						beetle.devices[src]->writeResponse(err, ATT_ERROR_PDU_LEN);
@@ -950,7 +950,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 							return;
 						}
 
-						if (resp == NULL) {
+						if (resp == NULL || respLen <= 0) {
 							uint8_t err[ATT_ERROR_PDU_LEN];
 							pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);
 							beetle.devices[src]->writeResponse(err, ATT_ERROR_PDU_LEN);

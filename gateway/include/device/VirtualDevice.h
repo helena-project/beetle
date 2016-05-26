@@ -60,16 +60,6 @@ protected:
 	void readHandler(uint8_t *buf, int len);
 
 	/*
-	 * Stops processing of requests due to internal reason. Destroys the device.
-	 */
-	void stopInternal();
-
-	/*
-	 * Has stop been called either internally, externally, or by the destructor?
-	 */
-	bool isStopped();
-
-	/*
 	 * Called by base class to write packet.
 	 */
 	virtual bool write(uint8_t *buf, int len) = 0;

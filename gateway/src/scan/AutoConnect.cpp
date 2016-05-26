@@ -52,7 +52,7 @@ AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, s
 				if (isBdAddr(addr)) {
 					blacklist.insert(addr);
 				} else {
-					throw std::invalid_argument("invalid address in blacklist file - " + addr);
+					throw std::domain_error("invalid address in blacklist file - " + addr);
 				}
 			}
 		}

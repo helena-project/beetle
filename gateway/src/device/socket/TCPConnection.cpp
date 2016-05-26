@@ -31,7 +31,7 @@ TCPConnection::TCPConnection(Beetle &beetle, SSL *ssl_, int sockfd_, struct sock
 }
 
 TCPConnection::~TCPConnection() {
-	terminated = true;
+	stopped = true;
 
 	pendingWrites.wait();
 	if (debug_socket) {
@@ -50,28 +50,28 @@ void TCPConnection::startInternal() {
 }
 
 bool TCPConnection::write(uint8_t *buf, int len) {
-	if (terminated) {
+	if (stopped) {
 		return false;
 	}
 
-	uint8_t *bufCpy = new uint8_t[len];
-	memcpy(bufCpy, buf, len);
+	std::shared_ptr<uint8_t> bufCpy(new uint8_t[len]);
+	memcpy(bufCpy.get(), buf, len);
 	pendingWrites.increment();
 	beetle.writers.schedule(getId(), [this, bufCpy, len] {
 		uint8_t bufLen = len;
-		if (SSL_write_all(ssl, &bufLen, 1) != 1 || SSL_write_all(ssl, bufCpy, len) != len) {
+		if (SSL_write_all(ssl, &bufLen, 1) != 1 || SSL_write_all(ssl, bufCpy.get(), len) != len) {
 			if (debug_socket) {
 				std::stringstream ss;
 				ss << "socket write failed : " << strerror(errno);
 				pdebug(ss.str());
 			}
-			terminate();
+			stopInternal();
+		} else {
+			if (debug_socket) {
+				pdebug(getName() + " wrote " + std::to_string(len) + " bytes");
+				pdebug(bufCpy.get(), len);
+			}
 		}
-		if (debug_socket) {
-			pdebug(getName() + " wrote " + std::to_string(len) + " bytes");
-			pdebug(bufCpy, len);
-		}
-		delete[] bufCpy;
 		pendingWrites.decrement();
 	});
 	return true;
@@ -91,7 +91,7 @@ void TCPConnection::readDaemon() {
 				std::stringstream ss;
 				ss << "socket errno: " << strerror(errno);
 			}
-			terminate();
+			stopInternal();
 			break;
 		} else {
 			assert(bytesRead == 1);
@@ -110,7 +110,7 @@ void TCPConnection::readDaemon() {
 				int n = SSL_read(ssl, buf + bytesRead, len - bytesRead);
 				if (n < 0) {
 					std::cerr << "socket errno: " << strerror(errno) << std::endl;
-					terminate();
+					stopInternal();
 					break;
 				} else {
 					bytesRead += n;
@@ -141,8 +141,8 @@ struct sockaddr_in TCPConnection::getSockaddr() {
 	return sockaddr;
 }
 
-void TCPConnection::terminate() {
-	if(!terminated.exchange(true)) {
+void TCPConnection::stopInternal() {
+	if(!stopped.exchange(true)) {
 		if (debug) {
 			pdebug("terminating " + getName());
 		}

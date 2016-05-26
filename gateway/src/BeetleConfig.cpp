@@ -28,7 +28,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 	json config;
 	if (filename != "") {
 		if (!file_exists(filename)) {
-			throw std::invalid_argument("configuration file not found");
+			throw ConfigException("configuration file not found");
 		}
 		std::ifstream ifs(filename);
 		ifs >> config;
@@ -46,7 +46,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 			if (it.key() == "enable") {
 				scanEnabled = it.value();
 			} else {
-				throw std::invalid_argument("unknown scan param: " + it.key());
+				throw ConfigException("unknown scan param: " + it.key());
 			}
 		}
 	}
@@ -61,10 +61,10 @@ BeetleConfig::BeetleConfig(std::string filename) {
 			} else if (it.key() == "blacklist") {
 				autoConnectBlacklist = it.value();
 				if (autoConnectBlacklist != "" && !file_exists(autoConnectBlacklist)) {
-					throw std::invalid_argument("file does not exist: " + autoConnectBlacklist);
+					throw ConfigException("file does not exist: " + autoConnectBlacklist);
 				}
 			} else {
-				throw std::invalid_argument("unknown scan param: " + it.key());
+				throw ConfigException("unknown autoConnect param: " + it.key());
 			}
 		}
 	}
@@ -77,7 +77,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 			} else if (it.key() == "port") {
 				tcpPort = it.value();
 			} else {
-				throw std::invalid_argument("unknown tcp param: " + it.key());
+				throw ConfigException("unknown tcp param: " + it.key());
 			}
 		}
 	}
@@ -90,7 +90,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 			} else if (it.key() == "path") {
 				ipcPath = it.value();
 			} else {
-				throw std::invalid_argument("unknown ipc param: " + it.key());
+				throw ConfigException("unknown ipc param: " + it.key());
 			}
 		}
 	}
@@ -105,7 +105,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 			} else if (it.key() == "port") {
 				controllerPort = it.value();
 			} else {
-				throw std::invalid_argument("unknown controller param: " + it.key());
+				throw ConfigException("unknown controller param: " + it.key());
 			}
 		}
 	}
@@ -118,25 +118,25 @@ BeetleConfig::BeetleConfig(std::string filename) {
 			} else if (it.key() == "serverKey") {
 				sslServerKey = it.value();
 				if (sslServerKey != "" && !file_exists(sslServerKey)) {
-					throw std::invalid_argument("file does not exist: " + sslServerKey);
+					throw ConfigException("file does not exist: " + sslServerKey);
 				}
 			} else if (it.key() == "serverCert") {
 				sslServerCert = it.value();
 				if (sslServerCert != "" && !file_exists(sslServerCert)) {
-					throw std::invalid_argument("file does not exist: " + sslServerCert);
+					throw ConfigException("file does not exist: " + sslServerCert);
 				}
 			} else if (it.key() == "clientKey") {
 				sslClientKey = it.value();
 				if (sslClientKey != "" && !file_exists(sslClientKey)) {
-					throw std::invalid_argument("file does not exist: " + sslClientKey);
+					throw ConfigException("file does not exist: " + sslClientKey);
 				}
 			} else if (it.key() == "clientCert") {
 				sslClientCert = it.value();
 				if (sslClientCert != "" && !file_exists(sslClientCert)) {
-					throw std::invalid_argument("file does not exist: " + sslClientCert);
+					throw ConfigException("file does not exist: " + sslClientCert);
 				}
 			} else {
-				throw std::invalid_argument("unknown ssl param: " + it.key());
+				throw ConfigException("unknown ssl param: " + it.key());
 			}
 		}
 	}
@@ -157,7 +157,7 @@ BeetleConfig::BeetleConfig(std::string filename) {
 			} else if (it.key() == "controller") {
 				debugController = it.value();
 			} else {
-				throw std::invalid_argument("unknown debug param: " + it.key());
+				throw ConfigException("unknown debug param: " + it.key());
 			}
 		}
 	}

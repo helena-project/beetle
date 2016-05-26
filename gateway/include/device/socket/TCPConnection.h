@@ -43,8 +43,8 @@ private:
 
 	struct sockaddr_in sockaddr;
 
-	std::atomic_bool terminated;
-	void terminate();
+	std::atomic_bool stopped;
+	void stopInternal();
 
 	std::thread readThread;
 	void readDaemon();

@@ -10,6 +10,17 @@
 
 #include <string>
 
+class ConfigException : public std::exception {
+public:
+	ConfigException(std::string msg) : msg(msg) {};
+	ConfigException(const char *msg) : msg(msg) {};
+	~ConfigException() throw() {};
+	const char *what() const throw() { return this->msg.c_str(); };
+private:
+	std::string msg;
+};
+
+
 class BeetleConfig {
 public:
 	/*

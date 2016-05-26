@@ -76,19 +76,11 @@ void VirtualDevice::start(bool discoverHandles) {
 	if (discoverHandles) {
 		startInternal();
 
-		//	std::string discoveredName = discoverDeviceName(this);
-		//	if (name != "") {
-		//		if (discoveredName != name) {
-		//			pwarn("discovered name " + discoveredName + " does not equal " + name);
-		//		}
-		//	} else {
-		//		name = discoveredName;
-		//	}
-
 		if (name == "") {
-			name = discoverDeviceName(this);
+			name = discoverDeviceName(this); /* May throw device exception */
 		}
 
+		/* May throw device exception */
 		std::map<uint16_t, Handle *> handlesTmp = discoverAllHandles(this);
 
 		handlesMutex.lock();
@@ -100,7 +92,7 @@ void VirtualDevice::start(bool discoverHandles) {
 		startInternal();
 
 		if (name == "") {
-			name = "<unknown>";
+			throw DeviceException("device must have a name");
 		}
 	}
 }
@@ -146,8 +138,10 @@ int VirtualDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&res
 	std::shared_ptr<int> respLenPtr(new int);
 	std::shared_ptr<std::unique_ptr<uint8_t>> respPtr(new std::unique_ptr<uint8_t>());
 	writeTransaction(buf, len, [sema, respPtr, respLenPtr](uint8_t *resp_, int respLen_) {
-		respPtr->reset(new uint8_t[respLen_]);
-		memcpy(respPtr->get(), resp_, respLen_);
+		if (resp_ != NULL && respLen_ > 0) {
+			respPtr->reset(new uint8_t[respLen_]);
+			memcpy(respPtr->get(), resp_, respLen_);
+		}
 		*respLenPtr = respLen_;
 		sema->notify();
 	});
@@ -333,7 +327,7 @@ static std::string discoverDeviceName(VirtualDevice *d) {
 	int reqLen = pack_read_by_type_req_pdu(GATT_GAP_CHARAC_DEVICE_NAME_UUID, 0x1, 0xFFFF, req);
 	int respLen = d->writeTransactionBlocking(req, reqLen, resp);
 	if (resp == NULL || respLen < 4 || resp[0] != ATT_OP_READ_BY_TYPE_RESP) {
-		name = "unknown";
+		throw DeviceException("device returned no name");
 	} else {
 		char cName[respLen - 4 + 1];
 		memcpy(cName, resp + 4, respLen - 4);

@@ -71,7 +71,7 @@ LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType) :
 }
 
 LEPeripheral::~LEPeripheral() {
-	terminated = true;
+	stopped = true;
 
 	pendingWrites.wait();
 	if (debug_socket) {
@@ -101,27 +101,27 @@ struct l2cap_conninfo LEPeripheral::getL2capConnInfo() {
 }
 
 bool LEPeripheral::write(uint8_t *buf, int len) {
-	if (terminated) {
+	if (stopped) {
 		return false;
 	}
 
-	uint8_t *bufCpy = new uint8_t[len];
-	memcpy(bufCpy, buf, len);
+	std::shared_ptr<uint8_t> bufCpy(new uint8_t[len]);
+	memcpy(bufCpy.get(), buf, len);
 	pendingWrites.increment();
 	beetle.writers.schedule(getId(), [this, bufCpy, len] {
-		if (write_all(sockfd, bufCpy, len) != len) {
+		if (write_all(sockfd, bufCpy.get(), len) != len) {
 			if (debug_socket) {
 				std::stringstream ss;
 				ss << "socket write failed : " << strerror(errno);
 				pdebug(ss.str());
 			}
-			terminate();
+			stopInternal();
+		} else {
+			if (debug_socket) {
+				pdebug(getName() + " wrote " + std::to_string(len) + " bytes");
+				pdebug(bufCpy.get(), len);
+			}
 		}
-		if (debug_socket) {
-			pdebug(getName() + " wrote " + std::to_string(len) + " bytes");
-			pdebug(bufCpy, len);
-		}
-		delete[] bufCpy;
 		pendingWrites.decrement();
 	});
 	return true;
@@ -143,7 +143,7 @@ void LEPeripheral::readDaemon() {
 				std::stringstream ss;
 				ss << "socket errno: " << strerror(errno);
 			}
-			terminate();
+			stopInternal();
 			break;
 		} else {
 			if (debug_socket) {
@@ -158,8 +158,8 @@ void LEPeripheral::readDaemon() {
 	}
 }
 
-void LEPeripheral::terminate() {
-	if(!terminated.exchange(true)) {
+void LEPeripheral::stopInternal() {
+	if(!stopped.exchange(true)) {
 		if (debug) {
 			pdebug("terminating " + getName());
 		}
