@@ -48,8 +48,8 @@ NetworkAuth::NetworkAuth(rule_t r, std::string ip_, bool isPrivate_) : DynamicAu
 	ip = ip_;
 }
 
-void NetworkAuth::evaluate(std::shared_ptr<ControllerClient> cc, Device *from, Device *to) {
-	TCPClient *tcpTo = dynamic_cast<TCPClient *>(to);
+void NetworkAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<Device> from, std::shared_ptr<Device> to) {
+	auto tcpTo = std::dynamic_pointer_cast<TCPClient>(to);
 	if (tcpTo) {
 		struct sockaddr_in addr = tcpTo->getSockaddr();
 		if (isPrivate) {
@@ -73,7 +73,7 @@ PasscodeAuth::PasscodeAuth(rule_t r) : DynamicAuth(r) {
 
 }
 
-void PasscodeAuth::evaluate(std::shared_ptr<ControllerClient> cc, Device *from, Device *to) {
+void PasscodeAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<Device> from, std::shared_ptr<Device> to) {
 	if (state == SATISFIED) {
 		return;
 	}
@@ -127,7 +127,8 @@ AdminAuth::AdminAuth(rule_t r) : DynamicAuth(r) {
 
 }
 
-void AdminAuth::evaluate(std::shared_ptr<ControllerClient> cc, Device *from, Device *to) {
+void AdminAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<Device> from,
+		std::shared_ptr<Device> to) {
 	if (state == SATISFIED) {
 		return;
 	}
@@ -180,7 +181,8 @@ UserAuth::UserAuth(rule_t r) : DynamicAuth(r) {
 
 }
 
-void UserAuth::evaluate(std::shared_ptr<ControllerClient> cc, Device *from, Device *to) {
+void UserAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<Device> from,
+		std::shared_ptr<Device> to) {
 	if (state == SATISFIED) {
 		return;
 	}

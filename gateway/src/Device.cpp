@@ -33,10 +33,10 @@ Device::Device(Beetle &beetle_, HandleAllocationTable *hat_) : Device(beetle_, i
 
 Device::Device(Beetle &beetle_, device_t id_, HandleAllocationTable *hat_) : beetle(beetle_) {
 	id = id_;
-	hat = hat_;
-	if (!hat) {
-		hat = new BlockAllocator(256);
+	if (!hat_) {
+		hat_= new BlockAllocator(256);
 	}
+	hat.reset(hat_);
 	type = UNKNOWN;
 }
 
@@ -47,10 +47,6 @@ Device::~Device() {
 	}
 	handles.clear();
 	handlesMutex.unlock();
-
-	hatMutex.lock();
-	delete hat;
-	hatMutex.lock();
 }
 
 device_t Device::getId() {

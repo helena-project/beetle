@@ -169,10 +169,13 @@ int VirtualDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&res
 		resp = NULL;
 		return -1;
 	} else {
-		if (sema->try_wait(30)) {
+		if (sema->try_wait(10)) {
 			resp = respPtr->release();
 			return *respLenPtr;
 		} else {
+			if (debug) {
+				pdebug("blocking transaction timed out");
+			}
 			resp = NULL;
 			return -1;
 		}
@@ -285,7 +288,7 @@ void VirtualDevice::discoverNetworkServices(UUID serviceUuid) {
 			 */
 			beetle.devicesMutex.lock_shared();
 			for (auto &kv: beetle.devices) {
-				TCPServerProxy *tcpSp = dynamic_cast<TCPServerProxy *>(kv.second);
+				auto tcpSp = std::dynamic_pointer_cast<TCPServerProxy>(kv.second);
 				if (tcpSp && tcpSp->getServerGateway() == d.gateway
 						&& tcpSp->getRemoteDeviceId() == d.id) {
 					localId = tcpSp->getId();
@@ -299,13 +302,13 @@ void VirtualDevice::discoverNetworkServices(UUID serviceUuid) {
 					/*
 					 * Try to connect and map from remote.
 					 */
-					VirtualDevice *device = NULL;
+					std::shared_ptr<VirtualDevice> device = NULL;
 					try {
-						device = TCPServerProxy::connectRemote(beetle, d.ip, d.port, d.id);
+						device.reset(TCPServerProxy::connectRemote(beetle, d.ip, d.port, d.id));
 						localId = device->getId();
 						sync.notify();
 
-						beetle.addDevice(device);
+						beetle.addDevice(std::dynamic_pointer_cast<Device>(device));
 
 						device->start();
 

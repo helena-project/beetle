@@ -13,6 +13,7 @@
 #include <exception>
 #include <functional>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 
@@ -81,7 +82,7 @@ public:
 	/*
 	 * Handle address offsets that this device is a client to.
 	 */
-	HandleAllocationTable *hat;
+	std::unique_ptr<HandleAllocationTable> hat;
 	std::mutex hatMutex;
 
 	/*

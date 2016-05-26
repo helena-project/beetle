@@ -38,7 +38,7 @@ AccessControl::~AccessControl() {
 
 }
 
-bool AccessControl::canMap(Device *from, Device *to) {
+bool AccessControl::canMap(std::shared_ptr<Device> from, std::shared_ptr<Device> to) {
 	std::string fromGateway;
 	device_t fromId;
 	switch (from->getType()) {
@@ -54,7 +54,7 @@ bool AccessControl::canMap(Device *from, Device *to) {
 	case Device::TCP_CLIENT_PROXY:
 		return false;
 	case Device::TCP_SERVER_PROXY: {
-		TCPServerProxy *fromCast = dynamic_cast<TCPServerProxy *>(from);
+		auto fromCast = std::dynamic_pointer_cast<TCPServerProxy>(from);
 		fromGateway = fromCast->getServerGateway();
 		fromId = fromCast->getRemoteDeviceId();
 		break;
@@ -150,7 +150,7 @@ RemoveDeviceHandler AccessControl::getRemoveDeviceHandler() {
 	};
 }
 
-bool AccessControl::acquireExclusiveLease(Device *to, exclusive_lease_t exclusiveId,
+bool AccessControl::acquireExclusiveLease(std::shared_ptr<Device> to, exclusive_lease_t exclusiveId,
 		bool &newlyAcquired) {
 	std::unique_lock<std::mutex> leasesLk(leasesMutex);
 	if (leases[to->getId()].find(exclusiveId) != leases[to->getId()].end()) {
@@ -203,7 +203,7 @@ bool AccessControl::acquireExclusiveLease(Device *to, exclusive_lease_t exclusiv
 	}
 }
 
-void AccessControl::releaseExclusiveLease(Device *to, exclusive_lease_t exclusiveId) {
+void AccessControl::releaseExclusiveLease(std::shared_ptr<Device> to, exclusive_lease_t exclusiveId) {
 	std::unique_lock<std::mutex> leasesLk(leasesMutex);
 	leases[to->getId()].erase(exclusiveId);
 	leasesLk.unlock();
@@ -240,7 +240,7 @@ void AccessControl::releaseExclusiveLease(Device *to, exclusive_lease_t exclusiv
 /*
  * Unpacks the controller response and returns whether the mapping is allowed.
  */
-bool AccessControl::handleCanMapResponse(Device *from, Device *to, std::stringstream &response) {
+bool AccessControl::handleCanMapResponse(std::shared_ptr<Device> from, std::shared_ptr<Device> to, std::stringstream &response) {
 	json j;
 	j << response;
 
@@ -408,11 +408,11 @@ static inline bool isWriteReq(uint8_t op) {
 			|| op == ATT_OP_EXEC_WRITE_REQ;
 }
 
-bool AccessControl::canAccessHandle(Device *client, Device *server, Handle *handle,
+bool AccessControl::canAccessHandle(std::shared_ptr<Device> client, std::shared_ptr<Device> server, Handle *handle,
 		uint8_t op, uint8_t &attErr) {
-	if (dynamic_cast<TCPClientProxy *>(client)) {
+	if (client->getType() == Device::TCP_CLIENT_PROXY) {
 		return true;
-	} else if (dynamic_cast<TCPServerProxy *>(client)) {
+	} else if (client->getType() == Device::TCP_SERVER_PROXY) {
 		return false;
 	}
 
@@ -546,12 +546,12 @@ bool AccessControl::canAccessHandle(Device *client, Device *server, Handle *hand
 	}
 }
 
-bool AccessControl::getCharAccessProperties(Device *client, Device *server, Handle *handle, uint8_t &properties) {
+bool AccessControl::getCharAccessProperties(std::shared_ptr<Device> client, std::shared_ptr<Device> server, Handle *handle, uint8_t &properties) {
 	boost::shared_lock<boost::shared_mutex> lk(cacheMutex);
-	if (dynamic_cast<TCPClientProxy *>(client)) {
+	if (client->getType() == Device::TCP_CLIENT_PROXY) {
 		properties = 0xFF;
 		return true;
-	} else if (dynamic_cast<TCPServerProxy *>(client)) {
+	} else if (client->getType() == Device::TCP_SERVER_PROXY) {
 		return false;
 	}
 
@@ -592,10 +592,11 @@ bool AccessControl::getCharAccessProperties(Device *client, Device *server, Hand
 	return false;
 }
 
-bool AccessControl::canReadType(Device *client, Device *server, UUID &attType) {
-	if (dynamic_cast<TCPClientProxy *>(client)) {
+bool AccessControl::canReadType(std::shared_ptr<Device> client, std::shared_ptr<Device> server,
+		UUID &attType) {
+	if (std::dynamic_pointer_cast<TCPClientProxy>(client)) {
 		return true;
-	} else if (dynamic_cast<TCPServerProxy *>(client)) {
+	} else if (std::dynamic_pointer_cast<TCPServerProxy>(client)) {
 		return false;
 	}
 

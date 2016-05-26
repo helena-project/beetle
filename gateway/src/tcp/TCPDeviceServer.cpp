@@ -151,19 +151,19 @@ void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_
     /*
      * Instantiate the virtual device around the client socket.
      */
-	VirtualDevice *device = NULL;
+	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
 		/*
 		 * Takes over the clifd
 		 */
 		if (clientParams.find(TCP_PARAM_GATEWAY) == clientParams.end()) {
-			device = new TCPClient(beetle, ssl, clifd, clientParams[TCP_PARAM_CLIENT], cliaddr);
+			device.reset(new TCPClient(beetle, ssl, clifd, clientParams[TCP_PARAM_CLIENT], cliaddr));
 		} else {
 			// name of the client gateway
 			std::string client = clientParams[TCP_PARAM_GATEWAY];
 			// device that the client is requesting
 			device_t deviceId = std::stol(clientParams[TCP_PARAM_DEVICE]);
-			device = new TCPClientProxy(beetle, ssl, clifd, client, cliaddr, deviceId);
+			device.reset(new TCPClientProxy(beetle, ssl, clifd, client, cliaddr, deviceId));
 		}
 
 		device->start(clientParams[TCP_PARAM_SERVER] == "true");

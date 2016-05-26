@@ -34,7 +34,7 @@ public:
 	 * Add a device to Beetle's mappings. Threadsafe.
 	 * Do not call while holding devices or hat mutexes.
 	 */
-	void addDevice(Device *);
+	void addDevice(std::shared_ptr<Device>);
 
 	/*
 	 * Removes a device from Beetle's mappings and unsubscribes
@@ -79,7 +79,7 @@ public:
 	/*
 	 * Global map of all devices at this instance.
 	 */
-	std::map<device_t, Device *> devices;
+	std::map<device_t, std::shared_ptr<Device>> devices;
 	boost::shared_mutex devicesMutex;
 
 	/*
@@ -90,12 +90,12 @@ public:
 	/*
 	 * Simulated device for Beetle's own services.
 	 */
-	BeetleInternal *beetleDevice;
+	std::shared_ptr<BeetleInternal> beetleDevice;
 
 	/*
 	 * Router object to route ATT packets
 	 */
-	Router *router;
+	std::unique_ptr<Router> router;
 
 	/*
 	 * HCI socket

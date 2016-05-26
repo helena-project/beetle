@@ -14,17 +14,18 @@
 #include "Router.h"
 
 Beetle::Beetle(std::string name_) : workers(4), writers(4) {
-	router = new Router(*this);
-	beetleDevice = new BeetleInternal(*this, name_);
-	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
+	router.reset(new Router(*this));
+	beetleDevice.reset(new BeetleInternal(*this, name_));
+	devices[BEETLE_RESERVED_DEVICE] = std::dynamic_pointer_cast<Device>(beetleDevice);
 	name = name_;
 }
 
 Beetle::~Beetle() {
-
+	boost::unique_lock<boost::shared_mutex> devicesLk(devicesMutex);
+	devices.clear();
 }
 
-void Beetle::addDevice(Device *d) {
+void Beetle::addDevice(std::shared_ptr<Device> d) {
 	boost::unique_lock<boost::shared_mutex> deviceslk(devicesMutex);
 	device_t id = d->getId();
 	devices[id] = d;
@@ -46,7 +47,7 @@ void Beetle::removeDevice(device_t id) {
 		return;
 	}
 
-	Device *d = devices[id];
+	std::shared_ptr<Device> d = devices[id];
 	devices.erase(id);
 
 	d->hatMutex.lock();
@@ -70,8 +71,6 @@ void Beetle::removeDevice(device_t id) {
 			beetleDevice->informServicesChanged(kv.second->hat->free(id), kv.first);
 		}
 	}
-
-	workers.schedule([d] { delete d; });
 
 	for (auto &h : removeHandlers) {
 		workers.schedule([h,id] { h(id); });
@@ -105,8 +104,8 @@ void Beetle::mapDevices(device_t from, device_t to) {
 		return;
 	}
 
-	Device *fromD = devices[from];
-	Device *toD = devices[to];
+	std::shared_ptr<Device> fromD = devices[from];
+	std::shared_ptr<Device> toD = devices[to];
 	if (accessControl && accessControl->canMap(fromD, toD) == false) {
 		pwarn("permission denied");
 		return;
@@ -145,7 +144,7 @@ void Beetle::unmapDevices(device_t from, device_t to) {
 		return;
 	}
 
-	Device *toD = devices[to];
+	std::shared_ptr<Device> toD = devices[to];
 
 	std::lock_guard<std::mutex> hatLg(toD->hatMutex);
 	handle_range_t range = toD->hat->free(from);

@@ -83,12 +83,12 @@ void UnixDomainSocketServer::serverDaemon(std::string path) {
 
 void UnixDomainSocketServer::startIPCDeviceHelper(int clifd, struct sockaddr_un cliaddr,
 		struct ucred clicred) {
-	VirtualDevice *device = NULL;
+	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
 		/*
 		 * Takes over the clifd
 		 */
-		device = new IPCApplication(beetle, clifd, "PID-" + std::to_string(clicred.pid), cliaddr, clicred);
+		device.reset(new IPCApplication(beetle, clifd, "PID-" + std::to_string(clicred.pid), cliaddr, clicred));
 
 		beetle.addDevice(device);
 		device->start();

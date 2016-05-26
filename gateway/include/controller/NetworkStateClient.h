@@ -31,8 +31,8 @@ private:
 
 	std::shared_ptr<ControllerClient> client;
 
-	void addDeviceHelper(Device *device);
-	void updateDeviceHelper(Device *device);
+	void addDeviceHelper(std::shared_ptr<Device> device);
+	void updateDeviceHelper(std::shared_ptr<Device> device);
 	void removeDeviceHelper(device_t d);
 };
 

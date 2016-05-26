@@ -97,7 +97,7 @@ AddDeviceHandler NetworkStateClient::getAddDeviceHandler() {
 			}
 			return;
 		}
-		Device *device = beetle.devices[d];
+		std::shared_ptr<Device> device = beetle.devices[d];
 		switch (device->getType()) {
 		case Device::IPC_APPLICATION:
 		case Device::LE_PERIPHERAL:
@@ -142,7 +142,7 @@ UpdateDeviceHandler NetworkStateClient::getUpdateDeviceHandler() {
 			}
 			return;
 		}
-		Device *device = beetle.devices[d];
+		std::shared_ptr<Device> device = beetle.devices[d];
 		switch (device->getType()) {
 		case Device::IPC_APPLICATION:
 		case Device::LE_PERIPHERAL:
@@ -175,7 +175,7 @@ RemoveDeviceHandler NetworkStateClient::getRemoveDeviceHandler() {
 	};
 }
 
-static std::string serializeHandles(Device *d) {
+static std::string serializeHandles(std::shared_ptr<Device> d) {
 	std::lock_guard<std::recursive_mutex> lg(d->handlesMutex);
 
 	std::list<json> arr;
@@ -213,7 +213,7 @@ static std::string serializeHandles(Device *d) {
 	return json(arr).dump();
 }
 
-void NetworkStateClient::addDeviceHelper(Device *d) {
+void NetworkStateClient::addDeviceHelper(std::shared_ptr<Device> d) {
 	std::string url = client->getUrl(
 			"network/connect/" + beetle.name + "/" + d->getName() + "/" + std::to_string(d->getId()));
 	if (debug_controller) {
@@ -246,7 +246,7 @@ void NetworkStateClient::addDeviceHelper(Device *d) {
 	}
 }
 
-void NetworkStateClient::updateDeviceHelper(Device *d) {
+void NetworkStateClient::updateDeviceHelper(std::shared_ptr<Device> d) {
 	std::string url = client->getUrl(
 			"network/connect/" + beetle.name + "/" + std::to_string(d->getId()));
 	if (debug_controller) {

@@ -55,28 +55,31 @@ public:
 	/*
 	 * Caller should hold at least a read lock on devices.
 	 */
-	bool canMap(Device *from, Device *to);
+	bool canMap(std::shared_ptr<Device> from, std::shared_ptr<Device> to);
 
 	/*
 	 * Return: whether access is permitted, and the error code if not
 	 *
 	 * Caller should hold device and handle locks.
 	 */
-	bool canAccessHandle(Device *client, Device *server, Handle *h, uint8_t op, uint8_t &attErr);
+	bool canAccessHandle(std::shared_ptr<Device> client, std::shared_ptr<Device> server,
+			Handle *h, uint8_t op, uint8_t &attErr);
 
 	/*
 	 * Return: whether access is permitted, and the properties.
 	 *
 	 * Caller should hold device and handle locks.
 	 */
-	bool getCharAccessProperties(Device *client, Device *server, Handle *h, uint8_t &properties);
+	bool getCharAccessProperties(std::shared_ptr<Device> client, std::shared_ptr<Device> server,
+			Handle *h, uint8_t &properties);
 
 	/*
 	 * Return: whether the uuid type may be read.
 	 *
 	 * Caller should hold device and handle locks.
 	 */
-	bool canReadType(Device *client, Device *server, UUID &attType);
+	bool canReadType(std::shared_ptr<Device> client, std::shared_ptr<Device> server,
+			UUID &attType);
 
 	/*
 	 * Get handler to clear irrelevant cached rules.
@@ -90,12 +93,14 @@ private:
 	std::map<std::pair<device_t, device_t>, cached_mapping_info_t> cache;
 	boost::shared_mutex cacheMutex;
 
-	bool handleCanMapResponse(Device *from, Device *to, std::stringstream &response);
+	bool handleCanMapResponse(std::shared_ptr<Device> from, std::shared_ptr<Device> to,
+			std::stringstream &response);
 
 	std::map<device_t, std::map<exclusive_lease_t, time_t>> leases;
 	std::mutex leasesMutex;
-	bool acquireExclusiveLease(Device *to, exclusive_lease_t id, bool &newlyAcquired);
-	void releaseExclusiveLease(Device *to, exclusive_lease_t id);
+	bool acquireExclusiveLease(std::shared_ptr<Device> to, exclusive_lease_t id,
+			bool &newlyAcquired);
+	void releaseExclusiveLease(std::shared_ptr<Device> to, exclusive_lease_t id);
 };
 
 #endif /* CONTROLLER_ACCESSCONTROL_H_ */

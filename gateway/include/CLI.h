@@ -67,7 +67,7 @@ private:
 	/*
 	 * Matches a device string, which may be an address, device id, or name (case-insensitive).
 	 */
-	Device *matchDevice(const std::string &device);
+	std::shared_ptr<Device> matchDevice(const std::string &device);
 
 	std::mutex discoveredMutex;
 	std::map<std::string, peripheral_info_t> discovered;

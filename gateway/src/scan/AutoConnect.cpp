@@ -59,9 +59,9 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 			 */
 			boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 			for (auto &kv : beetle.devices) {
-				LEPeripheral *le = NULL;
+				std::shared_ptr<LEPeripheral> le = NULL;
 				if (kv.second->getType() == Device::LE_PERIPHERAL &&
-						(le = dynamic_cast<LEPeripheral *>(kv.second))) {
+						(le = std::dynamic_pointer_cast<LEPeripheral>(kv.second))) {
 					if (le->getAddrType() == info.bdaddrType &&
 							memcmp(le->getBdaddr().b, info.bdaddr.b, sizeof(bdaddr_t))) {
 						maxConcurrentAttempts.notify();
@@ -92,9 +92,9 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 }
 
 void AutoConnect::connect(peripheral_info_t info, autoconnect_config_t config) {
-	VirtualDevice* device = NULL;
+	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
-		device = new LEPeripheral(beetle, info.bdaddr, info.bdaddrType);
+		device.reset(new LEPeripheral(beetle, info.bdaddr, info.bdaddrType));
 		beetle.addDevice(device);
 
 		device->start(config.discover);

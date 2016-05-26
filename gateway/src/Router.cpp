@@ -102,7 +102,7 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 		return -1;
 	}
 
-	Device *sourceDevice = beetle.devices[src];
+	std::shared_ptr<Device> sourceDevice = beetle.devices[src];
 
 	const uint8_t opCode = buf[0];
 
@@ -159,7 +159,7 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 				pwarn(std::to_string(dst) + " does not id a device");
 			}
 
-			Device *destinationDevice = beetle.devices[dst];
+			std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
 
 			/*
 			 * Lock handles
@@ -235,7 +235,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 		return -1;
 	}
 
-	Device *sourceDevice = beetle.devices[src];
+	std::shared_ptr<Device> sourceDevice = beetle.devices[src];
 
 	const uint8_t opCode = buf[0];
 
@@ -303,7 +303,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 				return -1;
 			}
 
-			Device *destinationDevice = beetle.devices[dst];
+			std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
 
 			/*
 			 * Lock handles
@@ -383,7 +383,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 		return -1;
 	}
 
-	Device *sourceDevice = beetle.devices[src];
+	std::shared_ptr<Device> sourceDevice = beetle.devices[src];
 
 	const uint8_t opCode = buf[0];
 	assert(opCode == ATT_OP_READ_BY_TYPE_REQ);
@@ -420,7 +420,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 
 	device_t dst = sourceDevice->hat->getDeviceForHandle(startHandle);
 	if (dst == BEETLE_RESERVED_DEVICE) {
-		Device *destinationDevice = beetle.devices[dst];
+		std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
 		if (debug_router) {
 			pdebug("ReadByTypeRequest to " + destinationDevice->getName());
 		}
@@ -475,7 +475,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 			return -1;
 		}
 
-		Device *destinationDevice = beetle.devices[dst];
+		std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
 		if (debug_router) {
 			pdebug("ReadByTypeRequest to " + destinationDevice->getName());
 		}
@@ -501,13 +501,13 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 				pwarn(std::to_string(src) + " does not id a device");
 				return;
 			}
-			Device *sourceDevice = beetle.devices[src];
+			std::shared_ptr<Device> sourceDevice = beetle.devices[src];
 
 			if (beetle.devices.find(dst) == beetle.devices.end()) {
 				pwarn(std::to_string(src) + " does not id a device");
 				return;
 			}
-			Device *destinationDevice = beetle.devices[dst];
+			std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
 			std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
 
 			if (resp == NULL || respLen <= 2) {
@@ -582,7 +582,7 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 		return -1;
 	}
 
-	Device *sourceDevice = beetle.devices[src];
+	std::shared_ptr<Device> sourceDevice = beetle.devices[src];
 
 	const uint8_t opCode = buf[0];
 	assert(opCode == ATT_OP_READ_BY_GROUP_REQ);
@@ -641,7 +641,7 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 				pwarn(std::to_string(dst) + " does not id a device");
 			}
 
-			Device *destinationDevice = beetle.devices[dst];
+			std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
 
 			/*
 			 * Lock handles
@@ -718,7 +718,7 @@ int Router::routeHandleNotifyOrIndicate(uint8_t *buf, int len, device_t src) {
 		return -1;
 	}
 
-	Device *sourceDevice = beetle.devices[src];
+	std::shared_ptr<Device> sourceDevice = beetle.devices[src];
 
 	const uint8_t opCode = buf[0];
 
@@ -744,7 +744,7 @@ int Router::routeHandleNotifyOrIndicate(uint8_t *buf, int len, device_t src) {
 			pwarn(std::to_string(dst) + " does not id a device");
 			continue;
 		}
-		Device *destinationDevice = beetle.devices[dst];
+		std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
 
 		handle_range_t handleRange = destinationDevice->hat->getDeviceRange(src);
 		if (handleRange.start == 0 && handleRange.start == handleRange.end) {
@@ -785,7 +785,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		return -1;
 	}
 
-	Device *sourceDevice = beetle.devices[src];
+	std::shared_ptr<Device> sourceDevice = beetle.devices[src];
 
 	const uint8_t opCode = buf[0];
 
@@ -810,7 +810,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		pwarn(std::to_string(dst) + " does not id a device");
 		return -1;
 	}
-	Device *destinationDevice = beetle.devices[dst];
+	std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
 
 	/*
 	 * Lock handles
@@ -956,7 +956,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 						if (beetle.devices.find(dst) == beetle.devices.end()) {
 							pwarn(std::to_string(dst) + " does not id a device");
 						} else {
-							Device *destinationDevice = beetle.devices[dst];
+							std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
 							std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
 							Handle *proxyH = destinationDevice->handles[remoteHandle];
 							proxyH->cache.cachedSet.clear();
