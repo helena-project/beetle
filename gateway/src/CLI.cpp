@@ -268,7 +268,7 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 					device->getName() + " has handle range [0," + std::to_string(device->getHighestHandle()) + "]");
 		}
 	} catch (DeviceException& e) {
-		std::cout << "caught exception: " << e.what() << std::endl;
+		pexcept(e);
 		printMessage("connection attempt failed: try again perhaps?");
 		if (device) {
 			beetle.removeDevice(device->getId());
@@ -333,7 +333,7 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 					device->getName() + " has handle range [0," + std::to_string(device->getHighestHandle()) + "]");
 		}
 	} catch (DeviceException& e) {
-		std::cout << "caught exception: " << e.what() << std::endl;
+		pexcept(e);
 		printMessage("remote connection attempt failed: try again perhaps?");
 		if (device) {
 			beetle.removeDevice(device->getId());

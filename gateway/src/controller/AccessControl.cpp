@@ -127,9 +127,7 @@ bool AccessControl::canMap(std::shared_ptr<Device> from, std::shared_ptr<Device>
 			return false;
 		}
 	} catch (std::exception &e) {
-		std::stringstream ss;
-		ss << "caught exception: " << e.what();
-		pwarn(ss.str());
+		pexcept(e);
 		return false;
 	}
 }
@@ -195,9 +193,7 @@ bool AccessControl::acquireExclusiveLease(std::shared_ptr<Device> to, exclusive_
 			return false;
 		}
 	} catch (std::exception &e) {
-		std::stringstream ss;
-		ss << "caught exception: " << e.what();
-		pwarn(ss.str());
+		pexcept(e);
 		newlyAcquired = false;
 		return false;
 	}
@@ -231,9 +227,7 @@ void AccessControl::releaseExclusiveLease(std::shared_ptr<Device> to, exclusive_
 			}
 		}
 	} catch (std::exception &e) {
-		std::stringstream ss;
-		ss << "caught exception: " << e.what();
-		pwarn(ss.str());
+		pexcept(e);
 	}
 }
 

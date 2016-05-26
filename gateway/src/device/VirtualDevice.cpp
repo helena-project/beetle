@@ -295,7 +295,7 @@ void VirtualDevice::discoverNetworkServices(UUID serviceUuid) {
 									+ " : " + device->getName());
 						}
 					} catch (DeviceException &e) {
-						std::cout << "caught exception: " << e.what() << std::endl;
+						pexcept(e);
 						if (device) {
 							beetle.removeDevice(device->getId());
 						}

@@ -80,9 +80,7 @@ NetworkStateClient::~NetworkStateClient() {
 			}
 		}
 	} catch (std::exception &e) {
-		std::stringstream ss;
-		ss << "caught exception: " << e.what();
-		pwarn(ss.str());
+		pexcept(e);
 	}
 }
 
@@ -118,7 +116,7 @@ AddDeviceHandler NetworkStateClient::getAddDeviceHandler() {
 				try {
 					addDeviceHelper(device);
 				} catch (std::exception &e) {
-					std::cerr << "caught exception: " << e.what() << std::endl;
+					pexcept(e);
 				}
 				break;
 			}
@@ -151,7 +149,7 @@ UpdateDeviceHandler NetworkStateClient::getUpdateDeviceHandler() {
 			try {
 				updateDeviceHelper(device);
 			} catch (std::exception &e) {
-				std::cerr << "caught exception: " << e.what() << std::endl;
+				pexcept(e);
 			}
 			break;
 			default:
@@ -168,7 +166,7 @@ RemoveDeviceHandler NetworkStateClient::getRemoveDeviceHandler() {
 		try {
 			removeDeviceHelper(d);
 		} catch (std::exception &e) {
-			std::cerr << "caught exception: " << e.what() << std::endl;
+			pexcept(e);
 		}
 	};
 }
@@ -238,9 +236,7 @@ void NetworkStateClient::addDeviceHelper(std::shared_ptr<Device> d) {
 			}
 		}
 	} catch (std::exception &e) {
-		std::stringstream ss;
-		ss << "caught exception: " << e.what();
-		pwarn(ss.str());
+		pexcept(e);
 	}
 }
 
@@ -270,9 +266,7 @@ void NetworkStateClient::updateDeviceHelper(std::shared_ptr<Device> d) {
 			}
 		}
 	} catch (std::exception &e) {
-		std::stringstream ss;
-		ss << "caught exception: " << e.what();
-		pwarn(ss.str());
+		pexcept(e);
 	}
 }
 
@@ -298,8 +292,6 @@ void NetworkStateClient::removeDeviceHelper(device_t d) {
 			}
 		}
 	} catch (std::exception &e) {
-		std::stringstream ss;
-		ss << "caught exception: " << e.what();
-		pwarn(ss.str());
+		pexcept(e);
 	}
 }

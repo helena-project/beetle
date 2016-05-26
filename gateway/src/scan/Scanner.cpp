@@ -62,7 +62,7 @@ static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval
 			0, 			// do not filter duplicates
 			1000);		// to (see above)
 	if (result < 0) {
-		pwarn("warning: failed to set scan enable");
+		pwarn("failed to set scan enable");
 	}
 
 	struct hci_filter oldFilter = { 0 };

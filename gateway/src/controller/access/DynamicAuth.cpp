@@ -109,9 +109,7 @@ void PasscodeAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_pt
 				state = UNATTEMPTED;
 			}
 		} catch (std::exception &e) {
-			std::stringstream ss;
-			ss << "caught exception: " << e.what();
-			pwarn(ss.str());
+			pexcept(e);
 			state = DENIED;
 		}
 		break;
@@ -163,9 +161,7 @@ void AdminAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<D
 					state = DENIED;
 				}
 			} catch (std::exception &e) {
-				std::stringstream ss;
-				ss << "caught exception: " << e.what();
-				pwarn(ss.str());
+				pexcept(e);
 				state = DENIED;
 			}
 			break;
@@ -218,9 +214,7 @@ void UserAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<De
 					state = DENIED;
 				}
 			} catch (std::exception &e) {
-				std::stringstream ss;
-				ss << "caught exception: " << e.what();
-				pwarn(ss.str());
+				pexcept(e);
 				state = DENIED;
 			}
 			break;

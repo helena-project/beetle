@@ -111,8 +111,10 @@ void AutoConnect::connect(peripheral_info_t info, autoconnect_config_t config) {
 			pdebug(device->getName() + " has handle range [0," + std::to_string(device->getHighestHandle()) + "]");
 		}
 	} catch (DeviceException& e) {
-		std::cerr << "caught exception: " << e.what() << std::endl;
-		pdebug("auto-connection attempt failed");
+		pexcept(e);
+		if (debug) {
+			pdebug("auto-connection attempt failed");
+		}
 		if (device) {
 			beetle.removeDevice(device->getId());
 		}

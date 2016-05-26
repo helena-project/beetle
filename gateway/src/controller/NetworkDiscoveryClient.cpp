@@ -72,9 +72,7 @@ bool NetworkDiscoveryClient::findGatewayByName(std::string name, std::string &ip
 			return false;
 		}
 	} catch (std::exception &e) {
-		std::stringstream ss;
-		ss << "caught exception: " << e.what();
-		pwarn(ss.str());
+		pexcept(e);
 		return false;
 	}
 }
@@ -112,9 +110,7 @@ bool NetworkDiscoveryClient::queryHelper(std::string resource, std::list<discove
 			return false;
 		}
 	} catch (std::exception &e) {
-		std::stringstream ss;
-		ss << "caught exception: " << e.what();
-		pwarn(ss.str());
+		pexcept(e);
 		return false;
 	}
 }

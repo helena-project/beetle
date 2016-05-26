@@ -29,10 +29,6 @@ inline void pdebug(std::string mesg) {
 	std::cerr << mesg << std::endl;
 }
 
-inline void pwarn(std::string mesg) {
-	std::cerr << "warning: " << mesg << std::endl;
-}
-
 /*
  * Print bytes as hex.
  */
@@ -42,6 +38,14 @@ inline void pdebug(uint8_t *buf, int len) {
 		fprintf(stderr, " %02x", buf[i]);
 	}
 	fprintf(stderr, " ]\n");
+}
+
+inline void pwarn(std::string mesg) {
+	std::cerr << "warning: " << mesg << std::endl;
+}
+
+inline void pexcept(std::exception &e) {
+	std::cerr << "caught exception: " << e.what() << std::endl;
 }
 
 #endif /* INCLUDE_DEBUG_H_ */

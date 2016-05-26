@@ -99,7 +99,7 @@ void UnixDomainSocketServer::startIPCDeviceHelper(int clifd, struct sockaddr_un 
 			pdebug(device->getName() + " has handle range [0," + std::to_string(device->getHighestHandle()) + "]");
 		}
 	} catch (std::exception& e) {
-		std::cout << "caught exception: " << e.what() << std::endl;
+		pexcept(e);
 		if (device) {
 			beetle.removeDevice(device->getId());
 		}
