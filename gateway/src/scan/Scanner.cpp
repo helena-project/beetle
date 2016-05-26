@@ -58,7 +58,8 @@ static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval
 		pwarn("failed to set LE scan parameters");
 	}
 
-	result = hci_le_set_scan_enable(deviceHandle, 0x01,		// enable
+	result = hci_le_set_scan_enable(deviceHandle,
+			0x01,		// enable
 			0, 			// do not filter duplicates
 			1000);		// to (see above)
 	if (result < 0) {
@@ -84,23 +85,23 @@ static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval
 	return oldFilter;
 }
 
-static void stopScanHelper(int deviceHandle, struct hci_filter oldFilter) {
-	int result = hci_le_set_scan_enable(deviceHandle,
-			0, 		// disable
-			1, 		// filter_dup
-			1000);	// to
-	if (result < 0) {
-		pwarn("failed to disable scan");
-	}
-
-	result = setsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &oldFilter, sizeof(oldFilter));
-	if (result < 0) {
-		pwarn("failed to replace old hci filter");
-	}
-}
+//static void stopScanHelper(int deviceHandle, struct hci_filter oldFilter) {
+//	int result = hci_le_set_scan_enable(deviceHandle,
+//			0, 		// disable
+//			1, 		// filter_dup
+//			1000);	// to
+//	if (result < 0) {
+//		pwarn("failed to disable scan");
+//	}
+//
+//	result = setsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &oldFilter, sizeof(oldFilter));
+//	if (result < 0) {
+//		pwarn("failed to replace old hci filter");
+//	}
+//}
 
 static int deviceHandle = -1;
-static struct hci_filter oldFilter;
+//static struct hci_filter oldFilter;
 static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<DiscoveryHandler> handlers,
 		uint16_t scanInterval, uint16_t scanWindow) {
 	if (debug) {
@@ -117,14 +118,13 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 		throw ScannerException("could not get handle to hci device");
 	}
 
- 	oldFilter = startScanHelper(deviceHandle, scanInterval, scanWindow);
-	startScanHelper(deviceHandle, scanInterval, scanWindow);
+ 	startScanHelper(deviceHandle, scanInterval, scanWindow);
 	std::atexit([]{
 		if (deviceHandle >= 0) {
 			if (debug_scan) {
 				pdebug("stopping scan and closing device");
 			}
-			stopScanHelper(deviceHandle, oldFilter);
+//			stopScanHelper(deviceHandle, oldFilter);
 			hci_close_dev(deviceHandle);
 		}
 	});
@@ -172,6 +172,9 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 			for (auto &cb : handlers) {
 				bool isRunning = running->test_and_set();
 				if (isRunning) {
+					/*
+					 * TODO: not quite memory safe
+					 */
 					cb(addr, peripheral_info_t { name, info->bdaddr, addrType });
 				} else {
 					running->clear();
