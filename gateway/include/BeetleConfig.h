@@ -37,7 +37,7 @@ public:
 	 * Autoconnect settings
 	 */
 	bool autoConnectAll = false;
-	double autoConnectMinBackoff = 1.0;
+	double autoConnectMinBackoff = 60.0;
 	std::string autoConnectBlacklist = "";
 
 	/*
