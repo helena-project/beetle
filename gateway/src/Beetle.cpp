@@ -26,10 +26,18 @@ Beetle::~Beetle() {
 }
 
 void Beetle::addDevice(std::shared_ptr<Device> d) {
-	boost::unique_lock<boost::shared_mutex> deviceslk(devicesMutex);
+	boost::shared_lock<boost::shared_mutex> unused;
+	addDevice(d, unused);
+}
+
+void Beetle::addDevice(std::shared_ptr<Device> d, boost::shared_lock<boost::shared_mutex> &returnLock) {
+	devicesMutex.lock();
 	device_t id = d->getId();
 	devices[id] = d;
-	deviceslk.unlock();
+
+	/* Downgrade and return holding shared lock. */
+	devicesMutex.unlock_and_lock_shared();
+	returnLock = boost::shared_lock<boost::shared_mutex>(devicesMutex, boost::adopt_lock);
 
 	for (auto &h : addHandlers) {
 		workers.schedule([h,id] {h(id);});
@@ -61,12 +69,14 @@ void Beetle::removeDevice(device_t id) {
 			devices[server]->unsubscribeAll(id);
 		}
 	}
+	d->hatMutex.unlock();
 
 	for (auto &kv : devices) {
 		/*
 		 * Cancel subscriptions and inform that services have changed
 		 */
 		assert(kv.first != id);
+		std::lock_guard<std::mutex> otherHatLg(kv.second->hatMutex);
 		if (!kv.second->hat->getDeviceRange(id).isNull()) {
 			beetleDevice->informServicesChanged(kv.second->hat->free(id), kv.first);
 		}

@@ -29,10 +29,12 @@ protected:
 	bool write(uint8_t *buf, int len);
 	void startInternal();
 private:
-
 	int sockfd;
 	struct sockaddr_un sockaddr;
 	struct ucred ucred;
+
+	std::atomic_bool terminated;
+	void terminate();
 
 	std::thread readThread;
 	void readDaemon();

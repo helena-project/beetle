@@ -90,7 +90,8 @@ void UnixDomainSocketServer::startIPCDeviceHelper(int clifd, struct sockaddr_un 
 		 */
 		device.reset(new IPCApplication(beetle, clifd, "PID-" + std::to_string(clicred.pid), cliaddr, clicred));
 
-		beetle.addDevice(device);
+		boost::shared_lock<boost::shared_mutex> devicesLk;
+		beetle.addDevice(device, devicesLk);
 		device->start();
 
 		pdebug("connected to " + device->getName());

@@ -39,6 +39,9 @@ private:
 
 	struct l2cap_conninfo connInfo;
 
+	std::atomic_bool terminated;
+	void terminate();
+
 	std::thread readThread;
 	void readDaemon();
 

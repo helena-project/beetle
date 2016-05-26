@@ -96,7 +96,9 @@ void AutoConnect::connect(peripheral_info_t info, autoconnect_config_t config) {
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
 		device.reset(new LEPeripheral(beetle, info.bdaddr, info.bdaddrType));
-		beetle.addDevice(device);
+
+		boost::shared_lock<boost::shared_mutex> devicesLk;
+		beetle.addDevice(device, devicesLk);
 
 		device->start(config.discover);
 
@@ -124,6 +126,7 @@ void AutoConnect::daemon(int seconds) {
 	while (daemonRunning) {
 		if (ticks % seconds == 0) {
 			time_t now = time(NULL);
+
 			std::lock_guard<std::mutex> lg(lastAttemptMutex);
 			for (auto it = lastAttempt.cbegin(); it != lastAttempt.cend();) {
 				if (difftime(now, it->second) > minAttemptInterval) {

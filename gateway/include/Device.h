@@ -93,19 +93,19 @@ public:
 	/*
 	 * Enqueues a response. Returns whether the response was enqueued.
 	 */
-	virtual bool writeResponse(uint8_t *buf, int len) = 0;
+	virtual void writeResponse(uint8_t *buf, int len) = 0;
 
 	/*
 	 * Enqueues a command. Returns whether the command was enqueued.
 	 */
-	virtual bool writeCommand(uint8_t *buf, int len) = 0;
+	virtual void writeCommand(uint8_t *buf, int len) = 0;
 
 	/*
 	 * Enqueues a transaction. The callback is called when the response is received.
 	 * The pointers passed to cb do not persist after cb is done. Returns whether
 	 * the transaction was enqueued. On error the first argument to cb is NULL.
 	 */
-	virtual bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) = 0;
+	virtual void writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) = 0;
 
 	/*
 	 * Blocks until the transaction finishes. Resp is set and must be freed by the caller.

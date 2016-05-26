@@ -166,9 +166,9 @@ void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_
 			device.reset(new TCPClientProxy(beetle, ssl, clifd, client, cliaddr, deviceId));
 		}
 
+		boost::shared_lock<boost::shared_mutex> devicesLk;
+		beetle.addDevice(device, devicesLk);
 		device->start(clientParams[TCP_PARAM_SERVER] == "true");
-
-		beetle.addDevice(device);
 
 		if (debug) {
 			pdebug(device->getName() + " has handle range [0," + std::to_string(device->getHighestHandle()) + "]");

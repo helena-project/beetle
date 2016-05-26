@@ -35,24 +35,23 @@ BeetleInternal::~BeetleInternal() {
 /*
  * Should never get called. All reads and writes are serviced by the cache.
  */
-bool BeetleInternal::writeResponse(uint8_t *buf, int len) {
+void BeetleInternal::writeResponse(uint8_t *buf, int len) {
 	throw DeviceException(getName() + " does not make requests");
 }
 
 /*
  * Should never get called. All reads and writes are serviced by the cache.
  */
-bool BeetleInternal::writeCommand(uint8_t *buf, int len) {
+void BeetleInternal::writeCommand(uint8_t *buf, int len) {
 	if (debug) {
 		pwarn("Beetle received an unanticipated command");
 	}
-	return true;
 }
 
 /*
  * Should never get called. All reads and writes are serviced by the cache.
  */
-bool BeetleInternal::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
+void BeetleInternal::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
 	if (debug) {
 		pwarn("Beetle received an unanticipated request");
 	}
@@ -60,7 +59,6 @@ bool BeetleInternal::writeTransaction(uint8_t *buf, int len, std::function<void(
 	int respLen = writeTransactionBlocking(buf, len, resp);
 	cb(resp, respLen);
 	delete[] resp;
-	return true;
 }
 
 /*
@@ -78,7 +76,6 @@ int BeetleInternal::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&re
 int BeetleInternal::getMTU() {
 	return ATT_DEFAULT_LE_MTU;
 }
-;
 
 void BeetleInternal::informServicesChanged(handle_range_t range, device_t dst) {
 	if (debug) {

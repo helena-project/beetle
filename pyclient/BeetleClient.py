@@ -250,7 +250,7 @@ def inputReader(s):
 try: 
 	inputReader(s)
 except KeyboardInterrupt, err:
-	s.send(chr(0))
+	s.shutdown(socket.SHUT_WR)
 except RuntimeError, err:
 	print "Exception in input thread:", err
 finally:

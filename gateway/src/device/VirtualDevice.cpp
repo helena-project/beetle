@@ -38,7 +38,6 @@ static int64_t getCurrentTimeMillis(void) {
 VirtualDevice::VirtualDevice(Beetle &beetle, bool isEndpoint_, HandleAllocationTable *hat) :
 		Device(beetle, hat) {
 	isEndpoint = isEndpoint_;
-	stopped = false;
 	currentTransaction = NULL;
 	mtu = ATT_DEFAULT_LE_MTU;
 	unfinishedClientTransactions = 0;
@@ -66,12 +65,9 @@ VirtualDevice::~VirtualDevice() {
 	transactionMutex.unlock();
 }
 
-bool VirtualDevice::isStopped() {
-	return stopped;
-}
-
 static std::string discoverDeviceName(VirtualDevice *d);
 static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d);
+
 void VirtualDevice::start(bool discoverHandles) {
 	if (debug) {
 		pdebug("starting");
@@ -116,26 +112,15 @@ std::vector<uint64_t> VirtualDevice::getTransactionLatencies() {
 	return ret;
 }
 
-void VirtualDevice::stop() {
-	if (debug) {
-		pdebug("stopping " + getName());
-	}
-	stopped = true;
+void VirtualDevice::writeCommand(uint8_t *buf, int len) {
+	write(buf, len);
 }
 
-bool VirtualDevice::writeCommand(uint8_t *buf, int len) {
-	return isStopped() || write(buf, len);
+void VirtualDevice::writeResponse(uint8_t *buf, int len) {
+	write(buf, len);
 }
 
-bool VirtualDevice::writeResponse(uint8_t *buf, int len) {
-	return isStopped() || write(buf, len);
-}
-
-bool VirtualDevice::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
-	if (isStopped()) {
-		return false;
-	}
-
+void VirtualDevice::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
 	transaction_t *t = new transaction_t;
 	t->buf = new uint8_t[len];
 	memcpy(t->buf, buf, len);
@@ -146,43 +131,34 @@ bool VirtualDevice::writeTransaction(uint8_t *buf, int len, std::function<void(u
 	if (currentTransaction == NULL) {
 		currentTransaction = t;
 		lastTransactionMillis = getCurrentTimeMillis();
-		assert(write(t->buf, t->len));
+		if (!write(t->buf, t->len)) {
+			cb(NULL, -1);
+		}
 	} else {
 		pendingTransactions.push(t);
 	}
-	return true;
 }
 
 int VirtualDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp) {
-	if (isStopped()) {
-		resp = NULL;
-		return -1;
-	}
-
 	std::shared_ptr<Semaphore> sema(new Semaphore(0));
 	std::shared_ptr<int> respLenPtr(new int);
 	std::shared_ptr<std::unique_ptr<uint8_t>> respPtr(new std::unique_ptr<uint8_t>());
-	bool scheduled = writeTransaction(buf, len, [sema, respPtr, respLenPtr](uint8_t *resp_, int respLen_) {
+	writeTransaction(buf, len, [sema, respPtr, respLenPtr](uint8_t *resp_, int respLen_) {
 		respPtr->reset(new uint8_t[respLen_]);
 		memcpy(respPtr->get(), resp_, respLen_);
 		*respLenPtr = respLen_;
 		sema->notify();
 	});
 
-	if (!scheduled) {
+	if (sema->try_wait(10)) {
+		resp = respPtr->release();
+		return *respLenPtr;
+	} else {
+		if (debug) {
+			pdebug("blocking transaction timed out");
+		}
 		resp = NULL;
 		return -1;
-	} else {
-		if (sema->try_wait(10)) {
-			resp = respPtr->release();
-			return *respLenPtr;
-		} else {
-			if (debug) {
-				pdebug("blocking transaction timed out");
-			}
-			resp = NULL;
-			return -1;
-		}
 	}
 }
 
@@ -309,7 +285,8 @@ void VirtualDevice::discoverNetworkServices(UUID serviceUuid) {
 						localId = device->getId();
 						sync.notify();
 
-						beetle.addDevice(std::dynamic_pointer_cast<Device>(device));
+						boost::shared_lock<boost::shared_mutex> devicesLk;
+						beetle.addDevice(device, devicesLk);
 
 						device->start();
 

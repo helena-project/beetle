@@ -31,6 +31,8 @@ TCPConnection::TCPConnection(Beetle &beetle, SSL *ssl_, int sockfd_, struct sock
 }
 
 TCPConnection::~TCPConnection() {
+	terminated = true;
+
 	pendingWrites.wait();
 	if (debug_socket) {
 		pdebug("shutting down socket");
@@ -48,6 +50,10 @@ void TCPConnection::startInternal() {
 }
 
 bool TCPConnection::write(uint8_t *buf, int len) {
+	if (terminated) {
+		return false;
+	}
+
 	uint8_t *bufCpy = new uint8_t[len];
 	memcpy(bufCpy, buf, len);
 	pendingWrites.increment();
@@ -59,10 +65,7 @@ bool TCPConnection::write(uint8_t *buf, int len) {
 				ss << "socket write failed : " << strerror(errno);
 				pdebug(ss.str());
 			}
-			if (!isStopped()) {
-				stop();
-				beetle.removeDevice(getId());
-			}
+			terminate();
 		}
 		if (debug_socket) {
 			pdebug(getName() + " wrote " + std::to_string(len) + " bytes");
@@ -75,55 +78,46 @@ bool TCPConnection::write(uint8_t *buf, int len) {
 }
 
 void TCPConnection::readDaemon() {
-	if (debug)
+	if (debug) {
 		pdebug(getName() + " readDaemon started");
+	}
 	uint8_t buf[256];
 	uint8_t len;
-	while (!isStopped()) {
+	while (true) {
 		// read length of ATT message
 		int bytesRead = SSL_read(ssl, &len, sizeof(len));
-		if (bytesRead < 0) {
-			std::cerr << "socket error: " << strerror(errno) << std::endl;
-			stop();
-			beetle.removeDevice(getId());
+		if (bytesRead <= 0) {
+			std::cerr << "socket errno: " << strerror(errno) << std::endl;
+			terminate();
 			break;
-		} else if (bytesRead == 0) {
-			continue;
 		} else {
 			assert(bytesRead == 1);
 			if (debug_socket) {
 				pdebug("tcp expecting " + std::to_string(len) + " bytes");
 			}
 
-			if (len == 0) { // terminate the connection
-				if (!isStopped()) {
-					stop();
-					beetle.removeDevice(getId());
-				}
-				break;
+			// TODO perhaps 0 can be used as a heartbeat?
+			if (len == 0) {
+				continue;
 			}
 
 			// read payload ATT message
 			bytesRead = 0;
-			while (!isStopped() && bytesRead < len) {
+			while (bytesRead < len) {
 				int n = SSL_read(ssl, buf + bytesRead, len - bytesRead);
 				if (n < 0) {
-					std::cerr << "socket error: " << strerror(errno) << std::endl;
-					if (!isStopped()) {
-						stop();
-						beetle.removeDevice(getId());
-					}
+					std::cerr << "socket errno: " << strerror(errno) << std::endl;
+					terminate();
 					break;
 				} else {
 					bytesRead += n;
 				}
 			}
 
-			if (isStopped()) {
-				break;
+			if (bytesRead < len) {
+				break; // terminate called
 			}
 
-			assert(bytesRead == len);
 			if (debug_socket) {
 				pdebug(buf, bytesRead);
 			}
@@ -142,5 +136,21 @@ int TCPConnection::getMTU() {
 
 struct sockaddr_in TCPConnection::getSockaddr() {
 	return sockaddr;
+}
+
+void TCPConnection::terminate() {
+	if(!terminated.exchange(true)) {
+		if (debug) {
+			pdebug("terminating " + getName());
+		}
+
+		device_t id = getId();
+		Beetle *beetlePtr = &beetle;
+
+		/*
+		 * Destructor may join or wait for caller. This prevents deadlock.
+		 */
+		beetle.workers.schedule([beetlePtr, id] { beetlePtr->removeDevice(id); });
+	}
 }
 

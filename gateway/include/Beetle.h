@@ -34,7 +34,8 @@ public:
 	 * Add a device to Beetle's mappings. Threadsafe.
 	 * Do not call while holding devices or hat mutexes.
 	 */
-	void addDevice(std::shared_ptr<Device>);
+	void addDevice(std::shared_ptr<Device> device);
+	void addDevice(std::shared_ptr<Device> device, boost::shared_lock<boost::shared_mutex> &returnLock);
 
 	/*
 	 * Removes a device from Beetle's mappings and unsubscribes

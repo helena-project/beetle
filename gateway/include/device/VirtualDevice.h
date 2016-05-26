@@ -35,13 +35,14 @@ class VirtualDevice: public Device {
 public:
 	virtual ~VirtualDevice();
 
+	/*
+	 * Starts up the virtual device to begin processing requests.
+	 */
 	void start(bool discoverHandles = true);
-	void stop();
-	bool isStopped();
 
-	bool writeResponse(uint8_t *buf, int len);
-	bool writeCommand(uint8_t *buf, int len);
-	bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);
+	void writeResponse(uint8_t *buf, int len);
+	void writeCommand(uint8_t *buf, int len);
+	void writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);
 	int writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp);
 
 	int getMTU();
@@ -59,6 +60,16 @@ protected:
 	void readHandler(uint8_t *buf, int len);
 
 	/*
+	 * Stops processing of requests due to internal reason. Destroys the device.
+	 */
+	void stopInternal();
+
+	/*
+	 * Has stop been called either internally, externally, or by the destructor?
+	 */
+	bool isStopped();
+
+	/*
 	 * Called by base class to write packet.
 	 */
 	virtual bool write(uint8_t *buf, int len) = 0;
@@ -69,8 +80,6 @@ protected:
 	virtual void startInternal() = 0;
 
 private:
-	bool stopped;
-
 	bool isEndpoint;
 
 	int mtu;

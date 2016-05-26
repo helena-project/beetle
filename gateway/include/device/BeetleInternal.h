@@ -33,9 +33,9 @@ public:
 	/*
 	 * Should never get called. All reads and writes are serviced by the cache.
 	 */
-	bool writeResponse(uint8_t *buf, int len);
-	bool writeCommand(uint8_t *buf, int len);
-	bool writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);
+	void writeResponse(uint8_t *buf, int len);
+	void writeCommand(uint8_t *buf, int len);
+	void writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb);
 	int writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp);
 
 	/*

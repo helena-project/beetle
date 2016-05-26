@@ -30,6 +30,8 @@ IPCApplication::IPCApplication(Beetle &beetle, int sockfd_, std::string name_, s
 }
 
 IPCApplication::~IPCApplication() {
+	terminated = true;
+
 	pendingWrites.wait();
 	if (debug_socket) {
 		pdebug("shutting down socket");
@@ -46,6 +48,10 @@ void IPCApplication::startInternal() {
 }
 
 bool IPCApplication::write(uint8_t *buf, int len) {
+	if (terminated) {
+		return false;
+	}
+
 	uint8_t *bufCpy = new uint8_t[len];
 	memcpy(bufCpy, buf, len);
 	pendingWrites.increment();
@@ -56,10 +62,7 @@ bool IPCApplication::write(uint8_t *buf, int len) {
 				ss << "socket write failed : " << strerror(errno);
 				pdebug(ss.str());
 			}
-			if (!isStopped()) {
-				stop();
-				beetle.removeDevice(getId());
-			}
+			terminate();
 		}
 		if (debug_socket) {
 			pdebug(getName() + " wrote " + std::to_string(len) + " bytes");
@@ -73,21 +76,16 @@ bool IPCApplication::write(uint8_t *buf, int len) {
 
 void IPCApplication::readDaemon() {
 	if (debug) pdebug(getName() + " readDaemon started");
-	uint8_t buf[64];
-	while (!isStopped()) {
+	uint8_t buf[256];
+	while (true) {
 		int n = read(sockfd, buf, sizeof(buf));
 		if (debug_socket) {
 			pdebug(getName() + " read " + std::to_string(n) + " bytes");
 		}
-		if (n < 0) {
-			std::cerr << "socket error: " << strerror(errno) << std::endl;
-			if (!isStopped()) {
-				stop();
-				beetle.removeDevice(getId());
-			}
+		if (n <= 0) {
+			std::cerr << "socket errno: " << strerror(errno) << std::endl;
+			terminate();
 			break;
-		} else if (n == 0) {
-			continue;
 		} else {
 			if (debug_socket) {
 				pdebug(buf, n);
@@ -98,3 +96,18 @@ void IPCApplication::readDaemon() {
 	if (debug) pdebug(getName() + " readDaemon exited");
 }
 
+void IPCApplication::terminate() {
+	if(!terminated.exchange(true)) {
+		if (debug) {
+			pdebug("terminating " + getName());
+		}
+
+		device_t id = getId();
+		Beetle *beetlePtr = &beetle;
+
+		/*
+		 * Destructor may join or wait for caller. This prevents deadlock.
+		 */
+		beetle.workers.schedule([beetlePtr, id] { beetlePtr->removeDevice(id); });
+	}
+}

@@ -71,6 +71,8 @@ LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType) :
 }
 
 LEPeripheral::~LEPeripheral() {
+	terminated = true;
+
 	pendingWrites.wait();
 	if (debug_socket) {
 		pdebug("shutting down socket");
@@ -99,6 +101,10 @@ struct l2cap_conninfo LEPeripheral::getL2capConnInfo() {
 }
 
 bool LEPeripheral::write(uint8_t *buf, int len) {
+	if (terminated) {
+		return false;
+	}
+
 	uint8_t *bufCpy = new uint8_t[len];
 	memcpy(bufCpy, buf, len);
 	pendingWrites.increment();
@@ -109,10 +115,7 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 				ss << "socket write failed : " << strerror(errno);
 				pdebug(ss.str());
 			}
-			if (!isStopped()) {
-				stop();
-				beetle.removeDevice(getId());
-			}
+			terminate();
 		}
 		if (debug_socket) {
 			pdebug(getName() + " wrote " + std::to_string(len) + " bytes");
@@ -129,21 +132,16 @@ void LEPeripheral::readDaemon() {
 		pdebug(getName() + " readDaemon started");
 	}
 
-	uint8_t buf[32];
-	while (!isStopped()) {
+	uint8_t buf[256];
+	while (true) {
 		int n = read(sockfd, buf, sizeof(buf));
 		if (debug_socket) {
 			pdebug(getName() + " read " + std::to_string(n) + " bytes");
 		}
-		if (n < 0) {
-			std::cerr << "socket error: " << strerror(errno) << std::endl;
-			if (!isStopped()) {
-				stop();
-				beetle.removeDevice(getId());
-			}
+		if (n <= 0) {
+			std::cerr << "socket errno: " << strerror(errno) << std::endl;
+			terminate();
 			break;
-		} else if (n == 0) {
-			continue;
 		} else {
 			if (debug_socket) {
 				pdebug(buf, n);
@@ -157,3 +155,18 @@ void LEPeripheral::readDaemon() {
 	}
 }
 
+void LEPeripheral::terminate() {
+	if(!terminated.exchange(true)) {
+		if (debug) {
+			pdebug("terminating " + getName());
+		}
+
+		device_t id = getId();
+		Beetle *beetlePtr = &beetle;
+
+		/*
+		 * Destructor may join or wait for caller. This prevents deadlock.
+		 */
+		beetle.workers.schedule([beetlePtr, id] { beetlePtr->removeDevice(id); });
+	}
+}

@@ -256,7 +256,8 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 	try {
 		device.reset(new LEPeripheral(beetle, addr, addrType));
 
-		beetle.addDevice(std::dynamic_pointer_cast<Device>(device));
+		boost::shared_lock<boost::shared_mutex> devicesLk;
+		beetle.addDevice(device, devicesLk);
 
 		device->start(discoverHandles);
 
@@ -320,7 +321,9 @@ void CLI::doRemote(const std::vector<std::string>& cmd) {
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
 		device.reset(TCPServerProxy::connectRemote(beetle, host, port, remoteId));
-		beetle.addDevice(std::dynamic_pointer_cast<Device>(device));
+
+		boost::shared_lock<boost::shared_mutex> devicesLk;
+		beetle.addDevice(device, devicesLk);
 
 		device->start();
 
@@ -400,14 +403,14 @@ void CLI::doDisconnect(const std::vector<std::string>& cmd) {
 		return;
 	}
 
-	boost::unique_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
+	boost::shared_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
 	std::shared_ptr<Device> device = matchDevice(cmd[1]);
 	if (device != NULL) {
 		auto virtualDevice = std::dynamic_pointer_cast<VirtualDevice>(device);
 		if (virtualDevice) {
-			virtualDevice->stop();
 			device_t deviceId = virtualDevice->getId();
 			deviceslk.unlock();
+
 			beetle.removeDevice(deviceId);
 		} else {
 			printMessage("cannot stop " + device->getName());
