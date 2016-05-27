@@ -63,7 +63,7 @@ public:
 	 * Caller should hold device and handle locks.
 	 */
 	bool canAccessHandle(std::shared_ptr<Device> client, std::shared_ptr<Device> server,
-			Handle *h, uint8_t op, uint8_t &attErr);
+			std::shared_ptr<Handle> handle, uint8_t op, uint8_t &attErr);
 
 	/*
 	 * Return: whether access is permitted, and the properties.
@@ -71,7 +71,7 @@ public:
 	 * Caller should hold device and handle locks.
 	 */
 	bool getCharAccessProperties(std::shared_ptr<Device> client, std::shared_ptr<Device> server,
-			Handle *h, uint8_t &properties);
+			std::shared_ptr<Handle> handle, uint8_t &properties);
 
 	/*
 	 * Return: whether the uuid type may be read.

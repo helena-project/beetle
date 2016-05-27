@@ -45,9 +45,6 @@ Device::Device(Beetle &beetle_, device_t id_, HandleAllocationTable *hat_) :
 
 Device::~Device() {
 	handlesMutex.lock();
-	for (auto &kv : handles) {
-		delete kv.second;
-	}
 	handles.clear();
 	handlesMutex.unlock();
 }
@@ -81,7 +78,7 @@ void Device::unsubscribeAll(device_t d) {
 	std::lock_guard<std::recursive_mutex> lg(handlesMutex);
 	std::set<uint16_t> charCccdsToWrite;
 	for (auto &kv : handles) {
-		CharacteristicValue *cvH = dynamic_cast<CharacteristicValue *>(kv.second);
+		auto cvH = std::dynamic_pointer_cast<CharacteristicValue>(kv.second);
 		if (cvH && cvH->getUuid().isShort() && cvH->subscribers.find(d) != cvH->subscribers.end()) {
 			cvH->subscribers.erase(d);
 
@@ -97,7 +94,7 @@ void Device::unsubscribeAll(device_t d) {
 		/*
 		 * Makes assumption that cccd follows attribute value
 		 */
-		ClientCharCfg *cccdH = dynamic_cast<ClientCharCfg *>(kv.second);
+		auto cccdH = std::dynamic_pointer_cast<ClientCharCfg>(kv.second);
 		if (cccdH && charCccdsToWrite.find(cccdH->getCharHandle()) != charCccdsToWrite.end()) {
 			int reqLen = 5;
 			uint8_t req[reqLen];

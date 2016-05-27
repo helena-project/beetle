@@ -52,7 +52,7 @@ private:
 	 */
 	void init();
 
-	Handle *serviceChangedAttr;
+	std::shared_ptr<Handle> serviceChangedAttr;
 };
 
 #endif /* INCLUDE_DEVICE_BEETLEINTERNAL_H_ */

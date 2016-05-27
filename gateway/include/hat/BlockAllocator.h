@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <set>
+#include <memory>
 
 #include "BeetleTypes.h"
 #include "HandleAllocationTable.h"
@@ -32,7 +33,7 @@ public:
 private:
 	int blockSize;
 	int numBlocks;
-	device_t *blocks;
+	std::unique_ptr<device_t> blocks;
 };
 
 #endif /* INCLUDE_HAT_BLOCKALLOCATOR_H_ */

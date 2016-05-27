@@ -64,7 +64,7 @@ VirtualDevice::~VirtualDevice() {
 }
 
 static std::string discoverDeviceName(VirtualDevice *d);
-static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d);
+static std::map<uint16_t, std::shared_ptr<Handle>> discoverAllHandles(VirtualDevice *d);
 
 void VirtualDevice::start(bool discoverHandles) {
 	if (debug) {
@@ -82,7 +82,7 @@ void VirtualDevice::start(bool discoverHandles) {
 		}
 
 		/* May throw device exception */
-		std::map<uint16_t, Handle *> handlesTmp = discoverAllHandles(this);
+		std::map<uint16_t, std::shared_ptr<Handle>> handlesTmp = discoverAllHandles(this);
 
 		handlesMutex.lock();
 		handles = handlesTmp;
@@ -533,15 +533,15 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 	return handles;
 }
 
-static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
-	std::map<uint16_t, Handle *> handles;
+static std::map<uint16_t, std::shared_ptr<Handle>> discoverAllHandles(VirtualDevice *d) {
+	std::map<uint16_t, std::shared_ptr<Handle>> handles;
 
-	Handle *lastService = NULL;
-	Handle *lastCharacteristic = NULL;
+	std::shared_ptr<Handle> lastService = NULL;
+	std::shared_ptr<Handle> lastCharacteristic = NULL;
 
 	std::vector<group_t> services = discoverServices(d);
 	for (group_t &service : services) {
-		Handle *serviceHandle = new PrimaryService();
+		auto serviceHandle = std::make_shared<PrimaryService>();
 		serviceHandle->setHandle(service.handle);
 		serviceHandle->setEndGroupHandle(service.endGroup);
 		serviceHandle->setCacheInfinite(true);
@@ -553,7 +553,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 		std::vector<handle_value_t> characteristics = discoverCharacterisics(d, serviceHandle->getHandle(),
 				serviceHandle->getEndGroupHandle());
 		for (handle_value_t &characteristic : characteristics) {
-			Handle *charHandle = new Characteristic();
+			auto charHandle = std::make_shared<Characteristic>();
 			charHandle->setHandle(characteristic.handle);
 			charHandle->setServiceHandle(serviceHandle->getHandle());
 			charHandle->setCacheInfinite(true);
@@ -572,20 +572,20 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 				handle_value_t characteristic = characteristics[i];
 				uint16_t startGroup = characteristic.handle + 1;
 				uint16_t endGroup = characteristics[i + 1].handle - 1;
-				Characteristic *charHandle = dynamic_cast<Characteristic *>(handles[characteristic.handle]);
+				auto charHandle = std::dynamic_pointer_cast<Characteristic>(handles[characteristic.handle]);
 				charHandle->setEndGroupHandle(endGroup);
 
 				std::vector<handle_info_t> handleInfos = discoverHandles(d, startGroup, endGroup);
 				for (handle_info_t &handleInfo : handleInfos) {
 					UUID handleUuid = handleInfo.uuid;
-					Handle *handle;
+					std::shared_ptr<Handle> handle;
 					if (handleUuid.isShort() && handleUuid.getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
-						handle = new ClientCharCfg();
+						handle = std::make_shared<ClientCharCfg>();
 					} else if (handleInfo.handle == charHandle->getAttrHandle()) {
-						handle = new CharacteristicValue();
+						handle = std::make_shared<CharacteristicValue>();
 						handle->setUuid(handleUuid);
 					} else {
-						handle = new Handle();
+						handle = std::make_shared<Handle>();
 						handle->setUuid(handleUuid);
 					}
 					handle->setHandle(handleInfo.handle);
@@ -600,20 +600,20 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 			handle_value_t characteristic = characteristics[characteristics.size() - 1];
 			uint16_t startGroup = characteristic.handle + 1;
 			uint16_t endGroup = serviceHandle->getEndGroupHandle();
-			Characteristic *charHandle = dynamic_cast<Characteristic *>(handles[characteristic.handle]);
+			auto charHandle = std::dynamic_pointer_cast<Characteristic>(handles[characteristic.handle]);
 			charHandle->setEndGroupHandle(endGroup);
 
 			std::vector<handle_info_t> handleInfos = discoverHandles(d, startGroup, endGroup);
 			for (handle_info_t &handleInfo : handleInfos) {
 				UUID handleUuid = handleInfo.uuid;
-				Handle *handle;
+				std::shared_ptr<Handle> handle;
 				if (handleUuid.isShort() && handleUuid.getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
-					handle = new ClientCharCfg();
+					handle = std::make_shared<ClientCharCfg>();
 				} else if (handleInfo.handle == charHandle->getAttrHandle()) {
-					handle = new CharacteristicValue();
+					handle = std::make_shared<CharacteristicValue>();
 					handle->setUuid(handleUuid);
 				} else {
-					handle = new Handle();
+					handle = std::make_shared<Handle>();
 					handle->setUuid(handleUuid);
 				}
 				handle->setHandle(handleInfo.handle);

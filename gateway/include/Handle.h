@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <ctime>
+#include <memory>
 #include <set>
 #include <string>
 
@@ -24,8 +25,8 @@ public:
 	 * Transfers ownership of value pointer to cache.
 	 */
 	void set(uint8_t *value, int len);
+	std::unique_ptr<uint8_t> value;
 
-	uint8_t *value = NULL;
 	int len = 0;
 	time_t time = 0;
 	std::set<device_t> cachedSet;

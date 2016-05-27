@@ -17,22 +17,22 @@ BlockAllocator::BlockAllocator(int size) {
 	blockSize = size;
 	assert((MAX_HANDLE + 1) % blockSize == 0);
 	numBlocks = (MAX_HANDLE + 1) / blockSize;
-	blocks = new device_t[numBlocks];
-	blocks[0] = BEETLE_RESERVED_DEVICE;
+	blocks.reset(new device_t[numBlocks]);
+	blocks.get()[0] = BEETLE_RESERVED_DEVICE;
 	for (int i = 1; i < numBlocks; i++) {
-		blocks[i] = NULL_RESERVED_DEVICE;
+		blocks.get()[i] = NULL_RESERVED_DEVICE;
 	}
 }
 
 BlockAllocator::~BlockAllocator() {
-	delete[] blocks;
+
 }
 
 std::set<device_t> BlockAllocator::getDevices() {
 	std::set<device_t> ret;
 	for (int i = 0; i < numBlocks; i++) {
-		if (blocks[i] != NULL_RESERVED_DEVICE) {
-			ret.insert(blocks[i]);
+		if (blocks.get()[i] != NULL_RESERVED_DEVICE) {
+			ret.insert(blocks.get()[i]);
 		}
 	}
 	return ret;
@@ -40,7 +40,7 @@ std::set<device_t> BlockAllocator::getDevices() {
 
 handle_range_t BlockAllocator::getDeviceRange(device_t d) {
 	for (int i = 0; i < numBlocks; i++) {
-		if (blocks[i] == d) {
+		if (blocks.get()[i] == d) {
 			uint16_t baseHandle = i * blockSize;
 			handle_range_t ret;
 			ret.start = baseHandle;
@@ -52,7 +52,7 @@ handle_range_t BlockAllocator::getDeviceRange(device_t d) {
 }
 
 device_t BlockAllocator::getDeviceForHandle(uint16_t handle) {
-	return blocks[handle / blockSize];
+	return blocks.get()[handle / blockSize];
 }
 
 handle_range_t BlockAllocator::getHandleRange(uint16_t handle) {
@@ -66,8 +66,8 @@ handle_range_t BlockAllocator::getHandleRange(uint16_t handle) {
 handle_range_t BlockAllocator::reserve(device_t d, int n) {
 	assert(n < blockSize);
 	for (int i = 1; i < numBlocks; i++) {
-		if (blocks[i] == NULL_RESERVED_DEVICE) {
-			blocks[i] = d;
+		if (blocks.get()[i] == NULL_RESERVED_DEVICE) {
+			blocks.get()[i] = d;
 			uint16_t base = i * (uint16_t) blockSize;
 			uint16_t ceil = base + (uint16_t) blockSize - 1;
 			return handle_range_t { base, ceil };
@@ -78,8 +78,8 @@ handle_range_t BlockAllocator::reserve(device_t d, int n) {
 
 handle_range_t BlockAllocator::free(device_t d) {
 	for (int i = 1; i < numBlocks; i++) {
-		if (blocks[i] == d) {
-			blocks[i] = NULL_RESERVED_DEVICE;
+		if (blocks.get()[i] == d) {
+			blocks.get()[i] = NULL_RESERVED_DEVICE;
 			uint16_t base = i * (uint16_t) blockSize;
 			uint16_t ceil = base + (uint16_t) blockSize - 1;
 			return handle_range_t { base, ceil };

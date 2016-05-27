@@ -179,7 +179,7 @@ static std::string serializeHandles(std::shared_ptr<Device> d) {
 	std::string currServiceUuid;
 	std::set<std::string> currCharUuids;
 	for (auto &h : d->handles) {
-		PrimaryService *pSvc = dynamic_cast<PrimaryService *>(h.second);
+		auto pSvc = std::dynamic_pointer_cast<PrimaryService>(h.second);
 		if (pSvc) {
 			if (currServiceUuid != "") {
 				json j;
@@ -190,7 +190,7 @@ static std::string serializeHandles(std::shared_ptr<Device> d) {
 			currCharUuids.clear();
 			currServiceUuid = pSvc->getServiceUuid().str();
 		}
-		Characteristic *chr = dynamic_cast<Characteristic *>(h.second);
+		auto chr = std::dynamic_pointer_cast<Characteristic>(h.second);
 		if (chr) {
 			currCharUuids.insert(d->handles[chr->getAttrHandle()]->getUuid().str());
 		}

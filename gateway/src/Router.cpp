@@ -177,7 +177,7 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 				}
 
 				// TODO this allows 16bit handles only
-				Handle *handle = mapping.second;
+				auto handle = mapping.second;
 
 				/*
 				 * Check that access is permitted.
@@ -320,7 +320,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 					break;
 				}
 
-				Handle *handle = mapping.second;
+				auto handle = mapping.second;
 				if (handle->getUuid().getShort() == attType) {
 					/*
 					 * Check whether access is permitted.
@@ -333,7 +333,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 					}
 
 					int cmpLen = (attValLen < handle->cache.len) ? attValLen : handle->cache.len;
-					if (memcmp(handle->cache.value, attValue, cmpLen) == 0) {
+					if (memcmp(handle->cache.value.get(), attValue, cmpLen) == 0) {
 						*(uint16_t *) (resp + respLen) = htobs(offset);
 						*(uint16_t *) (resp + respLen + 2) = htobs(handle->getEndGroupHandle());
 						respLen += 4;
@@ -443,10 +443,10 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 				break;
 			}
 
-			Handle *handle = kv.second;
+			auto handle = kv.second;
 			if (handle->getUuid() == attType) {
 				*(uint16_t*) (resp + 2) = htobs(handle->getHandle());
-				memcpy(resp + 4, handle->cache.value, handle->cache.len);
+				memcpy(resp + 4, handle->cache.value.get(), handle->cache.len);
 				respLen += 2 + handle->cache.len;
 				resp[1] = 2 + handle->cache.len;
 				break;
@@ -535,7 +535,7 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 						pwarn("response for unknown handle : " + std::to_string(handle));
 						continue;
 					}
-					Handle *h = destinationDevice->handles[handle];
+					auto h = destinationDevice->handles[handle];
 
 					/*
 					 * Check if access is permitted.
@@ -661,7 +661,7 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 				}
 
 				// TODO this allows 16bit handles only
-				Handle *handle = mapping.second;
+				auto handle = mapping.second;
 
 				if (handle->getUuid() == attType) {
 					if (respHandleCount == 0) { // set the length
@@ -675,7 +675,7 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 
 					*(uint16_t *) (resp + respLen) = htobs(offset);
 					*(uint16_t *) (resp + respLen + 2) = htobs(handle->getEndGroupHandle() + handleRange.start);
-					memcpy(resp + respLen + 4, handle->cache.value, handle->cache.len);
+					memcpy(resp + respLen + 4, handle->cache.value.get(), handle->cache.len);
 					respLen += resp[1];
 					respHandleCount++;
 					if (respLen + resp[1] > srcMTU) {
@@ -736,11 +736,10 @@ int Router::routeHandleNotifyOrIndicate(uint8_t *buf, int len, device_t src) {
 	std::lock_guard<std::recursive_mutex> handlesLg(sourceDevice->handlesMutex);
 
 	uint16_t handle = btohs(*(uint16_t * )(buf + 1));
-	Handle *h;
 	if (sourceDevice->handles.find(handle) == sourceDevice->handles.end()) {
 		return -1; // no such handle
 	}
-	h = sourceDevice->handles[handle];
+	auto h = sourceDevice->handles[handle];
 
 	for (device_t dst : h->subscribers) {
 		if (beetle.devices.find(dst) == beetle.devices.end()) {
@@ -828,7 +827,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		return 0;
 	}
 
-	Handle *proxyH = destinationDevice->handles[remoteHandle];
+	auto proxyH = destinationDevice->handles[remoteHandle];
 
 	/*
 	 * Query access control.
@@ -845,7 +844,8 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		return 0;
 	}
 
-	if ((opCode == ATT_OP_WRITE_REQ || opCode == ATT_OP_WRITE_CMD) && dynamic_cast<ClientCharCfg *>(proxyH) != NULL) {
+	if ((opCode == ATT_OP_WRITE_REQ || opCode == ATT_OP_WRITE_CMD) &&
+			std::dynamic_pointer_cast<ClientCharCfg>(proxyH) != NULL) {
 		/*
 		 * Length of subscription command needs to be correct.
 		 */
@@ -861,9 +861,9 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		/*
 		 * Update to subscription
 		 */
-		Characteristic *charH = dynamic_cast<Characteristic *>(destinationDevice->handles[proxyH->getCharHandle()]);
-		CharacteristicValue *charAttrH =
-				dynamic_cast<CharacteristicValue *>(destinationDevice->handles[charH->getAttrHandle()]);
+		auto charH = std::dynamic_pointer_cast<Characteristic>(destinationDevice->handles[proxyH->getCharHandle()]);
+		auto charAttrH = std::dynamic_pointer_cast<CharacteristicValue>(
+				destinationDevice->handles[charH->getAttrHandle()]);
 		if (buf[3] == 0) {
 			charAttrH->subscribers.erase(src);
 		} else {
@@ -911,9 +911,9 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		int respLen = 1 + proxyH->cache.len;
 		uint8_t resp[respLen];
 		resp[0] = ATT_OP_READ_RESP;
-		memcpy(resp + 1, proxyH->cache.value, proxyH->cache.len);
+		memcpy(resp + 1, proxyH->cache.value.get(), proxyH->cache.len);
 
-		Characteristic *ch = dynamic_cast<Characteristic *>(proxyH);
+		auto ch = std::dynamic_pointer_cast<Characteristic>(proxyH);
 		if (ch) {
 			/*
 			 * This works because characterisics are cached infinitely.
@@ -961,7 +961,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 								} else {
 									std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
 									std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
-									Handle *proxyH = destinationDevice->handles[remoteHandle];
+									auto proxyH = destinationDevice->handles[remoteHandle];
 									proxyH->cache.cachedSet.clear();
 									int tmpLen = respLen - 1;
 									uint8_t *tmpVal = new uint8_t[tmpLen];

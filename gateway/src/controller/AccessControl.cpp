@@ -403,8 +403,8 @@ static inline bool isWriteReq(uint8_t op) {
 			|| op == ATT_OP_EXEC_WRITE_REQ;
 }
 
-bool AccessControl::canAccessHandle(std::shared_ptr<Device> client, std::shared_ptr<Device> server, Handle *handle,
-		uint8_t op, uint8_t &attErr) {
+bool AccessControl::canAccessHandle(std::shared_ptr<Device> client, std::shared_ptr<Device> server,
+		std::shared_ptr<Handle> handle, uint8_t op, uint8_t &attErr) {
 	if (client->getType() == Device::TCP_CLIENT_PROXY) {
 		return true;
 	} else if (client->getType() == Device::TCP_SERVER_PROXY) {
@@ -427,7 +427,7 @@ bool AccessControl::canAccessHandle(std::shared_ptr<Device> client, std::shared_
 	/*
 	 * Case 1: This handle is a service.
 	 */
-	PrimaryService *ps = dynamic_cast<PrimaryService *>(handle);
+	std::shared_ptr<PrimaryService> ps = std::dynamic_pointer_cast<PrimaryService>(handle);
 	if (ps) {
 		if (ruleMapping.service_char_rules.find(ps->getServiceUuid()) == ruleMapping.service_char_rules.end()) {
 			return false;
@@ -439,9 +439,9 @@ bool AccessControl::canAccessHandle(std::shared_ptr<Device> client, std::shared_
 	/*
 	 * Case 2: This handle is a characteristic.
 	 */
-	Characteristic *ch = dynamic_cast<Characteristic *>(handle);
+	auto ch = std::dynamic_pointer_cast<Characteristic>(handle);
 	if (ch) {
-		ps = dynamic_cast<PrimaryService *>(server->handles[ch->getServiceHandle()]);
+		ps = std::dynamic_pointer_cast<PrimaryService>(server->handles[ch->getServiceHandle()]);
 		if (!ps) {
 			return false;
 		}
@@ -461,8 +461,8 @@ bool AccessControl::canAccessHandle(std::shared_ptr<Device> client, std::shared_
 	/*
 	 * Case 3: This is a handle that is part of a service.
 	 */
-	ps = dynamic_cast<PrimaryService *>(server->handles[handle->getServiceHandle()]);
-	ch = dynamic_cast<Characteristic *>(server->handles[handle->getCharHandle()]);
+	ps = std::dynamic_pointer_cast<PrimaryService>(server->handles[handle->getServiceHandle()]);
+	ch = std::dynamic_pointer_cast<Characteristic>(server->handles[handle->getCharHandle()]);
 	if (!ps || !ch) {
 		return false;
 	}
@@ -478,7 +478,7 @@ bool AccessControl::canAccessHandle(std::shared_ptr<Device> client, std::shared_
 	/*
 	 * SubCase: char config
 	 */
-	ClientCharCfg *ccc = dynamic_cast<ClientCharCfg *>(handle);
+	auto ccc = std::dynamic_pointer_cast<ClientCharCfg>(handle);
 	if (ccc) {
 		if (!isWriteReq(op)) {
 			return true;
@@ -542,7 +542,7 @@ bool AccessControl::canAccessHandle(std::shared_ptr<Device> client, std::shared_
 }
 
 bool AccessControl::getCharAccessProperties(std::shared_ptr<Device> client, std::shared_ptr<Device> server,
-		Handle *handle, uint8_t &properties) {
+		std::shared_ptr<Handle> handle, uint8_t &properties) {
 	boost::shared_lock<boost::shared_mutex> lk(cacheMutex);
 	if (client->getType() == Device::TCP_CLIENT_PROXY) {
 		properties = 0xFF;
@@ -559,9 +559,9 @@ bool AccessControl::getCharAccessProperties(std::shared_ptr<Device> client, std:
 	cached_mapping_info_t &ruleMapping = cache[key];
 	properties = 0;
 
-	Characteristic *ch = dynamic_cast<Characteristic *>(handle);
+	auto ch = std::dynamic_pointer_cast<Characteristic>(handle);
 	if (ch) {
-		PrimaryService *ps = dynamic_cast<PrimaryService *>(server->handles[ch->getServiceHandle()]);
+		auto ps = std::dynamic_pointer_cast<PrimaryService>(server->handles[ch->getServiceHandle()]);
 		if (!ps) {
 			return false;
 		}

@@ -76,7 +76,7 @@ public:
 	/*
 	 * Handles that this device exposes to other devices as a server.
 	 */
-	std::map<uint16_t, Handle *> handles;
+	std::map<uint16_t, std::shared_ptr<Handle>> handles;
 	std::recursive_mutex handlesMutex;
 
 	/*

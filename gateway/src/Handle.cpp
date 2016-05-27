@@ -13,16 +13,11 @@
 #include "ble/gatt.h"
 
 CachedHandle::~CachedHandle() {
-	if (value != NULL) {
-		delete[] value;
-	}
+
 }
 
 void CachedHandle::set(uint8_t *value_, int len_) {
-	if (value != NULL) {
-		delete[] value;
-	}
-	value = value_;
+	value.reset(value_);
 	len = len_;
 	::time(&(time));
 }
@@ -100,7 +95,7 @@ std::string Handle::str() const {
 		ss << "\tcache: [";
 		std::string sep = "";
 		for (int i = 0; i < cache.len; i++) {
-			ss << sep << (unsigned int) cache.value[i];
+			ss << sep << (unsigned int) cache.value.get()[i];
 			sep = ",";
 		}
 		ss << ']';
@@ -113,12 +108,12 @@ PrimaryService::PrimaryService() {
 }
 
 UUID PrimaryService::getServiceUuid() const {
-	return UUID(cache.value, cache.len);
+	return UUID(cache.value.get(), cache.len);
 }
 
 std::string PrimaryService::str() const {
 	std::stringstream ss;
-	ss << handle << "\t" << "[PrimaryService]" << "\tuuid=" << UUID(cache.value, cache.len).str() << "\tend="
+	ss << handle << "\t" << "[PrimaryService]" << "\tuuid=" << UUID(cache.value.get(), cache.len).str() << "\tend="
 			<< endGroupHandle;
 	return ss.str();
 }
@@ -128,15 +123,15 @@ Characteristic::Characteristic() {
 }
 
 uint16_t Characteristic::getAttrHandle() const {
-	return *(uint16_t *) (cache.value + 1);
+	return *(uint16_t *) (cache.value.get() + 1);
 }
 
 UUID Characteristic::getCharUuid() const {
-	return UUID(cache.value + 3, cache.len - 3);
+	return UUID(cache.value.get() + 3, cache.len - 3);
 }
 
 uint8_t Characteristic::getProperties() const {
-	return cache.value[0];
+	return cache.value.get()[0];
 }
 
 static std::string getPropertiesString(uint8_t properties) {
@@ -156,8 +151,9 @@ std::string Characteristic::str() const {
 	std::stringstream ss;
 	ss << handle << "\t" << "[Characteristic]" << "\tsH=" << serviceHandle << "\t";
 	if (cache.value != NULL && cache.len >= 5) {
-		uint8_t properties = cache.value[0];
-		ss << "uuid=" << UUID(cache.value + 3, cache.len - 3).str() << "\tvH=" << btohs(*(uint16_t * )(cache.value + 1))
+		uint8_t properties = cache.value.get()[0];
+		ss << "uuid=" << UUID(cache.value.get() + 3, cache.len - 3).str() << "\tvH="
+				<< btohs(*(uint16_t * )(cache.value.get() + 1))
 				<< "\t" << getPropertiesString(properties) << "\tend=" << endGroupHandle;
 	} else {
 		ss << "unknown or malformed";
