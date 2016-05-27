@@ -130,7 +130,7 @@ void BeetleInternal::init() {
 	gapDeviceNameCharHandle->setCacheInfinite(true);
 	handles[gapDeviceNameCharHandle->getHandle()] = gapDeviceNameCharHandle;
 
-	Handle *gapDeviceNameAttrHandle = new Handle();
+	Handle *gapDeviceNameAttrHandle = new CharacteristicValue();
 	gapDeviceNameAttrHandle->setHandle(handleAlloc++);
 	gapDeviceNameAttrHandle->setUuid(UUID(GATT_GAP_CHARAC_DEVICE_NAME_UUID));
 	gapDeviceNameAttrHandle->setServiceHandle(gapServiceHandle->getHandle());
@@ -172,13 +172,13 @@ void BeetleInternal::init() {
 	gattServiceChangedCharHandle->setCacheInfinite(true);
 	handles[gattServiceChangedCharHandle->getHandle()] = gattServiceChangedCharHandle;
 
-	Handle *gattServiceChangedAttrHandle = new Handle();
+	Handle *gattServiceChangedAttrHandle = new CharacteristicValue();
 	gattServiceChangedAttrHandle->setHandle(handleAlloc++);
 	gattServiceChangedAttrHandle->setUuid(UUID(GATT_GATT_CHARAC_SERVICE_CHANGED_UUID));
 	gattServiceChangedAttrHandle->setServiceHandle(gattServiceHandle->getHandle());
 	gattServiceChangedAttrHandle->setCharHandle(gattServiceChangedCharHandle->getHandle());
 	gattServiceChangedAttrHandle->cache.set(NULL, 0);
-	gattServiceChangedAttrHandle->setCacheInfinite(false);
+	gattServiceChangedAttrHandle->setCacheInfinite(true);
 	handles[gattServiceChangedAttrHandle->getHandle()] = gattServiceChangedAttrHandle;
 
 	// fill in attr handle for characteristic
@@ -190,7 +190,7 @@ void BeetleInternal::init() {
 	gattServiceChangedCfgHandle->setServiceHandle(gattServiceHandle->getHandle());
 	gattServiceChangedCfgHandle->setCharHandle(gattServiceChangedCharHandle->getHandle());
 	gattServiceChangedCfgHandle->cache.set(NULL, 0);
-	gattServiceChangedCfgHandle->setCacheInfinite(false);
+	gattServiceChangedCfgHandle->setCacheInfinite(true);
 	handles[gattServiceChangedCfgHandle->getHandle()] = gattServiceChangedCfgHandle;
 
 	// end the characteristic

@@ -46,7 +46,7 @@ VirtualDevice::VirtualDevice(Beetle &beetle, bool isEndpoint_, HandleAllocationT
 
 VirtualDevice::~VirtualDevice() {
 	transactionMutex.lock();
-	if (currentTransaction) {
+	if (currentTransaction != NULL) {
 		uint8_t err[ATT_ERROR_PDU_LEN];
 		pack_error_pdu(currentTransaction->buf[0], 0, ATT_ECODE_ABORTED, err);
 		currentTransaction->cb(err, ATT_ERROR_PDU_LEN);
@@ -485,7 +485,7 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 typedef struct {
 	uint8_t format;
 	uint16_t handle;
-	uuid_t uuid;
+	UUID uuid;
 } handle_info_t;
 
 static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t startGroup, uint16_t endGroup) {
@@ -521,13 +521,7 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 				handle_info_t handleInfo;
 				handleInfo.format = format;
 				handleInfo.handle = btohs(*(uint16_t * )(resp + i));
-				if (format == ATT_FIND_INFO_RESP_FMT_16BIT) {
-					memset(handleInfo.uuid.value, 0, 2);
-					memcpy(handleInfo.uuid.value + 2, resp + i + 2, attDataLen - 2);
-					memcpy(handleInfo.uuid.value + 4, BLUETOOTH_BASE_UUID, 12);
-				} else {
-					memcpy(handleInfo.uuid.value, resp + i + 2, attDataLen - 2);
-				}
+				handleInfo.uuid = UUID(resp + i + 2, attDataLen - 2);
 				handles.push_back(handleInfo);
 				if (debug_discovery) {
 					pdebug("found handle at " + std::to_string(handleInfo.handle));
@@ -597,7 +591,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 
 				std::vector<handle_info_t> handleInfos = discoverHandles(d, startGroup, endGroup);
 				for (handle_info_t &handleInfo : handleInfos) {
-					UUID handleUuid = UUID(handleInfo.uuid);
+					UUID handleUuid = handleInfo.uuid;
 					Handle *handle;
 					if (handleUuid.isShort() && handleUuid.getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
 						handle = new ClientCharCfg();
@@ -625,7 +619,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 
 			std::vector<handle_info_t> handleInfos = discoverHandles(d, startGroup, endGroup);
 			for (handle_info_t &handleInfo : handleInfos) {
-				UUID handleUuid = UUID(handleInfo.uuid);
+				UUID handleUuid = handleInfo.uuid;
 				Handle *handle;
 				if (handleUuid.isShort() && handleUuid.getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
 					handle = new ClientCharCfg();

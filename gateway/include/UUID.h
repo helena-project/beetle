@@ -35,24 +35,14 @@ public:
 	/*
 	 * A uuid from the buffer. len must be either 2 or 16
 	 */
-	UUID(uint8_t *buf, size_t len);
+	UUID(uint8_t *buf, size_t len, bool reversed = true);
 
 	/*
 	 * Load uuid from string.
 	 */
 	UUID(std::string s);
 
-	/*
-	 * An uuid from an existing uuid
-	 */
-	UUID(uuid_t uuid_);
-
 	virtual ~UUID();
-
-	/*
-	 * Returns the full 128-bit uuid.
-	 */
-	uuid_t get() const;
 
 	/*
 	 * Returns the 16-bit short uuid.
@@ -72,7 +62,7 @@ public:
 	    return memcmp(uuid.value, rhs.uuid.value, UUID_LEN) == 0;
 	}
 
-	std::string str() const;
+	std::string str(bool forceLong = false) const;
 private:
 	uuid_t uuid;
 };
