@@ -156,13 +156,13 @@ void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_
 		 * Takes over the clifd
 		 */
 		if (clientParams.find(TCP_PARAM_GATEWAY) == clientParams.end()) {
-			device.reset(new TCPClient(beetle, ssl, clifd, clientParams[TCP_PARAM_CLIENT], cliaddr));
+			device = std::make_shared<TCPClient>(beetle, ssl, clifd, clientParams[TCP_PARAM_CLIENT], cliaddr);
 		} else {
 			// name of the client gateway
 			std::string client = clientParams[TCP_PARAM_GATEWAY];
 			// device that the client is requesting
 			device_t deviceId = std::stol(clientParams[TCP_PARAM_DEVICE]);
-			device.reset(new TCPClientProxy(beetle, ssl, clifd, client, cliaddr, deviceId));
+			device = std::make_shared<TCPClientProxy>(beetle, ssl, clifd, client, cliaddr, deviceId);
 		}
 
 		boost::shared_lock<boost::shared_mutex> devicesLk;

@@ -88,7 +88,7 @@ void UnixDomainSocketServer::startIPCDeviceHelper(int clifd, struct sockaddr_un 
 		/*
 		 * Takes over the clifd
 		 */
-		device.reset(new IPCApplication(beetle, clifd, "PID-" + std::to_string(clicred.pid), cliaddr, clicred));
+		device = std::make_shared<IPCApplication>(beetle, clifd, "PID-" + std::to_string(clicred.pid), cliaddr, clicred);
 
 		boost::shared_lock<boost::shared_mutex> devicesLk;
 		beetle.addDevice(device, devicesLk);

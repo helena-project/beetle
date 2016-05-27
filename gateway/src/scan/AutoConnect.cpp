@@ -27,7 +27,7 @@
 #include "util/trim.h"
 
 static inline double min(double x, double y) {
-	return ((x > y) ? y : x);
+	return (x > y) ? y : x;
 }
 
 AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, std::string autoConnectBlacklist) :
@@ -128,7 +128,7 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 void AutoConnect::connect(peripheral_info_t info, bool discover) {
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
-		device.reset(new LEPeripheral(beetle, info.bdaddr, info.bdaddrType));
+		device = std::make_shared<LEPeripheral>(beetle, info.bdaddr, info.bdaddrType);
 
 		boost::shared_lock<boost::shared_mutex> devicesLk;
 		beetle.addDevice(device, devicesLk);

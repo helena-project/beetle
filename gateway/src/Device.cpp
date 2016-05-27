@@ -34,19 +34,16 @@ Device::Device(Beetle &beetle_, HandleAllocationTable *hat_) :
 }
 
 Device::Device(Beetle &beetle_, device_t id_, HandleAllocationTable *hat_) :
-		beetle(beetle_) {
+		hat(hat_), beetle(beetle_) {
 	id = id_;
-	if (!hat_) {
-		hat_ = new BlockAllocator(256);
+	if (!hat) {
+		hat = std::make_unique<BlockAllocator>(256);
 	}
-	hat.reset(hat_);
 	type = UNKNOWN;
 }
 
 Device::~Device() {
-	handlesMutex.lock();
-	handles.clear();
-	handlesMutex.unlock();
+
 }
 
 device_t Device::getId() {

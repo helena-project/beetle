@@ -254,7 +254,7 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
-		device.reset(new LEPeripheral(beetle, addr, addrType));
+		device = std::make_shared<LEPeripheral>(beetle, addr, addrType);
 
 		boost::shared_lock<boost::shared_mutex> devicesLk;
 		beetle.addDevice(device, devicesLk);
