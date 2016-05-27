@@ -7,12 +7,14 @@
 
 #include "device/socket/IPCApplication.h"
 
+#include <boost/shared_array.hpp>
 #include <cstring>
 #include <errno.h>
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <unistd.h>
+#include <memory>
 
 #include "Beetle.h"
 #include "Debug.h"
@@ -27,6 +29,7 @@ IPCApplication::IPCApplication(Beetle &beetle, int sockfd_, std::string name_, s
 	sockfd = sockfd_;
 	sockaddr = sockaddr_;
 	ucred = ucred_;
+	stopped = false;
 }
 
 IPCApplication::~IPCApplication() {
@@ -52,7 +55,10 @@ bool IPCApplication::write(uint8_t *buf, int len) {
 		return false;
 	}
 
-	std::shared_ptr<uint8_t> bufCpy(new uint8_t[len]);
+	assert(buf);
+	assert(len > 0);
+
+	boost::shared_array<uint8_t> bufCpy(new uint8_t[len]);
 	memcpy(bufCpy.get(), buf, len);
 	pendingWrites.increment();
 	beetle.writers.schedule(getId(), [this, bufCpy, len] {

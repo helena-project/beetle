@@ -133,21 +133,28 @@ void VirtualDevice::writeTransaction(uint8_t *buf, int len, std::function<void(u
 }
 
 int VirtualDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&resp) {
-	std::shared_ptr<Semaphore> sema(new Semaphore(0));
-	std::shared_ptr<int> respLenPtr(new int);
-	std::shared_ptr<std::unique_ptr<uint8_t>> respPtr(new std::unique_ptr<uint8_t>());
+	auto sema = std::make_shared<Semaphore>(0);
+	auto respLenPtr = std::make_shared<int>();
+	auto respPtr = std::make_shared<boost::shared_array<uint8_t>>();
 	writeTransaction(buf, len, [sema, respPtr, respLenPtr](uint8_t *resp_, int respLen_) {
 		if (resp_ != NULL && respLen_ > 0) {
 			respPtr->reset(new uint8_t[respLen_]);
-			memcpy(respPtr->get(), resp_, respLen_);
+			memcpy(respPtr.get()->get(), resp_, respLen_);
 		}
 		*respLenPtr = respLen_;
 		sema->notify();
 	});
 
 	if (sema->try_wait(10)) {
-		resp = respPtr->release();
-		return *respLenPtr;
+		int respLen = *respLenPtr;
+		if (respPtr->get() != NULL && respLen > 0) {
+			resp = new uint8_t[respLen];
+			memcpy(resp, respPtr->get(),respLen);
+			return respLen;
+		} else {
+			resp = NULL;
+			return -1;
+		}
 	} else {
 		if (debug) {
 			pdebug("blocking transaction timed out");
@@ -344,7 +351,7 @@ static std::string discoverDeviceName(VirtualDevice *d) {
 typedef struct {
 	uint16_t handle;
 	uint16_t endGroup;
-	std::shared_ptr<uint8_t> value;
+	boost::shared_array<uint8_t> value;
 	int len;
 } group_t;
 
@@ -371,7 +378,7 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
 
 		/* Somewhat of a hack */
-		std::unique_ptr<uint8_t> respOwner(resp);
+		boost::shared_array<uint8_t> respOwner(resp);
 
 		if (resp == NULL || respLen < 2) {
 			throw DeviceException("error on transaction");
@@ -412,7 +419,7 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 
 typedef struct {
 	uint16_t handle;
-	std::shared_ptr<uint8_t> value;
+	boost::shared_array<uint8_t> value;
 	int len;
 } handle_value_t;
 
@@ -437,7 +444,7 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
 
 		/* Somewhat of a hack */
-		std::unique_ptr<uint8_t> respOwner(resp);
+		boost::shared_array<uint8_t> respOwner(resp);
 
 		if (resp == NULL || respLen < 2) {
 			throw DeviceException("error on transaction");
@@ -502,7 +509,7 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
 
 		/* Somewhat of a hack */
-		std::unique_ptr<uint8_t> respOwner(resp);
+		boost::shared_array<uint8_t> respOwner(resp);
 
 		if (resp == NULL || respLen < 2) {
 			throw DeviceException("error on transaction");

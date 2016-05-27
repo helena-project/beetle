@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <set>
 #include <memory>
+#include <boost/shared_array.hpp>
 
 #include "BeetleTypes.h"
 #include "HandleAllocationTable.h"
@@ -33,7 +34,7 @@ public:
 private:
 	int blockSize;
 	int numBlocks;
-	std::unique_ptr<device_t> blocks;
+	boost::shared_array<device_t> blocks;
 };
 
 #endif /* INCLUDE_HAT_BLOCKALLOCATOR_H_ */

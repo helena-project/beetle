@@ -8,6 +8,7 @@
 #ifndef INCLUDE_HANDLE_H_
 #define INCLUDE_HANDLE_H_
 
+#include <boost/shared_array.hpp>
 #include <cstdint>
 #include <ctime>
 #include <memory>
@@ -25,7 +26,7 @@ public:
 	 * Transfers ownership of value pointer to cache.
 	 */
 	void set(uint8_t *value, int len);
-	std::unique_ptr<uint8_t> value;
+	boost::shared_array<uint8_t> value;
 
 	int len = 0;
 	time_t time = 0;

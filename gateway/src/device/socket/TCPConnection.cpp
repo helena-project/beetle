@@ -15,6 +15,7 @@
 #include <iostream>
 #include <openssl/ossl_typ.h>
 #include <sstream>
+#include <memory>
 
 #include "Beetle.h"
 #include "ble/att.h"
@@ -28,6 +29,7 @@ TCPConnection::TCPConnection(Beetle &beetle, SSL *ssl_, int sockfd_, struct sock
 	ssl = ssl_;
 	sockfd = sockfd_;
 	sockaddr = sockaddr_;
+	stopped = false;
 }
 
 TCPConnection::~TCPConnection() {
@@ -54,7 +56,11 @@ bool TCPConnection::write(uint8_t *buf, int len) {
 		return false;
 	}
 
-	std::shared_ptr<uint8_t> bufCpy(new uint8_t[len]);
+	assert(buf);
+	assert(len > 0);
+
+	boost::shared_array<uint8_t> bufCpy(new uint8_t[len]);
+
 	memcpy(bufCpy.get(), buf, len);
 	pendingWrites.increment();
 	beetle.writers.schedule(getId(), [this, bufCpy, len] {

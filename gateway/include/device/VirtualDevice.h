@@ -8,12 +8,14 @@
 #ifndef VIRTUALDEVICE_H_
 #define VIRTUALDEVICE_H_
 
+#include <boost/shared_array.hpp>
 #include <stddef.h>
 #include <cstdint>
 #include <functional>
 #include <mutex>
 #include <queue>
 #include <vector>
+#include <memory>
 
 #include "BeetleTypes.h"
 #include "Device.h"
@@ -23,7 +25,7 @@
 extern bool debug_discovery;
 
 typedef struct {
-	std::shared_ptr<uint8_t> buf;
+	boost::shared_array<uint8_t> buf;
 	int len;
 	std::function<void(uint8_t*, int)> cb;
 } transaction_t;

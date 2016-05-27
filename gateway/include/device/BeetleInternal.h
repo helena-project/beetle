@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <memory>
 
 #include "ble/att.h"
 #include "BeetleTypes.h"

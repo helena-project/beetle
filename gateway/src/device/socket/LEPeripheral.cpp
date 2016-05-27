@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 #include <sstream>
 #include <unistd.h>
+#include <memory>
 
 #include "Beetle.h"
 #include "ble/att.h"
@@ -29,16 +30,20 @@ LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType) :
 
 	bdaddr = addr;
 	bdaddrType = addrType;
+	stopped = false;
 
-	struct sockaddr_l2 loc_addr = { 0 };
+	struct sockaddr_l2 loc_addr;
+	memset(&loc_addr, 0, sizeof(struct sockaddr_l2));
 	loc_addr.l2_family = AF_BLUETOOTH;
-	bdaddr_t tmp = { 0, 0, 0, 0, 0, 0 }; // BDADDR_ANY
+	bdaddr_t tmp;
+	memset(tmp.b, 0, sizeof(bdaddr_t));
 	bacpy(&loc_addr.l2_bdaddr, &tmp);
 	loc_addr.l2_psm = 0;
 	loc_addr.l2_cid = htobs(ATT_CID);
 	loc_addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
 
-	struct sockaddr_l2 rem_addr = { 0 };
+	struct sockaddr_l2 rem_addr;
+	memset(&rem_addr, 0, sizeof(struct sockaddr_l2));
 	rem_addr.l2_family = AF_BLUETOOTH;
 	bacpy(&rem_addr.l2_bdaddr, &bdaddr);
 	rem_addr.l2_psm = 0;
@@ -105,7 +110,7 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 		return false;
 	}
 
-	std::shared_ptr<uint8_t> bufCpy(new uint8_t[len]);
+	boost::shared_array<uint8_t> bufCpy(new uint8_t[len]);
 	memcpy(bufCpy.get(), buf, len);
 	pendingWrites.increment();
 	beetle.writers.schedule(getId(), [this, bufCpy, len] {

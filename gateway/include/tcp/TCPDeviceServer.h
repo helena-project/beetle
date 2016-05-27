@@ -12,6 +12,7 @@
 #include <openssl/ossl_typ.h>
 #include <string>
 #include <thread>
+#include <memory>
 
 #include "BeetleTypes.h"
 #include "tcp/SSLConfig.h"

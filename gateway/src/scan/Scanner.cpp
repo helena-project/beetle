@@ -11,9 +11,11 @@
 #include <bluetooth/hci_lib.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <cassert>
 #include <cstring>
 #include <sstream>
+#include <atomic>
+#include <cstdlib>
+#include <thread>
 
 #include "ble/helper.h"
 #include "Debug.h"

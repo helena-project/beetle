@@ -13,6 +13,7 @@
 #include <boost/network/protocol/http/client.hpp>
 #include <exception>
 #include <string>
+#include <memory>
 
 #include "BeetleTypes.h"
 

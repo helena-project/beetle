@@ -13,8 +13,8 @@
 #include <exception>
 #include <functional>
 #include <string>
-#include <thread>
 #include <vector>
+#include <memory>
 
 #include "device/socket/LEPeripheral.h"
 
