@@ -52,9 +52,6 @@ void BeetleInternal::writeCommand(uint8_t *buf, int len) {
  * Should never get called. All reads and writes are serviced by the cache.
  */
 void BeetleInternal::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
-	if (debug) {
-		pwarn("Beetle received an unanticipated request");
-	}
 	uint8_t *resp;
 	int respLen = writeTransactionBlocking(buf, len, resp);
 	cb(resp, respLen);
@@ -178,7 +175,7 @@ void BeetleInternal::init() {
 	gattServiceChangedAttrHandle->setServiceHandle(gattServiceHandle->getHandle());
 	gattServiceChangedAttrHandle->setCharHandle(gattServiceChangedCharHandle->getHandle());
 	gattServiceChangedAttrHandle->cache.set(NULL, 0);
-	gattServiceChangedAttrHandle->setCacheInfinite(true);
+	gattServiceChangedAttrHandle->setCacheInfinite(false);
 	handles[gattServiceChangedAttrHandle->getHandle()] = gattServiceChangedAttrHandle;
 
 	// fill in attr handle for characteristic
@@ -190,7 +187,7 @@ void BeetleInternal::init() {
 	gattServiceChangedCfgHandle->setServiceHandle(gattServiceHandle->getHandle());
 	gattServiceChangedCfgHandle->setCharHandle(gattServiceChangedCharHandle->getHandle());
 	gattServiceChangedCfgHandle->cache.set(NULL, 0);
-	gattServiceChangedCfgHandle->setCacheInfinite(true);
+	gattServiceChangedCfgHandle->setCacheInfinite(false);
 	handles[gattServiceChangedCfgHandle->getHandle()] = gattServiceChangedCfgHandle;
 
 	// end the characteristic

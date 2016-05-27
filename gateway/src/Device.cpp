@@ -20,7 +20,8 @@
 
 std::atomic_int Device::idCounter(1);
 
-const std::string Device::deviceType2Str[] = { "BeetleInternal", 	// 0
+const std::string Device::deviceType2Str[] = {
+		"BeetleInternal", 	// 0
 		"LePeripheral", 	// 1
 		"TcpClient",		// 2
 		"IpcApplication",	// 3
@@ -83,6 +84,12 @@ void Device::unsubscribeAll(device_t d) {
 		CharacteristicValue *cvH = dynamic_cast<CharacteristicValue *>(kv.second);
 		if (cvH && cvH->getUuid().isShort() && cvH->subscribers.find(d) != cvH->subscribers.end()) {
 			cvH->subscribers.erase(d);
+
+			// No need to forward unsubscribe
+			if (type == BEETLE_INTERNAL) {
+				continue;
+			}
+
 			if (cvH->subscribers.size() == 0) {
 				charCccdsToWrite.insert(cvH->getCharHandle());
 			}
