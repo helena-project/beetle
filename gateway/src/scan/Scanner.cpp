@@ -33,6 +33,10 @@ Scanner::Scanner() {
 
 Scanner::~Scanner() {
 	running->clear();
+
+	/*
+	 * Can't join daemon since shutdown(SHUR_RDWR) doesn't work on hci sockets. Have to destruct without waiting.
+	 */
 }
 
 static void scanDaemon(std::shared_ptr<std::atomic_flag> terminated, std::vector<DiscoveryHandler> handlers,
@@ -100,8 +104,10 @@ static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval
 //	}
 //}
 
-static int deviceHandle = -1;
-//static struct hci_filter oldFilter;
+/*
+ * TODO: this is a hack
+ */
+static int staticDeviceHandle = -1;
 static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<DiscoveryHandler> handlers,
 		uint16_t scanInterval, uint16_t scanWindow) {
 	if (debug) {
@@ -113,19 +119,21 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 		throw ScannerException("could not get hci device");
 	}
 
-	deviceHandle = hci_open_dev(deviceId);
+	int deviceHandle = hci_open_dev(deviceId);
 	if (deviceHandle < 0) {
 		throw ScannerException("could not get handle to hci device");
+	} else {
+		staticDeviceHandle = deviceHandle;
 	}
 
  	startScanHelper(deviceHandle, scanInterval, scanWindow);
 	std::atexit([]{
-		if (deviceHandle >= 0) {
+		if (staticDeviceHandle >= 0) {
 			if (debug_scan) {
 				pdebug("stopping scan and closing device");
 			}
-//			stopScanHelper(deviceHandle, oldFilter);
-			hci_close_dev(deviceHandle);
+//			stopScanHelper(staticDeviceHandle, staticOldFilter);
+			hci_close_dev(staticDeviceHandle);
 		}
 	});
 
@@ -173,7 +181,7 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 				bool isRunning = running->test_and_set();
 				if (isRunning) {
 					/*
-					 * TODO: not quite memory safe
+					 * Not quite memory safe on exit
 					 */
 					cb(addr, peripheral_info_t { name, info->bdaddr, addrType });
 				} else {
