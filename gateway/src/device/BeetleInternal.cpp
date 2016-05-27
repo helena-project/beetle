@@ -111,18 +111,18 @@ void BeetleInternal::init() {
 	 */
 	auto gapServiceHandle = std::make_shared<PrimaryService>();
 	gapServiceHandle->setHandle(handleAlloc++);
-	uint16_t *gapHandleUUID = new uint16_t[1];
-	*gapHandleUUID = btohs(GATT_GAP_SERVICE_UUID);
-	gapServiceHandle->cache.set((uint8_t *) gapHandleUUID, sizeof(uint16_t));
+	auto gapHandleUUID = boost::shared_array<uint8_t>(new uint8_t[2]);
+	*(uint16_t *) gapHandleUUID.get() = btohs(GATT_GAP_SERVICE_UUID);
+	gapServiceHandle->cache.set(gapHandleUUID, 2);
 	gapServiceHandle->setCacheInfinite(true);
 	handles[gapServiceHandle->getHandle()] = gapServiceHandle;
 
 	auto gapDeviceNameCharHandle = std::make_shared<Characteristic>();
 	gapDeviceNameCharHandle->setHandle(handleAlloc++);
 	gapDeviceNameCharHandle->setServiceHandle(gapServiceHandle->getHandle());
-	uint8_t *gapDeviceNameCharHandleValue = new uint8_t[5];
+	auto gapDeviceNameCharHandleValue = boost::shared_array<uint8_t>(new uint8_t[5]);
 	gapDeviceNameCharHandleValue[0] = GATT_CHARAC_PROP_READ;
-	*(uint16_t *) (gapDeviceNameCharHandleValue + 3) = htobs(GATT_GAP_CHARAC_DEVICE_NAME_UUID);
+	*(uint16_t *) (gapDeviceNameCharHandleValue.get() + 3) = htobs(GATT_GAP_CHARAC_DEVICE_NAME_UUID);
 	gapDeviceNameCharHandle->cache.set(gapDeviceNameCharHandleValue, 5);
 	gapDeviceNameCharHandle->setCacheInfinite(true);
 	handles[gapDeviceNameCharHandle->getHandle()] = gapDeviceNameCharHandle;
@@ -132,15 +132,15 @@ void BeetleInternal::init() {
 	gapDeviceNameAttrHandle->setUuid(UUID(GATT_GAP_CHARAC_DEVICE_NAME_UUID));
 	gapDeviceNameAttrHandle->setServiceHandle(gapServiceHandle->getHandle());
 	gapDeviceNameAttrHandle->setCharHandle(gapDeviceNameCharHandle->getHandle());
-	uint8_t *gapDeviceNameAttrHandleValue = new uint8_t[name.length()];
-	memcpy(gapDeviceNameAttrHandleValue, name.c_str(), name.length());
+	auto gapDeviceNameAttrHandleValue = boost::shared_array<uint8_t>(new uint8_t[name.length()]);
+	memcpy(gapDeviceNameAttrHandleValue.get(), name.c_str(), name.length());
 	gapDeviceNameAttrHandle->cache.set(gapDeviceNameAttrHandleValue, name.length());
 	gapDeviceNameAttrHandle->setCacheInfinite(true);
 	handles[gapDeviceNameAttrHandle->getHandle()] = gapDeviceNameAttrHandle;
 
 	// fill in attr handle for characteristic
 	gapDeviceNameCharHandle->setCharHandle(gapDeviceNameAttrHandle->getHandle());
-	*(uint16_t *) (gapDeviceNameCharHandleValue + 1) = htobs(gapDeviceNameAttrHandle->getHandle());
+	*(uint16_t *) (gapDeviceNameCharHandleValue.get() + 1) = htobs(gapDeviceNameAttrHandle->getHandle());
 
 	// end the characteristic
 	gapDeviceNameCharHandle->setEndGroupHandle(gapDeviceNameAttrHandle->getHandle());
@@ -153,18 +153,18 @@ void BeetleInternal::init() {
 	 */
 	auto gattServiceHandle = std::make_shared<PrimaryService>();
 	gattServiceHandle->setHandle(handleAlloc++);
-	uint16_t *gattHandleUUID = new uint16_t[1];
-	*gattHandleUUID = btohs(GATT_GATT_SERVICE_UUID);
-	gattServiceHandle->cache.set((uint8_t *) gattHandleUUID, sizeof(uint16_t));
+	auto gattHandleUUID = boost::shared_array<uint8_t>(new uint8_t[2]);
+	*(uint16_t *) gattHandleUUID.get() = btohs(GATT_GATT_SERVICE_UUID);
+	gattServiceHandle->cache.set(gattHandleUUID, 2);
 	gattServiceHandle->setCacheInfinite(true);
 	handles[gattServiceHandle->getHandle()] = gattServiceHandle;
 
 	auto gattServiceChangedCharHandle = std::make_shared<Characteristic>();
 	gattServiceChangedCharHandle->setHandle(handleAlloc++);
 	gattServiceChangedCharHandle->setServiceHandle(gattServiceHandle->getHandle());
-	uint8_t *gattServiceChangedCharHandleValue = new uint8_t[5];
+	auto gattServiceChangedCharHandleValue = boost::shared_array<uint8_t>(new uint8_t[5]);
 	gattServiceChangedCharHandleValue[0] = GATT_CHARAC_PROP_NOTIFY;
-	*(uint16_t *) (gattServiceChangedCharHandleValue + 3) = htobs(GATT_GATT_CHARAC_SERVICE_CHANGED_UUID);
+	*(uint16_t *) (gattServiceChangedCharHandleValue.get() + 3) = htobs(GATT_GATT_CHARAC_SERVICE_CHANGED_UUID);
 	gattServiceChangedCharHandle->cache.set(gattServiceChangedCharHandleValue, 5);
 	gattServiceChangedCharHandle->setCacheInfinite(true);
 	handles[gattServiceChangedCharHandle->getHandle()] = gattServiceChangedCharHandle;
@@ -180,7 +180,7 @@ void BeetleInternal::init() {
 
 	// fill in attr handle for characteristic
 	gattServiceChangedCharHandle->setCharHandle(gattServiceChangedAttrHandle->getHandle());
-	*(uint16_t *) (gattServiceChangedCharHandleValue + 1) = htobs(gattServiceChangedAttrHandle->getHandle());
+	*(uint16_t *) (gattServiceChangedCharHandleValue.get() + 1) = htobs(gattServiceChangedAttrHandle->getHandle());
 
 	auto gattServiceChangedCfgHandle = std::make_shared<ClientCharCfg>();
 	gattServiceChangedCfgHandle->setHandle(handleAlloc++);

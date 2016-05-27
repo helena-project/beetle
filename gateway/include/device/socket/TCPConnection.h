@@ -25,7 +25,6 @@ class TCPConnection: public VirtualDevice {
 public:
 	virtual ~TCPConnection();
 
-	int getMTU();
 	struct sockaddr_in getSockaddr();
 
 protected:

@@ -114,7 +114,7 @@ void VirtualDevice::writeResponse(uint8_t *buf, int len) {
 }
 
 void VirtualDevice::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
-	transaction_t *t = new transaction_t;
+	auto t = std::make_shared<transaction_t>();
 	t->buf.reset(new uint8_t[len]);
 	memcpy(t->buf.get(), buf, len);
 	t->len = len;
@@ -122,13 +122,13 @@ void VirtualDevice::writeTransaction(uint8_t *buf, int len, std::function<void(u
 
 	std::lock_guard<std::mutex> lg(transactionMutex);
 	if (currentTransaction == NULL) {
-		currentTransaction.reset(t);
+		currentTransaction = t;
 		lastTransactionMillis = getCurrentTimeMillis();
 		if (!write(t->buf.get(), t->len)) {
 			cb(NULL, -1);
 		}
 	} else {
-		pendingTransactions.push(std::shared_ptr<transaction_t>(t));
+		pendingTransactions.push(t);
 	}
 }
 
@@ -559,7 +559,6 @@ static std::map<uint16_t, std::shared_ptr<Handle>> discoverAllHandles(VirtualDev
 		serviceHandle->setHandle(service.handle);
 		serviceHandle->setEndGroupHandle(service.endGroup);
 		serviceHandle->setCacheInfinite(true);
-		// let the handle inherit the pointer
 		serviceHandle->cache.set(service.value, service.len);
 		assert(handles.find(service.handle) == handles.end());
 		handles[service.handle] = serviceHandle;

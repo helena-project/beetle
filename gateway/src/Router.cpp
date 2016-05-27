@@ -964,11 +964,8 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 									auto proxyH = destinationDevice->handles[remoteHandle];
 									proxyH->cache.cachedSet.clear();
 									int tmpLen = respLen - 1;
-									uint8_t *tmpVal = new uint8_t[tmpLen];
-									memcpy(tmpVal, resp + 1, tmpLen);
-									/*
-									 * Cache takes over the pointer
-									 */
+									auto tmpVal = boost::shared_array<uint8_t>(new uint8_t[tmpLen]);
+									memcpy(tmpVal.get(), resp + 1, tmpLen);
 									proxyH->cache.set(tmpVal, tmpLen);
 									proxyH->cache.cachedSet.insert(src);
 								}

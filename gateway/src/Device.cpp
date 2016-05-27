@@ -54,7 +54,7 @@ std::string Device::getName() {
 	return name;
 }
 
-Device::DeviceType Device::getType() {
+Device::DeviceType Device::getType(){
 	return type;
 }
 

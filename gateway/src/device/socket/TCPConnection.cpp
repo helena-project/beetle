@@ -139,10 +139,6 @@ void TCPConnection::readDaemon() {
 	}
 }
 
-int TCPConnection::getMTU() {
-	return ATT_DEFAULT_LE_MTU;
-}
-
 struct sockaddr_in TCPConnection::getSockaddr() {
 	return sockaddr;
 }
