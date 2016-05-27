@@ -48,19 +48,17 @@ VirtualDevice::~VirtualDevice() {
 	transactionMutex.lock();
 	if (currentTransaction != NULL) {
 		uint8_t err[ATT_ERROR_PDU_LEN];
-		pack_error_pdu(currentTransaction->buf[0], 0, ATT_ECODE_ABORTED, err);
+		pack_error_pdu(currentTransaction->buf.get()[0], 0, ATT_ECODE_ABORTED, err);
 		currentTransaction->cb(err, ATT_ERROR_PDU_LEN);
-		delete[] currentTransaction->buf;
-		delete currentTransaction;
+		currentTransaction.reset();
 	}
 	while (pendingTransactions.size() > 0) {
-		transaction_t *t = pendingTransactions.front();
-		uint8_t err[ATT_ERROR_PDU_LEN];
-		pack_error_pdu(t->buf[0], 0, ATT_ECODE_ABORTED, err);
-		t->cb(err, ATT_ERROR_PDU_LEN);
-		delete[] t->buf;
-		delete t;
+		auto t = pendingTransactions.front();
 		pendingTransactions.pop();
+
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(t->buf.get()[0], 0, ATT_ECODE_ABORTED, err);
+		t->cb(err, ATT_ERROR_PDU_LEN);
 	}
 	transactionMutex.unlock();
 }
@@ -77,7 +75,10 @@ void VirtualDevice::start(bool discoverHandles) {
 		startInternal();
 
 		if (name == "") {
-			name = discoverDeviceName(this); /* May throw device exception */
+			name = discoverDeviceName(this);
+			if (name == "") {
+				throw DeviceException("device must have a name");
+			}
 		}
 
 		/* May throw device exception */
@@ -114,22 +115,21 @@ void VirtualDevice::writeResponse(uint8_t *buf, int len) {
 
 void VirtualDevice::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
 	transaction_t *t = new transaction_t;
-	t->buf = new uint8_t[len];
-	memcpy(t->buf, buf, len);
+	t->buf.reset(new uint8_t[len]);
+	memcpy(t->buf.get(), buf, len);
 	t->len = len;
 	t->cb = cb;
 
 	std::lock_guard<std::mutex> lg(transactionMutex);
 	if (currentTransaction == NULL) {
-		currentTransaction = t;
+		currentTransaction.reset(t);
 		lastTransactionMillis = getCurrentTimeMillis();
-		if (!write(t->buf, t->len)) {
+		if (!write(t->buf.get(), t->len)) {
 			cb(NULL, -1);
-			delete t->buf;
 			delete t;
 		}
 	} else {
-		pendingTransactions.push(t);
+		pendingTransactions.push(std::shared_ptr<transaction_t>(t));
 	}
 }
 
@@ -184,28 +184,24 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 		pwarn("unexpected transaction response when none existed!");
 		return;
 	} else {
-		transaction_t *t = currentTransaction;
+		auto t = currentTransaction;
 		if (pendingTransactions.size() > 0) {
 			while (pendingTransactions.size() > 0) {
 				currentTransaction = pendingTransactions.front();
 				pendingTransactions.pop();
-				if(!write(currentTransaction->buf, currentTransaction->len)) {
+				if(!write(currentTransaction->buf.get(), currentTransaction->len)) {
 					currentTransaction->cb(NULL, -1);
-					delete currentTransaction->buf;
-					delete currentTransaction;
-					currentTransaction = NULL;
+					currentTransaction.reset();
 				} else {
 					break;
 				}
 			}
 		} else {
-			currentTransaction = NULL;
+			currentTransaction.reset();
 		}
 		lk.unlock();
 
 		t->cb(buf, len);
-		delete[] t->buf;
-		delete t;
 	}
 }
 
@@ -327,7 +323,7 @@ static std::string discoverDeviceName(VirtualDevice *d) {
 	int reqLen = pack_read_by_type_req_pdu(GATT_GAP_CHARAC_DEVICE_NAME_UUID, 0x1, 0xFFFF, req);
 	int respLen = d->writeTransactionBlocking(req, reqLen, resp);
 	if (resp == NULL || respLen < 4 || resp[0] != ATT_OP_READ_BY_TYPE_RESP) {
-		throw DeviceException("device returned no name");
+		// nothing
 	} else {
 		char cName[respLen - 4 + 1];
 		memcpy(cName, resp + 4, respLen - 4);
@@ -347,7 +343,7 @@ static std::string discoverDeviceName(VirtualDevice *d) {
 typedef struct {
 	uint16_t handle;
 	uint16_t endGroup;
-	uint8_t *value;
+	std::shared_ptr<uint8_t> value;
 	int len;
 } group_t;
 
@@ -372,6 +368,7 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 
 		uint8_t *resp;
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
+		std::unique_ptr<uint8_t> respOwner(resp);
 
 		if (resp == NULL || respLen < 2) {
 			throw DeviceException("error on transaction");
@@ -384,31 +381,26 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 					break;
 				}
 				group_t group;
-				group.handle = btohs(*(uint16_t * )(resp + i));
-				group.endGroup = btohs(*(uint16_t * )(resp + i + 2));
+				group.handle = btohs(*(uint16_t *)(resp + i));
+				group.endGroup = btohs(*(uint16_t *)(resp + i + 2));
 				group.len = attDataLen - 4;
-				group.value = new uint8_t[group.len];
-				memcpy(group.value, resp + i + 4, group.len);
+				group.value.reset(new uint8_t[group.len]);
+				memcpy(group.value.get(), resp + i + 4, group.len);
 				groups.push_back(group);
 				if (debug_discovery) {
-					pdebug(
-							"found service at handles " + std::to_string(group.handle) + " - "
-									+ std::to_string(group.endGroup));
+					pdebug("found service at handles " + std::to_string(group.handle) + " - "
+							+ std::to_string(group.endGroup));
 				}
 			}
-			delete[] resp;
 			currHandle = groups.rbegin()->endGroup + 1;
 			if (currHandle == 0) {
 				break;
 			}
 		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_GROUP_REQ && resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
-			delete[] resp;
 			break;
 		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_GROUP_REQ && resp[4] == ATT_ECODE_REQ_NOT_SUPP) {
-			delete[] resp;
 			break;
 		} else {
-			delete[] resp;
 			throw DeviceException("unexpected transaction");
 		}
 	}
@@ -417,7 +409,7 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 
 typedef struct {
 	uint16_t handle;
-	uint8_t *value;
+	std::shared_ptr<uint8_t> value;
 	int len;
 } handle_value_t;
 
@@ -440,6 +432,7 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 
 		uint8_t *resp;
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
+		std::unique_ptr<uint8_t> respOwner(resp);
 
 		if (resp == NULL || respLen < 2) {
 			throw DeviceException("error on transaction");
@@ -452,16 +445,15 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 					break;
 				}
 				handle_value_t handleValue;
-				handleValue.handle = btohs(*(uint16_t * )(resp + i));
+				handleValue.handle = btohs(*(uint16_t *)(resp + i));
 				handleValue.len = attDataLen - 2;
-				handleValue.value = new uint8_t[handleValue.len];
-				memcpy(handleValue.value, resp + i + 2, handleValue.len);
+				handleValue.value.reset(new uint8_t[handleValue.len]);
+				memcpy(handleValue.value.get(), resp + i + 2, handleValue.len);
 				handles.push_back(handleValue);
 				if (debug_discovery) {
 					pdebug("found characteristic at handle " + std::to_string(handleValue.handle));
 				}
 			}
-			delete[] resp;
 
 			uint16_t nextHandle = handles.rbegin()->handle + 1;
 			if (nextHandle <= currHandle || nextHandle >= endHandle) {
@@ -469,13 +461,10 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 			}
 			currHandle = nextHandle;
 		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_TYPE_REQ && resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
-			delete[] resp;
 			break;
 		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_READ_BY_TYPE_REQ && resp[4] == ATT_ECODE_REQ_NOT_SUPP) {
-			delete[] resp;
 			break;
 		} else {
-			delete[] resp;
 			throw DeviceException("unexpected transaction");
 		}
 	}
@@ -506,6 +495,7 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 
 		uint8_t *resp;
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
+		std::unique_ptr<uint8_t> respOwner(resp);
 
 		if (resp == NULL || respLen < 2) {
 			throw DeviceException("error on transaction");
@@ -527,20 +517,16 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 					pdebug("found handle at " + std::to_string(handleInfo.handle));
 				}
 			}
-			delete[] resp;
 
 			currHandle = handles.rbegin()->handle + 1;
 			if (currHandle == 0 || currHandle >= endGroup) {
 				break;
 			}
 		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_FIND_INFO_REQ && resp[4] == ATT_ECODE_ATTR_NOT_FOUND) {
-			delete[] resp;
 			break;
 		} else if (resp[0] == ATT_OP_ERROR && resp[1] == ATT_OP_FIND_INFO_REQ && resp[4] == ATT_ECODE_REQ_NOT_SUPP) {
-			delete[] resp;
 			break;
 		} else {
-			delete[] resp;
 			throw DeviceException("unexpected transaction");
 		}
 	}
@@ -560,7 +546,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 		serviceHandle->setEndGroupHandle(service.endGroup);
 		serviceHandle->setCacheInfinite(true);
 		// let the handle inherit the pointer
-		serviceHandle->cache.set(service.value, service.len);
+		serviceHandle->cache.set(service.value.get(), service.len);
 		assert(handles.find(service.handle) == handles.end());
 		handles[service.handle] = serviceHandle;
 
@@ -573,7 +559,7 @@ static std::map<uint16_t, Handle *> discoverAllHandles(VirtualDevice *d) {
 			charHandle->setCacheInfinite(true);
 
 			// let the handle inherit the pointer
-			charHandle->cache.set(characteristic.value, characteristic.len);
+			charHandle->cache.set(characteristic.value.get(), characteristic.len);
 			assert(handles.find(characteristic.handle) == handles.end());
 			handles[characteristic.handle] = charHandle;
 

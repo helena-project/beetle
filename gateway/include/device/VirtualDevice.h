@@ -23,7 +23,7 @@
 extern bool debug_discovery;
 
 typedef struct {
-	uint8_t *buf;
+	std::shared_ptr<uint8_t> buf;
 	int len;
 	std::function<void(uint8_t*, int)> cb;
 } transaction_t;
@@ -86,8 +86,8 @@ private:
 	 * Server transactions
 	 */
 	void handleTransactionResponse(uint8_t *buf, int len);
-	transaction_t *currentTransaction;
-	std::queue<transaction_t *> pendingTransactions;
+	std::shared_ptr<transaction_t> currentTransaction;
+	std::queue<std::shared_ptr<transaction_t>> pendingTransactions;
 	std::vector<uint64_t> transactionLatencies;
 	std::mutex transactionMutex;
 
