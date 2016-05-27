@@ -155,9 +155,9 @@ int main(int argc, char *argv[]) {
 		if (btlConfig.tcpEnabled || enableTcp) {
 			std::cout << "using certificate: " << btlConfig.sslServerCert << std::endl;
 			std::cout << "using key: " << btlConfig.sslServerKey << std::endl;
-			tcpServer.reset(new TCPDeviceServer(btl,
+			tcpServer = std::make_unique<TCPDeviceServer>(btl,
 					new SSLConfig(btlConfig.sslVerifyPeers, true, btlConfig.sslServerCert, btlConfig.sslServerKey),
-					btlConfig.tcpPort));
+					btlConfig.tcpPort);
 		}
 
 		std::unique_ptr<UnixDomainSocketServer> ipcServer;
@@ -170,18 +170,18 @@ int main(int argc, char *argv[]) {
 		std::shared_ptr<AccessControl> accessControl;
 		std::shared_ptr<NetworkDiscoveryClient> networkDiscovery;
 		if (btlConfig.controllerEnabled || enableController) {
-			controllerClient.reset(new ControllerClient(btl, btlConfig.getControllerHostAndPort(),
-					btlConfig.sslVerifyPeers));
+			controllerClient = std::make_shared<ControllerClient>(btl, btlConfig.getControllerHostAndPort(),
+					btlConfig.sslVerifyPeers);
 
-			networkState.reset(new NetworkStateClient(btl, controllerClient, btlConfig.tcpPort));
+			networkState = std::make_shared<NetworkStateClient>(btl, controllerClient, btlConfig.tcpPort);
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());
 			btl.registerRemoveDeviceHandler(networkState->getRemoveDeviceHandler());
 			btl.registerUpdateDeviceHandler(networkState->getUpdateDeviceHandler());
 
-			networkDiscovery.reset(new NetworkDiscoveryClient(btl, controllerClient));
+			networkDiscovery = std::make_shared<NetworkDiscoveryClient>(btl, controllerClient);
 			btl.setDiscoveryClient(networkDiscovery);
 
-			accessControl.reset(new AccessControl(btl, controllerClient));
+			accessControl = std::make_shared<AccessControl>(btl, controllerClient);
 			btl.setAccessControl(accessControl);
 		}
 
@@ -190,10 +190,10 @@ int main(int argc, char *argv[]) {
 		std::unique_ptr<AutoConnect> autoConnect;
 		std::unique_ptr<Scanner> scanner;
 		if (btlConfig.scanEnabled) {
-			scanner.reset(new Scanner());
-			autoConnect.reset(new AutoConnect(btl, autoConnectAll || btlConfig.autoConnectAll,
+			scanner = std::make_unique<Scanner>();
+			autoConnect = std::make_unique<AutoConnect>(btl, autoConnectAll || btlConfig.autoConnectAll,
 //					1, btlConfig.autoConnectBlacklist));
-					btlConfig.autoConnectMinBackoff, btlConfig.autoConnectBlacklist));
+					btlConfig.autoConnectMinBackoff, btlConfig.autoConnectBlacklist);
 			scanner->registerHandler(cli.getDiscoveryHander());
 			scanner->registerHandler(autoConnect->getDiscoveryHandler());
 			scanner->start();

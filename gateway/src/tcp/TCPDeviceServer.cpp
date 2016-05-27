@@ -37,7 +37,6 @@ TCPDeviceServer::~TCPDeviceServer() {
 	serverRunning = false;
 	shutdown(sockfd, SHUT_RDWR);
 	daemonThread.join();
-	delete sslConfig;
 }
 
 void TCPDeviceServer::serverDaemon(int port) {

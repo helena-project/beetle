@@ -35,7 +35,7 @@ public:
 	virtual ~TCPDeviceServer();
 private:
 	Beetle &beetle;
-	SSLConfig *sslConfig;
+	std::unique_ptr<SSLConfig> sslConfig;
 
 	int sockfd;
 

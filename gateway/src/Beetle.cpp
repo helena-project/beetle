@@ -14,9 +14,9 @@
 
 Beetle::Beetle(std::string name_) :
 		workers(4), writers(4) {
-	router.reset(new Router(*this));
-	beetleDevice.reset(new BeetleInternal(*this, name_));
-	devices[BEETLE_RESERVED_DEVICE] = std::dynamic_pointer_cast<Device>(beetleDevice);
+	router = std::make_unique<Router>(*this);
+	beetleDevice = std::make_shared<BeetleInternal>(*this, name_);
+	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
 	name = name_;
 }
 

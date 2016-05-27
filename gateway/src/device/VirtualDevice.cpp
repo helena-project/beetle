@@ -126,7 +126,6 @@ void VirtualDevice::writeTransaction(uint8_t *buf, int len, std::function<void(u
 		lastTransactionMillis = getCurrentTimeMillis();
 		if (!write(t->buf.get(), t->len)) {
 			cb(NULL, -1);
-			delete t;
 		}
 	} else {
 		pendingTransactions.push(std::shared_ptr<transaction_t>(t));
@@ -317,8 +316,10 @@ static std::string discoverDeviceName(VirtualDevice *d) {
 	if (debug_discovery) {
 		pdebug("discovering name");
 	}
+
 	uint8_t *req = NULL;
 	uint8_t *resp = NULL;
+
 	std::string name;
 	int reqLen = pack_read_by_type_req_pdu(GATT_GAP_CHARAC_DEVICE_NAME_UUID, 0x1, 0xFFFF, req);
 	int respLen = d->writeTransactionBlocking(req, reqLen, resp);
@@ -368,6 +369,8 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 
 		uint8_t *resp;
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
+
+		/* Somewhat of a hack */
 		std::unique_ptr<uint8_t> respOwner(resp);
 
 		if (resp == NULL || respLen < 2) {
@@ -432,6 +435,8 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 
 		uint8_t *resp;
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
+
+		/* Somewhat of a hack */
 		std::unique_ptr<uint8_t> respOwner(resp);
 
 		if (resp == NULL || respLen < 2) {
@@ -495,6 +500,8 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 
 		uint8_t *resp;
 		int respLen = d->writeTransactionBlocking(req, reqLen, resp);
+
+		/* Somewhat of a hack */
 		std::unique_ptr<uint8_t> respOwner(resp);
 
 		if (resp == NULL || respLen < 2) {
