@@ -560,7 +560,7 @@ static std::map<uint16_t, std::shared_ptr<Handle>> discoverAllHandles(VirtualDev
 		serviceHandle->setEndGroupHandle(service.endGroup);
 		serviceHandle->setCacheInfinite(true);
 		// let the handle inherit the pointer
-		serviceHandle->cache.set(service.value.get(), service.len);
+		serviceHandle->cache.set(service.value, service.len);
 		assert(handles.find(service.handle) == handles.end());
 		handles[service.handle] = serviceHandle;
 
@@ -573,7 +573,7 @@ static std::map<uint16_t, std::shared_ptr<Handle>> discoverAllHandles(VirtualDev
 			charHandle->setCacheInfinite(true);
 
 			// let the handle inherit the pointer
-			charHandle->cache.set(characteristic.value.get(), characteristic.len);
+			charHandle->cache.set(characteristic.value, characteristic.len);
 			assert(handles.find(characteristic.handle) == handles.end());
 			handles[characteristic.handle] = charHandle;
 

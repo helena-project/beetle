@@ -22,10 +22,10 @@ class CachedHandle {
 public:
 	virtual ~CachedHandle();
 
-	/*
-	 * Transfers ownership of value pointer to cache.
-	 */
-	void set(uint8_t *value, int len);
+	/* Takes over ownership of value */
+	void set(uint8_t *value_, int len_);
+
+	void set(boost::shared_array<uint8_t> value, int len);
 	boost::shared_array<uint8_t> value;
 
 	int len = 0;

@@ -72,7 +72,7 @@ static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval
 		pwarn("failed to set scan enable");
 	}
 
-	struct hci_filter oldFilter = { 0 };
+	struct hci_filter oldFilter;
 	socklen_t oldFilterLen = sizeof(oldFilter);
 	result = getsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &oldFilter, &oldFilterLen);
 	if (result < 0) {

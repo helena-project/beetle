@@ -111,7 +111,7 @@ void BeetleInternal::init() {
 	 */
 	auto gapServiceHandle = std::make_shared<PrimaryService>();
 	gapServiceHandle->setHandle(handleAlloc++);
-	uint16_t *gapHandleUUID = new uint16_t;
+	uint16_t *gapHandleUUID = new uint16_t[1];
 	*gapHandleUUID = btohs(GATT_GAP_SERVICE_UUID);
 	gapServiceHandle->cache.set((uint8_t *) gapHandleUUID, sizeof(uint16_t));
 	gapServiceHandle->setCacheInfinite(true);
@@ -153,7 +153,7 @@ void BeetleInternal::init() {
 	 */
 	auto gattServiceHandle = std::make_shared<PrimaryService>();
 	gattServiceHandle->setHandle(handleAlloc++);
-	uint16_t *gattHandleUUID = new uint16_t;
+	uint16_t *gattHandleUUID = new uint16_t[1];
 	*gattHandleUUID = btohs(GATT_GATT_SERVICE_UUID);
 	gattServiceHandle->cache.set((uint8_t *) gattHandleUUID, sizeof(uint16_t));
 	gattServiceHandle->setCacheInfinite(true);

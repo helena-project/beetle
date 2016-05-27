@@ -17,7 +17,11 @@ CachedHandle::~CachedHandle() {
 }
 
 void CachedHandle::set(uint8_t *value_, int len_) {
-	value.reset(value_);
+	set(boost::shared_array<uint8_t>(value_), len);
+}
+
+void CachedHandle::set(boost::shared_array<uint8_t> value_, int len_) {
+	value = value_;
 	len = len_;
 	::time(&(time));
 }
