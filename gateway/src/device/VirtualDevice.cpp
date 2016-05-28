@@ -29,7 +29,7 @@
 
 static const int maxTransactionLatencies = 50;
 
-static int64_t getCurrentTimeMillis(void) {
+static uint64_t getCurrentTimeMillis(void) {
 	struct timespec spec;
 	clock_gettime(CLOCK_REALTIME, &spec);
 	return 1000 * spec.tv_sec + round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
@@ -156,12 +156,13 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 	std::unique_lock<std::mutex> lk(transactionMutex);
 
 	if (debug_performance) {
-		int64_t currentTimeMillis = getCurrentTimeMillis();
-		int64_t elapsed = currentTimeMillis - lastTransactionMillis;
+		uint64_t currentTimeMillis = getCurrentTimeMillis();
+		uint64_t elapsed = currentTimeMillis - lastTransactionMillis;
 		std::stringstream ss;
-		ss << "Transaction start:\t" << std::fixed << lastTransactionMillis << "\n";
-		ss << "Transaction end:\t" << std::fixed << currentTimeMillis << "\n";
-		ss << "Transaction length\t: " << std::fixed << elapsed;
+		ss << "Transaction" << std::endl;
+		ss << " start:\t" << std::fixed << lastTransactionMillis << std::endl;
+		ss << " end:\t" << std::fixed << currentTimeMillis << std::endl;
+		ss << " len:\t" << std::fixed << elapsed;
 		pdebug(ss.str());
 
 		if (transactionLatencies.size() < maxTransactionLatencies) {
