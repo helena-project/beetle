@@ -6,10 +6,10 @@
 - For Ubuntu 15.04+, libcppnetlib needs to be compiled and installed manually: https://github.com/cpp-netlib/cpp-netlib.git
 
 ##### To build and run
-1. clone and import the project into Eclipse
-2. build
-3. in a terminal, ``` cd Debug ```
-4. ``` sudo ./Beetle``` 
+1. clone and import the project into Eclipse (optional)
+2. in a terminal, ``` cd Debug ```
+3. ```make all```
+4. ```sudo ./Beetle``` 
 5. For more options use ```--help```, ```-p``` to print a sample configuration file, or write your own configuration
 
 ##### TCP connection protocol
