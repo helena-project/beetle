@@ -63,24 +63,14 @@ VirtualDevice::~VirtualDevice() {
 	transactionMutex.unlock();
 }
 
-static std::string discoverDeviceName(VirtualDevice *d);
 static std::map<uint16_t, std::shared_ptr<Handle>> discoverAllHandles(VirtualDevice *d);
 
 void VirtualDevice::start(bool discoverHandles) {
 	if (debug) {
 		pdebug("starting");
 	}
-
+	startInternal();
 	if (discoverHandles) {
-		startInternal();
-
-		if (name == "") {
-			name = discoverDeviceName(this);
-			if (name == "") {
-				throw DeviceException("device must have a name");
-			}
-		}
-
 		/* May throw device exception */
 		std::map<uint16_t, std::shared_ptr<Handle>> handlesTmp = discoverAllHandles(this);
 
@@ -89,12 +79,6 @@ void VirtualDevice::start(bool discoverHandles) {
 		handlesMutex.unlock();
 
 		beetle.updateDevice(getId());
-	} else {
-		startInternal();
-
-		if (name == "") {
-			throw DeviceException("device must have a name");
-		}
 	}
 }
 
@@ -175,8 +159,9 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 		int64_t currentTimeMillis = getCurrentTimeMillis();
 		int64_t elapsed = currentTimeMillis - lastTransactionMillis;
 		std::stringstream ss;
-		ss << "Transaction start: " << std::fixed << lastTransactionMillis << "\n" << "Transaction end: " << std::fixed
-				<< currentTimeMillis << "\n" << "Transaction length: " << std::fixed << elapsed;
+		ss << "Transaction start:\t" << std::fixed << lastTransactionMillis << "\n";
+		ss << "Transaction end:\t" << std::fixed << currentTimeMillis << "\n";
+		ss << "Transaction length\t: " << std::fixed << elapsed;
 		pdebug(ss.str());
 
 		if (transactionLatencies.size() < maxTransactionLatencies) {
@@ -317,35 +302,6 @@ void VirtualDevice::discoverNetworkServices(UUID serviceUuid) {
 			}
 		}
 	}
-}
-
-static std::string discoverDeviceName(VirtualDevice *d) {
-	if (debug_discovery) {
-		pdebug("discovering name");
-	}
-
-	uint8_t *req = NULL;
-	uint8_t *resp = NULL;
-
-	std::string name;
-	int reqLen = pack_read_by_type_req_pdu(GATT_GAP_CHARAC_DEVICE_NAME_UUID, 0x1, 0xFFFF, req);
-	int respLen = d->writeTransactionBlocking(req, reqLen, resp);
-	if (resp == NULL || respLen < 4 || resp[0] != ATT_OP_READ_BY_TYPE_RESP) {
-		// nothing
-	} else {
-		char cName[respLen - 4 + 1];
-		memcpy(cName, resp + 4, respLen - 4);
-		cName[respLen - 4] = '\0';
-		name = std::string(cName);
-	}
-
-	if (debug_discovery) {
-		pdebug(name);
-	}
-
-	delete[] req;
-	delete[] resp;
-	return name;
 }
 
 typedef struct {

@@ -21,6 +21,7 @@
 #include "ble/att.h"
 #include "Debug.h"
 #include "Device.h"
+#include "device/socket/shared.h"
 #include "sync/OrderedThreadPool.h"
 #include "util/write.h"
 
@@ -73,6 +74,10 @@ LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType) :
 	 * Set default connection interval.
 	 */
 	beetle.hci.setConnectionInterval(connInfo.hci_handle, 10, 40, 0, 0x0C80, 0);
+
+	if (!request_device_name(sockfd, name, delayedPackets)) {
+		throw DeviceException("could not discover device name");
+	}
 }
 
 LEPeripheral::~LEPeripheral() {
@@ -135,6 +140,10 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 void LEPeripheral::readDaemon() {
 	if (debug) {
 		pdebug(getName() + " readDaemon started");
+	}
+
+	for (delayed_packet_t &packet : delayedPackets) {
+		readHandler(packet.buf.get(), packet.len);
 	}
 
 	uint8_t buf[256];

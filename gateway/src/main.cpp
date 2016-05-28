@@ -28,6 +28,7 @@
 #include "ipc/UnixDomainSocketServer.h"
 #include "scan/AutoConnect.h"
 #include "scan/Scanner.h"
+#include "sync/TimedDaemon.h"
 #include "tcp/SSLConfig.h"
 #include "tcp/TCPDeviceServer.h"
 
@@ -197,6 +198,12 @@ int main(int argc, char *argv[]) {
 			scanner->registerHandler(cli.getDiscoveryHander());
 			scanner->registerHandler(autoConnect->getDiscoveryHandler());
 			scanner->start();
+		}
+
+		TimedDaemon timers;
+		timers.repeat(cli.getDaemon(), 5);
+		if (autoConnect) {
+			timers.repeat(autoConnect->getDaemon(), 5);
 		}
 
 		cli.join();

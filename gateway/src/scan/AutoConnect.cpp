@@ -26,16 +26,10 @@
 #include "util/file.h"
 #include "util/trim.h"
 
-static inline double min(double x, double y) {
-	return (x > y) ? y : x;
-}
-
 AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, std::string autoConnectBlacklist) :
-		beetle { beetle }, daemonThread() {
+		beetle { beetle } {
 	connectAll = connectAll_;
 	minBackoff = minBackoff_;
-	daemonRunning = true;
-	daemonThread = std::thread(&AutoConnect::daemon, this, min(60, minBackoff_));
 
 	if (autoConnectBlacklist != "") {
 		if (!file_exists(autoConnectBlacklist)) {
@@ -60,10 +54,25 @@ AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, s
 }
 
 AutoConnect::~AutoConnect() {
-	daemonRunning = false;
-	if (daemonThread.joinable()) {
-		daemonThread.join();
-	}
+
+}
+
+std::function<void()> AutoConnect::getDaemon() {
+	return [this] {
+		time_t now = time(NULL);
+
+		std::lock_guard<std::mutex> lg(lastAttemptMutex);
+		for (auto it = lastAttempt.cbegin(); it != lastAttempt.cend();) {
+			if (difftime(now, it->second) > minBackoff) {
+				if (debug_scan) {
+					pdebug("can try connecting to '" + it->first + "' again");
+				}
+				lastAttempt.erase(it++);
+			} else {
+				++it;
+			}
+		}
+	};
 }
 
 DiscoveryHandler AutoConnect::getDiscoveryHandler() {
@@ -147,38 +156,5 @@ void AutoConnect::connect(peripheral_info_t info, bool discover) {
 		if (device) {
 			beetle.removeDevice(device->getId());
 		}
-	}
-}
-
-void AutoConnect::daemon(int seconds) {
-	if (debug_scan) {
-		pdebug("autoConnectDaemon started");
-	}
-
-	// semi-busy wait to reduce shutdown latency
-	int ticks = 1;
-	while (daemonRunning) {
-		if (ticks % seconds == 0) {
-			time_t now = time(NULL);
-
-			std::lock_guard<std::mutex> lg(lastAttemptMutex);
-			for (auto it = lastAttempt.cbegin(); it != lastAttempt.cend();) {
-				if (difftime(now, it->second) > minBackoff) {
-					if (debug_scan) {
-						pdebug("can try connecting to '" + it->first + "' again");
-					}
-					lastAttempt.erase(it++);
-				} else {
-					++it;
-				}
-			}
-		}
-
-		sleep(1);
-		ticks++;
-	}
-
-	if (debug_scan) {
-		pdebug("autoConnectDaemon exited");
 	}
 }

@@ -15,6 +15,7 @@
 
 #include "sync/Countdown.h"
 #include "device/VirtualDevice.h"
+#include "shared.h"
 
 class LEPeripheral: public VirtualDevice {
 public:
@@ -41,6 +42,8 @@ private:
 
 	std::atomic_bool stopped;
 	void stopInternal();
+
+	std::list<delayed_packet_t> delayedPackets;
 
 	std::thread readThread;
 	void readDaemon();

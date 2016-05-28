@@ -12,9 +12,11 @@
 #include <sys/un.h>
 #include <cstdint>
 #include <thread>
+#include <list>
 
 #include "sync/Countdown.h"
 #include "device/VirtualDevice.h"
+#include "device/socket/shared.h"
 
 enum AddrType {
 	PUBLIC, RANDOM,
@@ -35,6 +37,8 @@ private:
 
 	std::atomic_bool stopped;
 	void stopInternal();
+
+	std::list<delayed_packet_t> delayedPackets;
 
 	std::thread readThread;
 	void readDaemon();

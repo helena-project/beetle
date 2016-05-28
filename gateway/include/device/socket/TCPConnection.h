@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <string>
 #include <thread>
+#include <list>
 #include <openssl/ossl_typ.h>
 
 #include "sync/Countdown.h"
@@ -44,6 +45,12 @@ private:
 
 	std::atomic_bool stopped;
 	void stopInternal();
+
+	typedef struct {
+		boost::shared_array<uint8_t> buf;
+		int len;
+	} delayed_packet_t;
+	std::list<delayed_packet_t> delayedPackets;
 
 	std::thread readThread;
 	void readDaemon();

@@ -57,14 +57,30 @@ DiscoveryHandler CLI::getDiscoveryHander() {
 	return [this](std::string addr, peripheral_info_t info) {
 		std::lock_guard<std::mutex> lg(discoveredMutex);
 		if (discovered.find(addr) == discovered.end()) {
-			aliases[addr] = "d" + std::to_string(aliasCounter++);
-		}
-		if (discovered.find(addr) != discovered.end() && discovered[addr].name.length() != 0) {
-			if (info.name.length() != 0) {
-				discovered[addr] = info; // overwrite previous name
-			}
+			discovered_t entry;
+			entry.alias = "d" + std::to_string(aliasCounter++);
+			entry.info = info;
+			discovered[addr] = entry;
 		} else {
-			discovered[addr] = info;
+			if (info.name.length() != 0) {
+				discovered[addr].info = info; // overwrite previous name
+			}
+		}
+		discovered[addr].lastSeen = time(NULL);
+	};
+}
+
+std::function<void()> CLI::getDaemon() {
+	return [this] {
+		time_t now = time(NULL);
+
+		std::lock_guard<std::mutex> lg(discoveredMutex);
+		for (auto it = discovered.cbegin(); it != discovered.cend();) {
+			if (difftime(now, it->second.lastSeen) > 60 * 5) { // 5 minutes
+				discovered.erase(it++);
+			} else {
+				++it;
+			}
 		}
 	};
 }
@@ -199,9 +215,9 @@ void CLI::doScan(const std::vector<std::string>& cmd) {
 	std::lock_guard<std::mutex> lg(discoveredMutex);
 	for (auto &d : discovered) {
 		std::stringstream ss;
-		ss << aliases[d.first] << "\t" << d.first << "\t"
-				<< ((d.second.bdaddrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random") << "\t"
-				<< d.second.name;
+		ss << d.second.alias << "\t" << d.first << "\t"
+				<< ((d.second.info.bdaddrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random") << "\t"
+				<< d.second.info.name;
 		printMessage(ss.str());
 	}
 }
@@ -238,10 +254,10 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 		 */
 		std::lock_guard<std::mutex> lg(discoveredMutex);
 		bool found = false;
-		for (auto &kv : aliases) {
-			if (kv.second == cmd[1]) {
-				addr = discovered[kv.first].bdaddr;
-				addrType = discovered[kv.first].bdaddrType;
+		for (auto &kv : discovered) {
+			if (kv.second.alias == cmd[1]) {
+				addr = kv.second.info.bdaddr;
+				addrType = kv.second.info.bdaddrType;
 				found = true;
 				break;
 			}

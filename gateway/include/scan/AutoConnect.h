@@ -14,6 +14,7 @@
 #include <string>
 #include <set>
 #include <thread>
+#include <functional>
 
 #include "BeetleTypes.h"
 #include "scan/Scanner.h"
@@ -38,6 +39,11 @@ public:
 	 * Return callback for scanner.
 	 */
 	DiscoveryHandler getDiscoveryHandler();
+
+	/*
+	 * Return the timeout daemon.
+	 */
+	std::function<void()> getDaemon();
 private:
 	Beetle &beetle;
 
@@ -62,13 +68,6 @@ private:
 	 * Only one connection attempt at a time
 	 */
 	std::mutex connectMutex;
-
-	/*
-	 * Time out entries in lastAttempt
-	 */
-	bool daemonRunning;
-	std::thread daemonThread;
-	void daemon(int seconds);
 
 	std::map<std::string, time_t, ci_less> lastAttempt;
 	std::mutex lastAttemptMutex;

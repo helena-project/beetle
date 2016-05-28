@@ -42,8 +42,9 @@ TCPConnection::~TCPConnection() {
 	SSL_shutdown(ssl);
 	SSL_free(ssl);
 	shutdown(sockfd, SHUT_RDWR);
-	if (readThread.joinable())
+	if (readThread.joinable()) {
 		readThread.join();
+	}
 	close(sockfd);
 }
 

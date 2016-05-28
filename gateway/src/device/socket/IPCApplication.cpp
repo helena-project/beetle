@@ -18,6 +18,7 @@
 
 #include "Beetle.h"
 #include "Debug.h"
+#include "device/socket/shared.h"
 #include "sync/OrderedThreadPool.h"
 #include "util/write.h"
 
@@ -30,6 +31,10 @@ IPCApplication::IPCApplication(Beetle &beetle, int sockfd_, std::string name_, s
 	sockaddr = sockaddr_;
 	ucred = ucred_;
 	stopped = false;
+
+	if (!request_device_name(sockfd, name, delayedPackets)) {
+		throw DeviceException("could not discover name");
+	}
 }
 
 IPCApplication::~IPCApplication() {
@@ -82,6 +87,11 @@ bool IPCApplication::write(uint8_t *buf, int len) {
 
 void IPCApplication::readDaemon() {
 	if (debug) pdebug(getName() + " readDaemon started");
+
+	for (delayed_packet_t &packet : delayedPackets) {
+		readHandler(packet.buf.get(), packet.len);
+	}
+
 	uint8_t buf[256];
 	while (true) {
 		int n = read(sockfd, buf, sizeof(buf));

@@ -35,6 +35,11 @@ public:
 	 * Get handler to execute on device discovered.
 	 */
 	DiscoveryHandler getDiscoveryHander();
+
+	/*
+	 * Get the timeout daemon.
+	 */
+	std::function<void()> getDaemon();
 private:
 	/*
 	 * Reads a line from stdin and parses tokens into ret.
@@ -69,9 +74,14 @@ private:
 	 */
 	std::shared_ptr<Device> matchDevice(const std::string &device);
 
+	typedef struct {
+		std::string alias;
+		peripheral_info_t info;
+		time_t lastSeen;
+	} discovered_t;
+
+	std::map<std::string, discovered_t> discovered;
 	std::mutex discoveredMutex;
-	std::map<std::string, peripheral_info_t> discovered;
-	std::map<std::string, std::string> aliases;
 	int aliasCounter;
 };
 
