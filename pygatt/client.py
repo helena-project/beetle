@@ -39,7 +39,7 @@ class _Service:
 	def _discoverAllCharacteristics(self):
 		startHandle = self._handleNo + 1
 		endHandle = self._endGroup
-		characUuid = uuid.UUID(gatt.CHARAC_UUID)
+		characUuid = UUID(gatt.CHARAC_UUID)
 
 		characs = []
 		characHandles = {}
@@ -61,7 +61,7 @@ class _Service:
 					handleNo = resp[idx] + (resp[idx+1] >> 8)
 					properties = resp[idx+2]
 					valHandleNo = resp[idx+3] + (resp[idx+4] >> 8)
-					uuid = uuid.UUID(resp[idx+5:idx+attDataLen])
+					uuid = UUID(resp[idx+5:idx+attDataLen])
 
 					charac = _Characteristic(self.client, self, uuid, handleNo, 
 						properties, valHandleNo)
@@ -147,7 +147,7 @@ class _Characteristic:
 		
 		descriptors = []
 
-		cccdUuid = uuid.UUID(gatt.CLIENT_CHARAC_CFG_UUID)
+		cccdUuid = UUID(gatt.CLIENT_CHARAC_CFG_UUID)
 		cccd = None
 		
 		currHandle = startHandle
@@ -165,7 +165,7 @@ class _Characteristic:
 				handleNo = currHandle # not needed
 				while idx < len(resp) and idx + attDataLen <= len(resp): 
 					handleNo = resp[idx] + (resp[idx+1] >> 8)
-					uuid = uuid.UUID(resp[idx+2:idx+attDataLen])
+					uuid = UUID(resp[idx+2:idx+attDataLen])
 
 					if handleNo == self._valHandleNo:
 						idx += attDataLen
@@ -327,7 +327,7 @@ class GattClient:
 		self.services = []
 		
 
-	def discoverServices(uuid=None):
+	def discoverServices(self, uuid=None):
 		if uuid is None:
 			return self._discoverAllServices()
 		else:
@@ -403,7 +403,7 @@ class GattClient:
 	def _discoverAllServices(self):
 		startHandle = 1
 		endHandle = 0xFFFF
-		primSvcUuid = uuid.UUID(gatt.PRIM_SVC_UUID)
+		primSvcUuid = UUID(gatt.PRIM_SVC_UUID)
 
 		services = []
 		serviceHandles = {}
@@ -424,7 +424,7 @@ class GattClient:
 				while idx < len(resp) and idx + attDataLen <= len(resp): 
 					handleNo = resp[idx] + (resp[idx+1] >> 8)
 					endGroup = resp[idx+2] + (resp[idx+3] >> 8)
-					uuid = uuid.UUID(resp[idx+4:idx+attDataLen])
+					uuid = UUID(resp[idx+4:idx+attDataLen])
 
 					service = _Service(self, uuid, handleNo, endGroup)
 					services.append(service)

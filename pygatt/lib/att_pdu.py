@@ -54,15 +54,15 @@ def parse_find_info_req(pdu):
 
 def parse_find_by_type_req(pdu):
 	return pdu[0], __unpack_handle(pdu, 1), __unpack_handle(pdu, 3), \
-		uuid.UUID(pdu[5:7]), pdu[7:]
+		uuid.UUID(pdu[5:7], reverse=True), pdu[7:]
 
 def parse_read_by_type_req(pdu):
 	return pdu[0], __unpack_handle(pdu, 1), __unpack_handle(pdu, 3), \
-		uuid.UUID(pdu[5:])
+		uuid.UUID(pdu[5:], reverse=True)
 
 def parse_read_by_group_req(pdu):
 	return pdu[0], __unpack_handle(pdu, 1), __unpack_handle(pdu, 3), \
-		uuid.UUID(pdu[5:])
+		uuid.UUID(pdu[5:], reverse=True)
 
 def parse_notify_indicate(pdu):
 	return pdu[0], __unpack_handle(pdu, 1), pdu[3:]

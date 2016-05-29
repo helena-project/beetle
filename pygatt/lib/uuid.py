@@ -1,17 +1,24 @@
-import uuid as pyuuid
 
 class UUID:
-	def __init__(self, value):
+	def __init__(self, value, reverse=False):
 		if type(value) is int:
 			assert (value >> 16) == 0
-			self._raw = bytearray([value & 0xFF, (value >> 8) & 0xFF])
+			assert reverse == False
+			self._raw = bytearray([(value >> 8) & 0xFF, value & 0xFF])
+		
 		elif type(value) is str:
 			value = value.replace("-", "")
+			assert reverse == False
 			assert len(value) == 4 or len(value) == 32
 			self._raw = bytearray.fromhex(value)
+
 		elif type(value) is bytearray:
 			assert len(value) == 2 or len(value) == 16
-			self._raw = value[:]
+			if reverse:
+				self._raw = value[::-1]
+			else:
+				self._raw = value[:]
+		
 		else:
 			raise Exception("unsupported type")
 
@@ -22,10 +29,7 @@ class UUID:
 		return len(self._raw)
 
 	def __str__(self):
-		if self.__len__() == 2:
-			return ''.join('{:02x}'.format(x) for x in self._raw.reverse())
-		else:
-			return pyuuid.UUID(bytes_le=self._raw).hex
+		return ''.join('{:02x}'.format(x) for x in self._raw)
 
 	def __eq__(self, other):
 		return isinstance(other, self.__class__) and self._raw == other._raw
