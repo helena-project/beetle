@@ -108,7 +108,7 @@ class ManagedSocket:
 			self._send(resp)
 
 		elif (att.isRequest(op) or op == att.OP_WRITE_CMD 
-			or op == att.OP_SIGNED_WRITE_CMD or att.OP_HANDLE_CNF):
+			or op == att.OP_SIGNED_WRITE_CMD or op == att.OP_HANDLE_CNF):
 
 			if self._server is not None:
 				resp = self._server._handle_packet(pdu)
@@ -119,10 +119,15 @@ class ManagedSocket:
 				resp = att_pdu.new_error_resp(op, 0, att.ECODE_REQ_NOT_SUPP)
 				self._send(resp)
 
-		elif (att.isResponse(op) or op == att.OP_HANDLE_IND 
-			or op == att.OP_HANDLE_IND):
+		elif (att.isResponse(op) 
+			or (op == att.OP_ERROR and len(pdu) >= 2 and att.isRequest(pdu[1]))
+			or op == att.OP_HANDLE_NOTIFY or op == att.OP_HANDLE_IND):
+
 			if self._client is not None:
 				self._client._handle_packet(pdu)
+
+		else:
+			raise RuntimeWarning("unknown opcode: " + str(op))
 
 	def __recv(self):
 		try:

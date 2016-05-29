@@ -45,10 +45,10 @@ class _Service:
 		characHandles = {}
 		currHandle = startHandle
 		while True:
-			req = att_pdu.new_read_by_type_req(startHandle, endHandle, 
+			req = att_pdu.new_read_by_type_req(currHandle, endHandle, 
 				characUuid)
 
-			resp = self._new_transaction(req)
+			resp = self.client._new_transaction(req)
 			if not resp:
 				raise ClientError("transaction failed")
 
@@ -106,7 +106,7 @@ class _Characteristic:
 		valHandleNo, endGroup=None):
 		assert uuid.__class__ is UUID
 		assert client.__class__ is GattClient
-		assert type(service) is _Service
+		assert service.__class__ is _Service
 		assert type(handleNo) is int
 		assert type(valHandleNo) is int
 		assert type(properties) is int
@@ -117,13 +117,13 @@ class _Characteristic:
 	 	self.permissions = set()
 		
 		if (properties & gatt.CHARAC_PROP_READ) != 0:
-			permissions.add('r')
+			self.permissions.add('r')
 		if (properties & gatt.CHARAC_PROP_WRITE) != 0:
-			permissions.add('w')
+			self.permissions.add('w')
 		if (properties & gatt.CHARAC_PROP_IND) != 0:
-			permissions.add('i')
+			self.permissions.add('i')
 		if (properties & gatt.CHARAC_PROP_NOTIFY) != 0:
-			permissions.add('n')
+			self.permissions.add('n')
 
 		self.client._add_val_handle(self, valHandleNo)
 
@@ -152,14 +152,15 @@ class _Characteristic:
 		
 		currHandle = startHandle
 		while True:
-			req = att_pdu.new_find_info_req(startHandle, endHandle)
+			req = att_pdu.new_find_info_req(currHandle, endHandle)
 
-			resp = self._new_transaction(req)
+			resp = self.client._new_transaction(req)
 			if not resp:
 				raise ClientError("transaction failed")
 
 			if resp[0] == att.OP_FIND_INFO_RESP:
-				attDataLen = 4 if resp[1] == att.FIND_INFO_RESP_FMT_16BIT else 18
+				attDataLen = 4 if resp[1] == att.FIND_INFO_RESP_FMT_16BIT \
+					else 18
 				idx = 2
 
 				handleNo = currHandle # not needed
@@ -264,7 +265,7 @@ class _Descriptor:
 	def __init__(self, client, characteristic, uuid, handleNo):
 		assert uuid.__class__ is UUID
 		assert client.__class__ is GattClient
-		assert type(characteristic) is _Characteristic
+		assert characteristic.__class__ is _Characteristic
 		assert type(handleNo) is int
 
 		self.client = client
@@ -409,14 +410,14 @@ class GattClient:
 		serviceHandles = {}
 		currHandle = startHandle
 		while True:
-			req = att_pdu.new_read_by_group_req(startHandle, endHandle, 
+			req = att_pdu.new_read_by_group_req(currHandle, endHandle, 
 				primSvcUuid)
 
 			resp = self._new_transaction(req)
 			if not resp:
 				raise ClientError("transaction failed")
 
-			if resp[0] == att.OP_READ_BY_GROUP_REQ:
+			if resp[0] == att.OP_READ_BY_GROUP_RESP:
 				attDataLen = resp[1]
 				idx = 2
 
@@ -457,6 +458,6 @@ class GattClient:
 			tmp.append(str(service))
 			for charac in service.characteristics:
 				tmp.append(str(charac))
-				for descripor in charac.descriptors:
+				for descriptor in charac.descriptors:
 					tmp.append(str(descriptor))
 		return "\n".join(tmp)

@@ -129,11 +129,11 @@ def runClient(client):
 	"""
 	Begin issuing requests as a client.
 	"""
-	# services = client.discoverServices()
-	# for service in services:
-	# 	characs = service.discoverCharacteristics()
-	# 	for charac in characs:
-	# 		charac.discoverDescriptors()
+	services = client.discoverServices()
+	for service in services:
+		characs = service.discoverCharacteristics()
+		for charac in characs:
+			charac.discoverDescriptors()
 	
 	print client
 
@@ -146,7 +146,7 @@ def main(args):
 		print "Disconnect:", err
 		os._exit(0)
 
-	managedSocket = ManagedSocket()
+	managedSocket = ManagedSocket(daemon=True)
 	server = GattServer(managedSocket, onDisconnect=onDisconnect)
 	client = GattClient(managedSocket)
 
@@ -157,10 +157,10 @@ def main(args):
 	s.connect((args.host, args.port))
 
 	# Send initial connection parameters. Just 0 for now.
-	clientParams = "\n".join(["client " + DEVICE_NAME, "server true"])
-	clientParamsLength = struct.pack("!i", len(clientParams))
-	s.send(clientParamsLength.encode('utf-8'))
-	s.send(clientParams.encode('utf-8'))
+	appParams = "\n".join(["client " + DEVICE_NAME, "server true"])
+	appParamsLength = struct.pack("!i", len(appParams))
+	s.send(appParamsLength.encode('utf-8'))
+	s.send(appParams.encode('utf-8'))
 
 	# Read parameters in plaintext from server
 	serverParamsLength = struct.unpack("!i", s.recv(4))[0]
