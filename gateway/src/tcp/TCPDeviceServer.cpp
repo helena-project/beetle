@@ -112,6 +112,8 @@ void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_
 	std::map<std::string, std::string> clientParams;
 	if (!readParamsHelper(ssl, clientParamsLen, clientParams)) {
 		pwarn("unable to read parameters");
+		SSL_shutdown(ssl);
+		SSL_free(ssl);
 		close(clifd);
 		return;
 	}

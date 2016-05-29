@@ -142,8 +142,8 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 	uint8_t buf[HCI_MAX_EVENT_SIZE];
 	while (running->test_and_set()) {
 		int n = read(deviceHandle, buf, sizeof(buf));
-		if (n <= 0) {
-			break;
+		if (n < 0) {
+			continue;
 		} else if (n < (1 + HCI_EVENT_HDR_SIZE)) {
 			if (debug_scan) {
 				pwarn("read less than hci evt header");

@@ -39,12 +39,12 @@ TCPConnection::~TCPConnection() {
 	if (debug_socket) {
 		pdebug("shutting down socket");
 	}
-	SSL_shutdown(ssl);
-	SSL_free(ssl);
 	shutdown(sockfd, SHUT_RDWR);
 	if (readThread.joinable()) {
 		readThread.join();
 	}
+	SSL_shutdown(ssl);
+	SSL_free(ssl);
 	close(sockfd);
 }
 
