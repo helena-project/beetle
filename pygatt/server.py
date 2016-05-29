@@ -126,6 +126,9 @@ class _Characteristic:
 		self._subscribe_callback = lambda: None
 		self._unsubscribe_callback = lambda: None
 
+		self._handle = _Handle(server, self, UUID(gatt.CHARAC_UUID))
+		self._valHandle = _Handle(server, self, self.uuid)
+
 		if allowNotify or allowIndicate:
 			self._cccd = _Descriptor(server, 
 				UUID(gatt.CLIENT_CHARAC_CFG_UUID))
@@ -148,9 +151,6 @@ class _Characteristic:
 			self._cccd.write(bytearray([0, 0]))
 		else:
 			self._cccd = None
-
-		self._handle = _Handle(server, self, UUID(gatt.CHARAC_UUID))
-		self._valHandle = _Handle(server, self, self.uuid)
 
 		if staticValue:
 			self._valHandle.setReadValue(staticValue) 
@@ -196,7 +196,7 @@ class _Characteristic:
 			pdu = bytearray([att.OP_HANDLE_NOTIFY])
 			pdu += self._valHandle.getHandleAsBytearray()
 			pdu += value
-			self.server._sock._send(pdu)
+			self.server._socket._send(pdu)
 
 	def sendIndicate(self, value, cb):
 		assert type(value) is bytearray
@@ -208,7 +208,7 @@ class _Characteristic:
 			pdu = bytearray([att.OP_HANDLE_NOTIFY])
 			pdu += self._valHandle.getHandleAsBytearray()
 			pdu += value
-			self.server._sock._send(pdu)
+			self.server._socket._send(pdu)
 			return True
 		else:
 			return False
@@ -220,8 +220,13 @@ class _Characteristic:
 		return self._handle
 
 	def _get_end_group_handle(self):
-		return self.descriptors[-1]._handle if self.descriptors else \
+		endHandle = self.descriptors[-1]._handle if self.descriptors else \
 			self._valHandle
+		if self._cccd:
+			return endHandle if endHandle._no > self._cccd._handle._no else \
+				self._cccd._handle
+		else:
+			return endHandle
 
 	def __len__(self):
 		return len(self.descriptors) + 1
@@ -460,11 +465,11 @@ class GattServer:
 			return att_pdu.new_error_resp(op, handleNo, 
 				att.ECODE_INVALID_HANDLE)
 		
-		if self.server._handles[handleNo]._read_callback:
+		if self._handles[handleNo]._read_callback:
 			try:
-				self.server._handles[handleNo]._read_callback(value)
+				self._handles[handleNo]._read_callback(value)
 				resp = bytearray([att.OP_READ_RESP])
-				resp += self.server._handles[handleNo]._read_callback()
+				resp += self._handles[handleNo]._read_callback()
 				return resp
 			except int, ecode:
 				return att_pdu.new_error_resp(op, handleNo, ecode)
@@ -489,9 +494,9 @@ class GattServer:
 			else:
 				return None
 
-		if self.server._handles[handleNo]._write_callback:
+		if self._handles[handleNo]._write_callback:
 			try:
-				self.server._handles[handleNo]._write_callback(value)
+				self._handles[handleNo]._write_callback(value)
 				return bytearray([att.OP_WRITE_RESP])
 			except int, ecode:
 				return att_pdu.new_error_resp(op, handleNo, ecode)
@@ -531,4 +536,11 @@ class GattServer:
 			return att_pdu.new_error_resp(op, 0, att.ECODE_REQ_NOT_SUPP)
 
 	def __str__(self):
-		return "\n".join(str(x) for x in self._handles[1:])
+		tmp = []
+		for service in self.services:
+			tmp.append(str(service))
+			for charac in service.characteristics:
+				tmp.append(str(charac))
+				for descripor in charac.descriptors:
+					tmp.append(str(descriptor))
+		return "\n".join(tmp)

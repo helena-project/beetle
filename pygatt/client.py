@@ -450,3 +450,13 @@ class GattClient:
 		self._serviceHandles = serviceHandles
 		self.services = services
 		return services
+
+	def __str__(self):
+		tmp = []
+		for service in self.services:
+			tmp.append(str(service))
+			for charac in service.characteristics:
+				tmp.append(str(charac))
+				for descripor in charac.descriptors:
+					tmp.append(str(descriptor))
+		return "\n".join(tmp)

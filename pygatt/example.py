@@ -106,10 +106,10 @@ def setupServer(server):
 			currBattLvl = valueDict["battLvl"]
 
 			if valueDict["hrMeasSub"]:
-				hrMeasChar.sendNotify(bytearray(currHrMeas & 0xFF))
+				hrMeasChar.sendNotify(bytearray([currHrMeas & 0xFF]))
 			if valueDict["battLvlSub"]:
 				if battLvlPrev != currBattLvl:
-					hrMeasChar.sendNotify(bytearray(currBattLvl & 0xFF))
+					hrMeasChar.sendNotify(bytearray([currBattLvl & 0xFF]))
 					battLvlPrev = valcurrBattLvl
 
 			# increment heart rate
@@ -133,8 +133,10 @@ def runClient(client):
 	# for service in services:
 	# 	characs = service.discoverCharacteristics()
 	# 	for charac in characs:
-	# 		charac.descoverDescriptors()
+	# 		charac.discoverDescriptors()
 	
+	print client
+
 	while True:
 		pass
 
