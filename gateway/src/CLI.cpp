@@ -131,7 +131,7 @@ void CLI::cmdLineDaemon() {
 			doUnmap(cmd);
 		} else if (c1 == "d" || c1 == "devices") {
 			doListDevices(cmd);
-		} else if (c1 == "handles") {
+		} else if (c1 == "ha" || c1 == "handles") {
 			doListHandles(cmd);
 		} else if (c1 == "o" || c1 == "offsets") {
 			doListOffsets(cmd);
@@ -195,7 +195,7 @@ void CLI::doHelp(const std::vector<std::string>& cmd) {
 	printMessage("  unmap");
 	printMessage("");
 	printMessage("  devices,d\t\tPrint connected devices.");
-	printMessage("  handles\t\tPrint a device's handles.");
+	printMessage("  handles,ha\t\tPrint a device's handles.");
 	printMessage("  offsets,o\t\tPrint mappings for a device.");
 	printMessage("");
 	printMessage("  interval\t\tSet max-connection interval for all devices.");

@@ -81,6 +81,7 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 	serv_addr.sin_port = htons(port);
 
 	if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+		shutdown(sockfd, SHUT_RDWR);
 		close(sockfd);
 		throw DeviceException("error connecting");
 	}
@@ -91,6 +92,7 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
 		SSL_free(ssl);
+		shutdown(sockfd, SHUT_RDWR);
 		close(sockfd);
 		throw DeviceException("error on ssl connect");
 	}
@@ -107,6 +109,7 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
 		SSL_free(ssl);
+		shutdown(sockfd, SHUT_RDWR);
 		close(sockfd);
 		throw DeviceException("could not write params length");
 	}
@@ -115,6 +118,7 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
 		SSL_free(ssl);
+		shutdown(sockfd, SHUT_RDWR);
 		close(sockfd);
 		throw DeviceException("could not write all the params");
 	}
@@ -127,6 +131,7 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
 		SSL_free(ssl);
+		shutdown(sockfd, SHUT_RDWR);
 		close(sockfd);
 		throw DeviceException("could not read tcp connection server parameters length");
 	}
@@ -141,6 +146,7 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
 		SSL_free(ssl);
+		shutdown(sockfd, SHUT_RDWR);
 		close(sockfd);
 		throw DeviceException("unable to read parameters");
 	}
@@ -156,6 +162,7 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
 		SSL_free(ssl);
+		shutdown(sockfd, SHUT_RDWR);
 		close(sockfd);
 		throw DeviceException("server gateway did not respond with name");
 	}
