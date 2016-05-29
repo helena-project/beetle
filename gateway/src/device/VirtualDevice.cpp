@@ -175,26 +175,38 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 	if (!currentTransaction) {
 		pwarn("unexpected transaction response when none existed!");
 		return;
-	} else {
-		auto t = currentTransaction;
-		if (pendingTransactions.size() > 0) {
-			while (pendingTransactions.size() > 0) {
-				currentTransaction = pendingTransactions.front();
-				pendingTransactions.pop();
-				if(!write(currentTransaction->buf.get(), currentTransaction->len)) {
-					currentTransaction->cb(NULL, -1);
-					currentTransaction.reset();
-				} else {
-					break;
-				}
-			}
-		} else {
-			currentTransaction.reset();
-		}
-		lk.unlock();
-
-		t->cb(buf, len);
 	}
+
+	if (buf[0] == ATT_OP_ERROR) {
+		if (len != ATT_ERROR_PDU_LEN) {
+			pwarn("invalid error pdu");
+			return;
+		}
+
+		if (buf[1] != currentTransaction->buf.get()[0]) {
+			pwarn("unmatched error: " + std::to_string(buf[1]));
+			return;
+		}
+	}
+
+	auto t = currentTransaction;
+	if (pendingTransactions.size() > 0) {
+		while (pendingTransactions.size() > 0) {
+			currentTransaction = pendingTransactions.front();
+			pendingTransactions.pop();
+			if(!write(currentTransaction->buf.get(), currentTransaction->len)) {
+				currentTransaction->cb(NULL, -1);
+				currentTransaction.reset();
+			} else {
+				break;
+			}
+		}
+	} else {
+		currentTransaction.reset();
+	}
+	lk.unlock();
+
+	t->cb(buf, len);
 }
 
 void VirtualDevice::readHandler(uint8_t *buf, int len) {
@@ -205,8 +217,7 @@ void VirtualDevice::readHandler(uint8_t *buf, int len) {
 		resp[0] = ATT_OP_MTU_RESP;
 		*(uint16_t *) (resp + 1) = htobs(ATT_DEFAULT_LE_MTU);
 		write(resp, sizeof(resp));
-	} else if (((opCode & 1) == 1 && opCode != ATT_OP_HANDLE_NOTIFY && opCode != ATT_OP_HANDLE_IND)
-			|| opCode == ATT_OP_HANDLE_CNF) {
+	} else if (is_att_response(opCode) || opCode == ATT_OP_HANDLE_CNF || opCode == ATT_OP_ERROR) {
 		handleTransactionResponse(buf, len);
 	} else {
 

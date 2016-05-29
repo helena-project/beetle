@@ -82,7 +82,7 @@ inline std::string ba2str_cpp(bdaddr_t bdaddr) {
 	return std::string(addr_c_str);
 }
 
-inline bool isBdAddr(const std::string &s) {
+inline bool is_bd_addr(const std::string &s) {
 	if (s.length() != 17) return false;
 	for (int i = 0; i < (int)s.length(); i++) {
 		char c = s[i];
@@ -96,5 +96,42 @@ inline bool isBdAddr(const std::string &s) {
 	return true;
 }
 
+inline bool is_att_response(uint8_t opcode) {
+	switch(opcode) {
+	case ATT_OP_MTU_RESP:
+	case ATT_OP_FIND_INFO_RESP:
+	case ATT_OP_FIND_BY_TYPE_RESP:
+	case ATT_OP_READ_BY_TYPE_RESP:
+	case ATT_OP_READ_RESP:
+	case ATT_OP_READ_BLOB_RESP:
+	case ATT_OP_READ_MULTI_RESP:
+	case ATT_OP_READ_BY_GROUP_RESP:
+	case ATT_OP_WRITE_RESP:
+	case ATT_OP_PREP_WRITE_RESP:
+	case ATT_OP_EXEC_WRITE_RESP:
+		return true;
+	default:
+		return false;
+	}
+}
+
+inline bool is_att_request(uint8_t opcode) {
+	switch(opcode) {
+	case ATT_OP_MTU_REQ:
+	case ATT_OP_FIND_INFO_REQ:
+	case ATT_OP_FIND_BY_TYPE_REQ:
+	case ATT_OP_READ_BY_TYPE_REQ:
+	case ATT_OP_READ_REQ:
+	case ATT_OP_READ_BLOB_REQ:
+	case ATT_OP_READ_MULTI_REQ:
+	case ATT_OP_READ_BY_GROUP_REQ:
+	case ATT_OP_WRITE_REQ:
+	case ATT_OP_PREP_WRITE_REQ:
+	case ATT_OP_EXEC_WRITE_REQ:
+		return true;
+	default:
+		return false;
+	}
+}
 
 #endif /* INCLUDE_BLE_HELPER_H_ */

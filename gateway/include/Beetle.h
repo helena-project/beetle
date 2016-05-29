@@ -41,14 +41,12 @@ public:
 	void addDevice(std::shared_ptr<Device> device, boost::shared_lock<boost::shared_mutex> &returnLock);
 
 	/*
-	 * Removes a device from Beetle's mappings and unsubscribes
-	 * the device from all characteristics.
+	 * Removes a device from Beetle's mappings and unsubscribes the device from all characteristics.
 	 */
 	void removeDevice(device_t);
 
 	/*
-	 * Inform Beetle that the device has been updated; for instance,
-	 * if the handles have changed.
+	 * Inform Beetle that the device has been updated; for instance, if the handles have changed.
 	 */
 	void updateDevice(device_t);
 

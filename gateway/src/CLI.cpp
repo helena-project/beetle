@@ -235,7 +235,7 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 		/*
 		 * Use address and type supplied by the user
 		 */
-		if (!isBdAddr(cmd[1]) || str2ba(cmd[1].c_str(), &addr) != 0) {
+		if (!is_bd_addr(cmd[1]) || str2ba(cmd[1].c_str(), &addr) != 0) {
 			printUsageError("invalid device address");
 			return;
 		}
@@ -686,7 +686,7 @@ void CLI::doSetDebug(const std::vector<std::string>& cmd) {
 std::shared_ptr<Device> CLI::matchDevice(const std::string &input) {
 	std::shared_ptr<Device> device = NULL;
 
-	if (isBdAddr(input)) {
+	if (is_bd_addr(input)) {
 		// match by address
 		bdaddr_t addr;
 		if (str2ba(input.c_str(), &addr) == 0) {
