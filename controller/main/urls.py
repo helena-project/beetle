@@ -29,6 +29,5 @@ urlpatterns = [
     url(r'^acstate/', include('acstate.urls')),
     url(r'^code/', include('acstate.shorturls')),
     url(r'^admin/', admin.site.urls),
-    url(r'^jet/', include('jet.urls', 'jet')),
     url(r'^$', lambda r: HttpResponseRedirect('admin/')),
 ]

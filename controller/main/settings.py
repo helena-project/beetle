@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'access.apps.AccessConfig',
     'acstate.apps.AcstateConfig',
     'sslserver',
-    'jet',
     'polymorphic',
     'solo',
     'django.contrib.admin',
@@ -139,49 +138,3 @@ STATIC_URL = '/static/'
 
 # SSL settings
 SECURE_SSL_REDIRECT = True
-
-# Jet admin interface settings
-JET_SIDE_MENU_COMPACT = True
-JET_DEFAULT_THEME = 'light-violet'
-JET_SIDE_MENU_CUSTOM_APPS = [
-    # ('auth', [
-    #     '__all__'
-    # ]),
-    ('beetle', [
-        'Contact',
-        'Gateway',
-        'Principal',
-    ]),
-    ('gatt', [
-        'Service',
-        'Characteristic',
-    ]),
-    ('access', [
-        'Rule',
-        'Exclusive',
-    ]),
-    ('acstate', [
-        'BeetleEmailAccount',
-        'AdminAuthInstance',
-        'UserAuthInstance',
-        'PasscodeAuthInstance',
-        'ExclusiveLease',
-    ]),
-    ('network', [
-        'ConnectedGateway',
-        'ConnectedPrincipal',
-    ]),
-]
-
-JET_THEMES = [
-    {
-        'theme': 'light-violet',
-        'color': '#a464c4',
-        'title': 'Light Violet'
-    },
-    {
-        'theme': 'light-gray',
-        'color': '#222',
-        'title': 'Light Gray'
-    }
-]

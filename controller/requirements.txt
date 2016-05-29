@@ -1,7 +1,6 @@
 django
 django-ipware
 django-sslserver
-django-jet
 django-polymorphic
 django-solo
 cronex
