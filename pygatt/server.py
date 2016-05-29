@@ -467,9 +467,9 @@ class GattServer:
 		
 		if self._handles[handleNo]._read_callback:
 			try:
-				self._handles[handleNo]._read_callback(value)
+				value = self._handles[handleNo]._read_callback()
 				resp = bytearray([att.OP_READ_RESP])
-				resp += self._handles[handleNo]._read_callback()
+				resp += value
 				return resp
 			except int, ecode:
 				return att_pdu.new_error_resp(op, handleNo, ecode)
