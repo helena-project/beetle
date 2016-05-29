@@ -347,8 +347,14 @@ static std::vector<group_t> discoverServices(VirtualDevice *d) {
 				if (i + attDataLen > respLen) {
 					break;
 				}
+
+				uint16_t handle = btohs(*(uint16_t *)(resp + i));
+				if (handle < currHandle || handle > endHandle) {
+					continue;
+				}
+
 				group_t group;
-				group.handle = btohs(*(uint16_t *)(resp + i));
+				group.handle = handle;
 				group.endGroup = btohs(*(uint16_t *)(resp + i + 2));
 				group.len = attDataLen - 4;
 				group.value.reset(new uint8_t[group.len]);
@@ -413,8 +419,14 @@ static std::vector<handle_value_t> discoverCharacterisics(VirtualDevice *d, uint
 				if (i + attDataLen > respLen) {
 					break;
 				}
+
+				uint16_t handle = btohs(*(uint16_t *)(resp + i));
+				if (handle < currHandle || handle > endHandle) {
+					continue;
+				}
+
 				handle_value_t handleValue;
-				handleValue.handle = btohs(*(uint16_t *)(resp + i));
+				handleValue.handle = handle;
 				handleValue.len = attDataLen - 2;
 				handleValue.value.reset(new uint8_t[handleValue.len]);
 				memcpy(handleValue.value.get(), resp + i + 2, handleValue.len);
@@ -479,9 +491,15 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 				if (i + attDataLen > respLen) {
 					break;
 				}
+
+				uint16_t handle = btohs(*(uint16_t *)(resp + i));
+				if (handle < currHandle || handle > endGroup) {
+					continue;
+				}
+
 				handle_info_t handleInfo;
 				handleInfo.format = format;
-				handleInfo.handle = btohs(*(uint16_t * )(resp + i));
+				handleInfo.handle = handle;
 				handleInfo.uuid = UUID(resp + i + 2, attDataLen - 2);
 				handles.push_back(handleInfo);
 				if (debug_discovery) {
@@ -504,6 +522,9 @@ static std::vector<handle_info_t> discoverHandles(VirtualDevice *d, uint16_t sta
 	return handles;
 }
 
+/*
+ * TODO robustly validate GATT server packets
+ */
 static std::map<uint16_t, std::shared_ptr<Handle>> discoverAllHandles(VirtualDevice *d) {
 	std::map<uint16_t, std::shared_ptr<Handle>> handles;
 
