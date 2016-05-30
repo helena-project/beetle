@@ -48,6 +48,11 @@ void TCPDeviceServer::serverDaemon(int port) {
 		throw ServerException("error creating socket");
 	}
 
+	int unused = 1;
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &unused, sizeof(int)) < 0) {
+	    throw ServerException("error setting socket to reuse");
+	}
+
 	struct sockaddr_in server_addr = { 0 };
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = INADDR_ANY;
