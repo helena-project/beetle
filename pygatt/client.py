@@ -171,6 +171,7 @@ class _Characteristic:
 
 					descriptor = _Descriptor(self.client, self, uuid, handleNo)
 					if uuid == cccdUuid:
+						# hide the cccd from users
 						cccd = descriptor
 					else:
 						descriptors.append(descriptor)
@@ -445,12 +446,14 @@ class GattClient:
 		self.services = services
 		return services
 
-	def __str__(self):
+	def __str__(self, indent=2):
 		tmp = []
 		for service in self.services:
 			tmp.append(str(service))
 			for charac in service.characteristics:
-				tmp.append(str(charac))
+				tmp.append(" " * indent + str(charac))
+				if charac._cccd:
+					tmp.append(" " * indent * 2 + str(charac._cccd))
 				for descriptor in charac.descriptors:
-					tmp.append(str(descriptor))
+					tmp.append(" " * indent * 2 + str(descriptor))
 		return "\n".join(tmp)

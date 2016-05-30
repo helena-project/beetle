@@ -33,6 +33,12 @@ def getArguments():
 
 	return parser.parse_args()
 
+def printBox(s):
+	s = "|| %s ||" % s  
+	print "=" * len(s)
+	print s
+	print "=" * len(s)
+
 DEVICE_NAME = "Virtual HRM"
 
 HEART_RATE_SERVICE_UUID = 0x180D
@@ -125,6 +131,9 @@ def setupServer(server):
 	hrMeasThread.setDaemon(True)
 	hrMeasThread.start()
 
+	printBox("Server")
+	print server
+
 def runClient(client):
 	"""
 	Begin issuing requests as a client.
@@ -135,6 +144,8 @@ def runClient(client):
 		for charac in characs:
 			charac.discoverDescriptors()
 	
+	print ""
+	printBox("Client")
 	print client
 
 	while True:
@@ -157,14 +168,23 @@ def main(args):
 	s.connect((args.host, args.port))
 
 	# Send initial connection parameters. Just 0 for now.
-	appParams = "\n".join(["client " + DEVICE_NAME, "server true"])
-	appParamsLength = struct.pack("!i", len(appParams))
+	appParams = ["client " + DEVICE_NAME, "server true"]
+
+	print ""
+	printBox("Connection request")
+	for line in appParams:
+		print "$ %s" % line
+
+	appParamsStr = "\n".join(appParams)
+	appParamsLength = struct.pack("!i", len(appParamsStr))
 	s.send(appParamsLength.encode('utf-8'))
-	s.send(appParams.encode('utf-8'))
+	s.send(appParamsStr.encode('utf-8'))
 
 	# Read parameters in plaintext from server
 	serverParamsLength = struct.unpack("!i", s.recv(4))[0]
-	print "Server response:"
+	
+	print ""
+	printBox("Beetle response")
 	for serverParam in s.recv(serverParamsLength).split("\n"):
 		print "$ %s" % serverParam.rstrip()
 

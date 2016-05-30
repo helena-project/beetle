@@ -25,13 +25,13 @@ class _Handle:
 		self._write_callback = None
 		self._owner = owner
 
-	def read(self):
+	def _read(self):
 		try:
 			return self._read_callback()
 		except ServerError, err:
 			return None
 
-	def write(self, value):
+	def _write(self, value):
 		assert type(value) is bytearray
 		try:
 			self._write_callback(value)
@@ -46,27 +46,27 @@ class _Handle:
 		else:
 			raise ValueError("unsupported value type: " + str(type(value)))
 
-	def setReadCallback(self, cb):
+	def _setReadCallback(self, cb):
 		def __wrapper():
 			return self.__convert_to_bytearray(cb())
 		self._read_callback = __wrapper
 
-	def setReadValue(self, value):
+	def _setReadValue(self, value):
 		def __wrapper():
 			return self.__convert_to_bytearray(value)
 		self._read_callback = __wrapper
 
-	def setWriteCallback(self, cb):
+	def _setWriteCallback(self, cb):
 		self._write_callback = cb
 
-	def getHandleAsBytearray(self):
+	def _getHandleAsBytearray(self):
 		arr = bytearray(2)
 		arr[0] = self._no & 0xFF
 		arr[1] = (self._no >> 8) & 0xFF
 		return arr
 
 	def __str__(self):
-		return str(self._owner)
+		return "Handle - %d" % self._no
 
 class _Service:
 	def __init__(self, server, uuid):
@@ -81,7 +81,7 @@ class _Service:
 		self._handle = _Handle(server, self, UUID(gatt.PRIM_SVC_UUID))
 
 		# reversed by convention
-		self._handle.setReadValue(uuid.raw()[::-1])
+		self._handle._setReadValue(uuid.raw()[::-1])
 
 	def _add_characteristic(self, char):
 		self.characteristics.append(char)
@@ -147,35 +147,35 @@ class _Characteristic:
 							self._has_subscriber = False
 					self._cccd.write(value)
 
-			self._cccd._handle.setWriteCallback(cccd_cb)
+			self._cccd._handle._setWriteCallback(cccd_cb)
 			self._cccd.write(bytearray([0, 0]))
 		else:
 			self._cccd = None
 
 		if staticValue:
-			self._valHandle.setReadValue(staticValue) 
+			self._valHandle._setReadValue(staticValue) 
 
 		def read_cb():
 			"""
 			Properties may change.
 			"""
 			handleValue = bytearray([self._properties])
-			handleValue += self._valHandle.getHandleAsBytearray()
+			handleValue += self._valHandle._getHandleAsBytearray()
 			handleValue += self.uuid.raw()[::-1]
 			return handleValue	
-		self._handle.setReadCallback(read_cb)
+		self._handle._setReadCallback(read_cb)
 
 	def setReadCallback(self, cb):
 		self._properties |= gatt.CHARAC_PROP_READ
-		self._valHandle.setReadCallback(cb)
+		self._valHandle._setReadCallback(cb)
 
 	def setReadValue(self, value):
 		self._properties |= gatt.CHARAC_PROP_READ
-		self._valHandle.setReadValue(value)
+		self._valHandle._setReadValue(value)
 
 	def setWriteCallback(self, cb):
 		self._properties |= (gatt.CHARAC_PROP_WRITE | gatt.CHARAC_PROP_WRITE_NR)
-		self._valHandle.setWriteCallback(cb)
+		self._valHandle._setWriteCallback(cb)
 
 	def setSubscribeCallback(self, cb):
 		if self._cccd is None:
@@ -191,10 +191,10 @@ class _Characteristic:
 		assert type(value) is bytearray
 		assert self._cccd != None
 		
-		cccdValue = self._cccd.read()
+		cccdValue = self._cccd._read()
 		if cccdValue is not None and cccdValue[0] == 1:
 			pdu = bytearray([att.OP_HANDLE_NOTIFY])
-			pdu += self._valHandle.getHandleAsBytearray()
+			pdu += self._valHandle._getHandleAsBytearray()
 			pdu += value
 			self.server._socket._send(pdu)
 
@@ -202,11 +202,11 @@ class _Characteristic:
 		assert type(value) is bytearray
 		assert self._cccd != None
 
-		cccdValue = self._cccd.read()
+		cccdValue = self._cccd._read()
 		if cccdValue is not None and cccdValue[1] == 1:
 			self.server._indicateQueue.append(cb)
 			pdu = bytearray([att.OP_HANDLE_NOTIFY])
-			pdu += self._valHandle.getHandleAsBytearray()
+			pdu += self._valHandle._getHandleAsBytearray()
 			pdu += value
 			self.server._socket._send(pdu)
 			return True
@@ -251,7 +251,7 @@ class _Descriptor:
 	def write(self, value):
 		assert type(value) is bytearray
 		self._value = value
-		self._handle.setReadValue(self._value)
+		self._handle._setReadValue(self._value)
 
 	def read(self):
 		return self._value
@@ -332,7 +332,7 @@ class GattServer:
 				break
 			if len(resp) + 2 + respFmt > self._socket.getSendMtu():
 				break
-			resp += handle.getHandleAsBytearray()
+			resp += handle._getHandleAsBytearray()
 			resp += handle._uuid.raw()[::-1]
 			respCount += 1
 
@@ -360,8 +360,8 @@ class GattServer:
 				continue
 			if len(resp) + 4 > self._socket.getSendMtu():
 				break
-			resp += handle.getHandleAsBytearray()
-			resp += handle._owner._get_end_group_handle().getHandleAsBytearray()
+			resp += handle._getHandleAsBytearray()
+			resp += handle._owner._get_end_group_handle()._getHandleAsBytearray()
 			respCount += 1
 
 		if respCount == 0:
@@ -388,7 +388,7 @@ class GattServer:
 			if handle._uuid != uuid:
 				continue
 
-			valRead = handle.read()
+			valRead = handle._read()
 			if valRead is None:
 				return att_pdu.new_error_resp(op, startHandle, 
 					att.ECODE_READ_NOT_PERM)
@@ -402,7 +402,7 @@ class GattServer:
 				break
 			if len(resp) + 2 + valLen > self._socket.getSendMtu():
 				break
-			resp += handle.getHandleAsBytearray()
+			resp += handle._getHandleAsBytearray()
 			resp += valRead
 			respCount += 1
 
@@ -430,7 +430,7 @@ class GattServer:
 			if handle._uuid != uuid:
 				continue
 
-			valRead = handle.read()
+			valRead = handle._read()
 			if valRead is None:
 				return att_pdu.new_error_resp(op, startHandle, 
 					att.ECODE_READ_NOT_PERM)
@@ -444,8 +444,8 @@ class GattServer:
 				break
 			if len(resp) + 4 + valLen > self._socket.getSendMtu():
 				break
-			resp += handle.getHandleAsBytearray()
-			resp += handle._owner._get_end_group_handle().getHandleAsBytearray()
+			resp += handle._getHandleAsBytearray()
+			resp += handle._owner._get_end_group_handle()._getHandleAsBytearray()
 			resp += valRead
 			respCount += 1
 
@@ -535,12 +535,12 @@ class GattServer:
 		else:
 			return att_pdu.new_error_resp(op, 0, att.ECODE_REQ_NOT_SUPP)
 
-	def __str__(self):
+	def __str__(self, indent=2):
 		tmp = []
 		for service in self.services:
 			tmp.append(str(service))
 			for charac in service.characteristics:
-				tmp.append(str(charac))
-				for descripor in charac.descriptors:
-					tmp.append(str(descriptor))
+				tmp.append(" " * indent + str(charac))
+				for descriptor in charac.descriptors:
+					tmp.append(" " * indent * 2 + str(descriptor))
 		return "\n".join(tmp)
