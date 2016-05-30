@@ -34,7 +34,7 @@ inline bool request_device_name(int fd, std::string &name, std::list<delayed_pac
 		return false;
 	}
 
-	int respLen;
+	int respLen = -1;
 	uint8_t resp[256];
 	while (true) {
 		int n = read(fd, resp, sizeof(resp));

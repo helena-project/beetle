@@ -77,8 +77,8 @@ void TCPDeviceServer::serverDaemon(int port) {
 			pwarn("error on ssl accept");
 			ERR_print_errors_fp(stderr);
 			SSL_shutdown(ssl);
-			SSL_free(ssl);
 			shutdown(clifd, SHUT_RDWR);
+			SSL_free(ssl);
 			close(clifd);
 			continue;
 		}
@@ -97,8 +97,8 @@ void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_
 		}
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
-		SSL_free(ssl);
 		shutdown(clifd, SHUT_RDWR);
+		SSL_free(ssl);
 		close(clifd);
 		return;
 	}
@@ -115,8 +115,8 @@ void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_
 	if (!readParamsHelper(ssl, clientParamsLen, clientParams)) {
 		pwarn("unable to read parameters");
 		SSL_shutdown(ssl);
-		SSL_free(ssl);
 		shutdown(clifd, SHUT_RDWR);
+		SSL_free(ssl);
 		close(clifd);
 		return;
 	}
@@ -139,8 +139,8 @@ void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_
 	if (SSL_write_all(ssl, (uint8_t *) &serverParamsLen, sizeof(serverParamsLen)) == false) {
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
-		SSL_free(ssl);
 		shutdown(clifd, SHUT_RDWR);
+		SSL_free(ssl);
 		close(clifd);
 		if (debug) pdebug("could not write server params length");
 	}
@@ -148,8 +148,8 @@ void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_
 	if (SSL_write_all(ssl, (uint8_t *) serverParams.c_str(), serverParams.length()) == false) {
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
-		SSL_free(ssl);
 		shutdown(clifd, SHUT_RDWR);
+		SSL_free(ssl);
 		close(clifd);
 		if (debug) pdebug("could not write server params");
 	}

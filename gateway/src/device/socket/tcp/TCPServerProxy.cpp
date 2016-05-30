@@ -91,8 +91,8 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 	if (SSL_connect(ssl) <= 0) {
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
-		SSL_free(ssl);
 		shutdown(sockfd, SHUT_RDWR);
+		SSL_free(ssl);
 		close(sockfd);
 		throw DeviceException("error on ssl connect");
 	}
@@ -108,8 +108,8 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 	if (SSL_write_all(ssl, (uint8_t *) &clientParamsLen, sizeof(clientParamsLen)) == false) {
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
-		SSL_free(ssl);
 		shutdown(sockfd, SHUT_RDWR);
+		SSL_free(ssl);
 		close(sockfd);
 		throw DeviceException("could not write params length");
 	}
@@ -117,8 +117,8 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 	if (SSL_write_all(ssl, (uint8_t *) clientParams.c_str(), clientParams.length()) == false) {
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
-		SSL_free(ssl);
 		shutdown(sockfd, SHUT_RDWR);
+		SSL_free(ssl);
 		close(sockfd);
 		throw DeviceException("could not write all the params");
 	}
@@ -130,8 +130,8 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 	if (SSL_read(ssl, &serverParamsLen, sizeof(uint32_t)) != sizeof(uint32_t)) {
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
-		SSL_free(ssl);
 		shutdown(sockfd, SHUT_RDWR);
+		SSL_free(ssl);
 		close(sockfd);
 		throw DeviceException("could not read tcp connection server parameters length");
 	}
@@ -145,8 +145,8 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 	if (!readParamsHelper(ssl, serverParamsLen, serverParams)) {
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
-		SSL_free(ssl);
 		shutdown(sockfd, SHUT_RDWR);
+		SSL_free(ssl);
 		close(sockfd);
 		throw DeviceException("unable to read parameters");
 	}
@@ -161,8 +161,8 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 	if (serverParams.find(TCP_PARAM_GATEWAY) == serverParams.end()) {
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
-		SSL_free(ssl);
 		shutdown(sockfd, SHUT_RDWR);
+		SSL_free(ssl);
 		close(sockfd);
 		throw DeviceException("server gateway did not respond with name");
 	}

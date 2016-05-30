@@ -10,6 +10,7 @@
 #include <cassert>
 #include <map>
 #include <utility>
+#include <iostream>
 
 OrderedThreadPool::OrderedThreadPool(int n) :
 		s(0) {
@@ -50,6 +51,9 @@ void OrderedThreadPool::workerDaemon() {
 			long id = -1;
 			std::function<void()> f;
 
+			/*
+			 * Find a task id that is not locked.
+			 */
 			auto it = queue.begin();
 			while (it != queue.end()) {
 				if (locked.find(it->id) == locked.end()) {
@@ -57,14 +61,23 @@ void OrderedThreadPool::workerDaemon() {
 					f = it->f;
 					queue.erase(it);
 					break;
+				} else {
+					it++;
 				}
 			}
 			if (id == -1) {
+				/*
+				 * Cannot make progress. Another thread must be working. All task ids are locked.
+				 */
 				break;
 			} else {
 				locked.insert(id);
 				lk.unlock();
-				f();
+				try {
+					f();
+				} catch (std::exception &e) {
+					std::cerr << "worker caught exception: " << e.what() << std::endl;
+				}
 				lk.lock();
 				locked.erase(id);
 			}

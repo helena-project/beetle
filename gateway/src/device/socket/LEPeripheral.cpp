@@ -177,13 +177,6 @@ void LEPeripheral::stopInternal() {
 		if (debug) {
 			pdebug("terminating " + getName());
 		}
-
-		device_t id = getId();
-		Beetle *beetlePtr = &beetle;
-
-		/*
-		 * Destructor may join or wait for caller. This prevents deadlock.
-		 */
-		beetle.workers.schedule([beetlePtr, id] { beetlePtr->removeDevice(id); });
+		beetle.removeDevice(getId());
 	}
 }
