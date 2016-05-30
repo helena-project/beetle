@@ -467,7 +467,7 @@ class _ServerCharacteristic:
 		return "Characteristic - %s" % str(self.uuid)
 
 class _ServerDescriptor:
-	def __init__(self, server, uuid):
+	def __init__(self, server, uuid, value=None):
 		assert isinstance(server, GattServer)
 		assert isinstance(uuid, UUID)
 
@@ -480,7 +480,10 @@ class _ServerDescriptor:
 
 		# Protected members
 		self._handle = _ServerHandle(server, self.characteristic, uuid)
-		self._value = None
+		self._value = value
+
+		if self._value:
+			self._handle._setReadValue(value)
 
 	def write(self, value):
 		"""Write a value to the descriptor.
@@ -511,6 +514,7 @@ class GattServer:
 			socket : a ManagedSocket instance
 			onDisconnect : callback on disconnect
 		"""
+		assert isinstance(socket, ManagedSocket)
 
 		# Public members
 		self.services = []
@@ -574,18 +578,19 @@ class GattServer:
 		return _ServerCharacteristic(self, uuid, value, allowNotify, 
 			allowIndicate)
 	
-	def addDescriptor(self, uuid):
+	def addDescriptor(self, uuid, value=None):
 		"""Add a descriptor to the last characteristic
 
 		Args:
 			uuid : the type of the descriptor
+			value : default value for descriptor
 		Returns:
 			The newly added characteristic
 		"""
 		if not isinstance(uuid, UUID):
 			uuid = UUID(uuid)
 
-		return _ServerDescriptor(self, uuid)
+		return _ServerDescriptor(self, uuid, value)
 
 	# Protected and private methods
 
@@ -878,14 +883,18 @@ class _ClientService:
 		Returns:
 			A list of discovered characteristics
 		"""
+		if uuid and not isinstance(uuid, UUID):
+			uuid = UUID(uuid)
+
 		if uuid is None:
-			return self._discover_all_characteristics()
+			return self.__discover_all_characteristics()
 		else:
-			raise NotImplementedError
+			allCharacs = self.__discover_all_characteristics()
+			return filter(lambda x: x.uuid == uuid, allCharacs)
 
 	# Protected and private methods
 
-	def _discover_all_characteristics(self):
+	def __discover_all_characteristics(self):
 		startHandle = self._handleNo + 1
 		endHandle = self._endGroup
 		characUuid = UUID(gatt.CHARAC_UUID)
@@ -1222,6 +1231,7 @@ class GattClient:
 			socket : a ManagedSocket instance
 			onDisconnect : callback on disconnect
 		"""
+		assert isinstance(socket, ManagedSocket)
 
 		# Public members
 		self.services = []
@@ -1252,10 +1262,13 @@ class GattClient:
 			uuid : type of service to discover
 		Returns:
 			A list of services."""
+		if uuid and not isinstance(uuid, UUID):
+			uuid = UUID(uuid)
+
 		if uuid is None:
 			return self.__discover_all_services()
 		else:
-			raise NotImplementedError
+			return self.__discover_services_by_uuid(uuid)
 
 	# Protected and private methods
 
@@ -1371,6 +1384,65 @@ class GattClient:
 
 		self._serviceHandles = serviceHandles
 		self.services = services
+		return services
+
+	def __discover_service_by_uuid(self, uuid):
+		startHandle = 1
+		endHandle = 0xFFFF
+		primSvcUuid = UUID(gatt.PRIM_SVC_UUID)
+
+		services = []
+		newServices = []
+		serviceHandles = {}
+		currHandle = startHandle
+
+		while True:
+			req = att_pdu.new_find_by_type_value_req(currHandle, endHandle, 
+				primSvcUuid, uuid.raw()[::-1])
+
+			resp = self._new_transaction(req)
+			if not resp:
+				raise ClientError("transaction failed")
+
+			if resp[0] == att.OP_FIND_BY_TYPE_REQ:
+				idx = 2
+
+				endGroup = currHandle # not needed
+				while idx < len(resp) and idx + 4 <= len(resp): 
+					handleNo = resp[idx] + (resp[idx+1] >> 8)
+					endGroup = resp[idx+2] + (resp[idx+3] >> 8)
+
+					if handleNo in self._serviceHandles:
+						service = self._serviceHandles[handleNo]
+					else:
+						service = _ClientService(self, uuid, handleNo, endGroup)
+						serviceHandles[handleNo] = service
+						newServices.append(service)
+					services.append(service)
+
+					idx += 4
+
+				currHandle = endGroup + 1
+				if currHandle >= endHandle:
+					break
+
+			elif (resp[0] == att.OP_ERROR 
+				and resp[1] == att.OP_FIND_BY_TYPE_REQ
+				and resp[4] == att.ECODE_ATTR_NOT_FOUND):
+				break
+
+			elif (resp[0] == att.OP_ERROR 
+				and resp[1] == att.OP_FIND_BY_TYPE_REQ
+				and resp[4] == att.ECODE_REQ_NOT_SUPP):
+				raise ClientError("not supported")
+
+			else:
+				raise ClientError("error: %02x" % resp[0])
+
+		self.services.extend(newServices)
+		self.services.sort(key=lambda x: x._handleNo)
+		self._serviceHandles.update(serviceHandles)
+
 		return services
 
 	def __str__(self, indent=2):

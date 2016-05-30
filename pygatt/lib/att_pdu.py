@@ -42,6 +42,14 @@ def new_find_info_req(startHandle, endHandle):
 	pdu += __pack_handle(endHandle)
 	return pdu
 
+def new_find_by_type_value_req(startHandle, endHandle, uuid, value):
+	pdu = bytearray([att.OP_FIND_BY_TYPE_REQ])
+	pdu += __pack_handle(startHandle)
+	pdu += __pack_handle(endHandle)
+	pdu += uuid.raw()[::-1]
+	pdu += value
+	return pdu
+
 def parse_read_req(pdu):
 	assert type(pdu) is bytearray
 	return pdu[0], __unpack_handle(pdu, 1)
