@@ -147,15 +147,24 @@ def setUpServer(server):
 def runClient(client):
 	"""Begin issuing requests as a client"""
 
+	print ""
+	raw_input("Press ENTER to begin discovery:")
+
 	services = client.discoverServices()
 	for service in services:
-		characs = service.discoverCharacteristics()
-		for charac in characs:
-			charac.discoverDescriptors()
-	
-	print ""
+		characteristics = service.discoverCharacteristics()
+		for characteristic in characteristics:
+			characteristic.discoverDescriptors()
+
 	printBox("Client")
 	print client
+
+	print ""
+	for service in client.services:
+		for characteristic in service.characteristics:
+			if "r" in characteristic.permissions:
+				print "Read: " + " ".join("%02x" % x for x in \
+					characteristic.read())
 
 	while True:
 		pass

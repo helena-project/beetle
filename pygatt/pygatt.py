@@ -844,7 +844,7 @@ class GattServer:
 
 #------------------------------------------------------------------------------
 
-def __handle_to_bytearray(handle):
+def _handle_to_bytearray(handle):
 	"""Packs the 16-bit handle into a little endian bytearray"""
 	assert handle <= 0xFFFF
 	assert handle >= 0
@@ -1098,8 +1098,8 @@ class _ClientCharacteristic:
 			raise ClientError("read not permitted")
 
 		req = bytearray([att.OP_READ_REQ])
-		req += __handle_to_bytearray(self._valHandleNo)
-		resp = client._new_transaction(req)
+		req += _handle_to_bytearray(self._valHandleNo)
+		resp = self.client._new_transaction(req)
 		if resp is None:
 			raise ClientError("no response")
 		elif resp[0] == att.OP_READ_RESP:
@@ -1122,7 +1122,7 @@ class _ClientCharacteristic:
 			raise ClientError("write not permitted")
 
 		req = bytearray([att.OP_WRITE_REQ])
-		req += __handle_to_bytearray(self._valHandleNo)
+		req += _handle_to_bytearray(self._valHandleNo)
 		req += value
 
 		resp = client._new_transaction(req)
@@ -1173,7 +1173,7 @@ class _ClientDescriptor:
 		"""
 
 		req = bytearray([att.OP_READ_REQ])
-		req += __handle_to_bytearray(self._handleNo)
+		req += _handle_to_bytearray(self._handleNo)
 		resp = client._new_transaction(req)
 		if resp is None:
 			raise ClientError("no response")
@@ -1196,7 +1196,7 @@ class _ClientDescriptor:
 		assert type(value) is bytearray
 
 		req = bytearray([att.OP_WRITE_REQ])
-		req += __handle_to_bytearray(self._handleNo)
+		req += _handle_to_bytearray(self._handleNo)
 		req += value
 
 		resp = client._new_transaction(req)
