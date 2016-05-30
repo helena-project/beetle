@@ -316,8 +316,7 @@ class GattClient:
 		self._onDisconnect = onDisconnect
 
 		self._transactionLock = threading.Lock()
-		self._responseSema = threading.BoundedSemaphore(1)
-		self._responseSema.acquire() # decrement to 0
+		self._responseEvent = threading.Event()
 		
 		self._currentRequest = None
 		self._currentResponse = None
@@ -341,10 +340,7 @@ class GattClient:
 		if self._onDisconnect is not None:
 			self._onDisconnect(err)
 			self._disconnected = True
-			try:
-				self._responseSema.release()
-			except ValueError:
-				pass
+			self._responseEvent.set()
 
 	def _new_transaction(self, req):
 		assert type(req) is bytearray
@@ -360,12 +356,12 @@ class GattClient:
 
 			self._currentRequest = req
 			self._socket._send(req)
-			self._responseSema.acquire()
-
-			return self._currentResponse
+			if self._responseEvent.wait(60):
+				return self._currentResponse
 		finally:
 			self._currentRequest = None
 			self._currentResponse = None
+			self._responseEvent.clear()
 			self._transactionLock.release()
 
 		return None
@@ -377,10 +373,7 @@ class GattClient:
 			and pdu[1] == self._currentRequest[0])):
 
 			self._currentResponse = pdu
-			try:
-				self._responseSema.release()
-			except ValueError:
-				pass
+			self._responseEvent.set()
 			return None
 
 		if op == att.OP_HANDLE_NOTIFY or op == att.OP_HANDLE_IND:
