@@ -1,5 +1,14 @@
 #!/usr/bin/env python
 
+"""
+pygatt example
+==============
+
+This module implements a virtual heart rate monitor server and a client
+that performs discovery.
+"""
+
+
 import sys
 import os
 import socket
@@ -15,9 +24,7 @@ import lib.gatt as gatt
 import lib.att as att
 import lib.uuid as uuid
 
-from framework import ManagedSocket
-from server import GattServer, ServerError
-from client import GattClient, ClientError
+from pygatt import *
 
 def getArguments():
 	"""
@@ -139,7 +146,7 @@ def setUpServer(server):
 
 def runClient(client):
 	"""Begin issuing requests as a client"""
-	
+
 	services = client.discoverServices()
 	for service in services:
 		characs = service.discoverCharacteristics()
