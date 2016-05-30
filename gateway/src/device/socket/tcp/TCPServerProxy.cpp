@@ -26,6 +26,7 @@
 #include "Device.h"
 #include "hat/SingleAllocator.h"
 #include "tcp/TCPConnParams.h"
+#include "util/file.h"
 #include "util/write.h"
 
 TCPServerProxy::TCPServerProxy(Beetle &beetle, SSL *ssl, int sockfd, std::string serverGateway_,
@@ -126,23 +127,8 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 	/*
 	 * Read params from the server.
 	 */
-	uint32_t serverParamsLen;
-	if (SSL_read(ssl, &serverParamsLen, sizeof(uint32_t)) != sizeof(uint32_t)) {
-		ERR_print_errors_fp(stderr);
-		SSL_shutdown(ssl);
-		shutdown(sockfd, SHUT_RDWR);
-		SSL_free(ssl);
-		close(sockfd);
-		throw DeviceException("could not read tcp connection server parameters length");
-	}
-
-	serverParamsLen = ntohl(serverParamsLen);
-	if (debug) {
-		pdebug("expecting " + std::to_string(serverParamsLen) + " bytes of parameters");
-	}
-
 	std::map<std::string, std::string> serverParams;
-	if (!readParamsHelper(ssl, serverParamsLen, serverParams)) {
+	if (!readParamsHelper(ssl, sockfd, serverParams)) {
 		ERR_print_errors_fp(stderr);
 		SSL_shutdown(ssl);
 		shutdown(sockfd, SHUT_RDWR);

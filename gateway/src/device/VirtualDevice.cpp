@@ -27,7 +27,7 @@
 #include "sync/Semaphore.h"
 #include "UUID.h"
 
-static const int maxTransactionLatencies = 50;
+static const int maxTransactionLatencies = 20;
 
 static uint64_t getCurrentTimeMillis(void) {
 	struct timespec spec;

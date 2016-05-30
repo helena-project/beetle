@@ -34,9 +34,10 @@ const std::string TCP_PARAM_CLIENT = "client";
 const std::string TCP_PARAM_SERVER = "server";
 
 /*
- * Read paramsLen bytes of plaintext parameters from fd into params.
+ * Read paramsLen bytes of plaintext parameters from fd into params. Socket
+ * should be nonblocking, if timeout seconds passes, then failure is returned.
  * Returns true on success.
  */
-bool readParamsHelper(SSL *ssl, int paramsLen, std::map<std::string, std::string> &params);
+bool readParamsHelper(SSL *ssl, int fd, std::map<std::string, std::string> &params, double timeout = 10.0);
 
 #endif /* INCLUDE_TCP_CONNPARAMS_H_ */

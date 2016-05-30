@@ -68,16 +68,52 @@ void TCPConnection::startInternal() {
 				pdebug("tcp expecting " + std::to_string(len) + " bytes");
 			}
 
+			time_t startTime = time(NULL);
+
+			struct timeval defaultTimeout;
+			defaultTimeout.tv_sec = 0;
+			defaultTimeout.tv_usec = 100000;
+
+			fd_set fdSet;
+			FD_ZERO(&fdSet);
+			FD_SET(sockfd, &fdSet);
+
 			// read payload ATT message
 			bytesRead = 0;
 			while (bytesRead < len) {
-				int n = SSL_read(ssl, buf + bytesRead, len - bytesRead);
-				if (n < 0) {
-					std::cerr << "socket errno: " << strerror(errno) << std::endl;
+				if (difftime(time(NULL), startTime) > TIMEOUT_PAYLOAD) {
+					if (debug) {
+						pdebug("timed out reading payload");
+					}
 					stopInternal();
 					break;
-				} else {
-					bytesRead += n;
+				}
+
+				int result = SSL_pending(ssl);
+
+				if (result <= 0) {
+					struct timeval timeout = defaultTimeout;
+					fd_set readFds = fdSet;
+					fd_set exceptFds = fdSet;
+					result = select(sockfd+1, &readFds, NULL, &exceptFds, &timeout);
+					if (result < 0) {
+						std::stringstream ss;
+						ss << "select failed : " << strerror(errno);
+						pdebug(ss.str());
+						stopInternal();
+						break;
+					}
+				}
+
+				if (result > 0) {
+					int n = SSL_read(ssl, buf + bytesRead, len - bytesRead);
+					if (n < 0) {
+						std::cerr << "socket errno: " << strerror(errno) << std::endl;
+						stopInternal();
+						break;
+					} else {
+						bytesRead += n;
+					}
 				}
 			}
 

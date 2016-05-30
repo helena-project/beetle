@@ -47,6 +47,11 @@ private:
 	void stopInternal();
 
 	Countdown pendingWrites;
+
+	/*
+	 * Maximum number of seconds to wait for payload.
+	 */
+	static constexpr double TIMEOUT_PAYLOAD = 10;
 };
 
 #endif /* TCPCONNECTION_H_ */

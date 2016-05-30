@@ -24,6 +24,7 @@
 #include "device/socket/tcp/TCPClientProxy.h"
 #include "Debug.h"
 #include "tcp/TCPConnParams.h"
+#include "util/file.h"
 #include "util/write.h"
 
 TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig, int port) :
@@ -88,40 +89,15 @@ void TCPDeviceServer::serverDaemon(int port) {
 			continue;
 		}
 
-		/*
-		 * TODO: make this more efficient
-		 */
-		std::thread t(&TCPDeviceServer::startTcpDeviceHelper, this, ssl, clifd, client_addr);
-		t.detach();
+		startTcpDeviceHelper(ssl, clifd, client_addr);
 	}
 	close(sockfd);
 	if (debug) pdebug("tcp serverDaemon exited");
 }
 
 void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_in cliaddr) {
-	uint32_t clientParamsLen;
-	if (SSL_read(ssl, &clientParamsLen, sizeof(uint32_t)) != sizeof(uint32_t)) {
-		if (debug) {
-			pdebug("could not read tcp connection client parameters length");
-		}
-		ERR_print_errors_fp(stderr);
-		SSL_shutdown(ssl);
-		shutdown(clifd, SHUT_RDWR);
-		SSL_free(ssl);
-		close(clifd);
-		return;
-	}
-
-	/*
-	 * Read params from the client.
-	 */
-	clientParamsLen = ntohl(clientParamsLen);
-	if (debug) {
-		pdebug("expecting " + std::to_string(clientParamsLen) + " bytes of parameters");
-	}
-
 	std::map<std::string, std::string> clientParams;
-	if (!readParamsHelper(ssl, clientParamsLen, clientParams)) {
+	if (!readParamsHelper(ssl, clifd, clientParams)) {
 		pwarn("unable to read parameters");
 		SSL_shutdown(ssl);
 		shutdown(clifd, SHUT_RDWR);
