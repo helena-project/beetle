@@ -42,6 +42,7 @@ SSLConfig::SSLConfig(bool verifyPeers, bool isServer, std::string cert, std::str
 	} else {
 		SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
 	}
+	SSL_CTX_set_timeout(ctx, 6);
 	SSL_CTX_set_verify_depth(ctx, 3);
 	SSL_CTX_set_cipher_list(ctx, "HIGH");
 	SSL_CTX_set_options(ctx, SSL_OP_SINGLE_DH_USE);

@@ -83,7 +83,11 @@ void TCPDeviceServer::serverDaemon(int port) {
 			continue;
 		}
 
-		startTcpDeviceHelper(ssl, clifd, client_addr);
+		/*
+		 * TODO: make this more efficient
+		 */
+		std::thread t(&TCPDeviceServer::startTcpDeviceHelper, this, ssl, clifd, client_addr);
+		t.detach();
 	}
 	close(sockfd);
 	if (debug) pdebug("tcp serverDaemon exited");
