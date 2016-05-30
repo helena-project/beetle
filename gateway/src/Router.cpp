@@ -169,7 +169,7 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 
 			for (auto &mapping : destinationDevice->handles) {
 				uint16_t offset = mapping.first + handleRange.start;
-				if (offset < startHandle) {
+				if (offset < currHandle) {
 					continue;
 				} else if (offset > endHandle) {
 					done = true;
@@ -313,7 +313,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 
 			for (auto &mapping : destinationDevice->handles) {
 				uint16_t offset = mapping.first + handleRange.start;
-				if (offset < startHandle) {
+				if (offset < currHandle) {
 					continue;
 				} else if (offset > endHandle) {
 					done = true;
@@ -653,7 +653,7 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 
 			for (auto &mapping : destinationDevice->handles) {
 				uint16_t offset = mapping.first + handleRange.start;
-				if (offset < startHandle) {
+				if (offset < currHandle) {
 					continue;
 				} else if (offset > endHandle) {
 					done = true;
@@ -693,7 +693,7 @@ int Router::routeReadByGroupType(uint8_t *buf, int len, device_t src) {
 		 * Advance range
 		 */
 		currHandle = handleRange.end + 1;
-		if (currHandle <= handleRange.start) {
+		if (currHandle <= handleRange.start || currHandle == 0) {
 			done = true;
 			break;
 		}
