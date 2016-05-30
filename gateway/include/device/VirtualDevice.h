@@ -21,15 +21,6 @@
 #include "Device.h"
 #include "UUID.h"
 
-// Debug the GATT handle discovery.
-extern bool debug_discovery;
-
-typedef struct {
-	boost::shared_array<uint8_t> buf;
-	int len;
-	std::function<void(uint8_t*, int)> cb;
-} transaction_t;
-
 /*
  * Base class that implements GATT and asynchronous transactions.
  */
@@ -87,6 +78,12 @@ private:
 	/*
 	 * Server transactions
 	 */
+	typedef struct {
+		boost::shared_array<uint8_t> buf;
+		int len;
+		std::function<void(uint8_t*, int)> cb;
+	} transaction_t;
+
 	void handleTransactionResponse(uint8_t *buf, int len);
 	std::shared_ptr<transaction_t> currentTransaction;
 	std::queue<std::shared_ptr<transaction_t>> pendingTransactions;

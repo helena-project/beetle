@@ -18,9 +18,6 @@
 
 #include "device/socket/LEPeripheral.h"
 
-// Print debug info in scanning module
-extern bool debug_scan;
-
 class ScannerException : public std::exception {
 public:
 	ScannerException(std::string msg) : msg(msg) {};

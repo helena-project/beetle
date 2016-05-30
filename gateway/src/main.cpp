@@ -34,13 +34,13 @@
 
 
 /* Global debug variables */
-bool debug;				// Debug.h
-bool debug_scan;		// Scan.h
-bool debug_discovery;	// VirtualDevice.h
-bool debug_router;		// Router.h
-bool debug_socket;		// Debug.h
-bool debug_controller;	// Debug.h
-bool debug_performance; // Debug.h
+bool debug;
+bool debug_scan;
+bool debug_discovery;
+bool debug_router;
+bool debug_socket;
+bool debug_controller;
+bool debug_performance;
 
 void setDebugAll() {
 	debug = true;
