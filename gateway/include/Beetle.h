@@ -17,6 +17,7 @@
 #include "BeetleTypes.h"
 #include "sync/OrderedThreadPool.h"
 #include "sync/ThreadPool.h"
+#include "sync/SocketSelect.h"
 #include "HCI.h"
 
 /* Forward declarations */
@@ -125,6 +126,11 @@ public:
 	 * Threads used for writing.
 	 */
 	OrderedThreadPool writers;
+
+	/*
+	 * Threads used for reading.
+	 */
+	SocketSelect readers;
 };
 
 #endif /* INCLUDE_BEETLE_H_ */

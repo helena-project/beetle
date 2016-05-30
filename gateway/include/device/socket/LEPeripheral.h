@@ -45,9 +45,6 @@ private:
 
 	std::list<delayed_packet_t> delayedPackets;
 
-	std::thread readThread;
-	void readDaemon();
-
 	Countdown pendingWrites;
 };
 

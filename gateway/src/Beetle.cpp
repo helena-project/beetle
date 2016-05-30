@@ -13,7 +13,7 @@
 #include "Router.h"
 
 Beetle::Beetle(std::string name_) :
-		workers(4), writers(2) {
+		workers(2), writers(1), readers(1) {
 	router = std::make_unique<Router>(*this);
 	beetleDevice = std::make_shared<BeetleInternal>(*this, name_);
 	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;

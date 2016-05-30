@@ -5,14 +5,17 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/sync/OrderedThreadPool.cpp \
+../src/sync/SocketSelect.cpp \
 ../src/sync/ThreadPool.cpp 
 
 OBJS += \
 ./src/sync/OrderedThreadPool.o \
+./src/sync/SocketSelect.o \
 ./src/sync/ThreadPool.o 
 
 CPP_DEPS += \
 ./src/sync/OrderedThreadPool.d \
+./src/sync/SocketSelect.d \
 ./src/sync/ThreadPool.d 
 
 

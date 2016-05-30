@@ -25,7 +25,7 @@
 
 TCPConnection::TCPConnection(Beetle &beetle, SSL *ssl_, int sockfd_, struct sockaddr_in sockaddr_, bool isEndpoint,
 		HandleAllocationTable *hat) :
-		VirtualDevice(beetle, isEndpoint, hat), readThread() {
+		VirtualDevice(beetle, isEndpoint, hat) {
 	ssl = ssl_;
 	sockfd = sockfd_;
 	sockaddr = sockaddr_;
@@ -36,20 +36,62 @@ TCPConnection::~TCPConnection() {
 	stopped = true;
 
 	pendingWrites.wait();
+
+	beetle.readers.remove(sockfd);
+
 	if (debug_socket) {
 		pdebug("shutting down socket");
 	}
+
 	SSL_shutdown(ssl);
 	shutdown(sockfd, SHUT_RDWR);
-	if (readThread.joinable()) {
-		readThread.join();
-	}
 	SSL_free(ssl);
 	close(sockfd);
 }
 
 void TCPConnection::startInternal() {
-	readThread = std::thread(&TCPConnection::readDaemon, this);
+	beetle.readers.add(sockfd, [this] {
+		uint8_t buf[256];
+		uint8_t len;
+
+		// read length of ATT message
+		int bytesRead = SSL_read(ssl, &len, sizeof(len));
+		if (bytesRead <= 0) {
+			if (debug_socket) {
+				std::stringstream ss;
+				ss << "socket errno: " << strerror(errno);
+			}
+			stopInternal();
+		} else {
+			assert(bytesRead == 1);
+			if (debug_socket) {
+				pdebug("tcp expecting " + std::to_string(len) + " bytes");
+			}
+
+			// read payload ATT message
+			bytesRead = 0;
+			while (bytesRead < len) {
+				int n = SSL_read(ssl, buf + bytesRead, len - bytesRead);
+				if (n < 0) {
+					std::cerr << "socket errno: " << strerror(errno) << std::endl;
+					stopInternal();
+					break;
+				} else {
+					bytesRead += n;
+				}
+			}
+
+			if (bytesRead < len) {
+				return;
+			}
+
+			if (debug_socket) {
+				phex(buf, bytesRead);
+			}
+
+			readHandler(buf, bytesRead);
+		}
+	});
 }
 
 bool TCPConnection::write(uint8_t *buf, int len) {
@@ -82,62 +124,6 @@ bool TCPConnection::write(uint8_t *buf, int len) {
 		pendingWrites.decrement();
 	});
 	return true;
-}
-
-void TCPConnection::readDaemon() {
-	if (debug) {
-		pdebug(getName() + " readDaemon started");
-	}
-	uint8_t buf[256];
-	uint8_t len;
-	while (true) {
-		// read length of ATT message
-		int bytesRead = SSL_read(ssl, &len, sizeof(len));
-		if (bytesRead <= 0) {
-			if (debug_socket) {
-				std::stringstream ss;
-				ss << "socket errno: " << strerror(errno);
-			}
-			stopInternal();
-			break;
-		} else {
-			assert(bytesRead == 1);
-			if (debug_socket) {
-				pdebug("tcp expecting " + std::to_string(len) + " bytes");
-			}
-
-			// TODO perhaps 0 can be used as a heartbeat?
-			if (len == 0) {
-				continue;
-			}
-
-			// read payload ATT message
-			bytesRead = 0;
-			while (bytesRead < len) {
-				int n = SSL_read(ssl, buf + bytesRead, len - bytesRead);
-				if (n < 0) {
-					std::cerr << "socket errno: " << strerror(errno) << std::endl;
-					stopInternal();
-					break;
-				} else {
-					bytesRead += n;
-				}
-			}
-
-			if (bytesRead < len) {
-				break; // terminate called
-			}
-
-			if (debug_socket) {
-				phex(buf, bytesRead);
-			}
-
-			readHandler(buf, bytesRead);
-		}
-	}
-	if (debug) {
-		pdebug(getName() + " readDaemon exited");
-	}
 }
 
 struct sockaddr_in TCPConnection::getSockaddr() {

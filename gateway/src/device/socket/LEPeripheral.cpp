@@ -26,7 +26,7 @@
 #include "util/write.h"
 
 LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType) :
-		VirtualDevice(beetle, true), readThread() {
+		VirtualDevice(beetle, true) {
 	type = LE_PERIPHERAL;
 
 	bdaddr = addr;
@@ -84,13 +84,13 @@ LEPeripheral::~LEPeripheral() {
 	stopped = true;
 
 	pendingWrites.wait();
+
+	beetle.readers.remove(sockfd);
+
 	if (debug_socket) {
 		pdebug("shutting down socket");
 	}
 	shutdown(sockfd, SHUT_RDWR);
-	if (readThread.joinable()) {
-		readThread.join();
-	}
 	close(sockfd);
 }
 
@@ -103,7 +103,30 @@ LEPeripheral::AddrType LEPeripheral::getAddrType() {
 }
 
 void LEPeripheral::startInternal() {
-	readThread = std::thread(&LEPeripheral::readDaemon, this);
+	for (delayed_packet_t &packet : delayedPackets) {
+		readHandler(packet.buf.get(), packet.len);
+	}
+	delayedPackets.clear();
+
+	beetle.readers.add(sockfd, [this] {
+		uint8_t buf[256];
+		int n = read(sockfd, buf, sizeof(buf));
+		if (debug_socket) {
+			pdebug(getName() + " read " + std::to_string(n) + " bytes");
+		}
+		if (n <= 0) {
+			if (debug_socket) {
+				std::stringstream ss;
+				ss << "socket errno: " << strerror(errno);
+			}
+			stopInternal();
+		} else {
+			if (debug_socket) {
+				phex(buf, n);
+			}
+			readHandler(buf, n);
+		}
+	});
 }
 
 struct l2cap_conninfo LEPeripheral::getL2capConnInfo() {
@@ -135,41 +158,6 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 		pendingWrites.decrement();
 	});
 	return true;
-}
-
-void LEPeripheral::readDaemon() {
-	if (debug) {
-		pdebug(getName() + " readDaemon started");
-	}
-
-	for (delayed_packet_t &packet : delayedPackets) {
-		readHandler(packet.buf.get(), packet.len);
-	}
-
-	uint8_t buf[256];
-	while (true) {
-		int n = read(sockfd, buf, sizeof(buf));
-		if (debug_socket) {
-			pdebug(getName() + " read " + std::to_string(n) + " bytes");
-		}
-		if (n <= 0) {
-			if (debug_socket) {
-				std::stringstream ss;
-				ss << "socket errno: " << strerror(errno);
-			}
-			stopInternal();
-			break;
-		} else {
-			if (debug_socket) {
-				phex(buf, n);
-			}
-			readHandler(buf, n);
-		}
-	}
-
-	if (debug) {
-		pdebug(getName() + " readDaemon exited");
-	}
 }
 
 void LEPeripheral::stopInternal() {
