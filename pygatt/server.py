@@ -11,7 +11,7 @@ class ServerError(Exception):
 	def __init__(self, msg):
 		self.msg = msg
 
-class _Handle:
+class _ServerHandle:
 	"""Protected server handle"""
 	
 	def __init__(self, server, owner, uuid):
@@ -72,7 +72,7 @@ class _Handle:
 	def __str__(self):
 		return "Handle - %d" % self._no
 
-class _Service:
+class _ServerService:
 	"""Protected server service"""
 
 	def __init__(self, server, uuid):
@@ -84,7 +84,7 @@ class _Service:
 		self.characteristics = []
 
 		# Protected members
-		self._handle = _Handle(server, self, UUID(gatt.PRIM_SVC_UUID))
+		self._handle = _ServerHandle(server, self, UUID(gatt.PRIM_SVC_UUID))
 
 		# reversed by convention
 		self._handle._setReadValue(uuid.raw()[::-1])
@@ -105,7 +105,7 @@ class _Service:
 	def __str__(self):
 		return "Service - %s" % str(self.uuid)
 
-class _Characteristic:
+class _ServerCharacteristic:
 	def __init__(self, server, uuid, staticValue=None, allowNotify=False, 
 		allowIndicate=False):
 		assert isinstance(server, GattServer)
@@ -132,11 +132,11 @@ class _Characteristic:
 		self._subscribe_callback = lambda: None
 		self._unsubscribe_callback = lambda: None
 
-		self._handle = _Handle(server, self, UUID(gatt.CHARAC_UUID))
-		self._valHandle = _Handle(server, self, self.uuid)
+		self._handle = _ServerHandle(server, self, UUID(gatt.CHARAC_UUID))
+		self._valHandle = _ServerHandle(server, self, self.uuid)
 
 		if allowNotify or allowIndicate:
-			self._cccd = _Descriptor(server, 
+			self._cccd = _ServerDescriptor(server, 
 				UUID(gatt.CLIENT_CHARAC_CFG_UUID))
 			def cccd_cb(value):
 				assert type(value) is bytearray
@@ -279,7 +279,7 @@ class _Characteristic:
 	def __str__(self):
 		return "Characteristic - %s" % str(self.uuid)
 
-class _Descriptor:
+class _ServerDescriptor:
 	def __init__(self, server, uuid):
 		assert isinstance(server, GattServer)
 		assert isinstance(uuid, UUID)
@@ -292,7 +292,7 @@ class _Descriptor:
 		self.characteristic._add_descriptor(self)
 
 		# Protected members
-		self._handle = _Handle(server, self.characteristic, uuid)
+		self._handle = _ServerHandle(server, self.characteristic, uuid)
 		self._value = None
 
 	def write(self, value):
@@ -362,7 +362,7 @@ class GattServer:
 		if not isinstance(uuid, UUID):
 			uuid = UUID(uuid)
 
-		service = _Service(self, uuid)
+		service = _ServerService(self, uuid)
 		self.services.append(service)
 		return service
 
@@ -384,7 +384,7 @@ class GattServer:
 		if not isinstance(uuid, UUID):
 			uuid = UUID(uuid)
 
-		return _Characteristic(self, uuid, value, allowNotify, allowIndicate)
+		return _ServerCharacteristic(self, uuid, value, allowNotify, allowIndicate)
 	
 	def addDescriptor(self, uuid):
 		"""Add a descriptor to the last characteristic
@@ -397,7 +397,7 @@ class GattServer:
 		if not isinstance(uuid, UUID):
 			uuid = UUID(uuid)
 
-		return _Descriptor(self, uuid)
+		return _ServerDescriptor(self, uuid)
 
 	# Protected and private methods
 

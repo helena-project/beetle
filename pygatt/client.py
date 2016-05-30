@@ -19,7 +19,7 @@ def __handle_to_bytearray(handle):
 	assert handle >= 0
 	return bytearray([handle & 0xFF, (handle >> 8) & 0xFF])
 
-class _Service:
+class _ClientService:
 	def __init__(self, client, uuid, handleNo, endGroup):
 		assert isinstance(uuid, UUID)
 		assert isinstance(client, GattClient)
@@ -81,7 +81,7 @@ class _Service:
 					valHandleNo = resp[idx+3] + (resp[idx+4] >> 8)
 					uuid = UUID(resp[idx+5:idx+attDataLen], reverse=True)
 
-					charac = _Characteristic(self.client, self, uuid, handleNo, 
+					charac = _ClientCharacteristic(self.client, self, uuid, handleNo, 
 						properties, valHandleNo)
 					characs.append(charac)
 					characHandles[handleNo] = characs
@@ -119,12 +119,12 @@ class _Service:
 	def __str__(self):
 		return "Service - %s" % str(self.uuid)
 
-class _Characteristic:
+class _ClientCharacteristic:
 	def __init__(self, client, service, uuid, handleNo, properties, 
 		valHandleNo, endGroup=None):
 		assert isinstance(uuid, UUID)
 		assert isinstance(client, GattClient)
-		assert isinstance(service, _Service)
+		assert isinstance(service, _ClientService)
 		assert type(handleNo) is int
 		assert type(valHandleNo) is int
 		assert type(properties) is int
@@ -195,7 +195,7 @@ class _Characteristic:
 						idx += attDataLen
 						continue
 
-					descriptor = _Descriptor(self.client, self, uuid, handleNo)
+					descriptor = _ClientDescriptor(self.client, self, uuid, handleNo)
 					if uuid == cccdUuid:
 						# hide the cccd from users
 						cccd = descriptor
@@ -314,11 +314,11 @@ class _Characteristic:
 	def __str__(self):
 		return "Characteristic - %s" % str(self.uuid)
 
-class _Descriptor:
+class _ClientDescriptor:
 	def __init__(self, client, characteristic, uuid, handleNo):
 		assert isinstance(uuid, UUID)
 		assert isinstance(client, GattClient)
-		assert isinstance(characteristic, _Characteristic)
+		assert isinstance(characteristic, _ClientCharacteristic)
 		assert type(handleNo) is int
 
 		# Public members
@@ -514,7 +514,7 @@ class GattClient:
 					endGroup = resp[idx+2] + (resp[idx+3] >> 8)
 					uuid = UUID(resp[idx+4:idx+attDataLen], reverse=True)
 
-					service = _Service(self, uuid, handleNo, endGroup)
+					service = _ClientService(self, uuid, handleNo, endGroup)
 					services.append(service)
 					serviceHandles[handleNo] = service
 
