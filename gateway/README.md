@@ -20,5 +20,8 @@ Parameters are key value pairs sent at the beginning of the connection in ASCII 
 * ```gateway name``` *(connect with the gateway protocol, where name is the name of the gateway)*
 * ```device id``` *(where id is the id of the device at the gateway)*
 
-##### Certs Directory
+##### Certs directory
 This contains default certificates for testing. Needed for openssl to work.
+
+##### Code style
+Lines are limited to 120 characters.
