@@ -23,18 +23,27 @@ public:
 
 	};
 
+	/*
+	 * Increases the internal count by one. Do not call after waiting!
+	 */
 	void increment() {
 		std::lock_guard<std::mutex> lg(m);
 		assert(waited == false);
 		count++;
 	}
 
+	/*
+	 * Reduces the count by one.
+	 */
 	void decrement() {
 		std::lock_guard<std::mutex> lg(m);
 		count--;
 		cv.notify_all();
 	};
 
+	/*
+	 * Wait for count to reach 0.
+	 */
 	void wait() {
 		std::unique_lock<std::mutex> ul(m);
 		waited = true;

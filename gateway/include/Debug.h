@@ -29,10 +29,7 @@ inline void pdebug(std::string mesg) {
 	std::cerr << mesg << std::endl;
 }
 
-/*
- * Print bytes as hex.
- */
-inline void pdebug(uint8_t *buf, int len) {
+inline void phex(uint8_t *buf, int len) {
 	fprintf(stderr, "[");
 	for (int i = 0; i < len; i++) {
 		fprintf(stderr, " %02x", buf[i]);

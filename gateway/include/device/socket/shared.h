@@ -2,7 +2,7 @@
  * shared.h
  *
  *  Created on: May 28, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef DEVICE_SOCKET_TCP_SHARED_H_
@@ -49,7 +49,7 @@ inline bool request_device_name(int fd, std::string &name, std::list<delayed_pac
 			break;
 		} else {
 			if (debug_socket) {
-				pdebug(resp, n);
+				phex(resp, n);
 			}
 			if (resp[0] == ATT_OP_READ_BY_TYPE_RESP) {
 				respLen = n;

@@ -2,7 +2,7 @@
  * TimedDaemon.h
  *
  *  Created on: May 28, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef SYNC_TIMEDDAEMON_H_
@@ -17,11 +17,6 @@
 
 class TimedDaemon {
 public:
-	typedef struct {
-		std::function<void()> f;
-		int interval;
-	} scheduled_t;
-
 	TimedDaemon() : t() {
 		isRunning.test_and_set();
 		t = std::thread([this] {
@@ -49,10 +44,20 @@ public:
 		}
 	}
 
-	void repeat(std::function<void()> f, int interval) {
+	/*
+	 * Call the function repeatedly.
+	 */
+	void repeat(std::function<void()> f, int seconds) {
 		std::lock_guard<std::mutex> lg(m);
-		daemons.push_back(scheduled_t{f, interval});
+		daemons.push_back(scheduled_t{f, seconds});
 	}
+
+private:
+
+	typedef struct {
+		std::function<void()> f;
+		int interval;
+	} scheduled_t;
 
 	std::atomic_flag isRunning;
 	std::vector<scheduled_t> daemons;

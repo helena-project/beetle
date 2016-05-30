@@ -2,7 +2,7 @@
  * trim.h
  *
  *  Created on: May 26, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef UTIL_TRIM_H_

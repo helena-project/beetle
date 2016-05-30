@@ -256,7 +256,7 @@ int Router::routeFindByTypeValue(uint8_t *buf, int len, device_t src) {
 		std::stringstream ss;
 		ss << "FindByTypeValue to [" << startHandle << "," << endHandle << "] ";
 		pdebug(ss.str());
-		pdebug(attValue, attValLen);
+		phex(attValue, attValLen);
 	}
 
 	if (startHandle == 0 || startHandle > endHandle) {

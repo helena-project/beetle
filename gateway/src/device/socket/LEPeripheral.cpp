@@ -129,7 +129,7 @@ bool LEPeripheral::write(uint8_t *buf, int len) {
 		} else {
 			if (debug_socket) {
 				pdebug(getName() + " wrote " + std::to_string(len) + " bytes");
-				pdebug(bufCpy.get(), len);
+				phex(bufCpy.get(), len);
 			}
 		}
 		pendingWrites.decrement();
@@ -161,7 +161,7 @@ void LEPeripheral::readDaemon() {
 			break;
 		} else {
 			if (debug_socket) {
-				pdebug(buf, n);
+				phex(buf, n);
 			}
 			readHandler(buf, n);
 		}

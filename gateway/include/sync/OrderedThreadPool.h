@@ -25,6 +25,10 @@ class OrderedThreadPool {
 public:
 	OrderedThreadPool(int n);
 	virtual ~OrderedThreadPool();
+
+	/*
+	 * Schedule a new task with id.
+	 */
 	void schedule(long id, std::function<void()> task);
 private:
 	bool running;

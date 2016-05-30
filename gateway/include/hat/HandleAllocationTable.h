@@ -24,6 +24,7 @@ typedef struct {
 		ss << "[" << start << "," << end << "]";
 		return ss.str();
 	}
+
 	bool isNull() {
 		return start == 0 && end == 0;
 	}

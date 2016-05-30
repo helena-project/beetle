@@ -21,6 +21,10 @@ class ThreadPool {
 public:
 	ThreadPool(int n);
 	virtual ~ThreadPool();
+
+	/*
+	 * Schedule a new task.
+	 */
 	void schedule(std::function<void()> task);
 private:
 	bool running;

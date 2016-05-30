@@ -22,12 +22,18 @@ public:
 
 	};
 
+	/*
+	 * Increase count by 1.
+	 */
 	void notify() {
 		std::lock_guard<std::mutex> lg(m);
 		count++;
 		cv.notify_one();
 	};
 
+	/*
+	 * Decrease count by 1.
+	 */
 	void wait() {
 		std::unique_lock<std::mutex> ul(m);
 		while (count <= 0) {
@@ -36,6 +42,9 @@ public:
 		count--;
 	};
 
+	/*
+	 * Non-blocking wait.
+	 */
 	bool try_wait() {
 		std::lock_guard<std::mutex> lg(m);
 		if (count > 0) {
