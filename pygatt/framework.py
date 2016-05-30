@@ -8,12 +8,18 @@ from client import GattClient
 import lib.att as att
 
 class ManagedSocket:
-	def __init__(self, stream=True, recv_mtu=att.DEFAULT_LE_MTU, 
-		send_mtu=att.DEFAULT_LE_MTU, daemon=False):
+	def __init__(self, recv_mtu=att.DEFAULT_LE_MTU, send_mtu=att.DEFAULT_LE_MTU, 
+		daemon=False):
+		"""Create a managed socket wrapping around a regular socket
+		
+		Args:
+			stream (bool):  
+		"""
+
 		self._server = None
 		self._client = None
 
-		self._stream = stream
+		self._stream = None
 		self._sock = None
 		self._lock = threading.Lock()
 		
@@ -27,7 +33,8 @@ class ManagedSocket:
 	def getSendMtu(self):
 		return self._send_mtu
 
-	def bind(self, sock):
+	def bind(self, sock, stream):
+		self._stream = stream
 		self._sock = sock
 		self._readThread.start()
 
