@@ -29,7 +29,7 @@ class UUID:
 		return len(self._raw)
 
 	def __str__(self):
-		return ''.join('{:02x}'.format(x) for x in self._raw)
+		return ''.join('{:02X}'.format(x) for x in self._raw)
 
 	def __eq__(self, other):
 		return isinstance(other, self.__class__) and self._raw == other._raw

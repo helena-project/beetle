@@ -61,7 +61,7 @@ class _Service:
 					handleNo = resp[idx] + (resp[idx+1] >> 8)
 					properties = resp[idx+2]
 					valHandleNo = resp[idx+3] + (resp[idx+4] >> 8)
-					uuid = UUID(resp[idx+5:idx+attDataLen])
+					uuid = UUID(resp[idx+5:idx+attDataLen], reverse=True)
 
 					charac = _Characteristic(self.client, self, uuid, handleNo, 
 						properties, valHandleNo)
@@ -136,9 +136,6 @@ class _Characteristic:
 		self._cccd = None
 		self.descriptors = []
 
-	def _setEndGroup(self, endGroup):
-		self._endGroup = endGroup
-
 	def discoverDescriptors(self):
 		assert self._endGroup is not None
 		
@@ -166,7 +163,7 @@ class _Characteristic:
 				handleNo = currHandle # not needed
 				while idx < len(resp) and idx + attDataLen <= len(resp): 
 					handleNo = resp[idx] + (resp[idx+1] >> 8)
-					uuid = UUID(resp[idx+2:idx+attDataLen])
+					uuid = UUID(resp[idx+2:idx+attDataLen], reverse=True)
 
 					if handleNo == self._valHandleNo:
 						idx += attDataLen
@@ -254,6 +251,9 @@ class _Characteristic:
 			raise ClientError("error: %02x" % resp[4])
 		else:
 			raise ClientError("unexpected packet")
+
+	def _setEndGroup(self, endGroup):
+		self._endGroup = endGroup
 
 	def __len__(self):
 		return len(descriptors)
@@ -418,7 +418,7 @@ class GattClient:
 				while idx < len(resp) and idx + attDataLen <= len(resp): 
 					handleNo = resp[idx] + (resp[idx+1] >> 8)
 					endGroup = resp[idx+2] + (resp[idx+3] >> 8)
-					uuid = UUID(resp[idx+4:idx+attDataLen])
+					uuid = UUID(resp[idx+4:idx+attDataLen], reverse=True)
 
 					service = _Service(self, uuid, handleNo, endGroup)
 					services.append(service)
