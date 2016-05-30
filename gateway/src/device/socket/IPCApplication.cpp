@@ -58,6 +58,10 @@ void IPCApplication::startInternal() {
 	delayedPackets.clear();
 
 	beetle.readers.add(sockfd, [this] {
+		if (stopped) {
+			return;
+		}
+
 		uint8_t buf[256];
 		int n = read(sockfd, buf, sizeof(buf));
 		if (debug_socket) {

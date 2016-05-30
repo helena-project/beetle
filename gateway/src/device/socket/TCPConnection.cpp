@@ -51,6 +51,10 @@ TCPConnection::~TCPConnection() {
 
 void TCPConnection::startInternal() {
 	beetle.readers.add(sockfd, [this] {
+		if (stopped) {
+			return;
+		}
+
 		uint8_t buf[256];
 		uint8_t len;
 
@@ -80,7 +84,7 @@ void TCPConnection::startInternal() {
 
 			// read payload ATT message
 			bytesRead = 0;
-			while (bytesRead < len) {
+			while (!stopped && bytesRead < len) {
 				if (difftime(time(NULL), startTime) > TIMEOUT_PAYLOAD) {
 					if (debug) {
 						pdebug("timed out reading payload");
