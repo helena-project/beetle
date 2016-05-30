@@ -163,8 +163,11 @@ def runClient(client):
 	for service in client.services:
 		for characteristic in service.characteristics:
 			if "r" in characteristic.permissions:
-				print "Read: " + " ".join("%02x" % x for x in \
-					characteristic.read())
+				try:
+					charVal = characteristic.read()
+					print "Read: " + " ".join("%02x" % x for x in charVal)
+				except ClientError, err:
+					print "Caught exception:", err
 
 	while True:
 		pass

@@ -88,11 +88,11 @@ class ManagedSocket:
 		self._sock.shutdown(socket.SHUT_RDWR)
 		self._teardown()
 
-	def _setServer(self, server):
+	def _set_server(self, server):
 		assert server.__class__ is GattServer
 		self._server = server
 
-	def _setClient(self, client):
+	def _set_client(self, client):
 		assert client.__class__ is GattClient
 		self._client = client
 
@@ -237,24 +237,21 @@ class _ServerHandle:
 		else:
 			raise ValueError("unsupported value type: " + str(type(value)))
 
-	def _setReadCallback(self, cb):
+	def _set_read_callback(self, cb):
 		def __wrapper():
 			return self.__convert_to_bytearray(cb())
 		self._read_callback = __wrapper
 
-	def _setReadValue(self, value):
+	def _set_read_value(self, value):
 		def __wrapper():
 			return self.__convert_to_bytearray(value)
 		self._read_callback = __wrapper
 
-	def _setWriteCallback(self, cb):
+	def _set_write_callback(self, cb):
 		self._write_callback = cb
 
-	def _getHandleAsBytearray(self):
-		arr = bytearray(2)
-		arr[0] = self._no & 0xFF
-		arr[1] = (self._no >> 8) & 0xFF
-		return arr
+	def _get_handle_as_bytearray(self):
+		return att_pdu.pack_handle(self._no)
 
 	def __str__(self):
 		return "Handle - %d" % self._no
@@ -274,7 +271,7 @@ class _ServerService:
 		self._handle = _ServerHandle(server, self, UUID(gatt.PRIM_SVC_UUID))
 
 		# reversed by convention
-		self._handle._setReadValue(uuid.raw()[::-1])
+		self._handle._set_read_value(uuid.raw()[::-1])
 
 	def _add_characteristic(self, char):
 		self.characteristics.append(char)
@@ -340,21 +337,21 @@ class _ServerCharacteristic:
 							self._has_subscriber = False
 					self._cccd.write(value)
 
-			self._cccd._handle._setWriteCallback(cccd_cb)
+			self._cccd._handle._set_write_callback(cccd_cb)
 			self._cccd.write(bytearray([0, 0]))
 		else:
 			self._cccd = None
 
 		if staticValue:
-			self._valHandle._setReadValue(staticValue) 
+			self._valHandle._set_read_value(staticValue) 
 
 		def read_cb():
 			"""Properties may change."""
 			handleValue = bytearray([self._properties])
-			handleValue += self._valHandle._getHandleAsBytearray()
+			handleValue += self._valHandle._get_handle_as_bytearray()
 			handleValue += self.uuid.raw()[::-1]
 			return handleValue	
-		self._handle._setReadCallback(read_cb)
+		self._handle._set_read_callback(read_cb)
 
 	# Public methods
 
@@ -365,7 +362,7 @@ class _ServerCharacteristic:
 			cb : a function that returns a bytearray
 		"""
 		self._properties |= gatt.CHARAC_PROP_READ
-		self._valHandle._setReadCallback(cb)
+		self._valHandle._set_read_callback(cb)
 
 	def setReadValue(self, value):
 		"""Allow reads and sets a static value.
@@ -374,7 +371,7 @@ class _ServerCharacteristic:
 			value : a bytearray, should be shorter than the the send MTU - 3
 		"""
 		self._properties |= gatt.CHARAC_PROP_READ
-		self._valHandle._setReadValue(value)
+		self._valHandle._set_read_value(value)
 
 	def setWriteCallback(self, cb):
 		"""Allow writes and sets a callback to handle client writes
@@ -383,7 +380,7 @@ class _ServerCharacteristic:
 			cb : a function that takes a bytearray as argument
 		"""
 		self._properties |= (gatt.CHARAC_PROP_WRITE | gatt.CHARAC_PROP_WRITE_NR)
-		self._valHandle._setWriteCallback(cb)
+		self._valHandle._set_write_callback(cb)
 
 	def setSubscribeCallback(self, cb):
 		"""Sets a callback for subscription changes
@@ -417,7 +414,7 @@ class _ServerCharacteristic:
 		cccdValue = self._cccd._read()
 		if cccdValue is not None and cccdValue[0] == 1:
 			pdu = bytearray([att.OP_HANDLE_NOTIFY])
-			pdu += self._valHandle._getHandleAsBytearray()
+			pdu += self._valHandle._get_handle_as_bytearray()
 			pdu += value
 			self.server._socket._send(pdu)
 
@@ -436,7 +433,7 @@ class _ServerCharacteristic:
 		if cccdValue is not None and cccdValue[1] == 1:
 			self.server._indicateQueue.append(cb)
 			pdu = bytearray([att.OP_HANDLE_NOTIFY])
-			pdu += self._valHandle._getHandleAsBytearray()
+			pdu += self._valHandle._get_handle_as_bytearray()
 			pdu += value
 			self.server._socket._send(pdu)
 			return True
@@ -483,7 +480,7 @@ class _ServerDescriptor:
 		self._value = value
 
 		if self._value:
-			self._handle._setReadValue(value)
+			self._handle._set_read_value(value)
 
 	def write(self, value):
 		"""Write a value to the descriptor.
@@ -493,7 +490,7 @@ class _ServerDescriptor:
 		"""
 		assert type(value) is bytearray
 		self._value = value
-		self._handle._setReadValue(self._value)
+		self._handle._set_read_value(self._value)
 
 	def read(self):
 		"""Read the descriptor value.
@@ -521,7 +518,7 @@ class GattServer:
 
 		# Protected members
 		self._socket = socket
-		self._socket._setServer(self)
+		self._socket._set_server(self)
 
 		self._handles = [None,]
 		self._currHandleOfs = 0
@@ -634,7 +631,7 @@ class GattServer:
 				break
 			if len(resp) + 2 + respFmt > self._socket.getSendMtu():
 				break
-			resp += handle._getHandleAsBytearray()
+			resp += handle._get_handle_as_bytearray()
 			resp += handle._uuid.raw()[::-1]
 			respCount += 1
 
@@ -662,8 +659,8 @@ class GattServer:
 				continue
 			if len(resp) + 4 > self._socket.getSendMtu():
 				break
-			resp += handle._getHandleAsBytearray()
-			resp += handle._owner._get_end_group_handle()._getHandleAsBytearray()
+			resp += handle._get_handle_as_bytearray()
+			resp += handle._owner._get_end_group_handle()._get_handle_as_bytearray()
 			respCount += 1
 
 		if respCount == 0:
@@ -704,7 +701,7 @@ class GattServer:
 				break
 			if len(resp) + 2 + valLen > self._socket.getSendMtu():
 				break
-			resp += handle._getHandleAsBytearray()
+			resp += handle._get_handle_as_bytearray()
 			resp += valRead
 			respCount += 1
 
@@ -746,8 +743,8 @@ class GattServer:
 				break
 			if len(resp) + 4 + valLen > self._socket.getSendMtu():
 				break
-			resp += handle._getHandleAsBytearray()
-			resp += handle._owner._get_end_group_handle()._getHandleAsBytearray()
+			resp += handle._get_handle_as_bytearray()
+			resp += handle._owner._get_end_group_handle()._get_handle_as_bytearray()
 			resp += valRead
 			respCount += 1
 
@@ -897,6 +894,9 @@ class _ClientService:
 	def __discover_all_characteristics(self):
 		startHandle = self._handleNo + 1
 		endHandle = self._endGroup
+		if startHandle > endHandle:
+			return []
+			
 		characUuid = UUID(gatt.CHARAC_UUID)
 
 		characs = []
@@ -914,11 +914,11 @@ class _ClientService:
 				attDataLen = resp[1]
 				idx = 2
 
-				handleNo = currHandle # not needed
+				maxHandleNo = currHandle # not needed
 				while idx < len(resp) and idx + attDataLen <= len(resp): 
-					handleNo = resp[idx] + (resp[idx+1] >> 8)
+					handleNo = att_pdu.unpack_handle(resp, idx)
 					properties = resp[idx+2]
-					valHandleNo = resp[idx+3] + (resp[idx+4] >> 8)
+					valHandleNo = att_pdu.unpack_handle(resp, idx + 3)
 					uuid = UUID(resp[idx+5:idx+attDataLen], reverse=True)
 
 					charac = _ClientCharacteristic(self.client, self, uuid, 
@@ -927,8 +927,9 @@ class _ClientService:
 					characHandles[handleNo] = characs
 
 					idx += attDataLen
+					maxHandleNo = valHandleNo
 
-				currHandle = handleNo + 1
+				currHandle = maxHandleNo + 1
 				if currHandle >= endHandle:
 					break
 
@@ -1007,6 +1008,8 @@ class _ClientCharacteristic:
 		
 		startHandle = self._handleNo + 1
 		endHandle = self._endGroup
+		if startHandle > endHandle:
+			return []
 		
 		descriptors = []
 
@@ -1028,7 +1031,7 @@ class _ClientCharacteristic:
 
 				handleNo = currHandle # not needed
 				while idx < len(resp) and idx + attDataLen <= len(resp): 
-					handleNo = resp[idx] + (resp[idx+1] >> 8)
+					handleNo = att_pdu.unpack_handle(resp, idx)
 					uuid = UUID(resp[idx+2:idx+attDataLen], reverse=True)
 
 					if handleNo == self._valHandleNo:
@@ -1238,7 +1241,7 @@ class GattClient:
 
 		# Protected members
 		self._socket = socket
-		self._socket._setClient(self)
+		self._socket._set_client(self)
 
 		self._disconnected = False
 		self._onDisconnect = onDisconnect
@@ -1355,8 +1358,8 @@ class GattClient:
 
 				endGroup = currHandle # not needed
 				while idx < len(resp) and idx + attDataLen <= len(resp): 
-					handleNo = resp[idx] + (resp[idx+1] >> 8)
-					endGroup = resp[idx+2] + (resp[idx+3] >> 8)
+					handleNo = att_pdu.unpack_handle(resp, idx)
+					endGroup = att_pdu.unpack_handle(resp, idx + 2)
 					uuid = UUID(resp[idx+4:idx+attDataLen], reverse=True)
 
 					service = _ClientService(self, uuid, handleNo, endGroup)
@@ -1409,8 +1412,8 @@ class GattClient:
 
 				endGroup = currHandle # not needed
 				while idx < len(resp) and idx + 4 <= len(resp): 
-					handleNo = resp[idx] + (resp[idx+1] >> 8)
-					endGroup = resp[idx+2] + (resp[idx+3] >> 8)
+					handleNo = att_pdu.unpack_handle(resp, idx)
+					endGroup = att_pdu.unpack_handle(resp, idx + 2)
 
 					if handleNo in self._serviceHandles:
 						service = self._serviceHandles[handleNo]
