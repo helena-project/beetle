@@ -1,6 +1,15 @@
 
 class UUID:
 	def __init__(self, value, reverse=False):
+		"""A Bluetooth UUID type
+
+		Note: the value is stored internally in the order that the uuid is 
+		printed.
+
+		Args:
+			value (int, str, bytearray) : the uuid
+			reverse : whether to the input value is reversed 
+		"""
 		if type(value) is int:
 			assert (value >> 16) == 0
 			assert reverse == False
@@ -23,7 +32,8 @@ class UUID:
 			raise Exception("unsupported type")
 
 	def raw(self):
-		return self._raw
+		"""Return the uuid as a bytearray"""
+		return self._raw[:]
 
 	def __len__(self):
 		return len(self._raw)

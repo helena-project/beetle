@@ -4,18 +4,22 @@ import lib.gatt as gatt
 from lib.uuid import UUID
 
 class ServerError(Exception):
-	def __init__(self, arg):
-		self.msg = arg
+	"""Standard error type raised by GattServer.
+	
+	Note: may safely be raised by callbacks
+	"""
+	def __init__(self, msg):
+		self.msg = msg
 
 class _Handle:
+	"""Protected server handle"""
+	
 	def __init__(self, server, owner, uuid):
-		assert server.__class__ is GattServer
+		assert isinstance(server, GattServer)
+		assert isinstance(uuid, UUID)
 		assert owner is not None
 		assert owner._get_end_group_handle is not None
 		assert owner._get_start_group_handle is not None
-
-		if uuid.__class__ is not UUID:
-			uuid = UUID(uuid)
 
 		server._add_handle(self)
 
@@ -69,15 +73,17 @@ class _Handle:
 		return "Handle - %d" % self._no
 
 class _Service:
+	"""Protected server service"""
+
 	def __init__(self, server, uuid):
-		assert server.__class__ is GattServer
+		assert isinstance(server, GattServer)
+		assert isinstance(uuid, UUID)
 
-		if uuid.__class__ is not UUID:
-			uuid = UUID(uuid)
-
+		# Public members
 		self.uuid = uuid
 		self.characteristics = []
 
+		# Protected members
 		self._handle = _Handle(server, self, UUID(gatt.PRIM_SVC_UUID))
 
 		# reversed by convention
@@ -102,15 +108,18 @@ class _Service:
 class _Characteristic:
 	def __init__(self, server, uuid, staticValue=None, allowNotify=False, 
 		allowIndicate=False):
-		assert server.__class__ is GattServer
+		assert isinstance(server, GattServer)
+		assert isinstance(uuid, UUID)
 
-		if uuid.__class__ is not UUID:
-			uuid = UUID(uuid)
-
+		# Public members
 		self.server = server
 		self.uuid = uuid
 		self.descriptors = []
+		self.service = server.services[-1]
+		
+		self.service._add_characteristic(self)
 
+		# Protected members
 		self._properties = 0
 		if staticValue:
 			self._properties |= gatt.CHARAC_PROP_READ
@@ -118,9 +127,6 @@ class _Characteristic:
 			self._properties |= gatt.CHARAC_PROP_NOTIFY	
 		if allowIndicate:
 			self._properties |= gatt.CHARAC_PROP_IND
-
-		self.service = server.services[-1]
-		self.service._add_characteristic(self)
 
 		self._has_subscriber = False
 		self._subscribe_callback = lambda: None
@@ -156,38 +162,68 @@ class _Characteristic:
 			self._valHandle._setReadValue(staticValue) 
 
 		def read_cb():
-			"""
-			Properties may change.
-			"""
+			"""Properties may change."""
 			handleValue = bytearray([self._properties])
 			handleValue += self._valHandle._getHandleAsBytearray()
 			handleValue += self.uuid.raw()[::-1]
 			return handleValue	
 		self._handle._setReadCallback(read_cb)
 
+	# Public methods
+
 	def setReadCallback(self, cb):
+		"""Allow reads and sets a callback to handle client reads.
+
+		Args: 
+			cb : a function that returns a bytearray
+		"""
 		self._properties |= gatt.CHARAC_PROP_READ
 		self._valHandle._setReadCallback(cb)
 
 	def setReadValue(self, value):
+		"""Allow reads and sets a static value.
+		
+		Args: 
+			value : a bytearray, should be shorter than the the send MTU - 3
+		"""
 		self._properties |= gatt.CHARAC_PROP_READ
 		self._valHandle._setReadValue(value)
 
 	def setWriteCallback(self, cb):
+		"""Allow writes and sets a callback to handle client writes
+
+		Args:
+			cb : a function that takes a bytearray as argument
+		"""
 		self._properties |= (gatt.CHARAC_PROP_WRITE | gatt.CHARAC_PROP_WRITE_NR)
 		self._valHandle._setWriteCallback(cb)
 
 	def setSubscribeCallback(self, cb):
+		"""Sets a callback for subscription changes
+
+		Args:
+			cb : a function that takes a bytearray of length 2. 
+		"""
 		if self._cccd is None:
 			raise ServerError("subscriptions not allowed")
 		self._subscribe_callback = cb
 
 	def setUnsubscribeCallback(self, cb):
+		"""Sets a callback for subscription changes
+
+		Args:
+			cb : a function that takes no arguments.
+		"""
 		if self._cccd is None:
 			raise ServerError("subscriptions not allowed")
 		self._unsubscribe_callback = cb
 
 	def sendNotify(self, value):
+		"""Send a notification to the client.
+
+		Args:
+			value : a bytearray of length with max length of send MTU - 3
+		"""
 		assert type(value) is bytearray
 		assert self._cccd != None
 		
@@ -199,6 +235,13 @@ class _Characteristic:
 			self.server._socket._send(pdu)
 
 	def sendIndicate(self, value, cb):
+		"""Send an indication and sets a callback for the confirmation. 
+
+		Args:
+			value : a bytearray of length with max length of send MTU - 3
+		Returns: 
+			Whether the indicate packet was successfully sent.
+		"""
 		assert type(value) is bytearray
 		assert self._cccd != None
 
@@ -212,6 +255,8 @@ class _Characteristic:
 			return True
 		else:
 			return False
+
+	# Private and protected methods
 
 	def _add_descriptor(self, descriptor):
 		self.descriptors.append(descriptor)
@@ -236,24 +281,36 @@ class _Characteristic:
 
 class _Descriptor:
 	def __init__(self, server, uuid):
-		assert server.__class__ is GattServer
+		assert isinstance(server, GattServer)
+		assert isinstance(uuid, UUID)
 
-		if uuid.__class__ is not UUID:
-			uuid = UUID(uuid)
-
+		# Public members
+		self.server = server
 		self.uuid = uuid
-		self.char = server.services[-1].characteristics[-1]
-		self.char._add_descriptor(self)
+		self.characteristic = server.services[-1].characteristics[-1]
 
-		self._handle = _Handle(server, self.char, uuid)
+		self.characteristic._add_descriptor(self)
+
+		# Protected members
+		self._handle = _Handle(server, self.characteristic, uuid)
 		self._value = None
 
 	def write(self, value):
+		"""Write a value to the descriptor.
+		
+		Args:
+			value : a bytearray with length not exceeding send MTU - 3
+		"""
 		assert type(value) is bytearray
 		self._value = value
 		self._handle._setReadValue(self._value)
 
 	def read(self):
+		"""Read the descriptor value.
+
+		Returns: 
+			A bytearray
+		"""
 		return self._value
 
 	def __str__(self):
@@ -261,19 +318,35 @@ class _Descriptor:
 
 class GattServer:
 	def __init__(self, socket, onDisconnect=None):
+		"""Make a GATT server
+
+		Args:
+			socket : a ManagedSocket instance
+			onDisconnect : callback on disconnect
+		"""
+
+		# Public members
+		self.services = []
+
+		# Protected members
 		self._socket = socket
 		self._socket._setServer(self)
 
 		self._handles = [None,]
 		self._currHandleOfs = 0
-		
-		self.services = []
 
 		self._indicateQueue = []
 
 		self._onDisconnect = onDisconnect
 
+	# Public methods
+
 	def addGapService(self, deviceName):
+		"""Add a Generic Access Profile service.
+
+		Args:
+			deviceName : name of the device advertised to the other side
+		"""
 		assert len(self._handles) == 1
 		assert type(deviceName) is str
 
@@ -281,16 +354,52 @@ class GattServer:
 		self.addCharacteristic(gatt.GAP_CHARAC_DEVICE_NAME_UUID, deviceName)
 
 	def addService(self, uuid):
+		"""Add a service of type uuid.
+		
+		Returns:
+			The newly added service.
+		"""
+		if not isinstance(uuid, UUID):
+			uuid = UUID(uuid)
+
 		service = _Service(self, uuid)
 		self.services.append(service)
 		return service
 
 	def addCharacteristic(self, uuid, value=None, allowNotify=False, 
 		allowIndicate=False):
+		"""Add a characteristic to the last service.
+		
+		Notes: permissions are learned by adding callbacks and values to the
+		characteristic.
+
+		Args:
+			uuid : type of the characteristic
+			value : static value for the characteristic
+			allowNotify : allow notifications
+			allowIndicate :	allow indications
+		Returns:
+			The newly added characteristic
+		"""
+		if not isinstance(uuid, UUID):
+			uuid = UUID(uuid)
+
 		return _Characteristic(self, uuid, value, allowNotify, allowIndicate)
 	
-	def addDescriptor(self):
+	def addDescriptor(self, uuid):
+		"""Add a descriptor to the last characteristic
+
+		Args:
+			uuid : the type of the descriptor
+		Returns:
+			The newly added characteristic
+		"""
+		if not isinstance(uuid, UUID):
+			uuid = UUID(uuid)
+
 		return _Descriptor(self, uuid)
+
+	# Protected and private methods
 
 	def __is_valid_handle(self, handleNo):
 		return handleNo != 0 and handleNo < len(self._handles)

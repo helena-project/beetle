@@ -8,13 +8,20 @@ from client import GattClient
 import lib.att as att
 
 class ManagedSocket:
-	def __init__(self, recv_mtu=att.DEFAULT_LE_MTU, send_mtu=att.DEFAULT_LE_MTU, 
-		daemon=False):
-		"""Create a managed socket wrapping around a regular socket
+	def __init__(self, recv_mtu=att.DEFAULT_LE_MTU, 
+		send_mtu=att.DEFAULT_LE_MTU, daemon=False):
+		"""Create a managed socket wrapping around a regular socket.
 		
 		Args:
-			stream (bool):  
+			recv_mtu : the MTU supported by the other side of the connection 
+			send_mtu : the MTU supported by this side of the connection
+			daemon : if true, then then this class will use a daemon thread
 		"""
+
+		assert type(recv_mtu) is int
+		assert recv_mtu > 0
+		assert type(send_mtu) is int
+		assert send_mtu > 0
 
 		self._server = None
 		self._client = None
@@ -31,23 +38,28 @@ class ManagedSocket:
 		self._readThread.setDaemon(daemon)
 
 	def getSendMtu(self):
+		"""Return the MTU supported by the other end"""
 		return self._send_mtu
 
+	def getRecvMtu(self):
+		"""Return the MTU supported by this end"""
+		return self._recv_mtu
+
 	def bind(self, sock, stream):
+		"""Transfer ownership of socket and starts handling packets.
+
+		Args:
+			sock : socket from python socket library
+			stream : whether the socket preserves packet boundaries
+		"""
 		self._stream = stream
 		self._sock = sock
 		self._readThread.start()
 
 	def shutdown(self):
+		"""Kill the managed socket"""
 		self._running = False
-		self._sock.shutdown(socket.SHUT_RD)
-
-		if self._stream:
-			self._lock.acquire()
-			self._sock.write(bytearray([0]))
-			self._lock.release()
-
-		self._sock.shutdown(socket.SHUT_RD)
+		self._sock.shutdown(socket.SHUT_RDWR)
 		self._teardown()
 
 	def _setServer(self, server):
@@ -65,6 +77,8 @@ class ManagedSocket:
 			self._server._handle_disconnect(err)
 
 	def _send(self, pdu):
+		"""Send an ATT packet"""
+		
 		assert type(pdu) is bytearray
 		assert len(pdu) > 0
 		assert len(pdu) <= self._send_mtu
@@ -82,6 +96,8 @@ class ManagedSocket:
 			self._lock.release()
 
 	def __recv_single(self):
+		"""Read and handle a single packet"""
+
 		if self._stream:
 			# Stream mode
 			n = self._sock.recv(1)
@@ -137,6 +153,7 @@ class ManagedSocket:
 			raise RuntimeWarning("unknown opcode: " + str(op))
 
 	def __recv(self):
+		"""Receive packets"""
 		try:
 			while self._running:
 				self.__recv_single()

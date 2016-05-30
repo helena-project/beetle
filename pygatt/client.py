@@ -5,38 +5,56 @@ import lib.att_pdu as att_pdu
 import lib.gatt as gatt
 from lib.uuid import UUID
 
+class ClientError(Exception):
+	"""Standard error type raised by GattClient.
+
+	Note: may safely be raised by callbacks
+	"""
+	def __init__(self, msg):
+		self.msg = msg
+
 def __handle_to_bytearray(handle):
+	"""Packs the 16-bit handle into a little endian bytearray"""
 	assert handle <= 0xFFFF
 	assert handle >= 0
 	return bytearray([handle & 0xFF, (handle >> 8) & 0xFF])
 
-class ClientError(Exception):
-    def __init__(self, arg):
-        self.msg = arg
-
 class _Service:
 	def __init__(self, client, uuid, handleNo, endGroup):
-		assert uuid.__class__ is UUID
-		assert client.__class__ is GattClient
+		assert isinstance(uuid, UUID)
+		assert isinstance(client, GattClient)
 		assert type(handleNo) is int
 		assert type(endGroup) is int
 
+		# Public members
 		self.client = client
 		self.uuid = uuid
+		self.characteristics = []
 
+		# Protected members
 		self._handleNo = handleNo
 		self._endGroup = endGroup 
 
-		self.characteristics = []
 		self._characteristicHandles = {}
 
+	# Public methods
+
 	def discoverCharacteristics(self, uuid=None):
+		"""Find characteristics under the service
+		
+		Args:
+			uuid : a specific uuid to discover
+		Returns:
+			A list of discovered characteristics
+		"""
 		if uuid is None:
-			return self._discoverAllCharacteristics()
+			return self._discover_all_characteristics()
 		else:
 			raise NotImplementedError
 
-	def _discoverAllCharacteristics(self):
+	# Protected and private methods
+
+	def _discover_all_characteristics(self):
 		startHandle = self._handleNo + 1
 		endHandle = self._endGroup
 		characUuid = UUID(gatt.CHARAC_UUID)
@@ -87,9 +105,9 @@ class _Service:
 
 		for i, charac in enumerate(characs):
 			if i + 1 < len(characs):
-				charac._setEndGroup(characs[i+1]._handleNo-1)
+				charac._set_end_group(characs[i+1]._handleNo-1)
 			else:
-				charac._setEndGroup(self._endGroup)
+				charac._set_end_group(self._endGroup)
 
 		self._characteristicHandles = characHandles
 		self.characteristics = characs
@@ -104,13 +122,15 @@ class _Service:
 class _Characteristic:
 	def __init__(self, client, service, uuid, handleNo, properties, 
 		valHandleNo, endGroup=None):
-		assert uuid.__class__ is UUID
-		assert client.__class__ is GattClient
-		assert service.__class__ is _Service
+		assert isinstance(uuid, UUID)
+		assert isinstance(client, GattClient)
+		assert isinstance(service, _Service)
 		assert type(handleNo) is int
 		assert type(valHandleNo) is int
 		assert type(properties) is int
 
+		# Public members
+		
 		self.client = client
 		self.uuid = uuid
 		self.service = service
@@ -127,6 +147,8 @@ class _Characteristic:
 
 		self.client._add_val_handle(self, valHandleNo)
 
+		# Protected members
+
 		self._handleNo = handleNo
 		self._valHandleNo = valHandleNo
 		self._endGroup = endGroup
@@ -136,7 +158,11 @@ class _Characteristic:
 		self._cccd = None
 		self.descriptors = []
 
+	# Public methods
+
 	def discoverDescriptors(self):
+		"""Return a list of descriptors"""
+
 		assert self._endGroup is not None
 		
 		startHandle = self._handleNo + 1
@@ -198,6 +224,14 @@ class _Characteristic:
 		return descriptors
 
 	def subscribe(self, cb):
+		"""Subscribe to the characteristic, setting a callback.
+
+		Args:
+			cb : a function that takes a bytearray
+		Raises:
+			ClientError on failure
+		"""
+
 		if "i" not in self.permissions and "n" not in self.permissions:
 			raise ClientError("subscription not permitted")
 
@@ -213,12 +247,21 @@ class _Characteristic:
 		self._cccd.write(value)
 
 	def unsubscribe(self):
+		"""Unsubscribe from the characteristic."""
+
 		self._subscribeCallback = None
 
 		if self._cccd is not None:
 			self._cccd.write( ytearray([0,0]))
 
-	def read(self, value):
+	def read(self):
+		"""Blocking read of the characteristic.
+
+		Returns: 
+			A bytearray
+		Raises:
+			ClientError on failure
+		"""
 		if "r" not in self.permissions:
 			raise ClientError("read not permitted")
 
@@ -235,6 +278,13 @@ class _Characteristic:
 			raise ClientError("unexpected packet")
 
 	def write(self, value):
+		"""Blocking write of the characteristic.
+
+		Args:
+			value : a bytearray of length at most send MTU - 3
+		Raises:
+			ClientError on failure
+		"""
 		assert type(value) is bytearray
 		if "w" not in self.permissions:
 			raise ClientError("write not permitted")
@@ -253,7 +303,9 @@ class _Characteristic:
 		else:
 			raise ClientError("unexpected packet")
 
-	def _setEndGroup(self, endGroup):
+	# Private and protected methods
+
+	def _set_end_group(self, endGroup):
 		self._endGroup = endGroup
 
 	def __len__(self):
@@ -264,18 +316,30 @@ class _Characteristic:
 
 class _Descriptor:
 	def __init__(self, client, characteristic, uuid, handleNo):
-		assert uuid.__class__ is UUID
-		assert client.__class__ is GattClient
-		assert characteristic.__class__ is _Characteristic
+		assert isinstance(uuid, UUID)
+		assert isinstance(client, GattClient)
+		assert isinstance(characteristic, _Characteristic)
 		assert type(handleNo) is int
 
+		# Public members
 		self.client = client
 		self.uuid = uuid
 		self.characteristic = characteristic
 
+		# Protected members
 		self._handleNo = handleNo
 
+	# Public methods
+
 	def read(self):
+		"""Blocking read of the descriptor.
+
+		Returns: 
+			A bytearray
+		Raises:
+			ClientError on failure
+		"""
+
 		req = bytearray([att.OP_READ_REQ])
 		req += __handle_to_bytearray(self._handleNo)
 		resp = client._new_transaction(req)
@@ -289,6 +353,14 @@ class _Descriptor:
 			raise ClientError("unexpected packet")
 
 	def write(self, value):
+		"""Blocking write of the descriptor.
+
+		Args:
+			value : a bytearray of length at most send MTU - 3
+		Raises:
+			ClientError on failure
+		"""
+
 		assert type(value) is bytearray
 
 		req = bytearray([att.OP_WRITE_REQ])
@@ -305,11 +377,24 @@ class _Descriptor:
 		else:
 			raise ClientError("unexpected packet")
 
+	# Protected methods
+
 	def __str__(self):
 		return "Descriptor - %s" % str(self.uuid)
 
 class GattClient:
 	def __init__(self, socket, onDisconnect=None):
+		"""Make a GATT client
+
+		Args:
+			socket : a ManagedSocket instance
+			onDisconnect : callback on disconnect
+		"""
+
+		# Public members
+		self.services = []
+
+		# Protected members
 		self._socket = socket
 		self._socket._setClient(self)
 
@@ -325,14 +410,22 @@ class GattClient:
 		self._valHandles = {}
 
 		self._serviceHandles = {}
-		self.services = []
 		
+	# Public methods
 
 	def discoverServices(self, uuid=None):
+		"""Find services on the server.
+
+		Args:
+			uuid : type of service to discover
+		Returns:
+			A list of services."""
 		if uuid is None:
-			return self._discoverAllServices()
+			return self.__discover_all_services()
 		else:
 			raise NotImplementedError
+
+	# Protected and private methods
 
 	def _add_val_handle(self, characteristic, valHandleNo):
 		self._valHandles[valHandleNo] = characteristic
@@ -395,7 +488,7 @@ class GattClient:
 			
 		return None
 
-	def _discoverAllServices(self):
+	def __discover_all_services(self):
 		startHandle = 1
 		endHandle = 0xFFFF
 		primSvcUuid = UUID(gatt.PRIM_SVC_UUID)
@@ -431,11 +524,13 @@ class GattClient:
 				if currHandle >= endHandle:
 					break
 
-			elif (resp[0] == att.OP_ERROR and resp[1] == att.OP_READ_BY_GROUP_REQ
+			elif (resp[0] == att.OP_ERROR 
+				and resp[1] == att.OP_READ_BY_GROUP_REQ
 				and resp[4] == att.ECODE_ATTR_NOT_FOUND):
 				break
 
-			elif (resp[0] == att.OP_ERROR and resp[1] == att.OP_READ_BY_GROUP_REQ
+			elif (resp[0] == att.OP_ERROR 
+				and resp[1] == att.OP_READ_BY_GROUP_REQ
 				and resp[4] == att.ECODE_REQ_NOT_SUPP):
 				raise ClientError("not supported")
 

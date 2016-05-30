@@ -139,6 +139,7 @@ def setUpServer(server):
 
 def runClient(client):
 	"""Begin issuing requests as a client"""
+	
 	services = client.discoverServices()
 	for service in services:
 		characs = service.discoverCharacteristics()
