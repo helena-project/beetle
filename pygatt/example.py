@@ -88,9 +88,8 @@ def setUpServer(server):
 		return ret
 	hrMeasChar.setReadCallback(hrMeasReadCallback)
 	def hrMeasSubCallback(value):
-		assert value[1] != 1
-		assert value[0] == 1
-		valueDict["hrMeasSub"] = True
+		if value[0] == 1:
+			valueDict["hrMeasSub"] = True
 	hrMeasChar.setSubscribeCallback(hrMeasSubCallback)
 	def hrMeasUnsubCallback():
 		valueDict["hrMeasSub"] = False
@@ -110,9 +109,8 @@ def setUpServer(server):
 		return ret
 	battLvlChar.setReadCallback(battLvlReadCallback)
 	def battLvlSubCallback(value):
-		assert value[1] != 1
-		assert value[0] == 1
-		valueDict["battLvlSub"] = True
+		if value[0] == 1:
+			valueDict["battLvlSub"] = True
 	battLvlChar.setSubscribeCallback(battLvlSubCallback)
 	def battLvlUnsubCallback():
 		valueDict["battLvlSub"] = False
