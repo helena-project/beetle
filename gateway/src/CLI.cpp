@@ -123,7 +123,7 @@ void CLI::cmdLineDaemon() {
 			doHelp(cmd);
 		} else if (c1 == "s" || c1 == "scan") {
 			doScan(cmd);
-		} else if (c1 == "connect") {
+		} else if (c1 == "c" || c1 == "connect") {
 			doConnect(cmd, true);
 		} else if (c1 == "connect-nd") {
 			doConnect(cmd, false);
@@ -131,9 +131,9 @@ void CLI::cmdLineDaemon() {
 			doDisconnect(cmd);
 		} else if (c1 == "r" || c1 == "remote") {
 			doRemote(cmd);
-		} else if (c1 == "network") {
+		} else if (c1 == "n" || c1 == "network") {
 			doNetworkDiscover(cmd);
-		} else if (c1 == "map") {
+		} else if (c1 == "m" || c1 == "map") {
 			doMap(cmd);
 		} else if (c1 == "unmap") {
 			doUnmap(cmd);
@@ -193,13 +193,13 @@ void CLI::doHelp(const std::vector<std::string>& cmd) {
 	printMessage("  path\t\tPrint the unix domain socket path.");
 	printMessage("");
 	printMessage("  scan,s\t\tPrint results from background scan.");
-	printMessage("  connect\t\tConnect to a peripheral.");
+	printMessage("  connect,c\t\tConnect to a peripheral.");
 	printMessage("  connect-nd\t\tConnect without handle discovery.");
-	printMessage("  network\t\tPerform network-wide discovery.");
+	printMessage("  network,n\t\tPerform network-wide discovery.");
 	printMessage("  remote,r\t\tConnect to a device at a remote gateway.");
 	printMessage("  disconnect");
 	printMessage("");
-	printMessage("  map\t\t\tMap handles from one virtual device to another.");
+	printMessage("  map,m\t\tMap handles from one virtual device to another.");
 	printMessage("  unmap");
 	printMessage("");
 	printMessage("  devices,d\t\tPrint connected devices.");
