@@ -54,14 +54,19 @@ void Beetle::removeDevice(device_t id) {
 	 * Spawn in a separate thread since caller might be holding the device lock.
 	 */
 	workers.schedule([this, id] {
-		boost::unique_lock<boost::shared_mutex> devicesLk(devicesMutex);
+		devicesMutex.lock_upgrade();
 		if (devices.find(id) == devices.end()) {
 			pwarn("removing non-existent device!");
+			devicesMutex.unlock_upgrade();
 			return;
 		}
 
+		devicesMutex.unlock_upgrade_and_lock();
 		std::shared_ptr<Device> d = devices[id];
 		devices.erase(id);
+		devicesMutex.unlock_and_lock_shared();
+
+		boost::shared_lock<boost::shared_mutex> devicesLk(devicesMutex, boost::adopt_lock);
 
 		d->hatMutex.lock();
 		for (device_t server : d->hat->getDevices()) {

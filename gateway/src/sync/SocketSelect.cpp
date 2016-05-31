@@ -19,12 +19,13 @@
 
 SocketSelect::SocketSelect(unsigned int n) : daemonThread() {
 	FD_ZERO(&activeFds);
-	daemonRunning = true;
-	daemonThread = std::thread(&SocketSelect::daemon, this);
 
 	if (n > 1) {
 		workers = std::make_unique<ThreadPool>(n);
 	}
+
+	daemonRunning = true;
+	daemonThread = std::thread(&SocketSelect::daemon, this);
 }
 
 SocketSelect::~SocketSelect() {
