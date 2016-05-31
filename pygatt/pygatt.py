@@ -903,7 +903,7 @@ class _ClientService:
 		startHandle = self._handleNo + 1
 		endHandle = self._endGroup
 		if startHandle > endHandle:
-			return []
+			return [], {}
 			
 		characUuid = UUID(gatt.CHARAC_UUID)
 
