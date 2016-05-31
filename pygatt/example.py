@@ -82,7 +82,10 @@ def setUpServer(server):
 	hrMeasChar = server.addCharacteristic(HEART_RATE_MEASUREMENT_CHARAC_UUID, 
 		allowNotify=True)
 	def hrMeasReadCallback():
-		return bytearray(valueDict["hrMeas"] & 0xFF)
+		# Be extra careful with bytearray(1) vs bytearray([...])
+		ret = bytearray(1)
+		ret[0] = valueDict["hrMeas"] & 0xFF
+		return ret
 	hrMeasChar.setReadCallback(hrMeasReadCallback)
 	def hrMeasSubCallback(value):
 		assert value[1] != 1
@@ -93,7 +96,7 @@ def setUpServer(server):
 		valueDict["hrMeasSub"] = False
 	hrMeasChar.setUnsubscribeCallback(hrMeasUnsubCallback)
 
-	maxMrChar = server.addCharacteristic(HEART_RATE_MAX_CHARAC_UUID, 
+	maxHrChar = server.addCharacteristic(HEART_RATE_MAX_CHARAC_UUID, 
 		value=bytearray([0xFF]))
 
 	# Set up the battery service
@@ -101,7 +104,10 @@ def setUpServer(server):
 	battLvlChar = server.addCharacteristic(BATTERY_LEVEL_CHARAC_UUID, 
 		allowNotify=True)
 	def battLvlReadCallback():
-		return bytearray(valueDict["battLvl"] & 0xFF)
+		# Be extra careful with bytearray(1) vs bytearray([...])
+		ret = bytearray(1)
+		ret[0] = valueDict["battLvl"] & 0xFF
+		return ret
 	battLvlChar.setReadCallback(battLvlReadCallback)
 	def battLvlSubCallback(value):
 		assert value[1] != 1
