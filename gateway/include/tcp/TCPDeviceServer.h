@@ -36,15 +36,8 @@ public:
 	virtual ~TCPDeviceServer();
 private:
 	Beetle &beetle;
-	std::unique_ptr<SSLConfig> sslConfig;
-
+	std::shared_ptr<SSLConfig> sslConfig;
 	int sockfd;
-
-	bool serverRunning;
-	std::thread daemonThread;
-	void serverDaemon(int port);
-
-	void startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_in cliaddr);
 };
 
 #endif /* INCLUDE_TCP_TCPDEVICESERVER_H_ */

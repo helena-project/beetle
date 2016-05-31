@@ -20,14 +20,7 @@ public:
 
 private:
 	Beetle &beetle;
-
 	int fd;
-
-	bool daemonRunning;
-	std::thread daemonThread;
-	void serverDaemon(std::string path);
-
-	void startIPCDeviceHelper(int clifd, struct sockaddr_un cliaddr, struct ucred clicred);
 };
 
 #endif /* INCLUDE_IPC_UNIXDOMAINSOCKETSERVER_H_ */

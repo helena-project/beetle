@@ -19,21 +19,14 @@
 #include "device/socket/IPCApplication.h"
 #include "Debug.h"
 
+static void startIPCDeviceHelper(Beetle &beetle, int clifd, struct sockaddr_un cliaddr,
+		struct ucred clicred);
+
 UnixDomainSocketServer::UnixDomainSocketServer(Beetle &beetle, std::string path) :
-		beetle(beetle), daemonThread() {
-	daemonRunning = true;
-	fd = -1;
-	daemonThread = std::thread(&UnixDomainSocketServer::serverDaemon, this, path);
-}
-
-UnixDomainSocketServer::~UnixDomainSocketServer() {
-	daemonRunning = false;
-	shutdown(fd, SHUT_RDWR);
-	daemonThread.join();
-}
-
-void UnixDomainSocketServer::serverDaemon(std::string path) {
-	if (debug) pdebug("ipc serverDaemon started at path: " + path);
+		beetle(beetle) {
+	if (debug){
+		pdebug("ipc server started at path: " + path);
+	}
 
 	unlink(path.c_str());
 
@@ -54,17 +47,19 @@ void UnixDomainSocketServer::serverDaemon(std::string path) {
 	}
 
 	listen(fd, 5);
-	while (daemonRunning) {
+
+	/*
+	 * Add to sockets managed by select
+	 */
+	int fdShared = fd;
+	beetle.readers.add(fd, [&beetle, fdShared] {
 		struct sockaddr_un cliaddr;
 		socklen_t clilen = sizeof(cliaddr);
 
-		int clifd = accept(fd, (struct sockaddr *) &cliaddr, &clilen);
+		int clifd = accept(fdShared, (struct sockaddr *) &cliaddr, &clilen);
 		if (clifd < 0) {
-			if (!daemonRunning) {
-				break;
-			}
 			pwarn("error on accept");
-			continue;
+			return;
 		}
 
 		struct ucred clicred;
@@ -72,23 +67,33 @@ void UnixDomainSocketServer::serverDaemon(std::string path) {
 		if (getsockopt(clifd, SOL_SOCKET, SO_PEERCRED, &clicred, &clicredLen) < 0) {
 			pwarn("error on getting client info");
 			close(clifd);
-			continue;
+			return;
 		}
 
-		startIPCDeviceHelper(clifd, cliaddr, clicred);
-	}
-
-	close(fd);
-	if (debug) pdebug("ipc serverDaemon exited");
+		beetle.workers.schedule([&beetle, clifd, cliaddr, clicred] {
+			startIPCDeviceHelper(beetle, clifd, cliaddr, clicred);
+		});
+	});
 }
 
-void UnixDomainSocketServer::startIPCDeviceHelper(int clifd, struct sockaddr_un cliaddr, struct ucred clicred) {
+UnixDomainSocketServer::~UnixDomainSocketServer() {
+	beetle.readers.remove(fd);
+	shutdown(fd, SHUT_RDWR);
+	close(fd);
+	if (debug) {
+		pdebug("ipc server stopped");
+	}
+}
+
+static void startIPCDeviceHelper(Beetle &beetle, int clifd, struct sockaddr_un cliaddr,
+		struct ucred clicred) {
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
 		/*
 		 * Takes over the clifd
 		 */
-		device = std::make_shared<IPCApplication>(beetle, clifd, "PID-" + std::to_string(clicred.pid), cliaddr, clicred);
+		device = std::make_shared<IPCApplication>(beetle, clifd,
+				"PID-" + std::to_string(clicred.pid), cliaddr, clicred);
 
 		boost::shared_lock<boost::shared_mutex> devicesLk;
 		beetle.addDevice(device, devicesLk);
@@ -96,7 +101,8 @@ void UnixDomainSocketServer::startIPCDeviceHelper(int clifd, struct sockaddr_un 
 
 		pdebug("connected to " + device->getName());
 		if (debug) {
-			pdebug(device->getName() + " has handle range [0," + std::to_string(device->getHighestHandle()) + "]");
+			pdebug(device->getName() + " has handle range [0,"
+					+ std::to_string(device->getHighestHandle()) + "]");
 		}
 	} catch (std::exception& e) {
 		pexcept(e);

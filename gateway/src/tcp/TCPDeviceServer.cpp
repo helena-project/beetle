@@ -27,21 +27,13 @@
 #include "util/file.h"
 #include "util/write.h"
 
-TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig, int port) :
-		beetle(beetle), sslConfig(sslConfig) {
-	serverRunning = true;
-	sockfd = -1;
-	daemonThread = std::thread(&TCPDeviceServer::serverDaemon, this, port);
-}
+static void startTcpDeviceHelper(Beetle &, SSL *ssl, int clifd, struct sockaddr_in cliaddr);
 
-TCPDeviceServer::~TCPDeviceServer() {
-	serverRunning = false;
-	shutdown(sockfd, SHUT_RDWR);
-	daemonThread.join();
-}
-
-void TCPDeviceServer::serverDaemon(int port) {
-	if (debug) pdebug("tcp serverDaemon started on port: " + std::to_string(port));
+TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig_, int port) :
+		beetle(beetle), sslConfig(sslConfig_) {
+	if (debug) {
+		pdebug("tcp server started on port: " + std::to_string(port));
+	}
 
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -64,20 +56,23 @@ void TCPDeviceServer::serverDaemon(int port) {
 	}
 
 	listen(sockfd, 5);
-	while (serverRunning) {
+
+	/*
+	 * Add to sockets managed by select
+	 */
+	int sockfdShared = sockfd;
+	auto sslConfigShared = sslConfig;
+	beetle.readers.add(sockfd, [&beetle, sockfdShared, sslConfigShared] {
 		struct sockaddr_in client_addr;
 		socklen_t clilen = sizeof(client_addr);
 
-		int clifd = accept(sockfd, (struct sockaddr *) &client_addr, &clilen);
+		int clifd = accept(sockfdShared, (struct sockaddr *) &client_addr, &clilen);
 		if (clifd < 0) {
-			if (!serverRunning) {
-				break;
-			}
 			pwarn("error on accept");
-			continue;
+			return;
 		}
 
-		SSL *ssl = SSL_new(sslConfig->getCtx());
+		SSL *ssl = SSL_new(sslConfigShared->getCtx());
 		SSL_set_fd(ssl, clifd);
 		if (SSL_accept(ssl) <= 0) {
 			pwarn("error on ssl accept");
@@ -86,16 +81,25 @@ void TCPDeviceServer::serverDaemon(int port) {
 			shutdown(clifd, SHUT_RDWR);
 			SSL_free(ssl);
 			close(clifd);
-			continue;
+			return;
 		}
 
-		startTcpDeviceHelper(ssl, clifd, client_addr);
-	}
-	close(sockfd);
-	if (debug) pdebug("tcp serverDaemon exited");
+		beetle.workers.schedule([&beetle, ssl, clifd, client_addr]{
+			startTcpDeviceHelper(beetle, ssl, clifd, client_addr);
+		});
+	});
 }
 
-void TCPDeviceServer::startTcpDeviceHelper(SSL *ssl, int clifd, struct sockaddr_in cliaddr) {
+TCPDeviceServer::~TCPDeviceServer() {
+	beetle.readers.remove(sockfd);
+	shutdown(sockfd, SHUT_RDWR);
+	close(sockfd);
+	if (debug) {
+		pdebug("tcp server stopped");
+	}
+}
+
+static void startTcpDeviceHelper(Beetle &beetle, SSL *ssl, int clifd, struct sockaddr_in cliaddr) {
 	std::map<std::string, std::string> clientParams;
 	if (!readParamsHelper(ssl, clifd, clientParams)) {
 		pwarn("unable to read parameters");
