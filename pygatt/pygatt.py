@@ -9,6 +9,7 @@ example.py.
 import threading
 import socket
 import traceback
+import warnings
 
 import lib.att as att
 import lib.att_pdu as att_pdu
@@ -105,7 +106,10 @@ class ManagedSocket:
 		
 		assert type(pdu) is bytearray
 		assert len(pdu) > 0
-		assert len(pdu) <= self._send_mtu
+		if len(pdu) > self._send_mtu:
+			tmp = " ".join("%02x" % x for x in pdu)
+			warnings.warn("pdu exceeds mtu: %s" % tmp)
+			pdu = pdu[:self._send_mtu]
 
 		self._lock.acquire()
 		try:
@@ -162,7 +166,7 @@ class ManagedSocket:
 				if resp:
 					self._send(resp)
 			elif att.isRequest(op):
-				raise RuntimeWarning("server not supported")
+				warnings.warn("server not supported")
 				resp = att_pdu.new_error_resp(op, 0, att.ECODE_REQ_NOT_SUPP)
 				self._send(resp)
 
@@ -174,7 +178,7 @@ class ManagedSocket:
 				self._client._handle_packet(pdu)
 
 		else:
-			raise RuntimeWarning("unknown opcode: " + str(op))
+			warnings.warn("unknown opcode: " + str(op))
 
 	def __recv(self):
 		"""Receive packets"""
