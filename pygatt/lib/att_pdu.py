@@ -1,6 +1,8 @@
 import att
 import uuid
 
+ERROR_PDU_LEN = 5
+
 def unpack_handle(pdu, ofs):
 	return pdu[ofs] + (pdu[ofs+1] << 8)
 
@@ -14,7 +16,7 @@ def new_error_resp(op, handle, ecode):
 	assert type(handle) is int
 	assert type(ecode) is int
 
-	err = bytearray(5)
+	err = bytearray(ERROR_PDU_LEN)
 	err[0] = att.OP_ERROR
 	err[1] = op
 	err[2] = handle & 0xFF

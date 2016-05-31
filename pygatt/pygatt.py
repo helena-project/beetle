@@ -20,16 +20,14 @@ class ServerError(Exception):
 	
 	Note: may safely be raised by callbacks
 	"""
-	def __init__(self, msg):
-		self.msg = msg
+	pass
 
 class ClientError(Exception):
 	"""Standard error type raised by GattClient.
 
 	Note: may safely be raised by callbacks
 	"""
-	def __init__(self, msg):
-		self.msg = msg
+	pass
 
 #------------------------------------------------------------------------------
 
@@ -874,7 +872,9 @@ class _ClientService:
 
 	def discoverCharacteristics(self, uuid=None):
 		"""Find characteristics under the service
-		
+
+		Notes: if uuid is None, all characteristics are discovered. Any 
+			previously discovered characteristics are invalidated.
 		Args:
 			uuid : a specific uuid to discover
 		Returns:
@@ -883,11 +883,19 @@ class _ClientService:
 		if uuid and not isinstance(uuid, UUID):
 			uuid = UUID(uuid)
 
+		allCharacs, allCharacHandles = self.__discover_all_characteristics()
 		if uuid is None:
-			return self.__discover_all_characteristics()
+			self._characteristicHandles = allCharacHandles
+			self.characteristics = allCharacs
+			return allCharacs
 		else:
-			allCharacs = self.__discover_all_characteristics()
-			return filter(lambda x: x.uuid == uuid, allCharacs)
+			characs = filter(lambda x: x.uuid == uuid, allCharacs)
+			for charac in characs:
+				if charac._handleNo not in self._characteristicHandles:
+					self._characteristicHandles[charac._handleNo] = charac
+					self.characteristics.append(charac)
+			self.characteristics.sort(key=lambda x: x._handleNo)
+			return characs
 
 	# Protected and private methods
 
@@ -933,16 +941,17 @@ class _ClientService:
 				if currHandle >= endHandle:
 					break
 
-			elif (resp[0] == att.OP_ERROR and resp[1] == att.OP_READ_BY_TYPE_REQ
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+				and resp[1] == att.OP_READ_BY_TYPE_REQ
 				and resp[4] == att.ECODE_ATTR_NOT_FOUND):
 				break
 
-			elif (resp[0] == att.OP_ERROR and resp[1] == att.OP_READ_BY_TYPE_REQ
-				and resp[4] == att.ECODE_REQ_NOT_SUPP):
-				raise ClientError("not supported")
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+				and resp[1] == att.OP_READ_BY_TYPE_REQ):
+				raise ClientError("error - %s" % att.ecodeLookup(resp[4]))
 
 			else:
-				raise ClientError("error: %02x" % resp[0])
+				raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
 
 		for i, charac in enumerate(characs):
 			if i + 1 < len(characs):
@@ -950,9 +959,7 @@ class _ClientService:
 			else:
 				charac._set_end_group(self._endGroup)
 
-		self._characteristicHandles = characHandles
-		self.characteristics = characs
-		return characs
+		return characs, characHandles
 
 	def __len__(self):
 		return len(characteristics)
@@ -1052,16 +1059,17 @@ class _ClientCharacteristic:
 				if currHandle >= endHandle:
 					break
 
-			elif (resp[0] == att.OP_ERROR and resp[1] == att.OP_FIND_INFO_REQ
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+				and resp[1] == att.OP_FIND_INFO_REQ
 				and resp[4] == att.ECODE_ATTR_NOT_FOUND):
 				break
 
-			elif (resp[0] == att.OP_ERROR and resp[1] == att.OP_FIND_INFO_REQ
-				and resp[4] == att.ECODE_REQ_NOT_SUPP):
-				raise ClientError("not supported")
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+				and resp[1] == att.OP_FIND_INFO_REQ):
+				raise ClientError("error - %s" % att.ecodeLookup(resp[4]))
 
 			else:
-				raise ClientError("error: %02x" % resp[0])
+				raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
 
 		self.descriptors = descriptors
 		self._cccd = cccd
@@ -1116,10 +1124,10 @@ class _ClientCharacteristic:
 			raise ClientError("no response")
 		elif resp[0] == att.OP_READ_RESP:
 			return resp[1:]
-		elif resp[0] == att.OP_ERROR and len(resp) == 5:
-			raise ClientError("error: %02x" % resp[4])
+		elif resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN:
+			raise ClientError("read failed - %s" % att.ecodeLookup(resp[4]))
 		else:
-			raise ClientError("unexpected packet")
+			raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
 
 	def write(self, value):
 		"""Blocking write of the characteristic.
@@ -1142,10 +1150,10 @@ class _ClientCharacteristic:
 			raise ClientError("no response")
 		elif resp[0] == att.OP_WRITE_RESP:
 			return resp[1:]
-		elif resp[0] == att.OP_ERROR and len(resp) == 5:
-			raise ClientError("error: %02x" % resp[4])
+		elif resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN:
+			raise ClientError("write failed - %s" % att.ecodeLookup(resp[4]))
 		else:
-			raise ClientError("unexpected packet")
+			raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
 
 	# Private and protected methods
 
@@ -1191,10 +1199,10 @@ class _ClientDescriptor:
 			raise ClientError("no response")
 		elif resp[0] == att.OP_READ_RESP:
 			return resp[1:]
-		elif resp[0] == att.OP_ERROR and len(resp) == 5:
-			raise ClientError("error: %02x" % resp[4])
+		elif resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN:
+			raise ClientError("read failed - %s" % att.ecodeLookup(resp[4]))
 		else:
-			raise ClientError("unexpected packet")
+			raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
 
 	def write(self, value):
 		"""Blocking write of the descriptor.
@@ -1216,10 +1224,10 @@ class _ClientDescriptor:
 			raise ClientError("no response")
 		elif resp[0] == att.OP_WRITE_RESP:
 			return resp[1:]
-		elif resp[0] == att.OP_ERROR and len(resp) == 5:
-			raise ClientError("error: %02x" % resp[4])
+		elif resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN:
+			raise ClientError("write failed - %s" % att.ecodeLookup(resp[4]))
 		else:
-			raise ClientError("unexpected packet")
+			raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
 
 	# Protected methods
 
@@ -1261,6 +1269,8 @@ class GattClient:
 	def discoverServices(self, uuid=None):
 		"""Find services on the server.
 
+		Notes: if uuid is None, all services are discovered. Any previously 
+			discovered services are invalidated.
 		Args:
 			uuid : type of service to discover
 		Returns:
@@ -1372,18 +1382,17 @@ class GattClient:
 				if currHandle >= endHandle:
 					break
 
-			elif (resp[0] == att.OP_ERROR 
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN
 				and resp[1] == att.OP_READ_BY_GROUP_REQ
 				and resp[4] == att.ECODE_ATTR_NOT_FOUND):
 				break
 
-			elif (resp[0] == att.OP_ERROR 
-				and resp[1] == att.OP_READ_BY_GROUP_REQ
-				and resp[4] == att.ECODE_REQ_NOT_SUPP):
-				raise ClientError("not supported")
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+				and resp[1] == att.OP_READ_BY_GROUP_REQ):
+				raise ClientError("error - %s" % att.ecodeLookup(resp[4]))
 
 			else:
-				raise ClientError("error: %02x" % resp[0])
+				raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
 
 		self._serviceHandles = serviceHandles
 		self.services = services
@@ -1429,18 +1438,17 @@ class GattClient:
 				if currHandle >= endHandle:
 					break
 
-			elif (resp[0] == att.OP_ERROR 
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
 				and resp[1] == att.OP_FIND_BY_TYPE_REQ
 				and resp[4] == att.ECODE_ATTR_NOT_FOUND):
 				break
 
-			elif (resp[0] == att.OP_ERROR 
-				and resp[1] == att.OP_FIND_BY_TYPE_REQ
-				and resp[4] == att.ECODE_REQ_NOT_SUPP):
-				raise ClientError("not supported")
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+				and resp[1] == att.OP_FIND_BY_TYPE_REQ):
+				raise ClientError("error - %s" % att.ecodeLookup(resp[4]))
 
 			else:
-				raise ClientError("error: %02x" % resp[0])
+				raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
 
 		self.services.extend(newServices)
 		self.services.sort(key=lambda x: x._handleNo)

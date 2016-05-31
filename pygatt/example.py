@@ -147,30 +147,30 @@ def setUpServer(server):
 def runClient(client):
 	"""Begin issuing requests as a client"""
 
-	print ""
-	raw_input("Press ENTER to begin discovery:")
-
-	services = client.discoverServices()
-	for service in services:
-		characteristics = service.discoverCharacteristics()
-		for characteristic in characteristics:
-			characteristic.discoverDescriptors()
-
-	printBox("Client")
-	print client
-
-	print ""
-	for service in client.services:
-		for characteristic in service.characteristics:
-			if "r" in characteristic.permissions:
-				try:
-					charVal = characteristic.read()
-					print "Read: " + " ".join("%02x" % x for x in charVal)
-				except ClientError, err:
-					print "Caught exception:", err
-
 	while True:
-		pass
+		print ""
+		raw_input("Press ENTER to begin discovery:")
+
+		# discovery example
+		services = client.discoverServices()
+		for service in services:
+			characteristics = service.discoverCharacteristics()
+			for characteristic in characteristics:
+				characteristic.discoverDescriptors()
+
+		printBox("Client")
+		print client
+
+		# read example
+		print "\nIssuing reads:"
+		for service in client.services:
+			for characteristic in service.characteristics:
+				if "r" in characteristic.permissions:
+					try:
+						charVal = characteristic.read()
+						print "Read: " + " ".join("%02x" % x for x in charVal)
+					except ClientError, err:
+						print "Caught exception:", err
 
 def main(args):
 	"""Set up and run an example HRM server and client"""
