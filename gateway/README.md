@@ -22,7 +22,8 @@ file, or write your own configuration
 
 ## Commands
 Running Beetle presents a shell interface with several commands. Enter 
-```help``` to list commands and their explanations.
+```help``` to list commands and their explanations. Entering a command with no 
+arguments prints usage instructions.
 
 ## TCP connection protocol
 Parameters are key value pairs sent at the beginning of the connection in 
