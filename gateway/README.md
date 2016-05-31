@@ -2,8 +2,7 @@
 
 ##### Requirements
 - libboost-all-dev, libbluetooth-dev, libcppnetlib-dev, libasio-dev, openssl
-- Eclipse CDT (Mars)
-- For Ubuntu 15.04+, libcppnetlib needs to be compiled and installed manually: https://github.com/cpp-netlib/cpp-netlib.git
+- for controller functionality, libcppnetlib may need to be compiled and installed manually: https://github.com/cpp-netlib/cpp-netlib.git
 
 ##### To build and run
 1. clone and import the project into Eclipse (optional)
