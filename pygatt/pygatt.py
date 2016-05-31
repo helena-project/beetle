@@ -143,7 +143,7 @@ class ManagedSocket:
 				received += len(chunk)
 				pdu += bytearray(ord(x) for x in chunk)
 		else:
-			# Datagram mode
+			# Seqpacket mode
 			pdu = self._sock.recv()
 			if pdu == "":
 				raise RuntimeError("socket connection broken")

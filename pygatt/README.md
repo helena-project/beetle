@@ -7,7 +7,7 @@ transport layer. It supports simultaneous client/server modes; is agnostic
 to the OS, the underlying link and the network.
 
 ## ManagedSocket
-This wraps around a regular socket, either with datagrams or a stream. 
+This wraps around a regular socket, either with seqpackets or a stream. 
 
 ## GattClient
 This is bound to a ManagedSocket and allows the application to discover 
