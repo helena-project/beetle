@@ -52,9 +52,11 @@ bool readParamsHelper(SSL *ssl, int fd, std::map<std::string, std::string> &para
 			fd_set exceptFds = fdSet;
 			result = select(fd+1, &readFds, NULL, &exceptFds, &timeout);
 			if (result < 0) {
-				std::stringstream ss;
-				ss << "select failed : " << strerror(errno);
-				pdebug(ss.str());
+				if (debug) {
+					std::stringstream ss;
+					ss << "select failed : " << strerror(errno);
+					pdebug(ss.str());
+				}
 				return false;
 			}
 		}
@@ -98,9 +100,11 @@ bool readParamsHelper(SSL *ssl, int fd, std::map<std::string, std::string> &para
 			fd_set exceptFds = fdSet;
 			result = select(fd+1, &readFds, NULL, &exceptFds, &timeout);
 			if (result < 0) {
-				std::stringstream ss;
-				ss << "select failed : " << strerror(errno);
-				pdebug(ss.str());
+				if (debug) {
+					std::stringstream ss;
+					ss << "select failed : " << strerror(errno);
+					pdebug(ss.str());
+				}
 				return false;
 			}
 		}

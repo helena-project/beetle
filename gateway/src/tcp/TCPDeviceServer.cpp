@@ -31,10 +31,6 @@ static void startTcpDeviceHelper(Beetle &, SSL *ssl, int clifd, struct sockaddr_
 
 TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig_, int port) :
 		beetle(beetle), sslConfig(sslConfig_) {
-	if (debug) {
-		pdebug("tcp server started on port: " + std::to_string(port));
-	}
-
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (sockfd < 0) {
@@ -68,14 +64,18 @@ TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig_, int port
 
 		int clifd = accept(sockfdShared, (struct sockaddr *) &client_addr, &clilen);
 		if (clifd < 0) {
-			pwarn("error on accept");
+			if (debug) {
+				pwarn("error on accept");
+			}
 			return;
 		}
 
 		SSL *ssl = SSL_new(sslConfigShared->getCtx());
 		SSL_set_fd(ssl, clifd);
 		if (SSL_accept(ssl) <= 0) {
-			pwarn("error on ssl accept");
+			if (debug) {
+				pwarn("error on ssl accept");
+			}
 			ERR_print_errors_fp(stderr);
 			SSL_shutdown(ssl);
 			shutdown(clifd, SHUT_RDWR);
@@ -88,6 +88,8 @@ TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig_, int port
 			startTcpDeviceHelper(beetle, ssl, clifd, client_addr);
 		});
 	});
+
+	std::cout << "tcp server started on port: " << port << std::endl;
 }
 
 TCPDeviceServer::~TCPDeviceServer() {
@@ -102,7 +104,9 @@ TCPDeviceServer::~TCPDeviceServer() {
 static void startTcpDeviceHelper(Beetle &beetle, SSL *ssl, int clifd, struct sockaddr_in cliaddr) {
 	std::map<std::string, std::string> clientParams;
 	if (!readParamsHelper(ssl, clifd, clientParams)) {
-		pwarn("unable to read parameters");
+		if (debug) {
+			pwarn("unable to read parameters");
+		}
 		SSL_shutdown(ssl);
 		shutdown(clifd, SHUT_RDWR);
 		SSL_free(ssl);
@@ -131,7 +135,9 @@ static void startTcpDeviceHelper(Beetle &beetle, SSL *ssl, int clifd, struct soc
 		shutdown(clifd, SHUT_RDWR);
 		SSL_free(ssl);
 		close(clifd);
-		if (debug) pdebug("could not write server params length");
+		if (debug) {
+			pdebug("could not write server params length");
+		}
 	}
 
 	if (SSL_write_all(ssl, (uint8_t *) serverParams.c_str(), serverParams.length()) == false) {
@@ -140,7 +146,9 @@ static void startTcpDeviceHelper(Beetle &beetle, SSL *ssl, int clifd, struct soc
 		shutdown(clifd, SHUT_RDWR);
 		SSL_free(ssl);
 		close(clifd);
-		if (debug) pdebug("could not write server params");
+		if (debug) {
+			pdebug("could not write server params");
+		}
 	}
 
 	/*

@@ -25,11 +25,6 @@ Beetle::~Beetle() {
 	devices.clear();
 }
 
-void Beetle::addDevice(std::shared_ptr<Device> d) {
-	boost::shared_lock<boost::shared_mutex> unused;
-	addDevice(d, unused);
-}
-
 void Beetle::addDevice(std::shared_ptr<Device> d, boost::shared_lock<boost::shared_mutex> &returnLock) {
 	devicesMutex.lock();
 	device_t id = d->getId();
@@ -44,10 +39,10 @@ void Beetle::addDevice(std::shared_ptr<Device> d, boost::shared_lock<boost::shar
 	}
 }
 
-void Beetle::removeDevice(device_t id) {
+bool Beetle::removeDevice(device_t id, std::string &err) {
 	if (id == BEETLE_RESERVED_DEVICE) {
-		pwarn("not allowed to remove Beetle!");
-		return;
+		err = "not allowed to remove Beetle!";
+		return false;
 	}
 
 	/*
@@ -56,7 +51,9 @@ void Beetle::removeDevice(device_t id) {
 	workers.schedule([this, id] {
 		devicesMutex.lock_upgrade();
 		if (devices.find(id) == devices.end()) {
-			pwarn("removing non-existent device!");
+			if (debug) {
+				pwarn("removing non-existent device!");
+			}
 			devicesMutex.unlock_upgrade();
 			return;
 		}
@@ -96,6 +93,8 @@ void Beetle::removeDevice(device_t id) {
 			workers.schedule([h,id] {h(id);});
 		}
 	});
+
+	return true;
 }
 
 void Beetle::updateDevice(device_t id) {
@@ -104,65 +103,69 @@ void Beetle::updateDevice(device_t id) {
 	}
 }
 
-void Beetle::mapDevices(device_t from, device_t to) {
+bool Beetle::mapDevices(device_t from, device_t to, std::string &err) {
 	if (from == BEETLE_RESERVED_DEVICE || to == BEETLE_RESERVED_DEVICE) {
-		pwarn("not allowed to map Beetle");
-		return;
+		err = "not allowed to map Beetle";
+		return false;
 	} else if (from == NULL_RESERVED_DEVICE || to == NULL_RESERVED_DEVICE) {
-		pwarn("not allowed to map null device");
-		return;
+		err = "not allowed to map null device";
+		return false;
 	} else if (from == to) {
-		pwarn("cannot map device to itself");
-		return;
+		err = "cannot map device to itself";
+		return false;
 	}
 
 	boost::shared_lock<boost::shared_mutex> devicesLk(devicesMutex);
 	if (devices.find(from) == devices.end()) {
-		pwarn(std::to_string(from) + " does not id a device");
-		return;
+		err = std::to_string(from) + " does not id a device";
+		return false;
 	} else if (devices.find(to) == devices.end()) {
-		pwarn(std::to_string(to) + " does not id a device");
-		return;
+		err = std::to_string(to) + " does not id a device";
+		return false;
 	}
 
 	std::shared_ptr<Device> fromD = devices[from];
 	std::shared_ptr<Device> toD = devices[to];
 	if (accessControl && accessControl->canMap(fromD, toD) == false) {
-		pwarn("permission denied");
-		return;
+		err = "permission denied";
+		return false;
 	}
 
 	std::lock_guard<std::mutex> hatLg(toD->hatMutex);
 	if (!toD->hat->getDeviceRange(from).isNull()) {
 		std::stringstream ss;
 		ss << from << " is already mapped into " << to << "'s space";
-		pwarn(ss.str());
+		err = ss.str();
+		return false;
 	} else {
 		handle_range_t range = toD->hat->reserve(from);
 		if (debug) {
 			pdebug("reserved " + range.str() + " at device " + std::to_string(to));
 		}
 	}
+
+	return true;
 }
 
-void Beetle::unmapDevices(device_t from, device_t to) {
+bool Beetle::unmapDevices(device_t from, device_t to, std::string &err) {
 	if (from == BEETLE_RESERVED_DEVICE || to == BEETLE_RESERVED_DEVICE) {
-		pwarn("not allowed to unmap Beetle");
-		return;
+		err = "not allowed to unmap Beetle";
+		return false;
 	} else if (from == NULL_RESERVED_DEVICE || to == NULL_RESERVED_DEVICE) {
-		pwarn("unmapping null is a nop");
-		return;
+		err = "unmapping null is a nop";
+		return false;
 	} else if (from == to) {
-		pwarn("cannot unmap self from self");
-		return;
+		err = "cannot unmap self from self";
+		return false;
 	}
 
+	boost::shared_lock<boost::shared_mutex> devicesLk(devicesMutex);
 	if (devices.find(from) == devices.end()) {
-		pwarn(std::to_string(from) + " does not id a device");
-		return;
+		err = std::to_string(from) + " does not id a device";
+		return false;
 	} else if (devices.find(to) == devices.end()) {
-		pwarn(std::to_string(to) + " does not id a device");
-		return;
+		err = std::to_string(to) + " does not id a device";
+		return false;
 	}
 
 	std::shared_ptr<Device> toD = devices[to];
@@ -172,6 +175,8 @@ void Beetle::unmapDevices(device_t from, device_t to) {
 	if (debug) {
 		pdebug("freed " + range.str() + " at device " + std::to_string(to));
 	}
+
+	return true;
 }
 
 void Beetle::registerAddDeviceHandler(AddDeviceHandler h) {

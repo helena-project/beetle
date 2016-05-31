@@ -109,14 +109,18 @@ bool AccessControl::canMap(std::shared_ptr<Device> from, std::shared_ptr<Device>
 				ss << body(response);
 				return handleCanMapResponse(from, to, ss);
 			} catch (std::exception &e) {
-				std::stringstream ss;
-				ss << "Error parsing access control server response: " << e.what();
-				pwarn(ss.str());
+				if (debug_controller) {
+					std::stringstream ss;
+					ss << "Error parsing access control server response: " << e.what();
+					pwarn(ss.str());
+				}
 				return false;
 			}
 		}
 		case 500:
-			pwarn("internal server error");
+			if (debug_controller) {
+				pwarn("internal server error");
+			}
 			return false;
 		default:
 			if (debug_controller) {
@@ -184,16 +188,18 @@ bool AccessControl::acquireExclusiveLease(std::shared_ptr<Device> to, exclusive_
 			newlyAcquired = true;
 			return true;
 		} else {
-			std::stringstream ss;
-			ss << "exclusive lease denied: " << body(response);
 			if (debug_controller) {
+				std::stringstream ss;
+				ss << "exclusive lease denied: " << body(response);
 				pdebug(ss.str());
 			}
 			newlyAcquired = false;
 			return false;
 		}
 	} catch (std::exception &e) {
-		pexcept(e);
+		if (debug_controller) {
+			pexcept(e);
+		}
 		newlyAcquired = false;
 		return false;
 	}
@@ -419,7 +425,9 @@ bool AccessControl::canAccessHandle(std::shared_ptr<Device> client, std::shared_
 	boost::shared_lock<boost::shared_mutex> lk(cacheMutex);
 	auto key = std::make_pair(server->getId(), client->getId());
 	if (cache.find(key) == cache.end()) {
-		pwarn("no cached access control rules exist for client-server");
+		if (debug_controller) {
+			pwarn("no cached access control rules exist for client-server");
+		}
 		return false;
 	}
 	cached_mapping_info_t &ruleMapping = cache[key];
@@ -553,7 +561,9 @@ bool AccessControl::getCharAccessProperties(std::shared_ptr<Device> client, std:
 
 	auto key = std::make_pair(server->getId(), client->getId());
 	if (cache.find(key) == cache.end()) {
-		pwarn("no cached access control rules exist for client-server");
+		if (debug_controller) {
+			pwarn("no cached access control rules exist for client-server");
+		}
 		return false;
 	}
 	cached_mapping_info_t &ruleMapping = cache[key];
@@ -598,7 +608,9 @@ bool AccessControl::canReadType(std::shared_ptr<Device> client, std::shared_ptr<
 	boost::shared_lock<boost::shared_mutex> lk(cacheMutex);
 	auto key = std::make_pair(server->getId(), client->getId());
 	if (cache.find(key) == cache.end()) {
-		pwarn("no cached access control rules exist for client-server");
+		if (debug_controller) {
+			pwarn("no cached access control rules exist for client-server");
+		}
 		return false;
 	}
 	cached_mapping_info_t &ruleMapping = cache[key];

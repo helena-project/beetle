@@ -149,8 +149,8 @@ void AutoConnect::connect(peripheral_info_t info, bool discover) {
 			pdebug(device->getName() + " has handle range [0," + std::to_string(device->getHighestHandle()) + "]");
 		}
 	} catch (DeviceException& e) {
-		pexcept(e);
 		if (debug) {
+			pexcept(e);
 			pdebug("failed to connect to " + ba2str_cpp(info.bdaddr));
 		}
 		if (device) {

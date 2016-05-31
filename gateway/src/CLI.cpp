@@ -447,14 +447,12 @@ void CLI::doDisconnect(const std::vector<std::string>& cmd) {
 	boost::shared_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
 	std::shared_ptr<Device> device = matchDevice(cmd[1]);
 	if (device != NULL) {
-		auto virtualDevice = std::dynamic_pointer_cast<VirtualDevice>(device);
-		if (virtualDevice) {
-			device_t deviceId = virtualDevice->getId();
-			deviceslk.unlock();
+		device_t deviceId = device->getId();
+		deviceslk.unlock();
 
-			beetle.removeDevice(deviceId);
-		} else {
-			printMessage("cannot stop " + device->getName());
+		std::string err;
+		if (!beetle.removeDevice(deviceId, err)) {
+			printUsageError(err);
 		}
 	} else {
 		printMessage(cmd[1] + " does not exist");
@@ -474,7 +472,11 @@ void CLI::doMap(const std::vector<std::string>& cmd) {
 			std::cout << "caught invalid argument exception: " << e.what() << std::endl;
 			return;
 		}
-		beetle.mapDevices(from, to);
+
+		std::string err;
+		if (!beetle.mapDevices(from, to, err)) {
+			printUsageError(err);
+		}
 	}
 }
 
@@ -491,7 +493,11 @@ void CLI::doUnmap(const std::vector<std::string>& cmd) {
 			std::cout << "caught invalid argument exception: " << e.what() << std::endl;
 			return;
 		}
-		beetle.unmapDevices(from, to);
+
+		std::string err;
+		if (!beetle.unmapDevices(from, to, err)) {
+			printUsageError(err);
+		}
 	}
 }
 

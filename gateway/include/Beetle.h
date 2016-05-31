@@ -32,34 +32,45 @@ public:
 	virtual ~Beetle();
 
 	/*
-	 * Add a device to Beetle's mappings. Threadsafe.
-	 */
-	void addDevice(std::shared_ptr<Device> device);
-
-	/*
 	 * Add a device to Beetle's mappings. Threadsafe. Returns holding a shared lock on devices.
 	 */
 	void addDevice(std::shared_ptr<Device> device, boost::shared_lock<boost::shared_mutex> &returnLock);
-
-	/*
-	 * Removes a device from Beetle's mappings and unsubscribes the device from all characteristics.
-	 */
-	void removeDevice(device_t);
+	inline void addDevice(std::shared_ptr<Device> device) {
+		boost::shared_lock<boost::shared_mutex> unused;
+		addDevice(device, unused);
+	};
 
 	/*
 	 * Inform Beetle that the device has been updated; for instance, if the handles have changed.
 	 */
-	void updateDevice(device_t);
+	void updateDevice(device_t device);
+
+	/*
+	 * Removes a device from Beetle's mappings and unsubscribes the device from all characteristics.
+	 */
+	bool removeDevice(device_t device, std::string &err);
+	inline void removeDevice(device_t device) {
+		std::string unused;
+		removeDevice(device, unused);
+	}
 
 	/*
 	 * Maps handles from device 1 to device 2.
 	 */
-	void mapDevices(device_t from, device_t to);
+	bool mapDevices(device_t from, device_t to, std::string &err);
+	inline void mapDevices(device_t from, device_t to) {
+		std::string unused;
+		mapDevices(from, to, unused);
+	};
 
 	/*
 	 * Unmaps handles from device 1 to device 2.
 	 */
-	void unmapDevices(device_t from, device_t to);
+	bool unmapDevices(device_t from, device_t to, std::string &err);
+	inline void unmapDevices(device_t from, device_t to) {
+		std::string unused;
+		unmapDevices(from, to, unused);
+	}
 
 	/*
 	 * Register handler to be called after a device is added.

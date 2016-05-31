@@ -64,6 +64,7 @@ void TCPConnection::startInternal() {
 			if (debug_socket) {
 				std::stringstream ss;
 				ss << "socket errno: " << strerror(errno);
+				pdebug(ss.str());
 			}
 			stopInternal();
 		} else {
@@ -86,7 +87,7 @@ void TCPConnection::startInternal() {
 			bytesRead = 0;
 			while (!stopped && bytesRead < len) {
 				if (difftime(time(NULL), startTime) > TIMEOUT_PAYLOAD) {
-					if (debug) {
+					if (debug_socket) {
 						pdebug("timed out reading payload");
 					}
 					stopInternal();
@@ -99,11 +100,13 @@ void TCPConnection::startInternal() {
 					struct timeval timeout = defaultTimeout;
 					fd_set readFds = fdSet;
 					fd_set exceptFds = fdSet;
-					result = select(sockfd+1, &readFds, NULL, &exceptFds, &timeout);
+					result = select(sockfd + 1, &readFds, NULL, &exceptFds, &timeout);
 					if (result < 0) {
-						std::stringstream ss;
-						ss << "select failed : " << strerror(errno);
-						pdebug(ss.str());
+						if (debug_socket) {
+							std::stringstream ss;
+							ss << "select failed : " << strerror(errno);
+							pdebug(ss.str());
+						}
 						stopInternal();
 						break;
 					}
@@ -112,7 +115,9 @@ void TCPConnection::startInternal() {
 				if (result > 0) {
 					int n = SSL_read(ssl, buf + bytesRead, len - bytesRead);
 					if (n < 0) {
-						std::cerr << "socket errno: " << strerror(errno) << std::endl;
+						if (debug_socket) {
+							std::cerr << "socket errno: " << strerror(errno) << std::endl;
+						}
 						stopInternal();
 						break;
 					} else {

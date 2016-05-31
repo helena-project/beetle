@@ -69,9 +69,11 @@ NetworkStateClient::~NetworkStateClient() {
 	try {
 		auto response = client->getClient()->delete_(request);
 		if (response.status() != 200) {
-			std::stringstream ss;
-			ss << "error disconnecting from controller (" << response.status() << "): " << body(response);
-			pwarn(ss.str());
+			if (debug_controller) {
+				std::stringstream ss;
+				ss << "error disconnecting from controller (" << response.status() << "): " << body(response);
+				pwarn(ss.str());
+			}
 		} else {
 			if (debug_controller) {
 				std::stringstream ss;

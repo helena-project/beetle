@@ -122,6 +122,7 @@ void LEPeripheral::startInternal() {
 			if (debug_socket) {
 				std::stringstream ss;
 				ss << "socket errno: " << strerror(errno);
+				pdebug(ss.str());
 			}
 			stopInternal();
 		} else {
