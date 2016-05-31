@@ -79,7 +79,6 @@ DiscoveryHandler CLI::getDiscoveryHander() {
 std::function<void()> CLI::getDaemon() {
 	return [this] {
 		time_t now = time(NULL);
-
 		std::lock_guard<std::mutex> lg(discoveredMutex);
 		for (auto it = discovered.cbegin(); it != discovered.cend();) {
 			if (difftime(now, it->second.lastSeen) > 60 * 5) { // 5 minutes

@@ -20,18 +20,17 @@ public:
 	TimedDaemon() : t() {
 		isRunning.test_and_set();
 		t = std::thread([this] {
+			int tick = 0;
 			while (isRunning.test_and_set()) {
-				int tick = 0;
 				tick++;
 				sleep(1);
 
 				m.lock();
-				for (auto daemon : daemons) {
+				for (auto &daemon : daemons) {
 					if (tick % daemon.interval == 0) {
 						daemon.f();
 					}
 				}
-
 				m.unlock();
 			}
 		});
@@ -49,7 +48,10 @@ public:
 	 */
 	void repeat(std::function<void()> f, int seconds) {
 		std::lock_guard<std::mutex> lg(m);
-		daemons.push_back(scheduled_t{f, seconds});
+		scheduled_t s;
+		s.f = f;
+		s.interval = seconds;
+		daemons.push_back(s);
 	}
 
 private:
