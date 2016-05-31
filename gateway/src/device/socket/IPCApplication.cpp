@@ -45,7 +45,7 @@ IPCApplication::~IPCApplication() {
 	beetle.readers.remove(sockfd);
 
 	if (debug_socket) {
-		pdebug("shutting down socket");
+		pdebug("shutting down socket for " + getName());
 	}
 	shutdown(sockfd, SHUT_RDWR);
 	close(sockfd);
@@ -65,7 +65,7 @@ void IPCApplication::startInternal() {
 		uint8_t buf[256];
 		int n = read(sockfd, buf, sizeof(buf));
 		if (debug_socket) {
-			pdebug(getName() + " read " + std::to_string(n) + " bytes");
+			pdebug("read " + std::to_string(n) + " bytes from " + getName());
 		}
 		if (n <= 0) {
 			if (debug_socket) {
@@ -103,7 +103,7 @@ bool IPCApplication::write(uint8_t *buf, int len) {
 			stopInternal();
 		} else {
 			if (debug_socket) {
-				pdebug(getName() + " wrote " + std::to_string(len) + " bytes");
+				pdebug("wrote " + std::to_string(len) + " bytes to " + getName());
 				phex(bufCpy.get(), len);
 			}
 		}

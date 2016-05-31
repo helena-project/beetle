@@ -40,7 +40,7 @@ TCPConnection::~TCPConnection() {
 	beetle.readers.remove(sockfd);
 
 	if (debug_socket) {
-		pdebug("shutting down socket");
+		pdebug("shutting down socket for " + getName());
 	}
 
 	SSL_shutdown(ssl);
@@ -127,6 +127,7 @@ void TCPConnection::startInternal() {
 
 			if (debug_socket) {
 				phex(buf, bytesRead);
+				pdebug("read " + std::to_string(bytesRead) + " bytes from " + getName());
 			}
 
 			readHandler(buf, bytesRead);
@@ -157,7 +158,7 @@ bool TCPConnection::write(uint8_t *buf, int len) {
 			stopInternal();
 		} else {
 			if (debug_socket) {
-				pdebug(getName() + " wrote " + std::to_string(len) + " bytes");
+				pdebug("wrote " + std::to_string(len) + " bytes to " + getName());
 				phex(bufCpy.get(), len);
 			}
 		}
