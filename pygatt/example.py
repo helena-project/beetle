@@ -195,7 +195,7 @@ def main(args):
 	s = ssl.wrap_socket(s, cert_reqs=ssl.CERT_NONE)	# TODO fix this
 	s.connect((args.host, args.port))
 
-	# Send initial connection parameters. Just 0 for now.
+	# Send initial connection parameters.
 	appParams = ["client " + DEVICE_NAME, "server true"]
 
 	print ""
