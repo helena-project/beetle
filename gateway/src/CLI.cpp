@@ -40,14 +40,20 @@
 #include "hat/HandleAllocationTable.h"
 #include "Router.h"
 
-CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery) :
+CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery,
+		bool daemon) :
 		beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), inputDaemon() {
 	aliasCounter = 0;
-	inputDaemon = std::thread(&CLI::cmdLineDaemon, this);
+	useDaemon = daemon;
+	if (useDaemon) {
+		inputDaemon = std::thread(&CLI::cmdLineDaemon, this);
+	}
 }
 
 CLI::~CLI() {
-	if (inputDaemon.joinable()) inputDaemon.join();
+	if (useDaemon && inputDaemon.joinable()) {
+		inputDaemon.join();
+	}
 }
 
 DiscoveryHandler CLI::getDiscoveryHander() {
@@ -86,8 +92,11 @@ std::function<void()> CLI::getDaemon() {
 }
 
 void CLI::join() {
-	assert(inputDaemon.joinable());
-	inputDaemon.join();
+	if (useDaemon && inputDaemon.joinable()) {
+		inputDaemon.join();
+	} else {
+		cmdLineDaemon();
+	}
 }
 
 static void printUsage(std::string usage) {
@@ -205,19 +214,36 @@ void CLI::doHelp(const std::vector<std::string>& cmd) {
 	printMessage("  quit,q");
 }
 
+
+
 void CLI::doScan(const std::vector<std::string>& cmd) {
 	if (cmd.size() != 1) {
 		printUsage("scan");
 		return;
 	}
 
-	printMessage("alias\taddr\t\t\ttype\tname");
-	std::lock_guard<std::mutex> lg(discoveredMutex);
+	discoveredMutex.lock();
+	std::vector<discovered_t> discoveredCopy;
 	for (auto &d : discovered) {
+		discoveredCopy.push_back(d.second);
+	}
+	discoveredMutex.unlock();
+
+	/*
+	 * Order by alias.
+	 */
+	std::sort(discoveredCopy.begin(), discoveredCopy.end(),
+			[](const CLI::discovered_t &a, const CLI::discovered_t &b) -> bool {
+		return a.alias < b.alias;
+	});
+
+	time_t currTime = time(NULL);
+	printMessage("alias\taddr\t\t\ttype\tlast(s)\tname");
+	for (auto &d : discoveredCopy) {
 		std::stringstream ss;
-		ss << d.second.alias << "\t" << d.first << "\t"
-				<< ((d.second.info.bdaddrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random") << "\t"
-				<< d.second.info.name;
+		ss << d.alias << "\t" << ba2str_cpp(d.info.bdaddr) << "\t"
+				<< ((d.info.bdaddrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random") << "\t"
+				<< (int) difftime(currTime, d.lastSeen) << "\t" << d.info.name;
 		printMessage(ss.str());
 	}
 }
