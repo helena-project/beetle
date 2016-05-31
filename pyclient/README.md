@@ -1,10 +1,13 @@
 # Beetle TCP client
 
-By default, the tcp server runs on port 3002. Passing ```--tcp-port``` sets a different port. ```Beetleclient.py``` reads input provided by the user, and prints responses from the server.
+By default, the tcp server runs on port 3002. Passing ```--tcp-port``` sets 
+a different port. ```Beetleclient.py``` reads input provided by the user, 
+and prints responses from the server.
 
-##### Usage
+## Usage
 
-The tcp client will first ask for connection params. See Beetle readme for params. These are read line by line as 'key value' pairs.
+The tcp client will first ask for connection params. See Beetle readme for 
+params. These are read line by line as 'key value' pairs.
 
 To send requests:
 

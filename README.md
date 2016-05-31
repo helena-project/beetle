@@ -1,15 +1,15 @@
 # Beetle for Linux
 
-##### Beetle C++ gateway
+## Beetle C++ gateway
 In ```gateway``` subdirectory.
 
-##### Python tcp client
+## Python tcp client
 In ```pyclient``` subdirectory. 
 
-##### Python gatt library
+## Python gatt library
 In ```pygatt``` subdirectory. 
 
-##### Python controller
+## Python controller
 In ```controller``` subdirectory. Needed to run with the controller enabled.
 
 # License
