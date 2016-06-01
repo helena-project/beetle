@@ -80,7 +80,7 @@ void BeetleInternal::informServicesChanged(handle_range_t range, device_t dst) {
 	}
 
 	std::lock_guard<std::recursive_mutex> handlesLg(handlesMutex);
-	if (serviceChangedAttr->subscribers.size() == 0) {
+	if (serviceChangedAttr->subscribersNotify.size() == 0) {
 		return;
 	}
 	uint8_t cmd[7];
@@ -89,7 +89,7 @@ void BeetleInternal::informServicesChanged(handle_range_t range, device_t dst) {
 	*(uint16_t *) (cmd + 3) = htobs(range.start);
 	*(uint16_t *) (cmd + 5) = htobs(range.end);
 
-	if (serviceChangedAttr->subscribers.find(dst) != serviceChangedAttr->subscribers.end()) {
+	if (serviceChangedAttr->subscribersNotify.find(dst) != serviceChangedAttr->subscribersNotify.end()) {
 		if (beetle.devices.find(dst) != beetle.devices.end()) {
 			beetle.devices[dst]->writeCommand(cmd, sizeof(cmd));
 		} else {

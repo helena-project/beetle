@@ -90,14 +90,27 @@ std::vector<uint64_t> VirtualDevice::getTransactionLatencies() {
 }
 
 void VirtualDevice::writeCommand(uint8_t *buf, int len) {
+	assert(buf);
+	assert(len > 0);
+	assert(!is_att_response(buf[0]) && !is_att_request(buf[0]) && buf[0] != ATT_OP_HANDLE_IND
+			&& buf[0] != ATT_OP_HANDLE_CNF);
+
 	write(buf, len);
 }
 
 void VirtualDevice::writeResponse(uint8_t *buf, int len) {
+	assert(buf);
+	assert(len > 0);
+	assert(is_att_response(buf[0]) || buf[0] == ATT_OP_HANDLE_CNF || buf[0] == ATT_OP_ERROR);
+
 	write(buf, len);
 }
 
 void VirtualDevice::writeTransaction(uint8_t *buf, int len, std::function<void(uint8_t*, int)> cb) {
+	assert(buf);
+	assert(len > 0);
+	assert(is_att_request(buf[0]) || buf[0] == ATT_OP_HANDLE_IND);
+
 	auto t = std::make_shared<transaction_t>();
 	t->buf.reset(new uint8_t[len]);
 	memcpy(t->buf.get(), buf, len);

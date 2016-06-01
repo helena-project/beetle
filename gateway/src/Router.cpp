@@ -741,7 +741,9 @@ int Router::routeHandleNotifyOrIndicate(uint8_t *buf, int len, device_t src) {
 	}
 	auto h = sourceDevice->handles[handle];
 
-	for (device_t dst : h->subscribers) {
+	std::set<device_t> &list = (opCode == ATT_OP_HANDLE_NOTIFY) ? h->subscribersNotify : h->subscribersIndicate;
+
+	for (device_t dst : list) {
 		if (beetle.devices.find(dst) == beetle.devices.end()) {
 			pwarn(std::to_string(dst) + " does not id a device");
 			continue;
@@ -758,10 +760,20 @@ int Router::routeHandleNotifyOrIndicate(uint8_t *buf, int len, device_t src) {
 
 			if (opCode == ATT_OP_HANDLE_NOTIFY) {
 				destinationDevice->writeCommand(buf, len);
-			} else if (opCode == ATT_OP_HANDLE_IND) {
+			} else {
+				if (debug_router) {
+					pdebug("routing indicate to " + std::to_string(dst));
+				}
+
 				destinationDevice->writeTransaction(buf, len, [dst](uint8_t *a, int b) {
-					if (debug_router) {
-						pdebug("got confirmation from " + std::to_string(dst));
+					if (a != NULL && b > 0) {
+						if (debug_router) {
+							pdebug("got confirmation from " + std::to_string(dst));
+						}
+					} else {
+						if (debug_router) {
+							pdebug("no confirmation from " + std::to_string(dst));
+						}
 					}
 				});
 			}
@@ -864,15 +876,45 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		auto charH = std::dynamic_pointer_cast<Characteristic>(destinationDevice->handles[proxyH->getCharHandle()]);
 		auto charAttrH = std::dynamic_pointer_cast<CharacteristicValue>(
 				destinationDevice->handles[charH->getAttrHandle()]);
-		if (buf[3] == 0) {
-			charAttrH->subscribers.erase(src);
+
+		uint8_t initialState = 0;
+		initialState += (charAttrH->subscribersNotify.empty()) ? 0 : 1;
+		initialState += (charAttrH->subscribersIndicate.empty()) ? 0 : 1 << 1;
+
+		if (buf[3] == 0) { // unsubscribe
+			if (debug_router) {
+				pdebug(std::to_string(src) + " unsubscribed to notifications from " + std::to_string(dst));
+			}
+			charAttrH->subscribersNotify.erase(src);
 		} else {
-			charAttrH->subscribers.insert(src);
+			if (debug_router) {
+				pdebug(std::to_string(src) + " subscribed to notifications from " + std::to_string(dst));
+			}
+			charAttrH->subscribersNotify.insert(src);
 		}
-		int numSubscribers = charAttrH->subscribers.size();
-		if (dst != BEETLE_RESERVED_DEVICE
-				&& ((numSubscribers == 0 && buf[3] == 0) || (numSubscribers == 1 && (buf[3] == 1 || buf[3] == 2)))) {
+
+		if (buf[4] == 0) { // unsubscribe
+			if (debug_router) {
+				pdebug(std::to_string(src) + " unsubscribed to indications from " + std::to_string(dst));
+			}
+			charAttrH->subscribersIndicate.erase(src);
+		} else {
+			if (debug_router) {
+				pdebug(std::to_string(src) + " subscribed to indications from " + std::to_string(dst));
+			}
+			charAttrH->subscribersIndicate.insert(src);
+		}
+
+		uint8_t newState = 0;
+		newState += (charAttrH->subscribersNotify.empty()) ? 0 : 1;
+		newState += (charAttrH->subscribersIndicate.empty()) ? 0 : 1 << 1;
+
+		if (dst != BEETLE_RESERVED_DEVICE && (newState != initialState)) {
 			*(uint16_t *) (buf + 1) = htobs(remoteHandle);
+
+			buf[3] = (newState & 1) ? 1 : 0;
+			buf[4] = (newState & (1 << 1)) ? 1 : 0;
+
 			if (opCode == ATT_OP_WRITE_CMD) {
 				destinationDevice->writeCommand(buf, len);
 			} else {
@@ -919,9 +961,8 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 			 * This works because characterisics are cached infinitely.
 			 */
 			uint8_t properties;
-			if (beetle.accessControl
-					&& beetle.accessControl->getCharAccessProperties(sourceDevice, destinationDevice, ch, properties)
-							== false) {
+			if (beetle.accessControl && beetle.accessControl->getCharAccessProperties(sourceDevice, destinationDevice,
+					ch, properties) == false) {
 				pwarn("access properties changed");
 				uint8_t err[ATT_ERROR_PDU_LEN];
 				pack_error_pdu(opCode, handle, ATT_ECODE_READ_NOT_PERM, err);

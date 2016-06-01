@@ -8,6 +8,7 @@
 #include "Handle.h"
 
 #include <bluetooth/bluetooth.h>
+#include <boost/smart_ptr/shared_array.hpp>
 #include <sstream>
 
 #include "ble/gatt.h"
@@ -80,9 +81,28 @@ void Handle::setUuid(UUID uuid_) {
 
 std::string Handle::str() const {
 	std::stringstream ss;
+	ss << handle << "\t" << uuid.str() << "\tsH=" << serviceHandle << "\tcH=" << charHandle;
+	if (cache.value != NULL) {
+		ss << "\tcache: [";
+		std::string sep = "";
+		for (int i = 0; i < cache.len; i++) {
+			ss << sep << (unsigned int) cache.value.get()[i];
+			sep = ",";
+		}
+		ss << ']';
+	}
+	return ss.str();
+}
+
+std::string CharacteristicValue::str() const {
+	std::set<device_t> subscribers;
+	subscribers.insert(subscribersNotify.cbegin(), subscribersNotify.cend());
+	subscribers.insert(subscribersIndicate.cbegin(), subscribersIndicate.cend());
+
+	std::stringstream ss;
 	ss << handle << "\t" << uuid.str() << "\tsH=" << serviceHandle << "\tcH=" << charHandle << "\tnSub="
 			<< subscribers.size();
-	if (subscribers.size() > 0) {
+	if (!subscribers.empty()) {
 		ss << "\tsub=[";
 		std::string sep = "";
 		for (device_t d : subscribers) {

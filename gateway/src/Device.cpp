@@ -73,31 +73,38 @@ int Device::getHighestHandle() {
 
 void Device::unsubscribeAll(device_t d) {
 	std::lock_guard<std::recursive_mutex> lg(handlesMutex);
-	std::set<uint16_t> charCccdsToWrite;
+	std::map<uint16_t,uint8_t> charCccdsToWrite;
 	for (auto &kv : handles) {
 		auto cvH = std::dynamic_pointer_cast<CharacteristicValue>(kv.second);
-		if (cvH && cvH->getUuid().isShort() && cvH->subscribers.find(d) != cvH->subscribers.end()) {
-			cvH->subscribers.erase(d);
+		if (cvH) {
+			uint8_t initialState = 0;
+			initialState += (cvH->subscribersNotify.empty()) ? 0 : 1;
+			initialState += (cvH->subscribersIndicate.empty()) ? 0 : 1 << 1;
 
-			// No need to forward unsubscribe
-			if (type == BEETLE_INTERNAL) {
-				continue;
-			}
+			cvH->subscribersNotify.erase(d);
+			cvH->subscribersIndicate.erase(d);
 
-			if (cvH->subscribers.size() == 0) {
-				charCccdsToWrite.insert(cvH->getCharHandle());
+			uint8_t newState = 0;
+			newState += (cvH->subscribersNotify.empty()) ? 0 : 1;
+			newState += (cvH->subscribersIndicate.empty()) ? 0 : 1 << 1;
+
+			if (type != BEETLE_INTERNAL && newState != initialState) {
+				charCccdsToWrite[cvH->getCharHandle()] = newState;
 			}
 		}
 		/*
 		 * Makes assumption that cccd follows attribute value
 		 */
 		auto cccdH = std::dynamic_pointer_cast<ClientCharCfg>(kv.second);
-		if (cccdH && charCccdsToWrite.find(cccdH->getCharHandle()) != charCccdsToWrite.end()) {
+		if (cccdH && type != BEETLE_INTERNAL && charCccdsToWrite.find(cccdH->getCharHandle()) != charCccdsToWrite.end()) {
 			int reqLen = 5;
 			uint8_t req[reqLen];
 			memset(req, 0, reqLen);
 			req[0] = ATT_OP_WRITE_REQ;
 			*(uint16_t *) (req + 1) = htobs(cccdH->getHandle());
+			uint16_t charHandle = cccdH->getCharHandle();
+			req[3] = (charCccdsToWrite[charHandle] & 1) ? 1 : 0;
+			req[4] = (charCccdsToWrite[charHandle] & (1 << 1)) ? 1 : 0;
 			writeTransaction(req, reqLen, [](uint8_t *resp, int respLen) {});
 		}
 	}

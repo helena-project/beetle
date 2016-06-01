@@ -63,7 +63,8 @@ public:
 	virtual std::string str() const;
 
 	CachedHandle cache;
-	std::set<device_t> subscribers;
+	std::set<device_t> subscribersNotify;
+	std::set<device_t> subscribersIndicate;
 protected:
 	uint16_t handle = 0;
 	UUID uuid;
@@ -90,7 +91,7 @@ public:
 };
 
 class CharacteristicValue: public Handle {
-	/* just for understandability */
+	std::string str() const;
 };
 
 class ClientCharCfg: public Handle {
