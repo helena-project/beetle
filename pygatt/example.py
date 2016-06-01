@@ -176,6 +176,19 @@ def runClient(client):
 					except ClientError, err:
 						print "Caught exception:", err
 
+		# subscription example
+		print "\\nSubscribing to notifications and indications:"
+		for service in client.services:
+			for characteristic in service.characteristics:
+				value = bytearray(2)
+				if ("n" in characteristic.permissions or 
+					"i" in characteristic.permissions):
+					def subscriptionCallback(value):
+						print "Data from", str(characteristic.uuid)
+						print ">>>", " ".join("%02x" % x for x in value)
+					characteristic.subscribe(subscriptionCallback)
+					print "Subscribed:", characteristic
+
 def main(args):
 	"""Set up and run an example HRM server and client"""
 

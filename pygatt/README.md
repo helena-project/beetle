@@ -20,3 +20,6 @@ services, characteristics, and descriptors.
 ## Usage
 See ```example.py``` for an implementation of a heart rate monitor that also 
 acts as a GATT client.
+
+## Notes
+This library is a work in progress.

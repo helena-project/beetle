@@ -1097,8 +1097,8 @@ class _ClientCharacteristic:
 		self._subscribeCallback = cb
 
 		value = bytearray(2)
-		value[0] = 1 if "i" in self.permissions else 0
-		value[1] = 1 if "n" in self.permissions else 0
+		value[0] = 1 if "n" in self.permissions else 0
+		value[1] = 1 if "i" in self.permissions else 0
 
 		self._cccd.write(value)
 
@@ -1149,7 +1149,7 @@ class _ClientCharacteristic:
 		req += _handle_to_bytearray(self._valHandleNo)
 		req += value
 
-		resp = client._new_transaction(req)
+		resp = self.client._new_transaction(req)
 		if resp is None:
 			raise ClientError("no response")
 		elif resp[0] == att.OP_WRITE_RESP:
@@ -1198,7 +1198,7 @@ class _ClientDescriptor:
 
 		req = bytearray([att.OP_READ_REQ])
 		req += _handle_to_bytearray(self._handleNo)
-		resp = client._new_transaction(req)
+		resp = self.client._new_transaction(req)
 		if resp is None:
 			raise ClientError("no response")
 		elif resp[0] == att.OP_READ_RESP:
@@ -1223,7 +1223,7 @@ class _ClientDescriptor:
 		req += _handle_to_bytearray(self._handleNo)
 		req += value
 
-		resp = client._new_transaction(req)
+		resp = self.client._new_transaction(req)
 		if resp is None:
 			raise ClientError("no response")
 		elif resp[0] == att.OP_WRITE_RESP:
