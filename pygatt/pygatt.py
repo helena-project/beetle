@@ -163,7 +163,7 @@ class ManagedSocket:
 
 			if self._server is not None:
 				resp = self._server._handle_packet(pdu)
-				if resp:
+				if resp is not None:
 					self._send(resp)
 			elif att.isRequest(op):
 				warnings.warn("server not supported")
@@ -175,7 +175,9 @@ class ManagedSocket:
 			or op == att.OP_HANDLE_NOTIFY or op == att.OP_HANDLE_IND):
 
 			if self._client is not None:
-				self._client._handle_packet(pdu)
+				resp = self._client._handle_packet(pdu)
+				if resp is not None:
+					self._send(resp)
 
 		else:
 			warnings.warn("unknown opcode: " + str(op))
@@ -413,7 +415,7 @@ class _ServerCharacteristic:
 		assert type(value) is bytearray
 		assert self._cccd != None
 		
-		cccdValue = self._cccd._read()
+		cccdValue = self._cccd.read()
 		if cccdValue is not None and cccdValue[0] == 1:
 			pdu = bytearray([att.OP_HANDLE_NOTIFY])
 			pdu += self._valHandle._get_handle_as_bytearray()
@@ -431,10 +433,10 @@ class _ServerCharacteristic:
 		assert type(value) is bytearray
 		assert self._cccd != None
 
-		cccdValue = self._cccd._read()
+		cccdValue = self._cccd.read()
 		if cccdValue is not None and cccdValue[1] == 1:
 			self.server._indicateQueue.append(cb)
-			pdu = bytearray([att.OP_HANDLE_NOTIFY])
+			pdu = bytearray([att.OP_HANDLE_IND])
 			pdu += self._valHandle._get_handle_as_bytearray()
 			pdu += value
 			self.server._socket._send(pdu)
@@ -1239,12 +1241,13 @@ class _ClientDescriptor:
 		return "Descriptor - %s" % str(self.uuid)
 
 class GattClient:
-	def __init__(self, socket, onDisconnect=None):
+	def __init__(self, socket, onDisconnect=None, timeout=60):
 		"""Make a GATT client
 
 		Args:
 			socket : a ManagedSocket instance
 			onDisconnect : callback on disconnect
+			timeout : number of seconds to wait for transaction response
 		"""
 		assert isinstance(socket, ManagedSocket)
 
@@ -1258,6 +1261,7 @@ class GattClient:
 		self._disconnected = False
 		self._onDisconnect = onDisconnect
 
+		self._timeout = timeout
 		self._transactionLock = threading.Lock()
 		self._responseEvent = threading.Event()
 		
@@ -1312,7 +1316,7 @@ class GattClient:
 
 			self._currentRequest = req
 			self._socket._send(req)
-			if self._responseEvent.wait(60):
+			if self._responseEvent.wait(self._timeout):
 				return self._currentResponse
 		finally:
 			self._currentRequest = None
@@ -1339,15 +1343,26 @@ class GattClient:
 			_, handleNo, value = att_pdu.parse_notify_indicate(pdu)
 
 			if handleNo not in self._valHandles:
+				if op == att.OP_HANDLE_NOTIFY:
+					warnings.warn("notification on unknown handle")
+				else:
+					warnings.warn("indication on unknown handle")
 				return None
 
 			charac = self._valHandles[handleNo]
 			if charac._subscribeCallback is not None:
-				charac._subscribeCallback(value)
+				try:
+					charac._subscribeCallback(value)
+				except ClientError, err:
+					warnings.warn(err)
+			else:
+				warnings.warn("unsolicited notification or indication")
 
 			if op == att.OP_HANDLE_IND:
 				return bytearray([att.OP_HANDLE_CNF])
-			
+			else:
+				return None
+
 		return None
 
 	def __discover_all_services(self):

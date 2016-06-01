@@ -65,9 +65,9 @@ def setUpServer(server):
 	valueDict = {
 		"cntlPt" : None,
 		"hrMeas" : 0,
-		"hrMeasSub" : False,
+		"hrMeasSubNotify" : False,
 		"battLvl" : 100,
-		"battLvlSub" : False,
+		"battLvlSubIndicate" : False,
 	}
 	
 	# Set up the heart rate service
@@ -79,6 +79,7 @@ def setUpServer(server):
  		valueDict[cntlPt] = val
 	cntlPtChar.setWriteCallback(cntlPtWriteCallback)
 
+	# Demonstrate notifications
 	hrMeasChar = server.addCharacteristic(HEART_RATE_MEASUREMENT_CHARAC_UUID, 
 		allowNotify=True)
 	def hrMeasReadCallback():
@@ -89,10 +90,10 @@ def setUpServer(server):
 	hrMeasChar.setReadCallback(hrMeasReadCallback)
 	def hrMeasSubCallback(value):
 		if value[0] == 1:
-			valueDict["hrMeasSub"] = True
+			valueDict["hrMeasSubNotify"] = True
 	hrMeasChar.setSubscribeCallback(hrMeasSubCallback)
 	def hrMeasUnsubCallback():
-		valueDict["hrMeasSub"] = False
+		valueDict["hrMeasSubNotify"] = False
 	hrMeasChar.setUnsubscribeCallback(hrMeasUnsubCallback)
 
 	maxHrChar = server.addCharacteristic(HEART_RATE_MAX_CHARAC_UUID, 
@@ -100,8 +101,10 @@ def setUpServer(server):
 
 	# Set up the battery service
 	server.addService(BATTERY_SERVICE_UUID)
+
+	# Demonstrate indications
 	battLvlChar = server.addCharacteristic(BATTERY_LEVEL_CHARAC_UUID, 
-		allowNotify=True)
+		allowIndicate=True)
 	def battLvlReadCallback():
 		# Be extra careful with bytearray(1) vs bytearray([...])
 		ret = bytearray(1)
@@ -109,15 +112,18 @@ def setUpServer(server):
 		return ret
 	battLvlChar.setReadCallback(battLvlReadCallback)
 	def battLvlSubCallback(value):
-		if value[0] == 1:
-			valueDict["battLvlSub"] = True
+		if value[1] == 1:
+			valueDict["battLvlSubIndicate"] = True
 	battLvlChar.setSubscribeCallback(battLvlSubCallback)
 	def battLvlUnsubCallback():
-		valueDict["battLvlSub"] = False
+		valueDict["battLvlSubIndicate"] = False
 	battLvlChar.setUnsubscribeCallback(battLvlUnsubCallback)
 
 	def serverDaemon(valueDict, hrMeasChar, battLvlChar):
 		"""Execute every second to trigger notifications"""
+		def battIndicateCallback():
+			print "Confirm", battLvlChar.uuid
+
 		battLvlPrev = None
 		while True:
 			time.sleep(1)
@@ -125,18 +131,20 @@ def setUpServer(server):
 			currHrMeas = valueDict["hrMeas"]
 			currBattLvl = valueDict["battLvl"]
 
-			if valueDict["hrMeasSub"]:
+			if valueDict["hrMeasSubNotify"]:
 				hrMeasChar.sendNotify(bytearray([currHrMeas & 0xFF]))
-			if valueDict["battLvlSub"]:
+
+			if valueDict["battLvlSubIndicate"]:
 				if battLvlPrev != currBattLvl:
-					hrMeasChar.sendNotify(bytearray([currBattLvl & 0xFF]))
-					battLvlPrev = valcurrBattLvl
+					battLvlChar.sendIndicate(bytearray([currBattLvl & 0xFF]), 
+						battIndicateCallback)
+					battLvlPrev = currBattLvl
 
 			# increment heart rate
 			valueDict["hrMeas"] = (currHrMeas + 1) % 0xFF
 
 			# with small prob, decrement battery
-			if random.random() > 0.98:
+			if random.random() > 0.9:
 				currBattLvl = (currBattLvl - 1) if currBattLvl > 0 else 100
 				valueDict["battLvl"] = currBattLvl
 
@@ -177,16 +185,20 @@ def runClient(client):
 						print "Caught exception:", err
 
 		# subscription example
-		print "\\nSubscribing to notifications and indications:"
+		print "\nSubscribing to notifications and indications:"
 		for service in client.services:
 			for characteristic in service.characteristics:
-				value = bytearray(2)
 				if ("n" in characteristic.permissions or 
 					"i" in characteristic.permissions):
-					def subscriptionCallback(value):
-						print "Data from", str(characteristic.uuid)
-						print ">>>", " ".join("%02x" % x for x in value)
-					characteristic.subscribe(subscriptionCallback)
+
+					def makeCallback(characteristic):
+						# This captures characteristic
+						def _callback(value):
+							print "Data from", characteristic.uuid
+							print ">>>", " ".join("%02x" % x for x in value)
+						return _callback
+					
+					characteristic.subscribe(makeCallback(characteristic))
 					print "Subscribed:", characteristic
 
 def main(args):
