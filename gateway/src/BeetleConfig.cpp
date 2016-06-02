@@ -51,6 +51,22 @@ BeetleConfig::BeetleConfig(std::string filename) {
 		}
 	}
 
+	if (config.count("staticTopo")) {
+		json scanConfig = config["staticTopo"];
+		for (json::iterator it = scanConfig.begin(); it != scanConfig.end(); ++it) {
+			if (it.key() == "enable") {
+				staticTopoEnabled = it.value();
+			} else if (it.key() == "mappings") {
+				staticTopoMappings = it.value();
+				if (staticTopoMappings != "" && !file_exists(staticTopoMappings)) {
+					throw ConfigException("file does not exist: " + staticTopoMappings);
+				}
+			} else {
+				throw ConfigException("unknown static topo param: " + it.key());
+			}
+		}
+	}
+
 	if (config.count("autoConnect")) {
 		json scanConfig = config["scan"];
 		for (json::iterator it = scanConfig.begin(); it != scanConfig.end(); ++it) {
