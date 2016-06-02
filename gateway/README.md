@@ -10,7 +10,7 @@ peripherals without needing to understand device specific functionality.
 ## Requirements
 - libboost-all-dev, libbluetooth-dev, libcppnetlib-dev, libasio-dev, openssl
 - for controller functionality, libcppnetlib may need to be compiled and 
- manually: https://github.com/cpp-netlib/cpp-netlib.git
+ manually installed: https://github.com/cpp-netlib/cpp-netlib.git
 
 ## To build and run
 1. clone and import the project into Eclipse (optional)
