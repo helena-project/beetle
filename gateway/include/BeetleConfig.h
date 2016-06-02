@@ -49,7 +49,7 @@ public:
 	 */
 	bool autoConnectAll = false;
 	double autoConnectMinBackoff = 60.0;
-	std::string autoConnectBlacklist = "";
+	std::string autoConnectWhitelist = "";
 
 	/*
 	 * TCP settings

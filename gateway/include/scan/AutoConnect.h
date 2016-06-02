@@ -32,7 +32,7 @@ struct ci_less : std::binary_function<std::string, std::string, bool> {
 
 class AutoConnect {
 public:
-	AutoConnect(Beetle &beetle, bool connectAll = false, double minBackoff = 60.0, std::string blacklist = "");
+	AutoConnect(Beetle &beetle, bool connectAll = false, double minBackoff = 60.0, std::string whitelist = "");
 	virtual ~AutoConnect();
 
 	/*
@@ -62,7 +62,7 @@ private:
 	/*
 	 * Bluetooth addresses to ignore
 	 */
-	std::set<std::string, ci_less> blacklist;
+	std::set<std::string, ci_less> whitelist;
 
 	/*
 	 * Only one connection attempt at a time

@@ -58,10 +58,10 @@ BeetleConfig::BeetleConfig(std::string filename) {
 				autoConnectAll = it.value();
 			} else if (it.key() == "minBackoff") {
 				autoConnectMinBackoff = it.value();
-			} else if (it.key() == "blacklist") {
-				autoConnectBlacklist = it.value();
-				if (autoConnectBlacklist != "" && !file_exists(autoConnectBlacklist)) {
-					throw ConfigException("file does not exist: " + autoConnectBlacklist);
+			} else if (it.key() == "whitelist") {
+				autoConnectWhitelist = it.value();
+				if (autoConnectWhitelist != "" && !file_exists(autoConnectWhitelist)) {
+					throw ConfigException("file does not exist: " + autoConnectWhitelist);
 				}
 			} else {
 				throw ConfigException("unknown autoConnect param: " + it.key());
@@ -184,7 +184,7 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	json autoConnect;
 	autoConnect["all"] = autoConnectAll;
 	autoConnect["minBackoff"] = autoConnectMinBackoff;
-	autoConnect["blacklist"] = autoConnectBlacklist;
+	autoConnect["whitelist"] = autoConnectWhitelist;
 	config["autoConnect"] = autoConnect;
 
 	json tcp;

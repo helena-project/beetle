@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
 		if (btlConfig.scanEnabled) {
 			scanner = std::make_unique<Scanner>();
 			autoConnect = std::make_unique<AutoConnect>(btl, autoConnectAll || btlConfig.autoConnectAll,
-					btlConfig.autoConnectMinBackoff, btlConfig.autoConnectBlacklist);
+					btlConfig.autoConnectMinBackoff, btlConfig.autoConnectWhitelist);
 			scanner->registerHandler(cli.getDiscoveryHander());
 			scanner->registerHandler(autoConnect->getDiscoveryHandler());
 			scanner->start();

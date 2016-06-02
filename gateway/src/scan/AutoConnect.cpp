@@ -26,16 +26,16 @@
 #include "util/file.h"
 #include "util/trim.h"
 
-AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, std::string autoConnectBlacklist) :
+AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, std::string autoConnectWhitelist) :
 		beetle { beetle } {
 	connectAll = connectAll_;
 	minBackoff = minBackoff_;
 
-	if (autoConnectBlacklist != "") {
-		if (!file_exists(autoConnectBlacklist)) {
-			throw std::invalid_argument("blacklist file does not exist - " + autoConnectBlacklist);
+	if (autoConnectWhitelist != "") {
+		if (!file_exists(autoConnectWhitelist)) {
+			throw std::invalid_argument("whitelist file does not exist - " + autoConnectWhitelist);
 		} else {
-			std::ifstream ifs(autoConnectBlacklist);
+			std::ifstream ifs(autoConnectWhitelist);
 			std::string line;
 			while (std::getline(ifs, line)) {
 				std::string addr = trimmed(line);
@@ -44,9 +44,9 @@ AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, s
 				}
 
 				if (is_bd_addr(addr)) {
-					blacklist.insert(addr);
+					whitelist.insert(addr);
 				} else {
-					throw std::domain_error("invalid address in blacklist file - " + addr);
+					throw std::domain_error("invalid address in whitelist file - " + addr);
 				}
 			}
 		}
@@ -80,9 +80,9 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 		std::unique_lock<std::mutex> connectLk(connectMutex, std::try_to_lock);
 		if (connectLk.owns_lock()) {
 			/*
-			 * Consult blacklist
+			 * Consult whitelist
 			 */
-			if (!connectAll || blacklist.find(addr) != blacklist.end()) {
+			if (!connectAll && whitelist.find(addr) == whitelist.end()) {
 				return;
 			}
 
