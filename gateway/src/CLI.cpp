@@ -40,10 +40,23 @@
 #include "hat/HandleAllocationTable.h"
 #include "Router.h"
 
-CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery, bool daemon) :
+#define O_STREAM ((ostream) ? *ostream : std::cout)
+#define I_STREAM ((istream) ? *istream : std::cin)
+
+CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery,
+		std::istream *istream_, std::ostream *ostream_, bool useDaemon_) :
 		beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), inputDaemon() {
 	aliasCounter = 0;
-	useDaemon = daemon;
+	useDaemon = useDaemon_;
+
+	if (istream_) {
+		istream.reset(istream_);
+	}
+
+	if (ostream_) {
+		ostream.reset(ostream_);
+	}
+
 	if (useDaemon) {
 		inputDaemon = std::thread(&CLI::cmdLineDaemon, this);
 	}
@@ -97,16 +110,16 @@ void CLI::join() {
 	}
 }
 
-static void printUsage(std::string usage) {
-	std::cout << "Usage: " << usage << std::endl;
+void CLI::printUsage(std::string usage) {
+	O_STREAM << "Usage: " << usage << std::endl;
 }
 
-static void printUsageError(std::string error) {
-	std::cout << "Error: " << error << std::endl;
+void CLI::printUsageError(std::string error) {
+	O_STREAM << "Error: " << error << std::endl;
 }
 
-static void printMessage(std::string message) {
-	std::cout << "  " << message << std::endl;
+void CLI::printMessage(std::string message) {
+	O_STREAM << "  " << message << std::endl;
 }
 
 void CLI::cmdLineDaemon() {
@@ -165,15 +178,15 @@ void CLI::cmdLineDaemon() {
 
 bool CLI::getCommand(std::vector<std::string> &ret) {
 	assert(ret.empty());
-	std::cout << "> ";
+	O_STREAM << "> ";
 	std::string line;
-	getline(std::cin, line);
+	getline(I_STREAM, line);
 	transform(line.begin(), line.end(), line.begin(), ::tolower);
-	if (std::cin.eof()) {
-		std::cout << "Exiting..." << std::endl;
+	if ((I_STREAM).eof()) {
+		O_STREAM << "Exiting..." << std::endl;
 		return false;
-	} else if (std::cin.bad()) {
-		throw "Error";
+	} else if ((I_STREAM).bad()) {
+		throw std::runtime_error("IO exception");
 	} else {
 		boost::char_separator<char> sep { " " };
 		boost::tokenizer<boost::char_separator<char>> tokenizer { line, sep };
@@ -468,7 +481,7 @@ void CLI::doMap(const std::vector<std::string>& cmd) {
 			from = std::strtol(cmd[1].c_str(), NULL, 10);
 			to = std::strtol(cmd[2].c_str(), NULL, 10);
 		} catch (std::invalid_argument &e) {
-			std::cout << "caught invalid argument exception: " << e.what() << std::endl;
+			O_STREAM << "caught invalid argument exception: " << e.what() << std::endl;
 			return;
 		}
 
@@ -489,7 +502,7 @@ void CLI::doUnmap(const std::vector<std::string>& cmd) {
 			from = std::stol(cmd[1].c_str());
 			to = std::stol(cmd[2].c_str());
 		} catch (std::invalid_argument &e) {
-			std::cout << "caught invalid argument exception: " << e.what() << std::endl;
+			O_STREAM << "caught invalid argument exception: " << e.what() << std::endl;
 			return;
 		}
 
@@ -638,17 +651,17 @@ void CLI::doDumpData(const std::vector<std::string>& cmd) {
 			if (vd) {
 				auto latencies = vd->getTransactionLatencies();
 				if (latencies.size() > 0) {
-					std::cout << vd->getId() << "\t";
+					O_STREAM << vd->getId() << "\t";
 					for (uint64_t latency : latencies) {
-						std::cout << delim << std::fixed << latency;
+						O_STREAM << delim << std::fixed << latency;
 						delim = ",";
 					}
-					std::cout << std::endl;
+					O_STREAM << std::endl;
 				}
 			}
 		}
 	} else if (cmd[1] == "config") {
-		std::cout << beetleConfig.str() << std::endl;
+		O_STREAM << beetleConfig.str() << std::endl;
 	} else {
 		printUsageError(cmd[1] + " not recognized");
 	}
