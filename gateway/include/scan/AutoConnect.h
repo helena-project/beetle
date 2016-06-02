@@ -51,23 +51,17 @@ private:
 	 */
 	double minBackoff;
 
-	struct bdaddr_t_less : std::binary_function<bdaddr_t, bdaddr_t, bool> {
-		bool operator() (const bdaddr_t &a, const bdaddr_t &b) const {
-			return memcmp(a.b, b.b, sizeof(bdaddr_t));
-		}
-	};
-
 	/*
 	 * Bluetooth addresses to ignore
 	 */
-	std::set<bdaddr_t, bdaddr_t_less> whitelist;
+	std::set<std::string> whitelist;
 
 	/*
 	 * Only one connection attempt at a time
 	 */
 	std::mutex connectMutex;
 
-	std::map<bdaddr_t, time_t, bdaddr_t_less> lastAttempt;
+	std::map<std::string, time_t> lastAttempt;
 	std::mutex lastAttemptMutex;
 };
 

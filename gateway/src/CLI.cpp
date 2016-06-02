@@ -72,7 +72,9 @@ DiscoveryHandler CLI::getDiscoveryHander() {
 	/*
 	 * All this handler does is add the device to the list of discovered devices.
 	 */
-	return [this](std::string addr, peripheral_info_t info) {
+	return [this](peripheral_info_t info) {
+		std::string addr = ba2str_cpp(info.bdaddr);
+
 		std::lock_guard<std::mutex> lg(discoveredMutex);
 		if (discovered.find(addr) == discovered.end()) {
 			discovered_t entry;

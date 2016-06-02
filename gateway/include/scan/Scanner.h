@@ -40,7 +40,7 @@ typedef struct {
 /*
  * Callback upon discovery.
  */
-typedef std::function<void(std::string addr, peripheral_info_t info)> DiscoveryHandler;
+typedef std::function<void(peripheral_info_t info)> DiscoveryHandler;
 
 class Scanner {
 public:

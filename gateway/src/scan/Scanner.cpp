@@ -185,7 +185,7 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 					/*
 					 * Not quite memory safe on exit
 					 */
-					cb(addr, peripheral_info_t { name, info->bdaddr, addrType });
+					cb(peripheral_info_t { name, info->bdaddr, addrType });
 				} else {
 					running->clear();
 					break;

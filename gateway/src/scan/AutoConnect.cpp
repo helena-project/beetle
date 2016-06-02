@@ -54,7 +54,7 @@ AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, s
 			if (is_bd_addr(addr)) {
 				bdaddr_t bdaddr;
 				str2ba(addr.c_str(), &bdaddr);
-				whitelist.insert(bdaddr);
+				whitelist.insert(ba2str_cpp(bdaddr));
 				std::cout << "  " << ba2str_cpp(bdaddr) << std::endl;
 			} else {
 				throw ParseExecption("invalid address in whitelist file - " + line);
@@ -75,7 +75,7 @@ std::function<void()> AutoConnect::getDaemon() {
 		for (auto it = lastAttempt.cbegin(); it != lastAttempt.cend();) {
 			if (difftime(now, it->second) > minBackoff) {
 				if (debug_scan) {
-					pdebug("can try connecting to '" + ba2str_cpp(it->first) + "' again");
+					pdebug("can try connecting to '" + it->first + "' again");
 				}
 				lastAttempt.erase(it++);
 			} else {
@@ -86,13 +86,15 @@ std::function<void()> AutoConnect::getDaemon() {
 }
 
 DiscoveryHandler AutoConnect::getDiscoveryHandler() {
-	return [this](std::string addr, peripheral_info_t info) {
+	return [this](peripheral_info_t info) {
+		std::string addr = ba2str_cpp(info.bdaddr);
+
 		std::unique_lock<std::mutex> connectLk(connectMutex, std::try_to_lock);
 		if (connectLk.owns_lock()) {
 			/*
 			 * Consult whitelist
 			 */
-			if (!connectAll && whitelist.find(info.bdaddr) == whitelist.end()) {
+			if (!connectAll && whitelist.find(addr) == whitelist.end()) {
 				return;
 			}
 
@@ -100,11 +102,11 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 			 * Have we tried to connect recently?
 			 */
 			std::unique_lock<std::mutex> lastAttemptLk(lastAttemptMutex);
-			if (lastAttempt.find(info.bdaddr) != lastAttempt.end()) {
+			if (lastAttempt.find(addr) != lastAttempt.end()) {
 				return;
 			} else {
 				time_t now = time(NULL);
-				lastAttempt[info.bdaddr] = now;
+				lastAttempt[addr] = now;
 				lastAttemptLk.unlock();
 			}
 
