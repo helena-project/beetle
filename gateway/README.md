@@ -39,7 +39,7 @@ Indicate that the client is running a GATT server.
 Connect with the gateway protocol, where name is the name of the gateway.
 
 * ```device id``` 
-Connect the device with local id of the device at the gateway.
+Connect the device with local id at the remote gateway.
 
 ## Examples directory
 This contains sample whitelist and static mapping configuration files.
