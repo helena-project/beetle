@@ -27,8 +27,6 @@
 #include "sync/Semaphore.h"
 #include "UUID.h"
 
-static const int maxTransactionLatencies = 20;
-
 static uint64_t getCurrentTimeMillis(void) {
 	struct timespec spec;
 	clock_gettime(CLOCK_REALTIME, &spec);
@@ -142,7 +140,7 @@ int VirtualDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&res
 		sema->notify();
 	});
 
-	if (sema->try_wait(10)) {
+	if (sema->try_wait(BLOCKING_TRANSACTION_TIMEOUT)) {
 		int respLen = *respLenPtr;
 		if (respPtr->get() != NULL && respLen > 0) {
 			resp = new uint8_t[respLen];
@@ -165,6 +163,19 @@ int VirtualDevice::getMTU() {
 	return mtu;
 }
 
+bool VirtualDevice::isLive() {
+	time_t now = time(NULL);
+
+	std::lock_guard<std::mutex> lk(transactionMutex);
+	if (currentTransaction) {
+		if (difftime(now, currentTransaction->time) > ASYNC_TRANSACTION_TIMEOUT) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 	std::unique_lock<std::mutex> lk(transactionMutex);
 
@@ -178,7 +189,7 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 		ss << " len:\t" << std::fixed << elapsed;
 		pdebug(ss.str());
 
-		if (transactionLatencies.size() < maxTransactionLatencies) {
+		if (transactionLatencies.size() < MAX_TRANSACTION_LATENCIES) {
 			transactionLatencies.push_back(elapsed);
 		} else {
 			pwarn("max latency log capacity reached");
@@ -190,16 +201,25 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 		return;
 	}
 
-	if (buf[0] == ATT_OP_ERROR) {
+	uint8_t reqOpcode = currentTransaction->buf.get()[0];
+	uint8_t respOpcode = buf[0];
+
+	if (respOpcode == ATT_OP_ERROR) {
 		if (len != ATT_ERROR_PDU_LEN) {
 			pwarn("invalid error pdu");
 			return;
 		}
 
-		if (buf[1] != currentTransaction->buf.get()[0]) {
+		if (buf[1] != reqOpcode) {
 			pwarn("unmatched error: " + std::to_string(buf[1]));
 			return;
 		}
+	} else if (respOpcode == ATT_OP_HANDLE_CNF && reqOpcode != ATT_OP_HANDLE_IND) {
+		pwarn("unmatched confirmation");
+		return;
+	} else if (respOpcode - 1 != reqOpcode) {
+		pwarn("unmatched transaction: " + std::to_string(respOpcode));
+		return;
 	}
 
 	auto t = currentTransaction;

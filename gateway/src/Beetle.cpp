@@ -9,6 +9,7 @@
 #include "controller/AccessControl.h"
 #include "Debug.h"
 #include "device/BeetleInternal.h"
+#include "device/VirtualDevice.h"
 #include "hat/HandleAllocationTable.h"
 #include "Router.h"
 
@@ -191,6 +192,24 @@ void Beetle::registerRemoveDeviceHandler(RemoveDeviceHandler h) {
 
 void Beetle::registerUpdateDeviceHandler(UpdateDeviceHandler h) {
 	updateHandlers.push_back(h);
+}
+
+std::function<void()> Beetle::getDaemon() {
+	return [this] {
+		boost::shared_lock<boost::shared_mutex> devicesLk(devicesMutex);
+
+		for (auto &kv : devices) {
+			auto vd = std::dynamic_pointer_cast<VirtualDevice>(kv.second);
+			if (vd && !vd->isLive()) {
+				if (debug) {
+					std::stringstream ss;
+					ss << "timed out: " << vd->getId();
+					pdebug(ss.str());
+				}
+				removeDevice(vd->getId());
+			}
+		}
+	};
 }
 
 void Beetle::setAccessControl(std::shared_ptr<AccessControl> ac) {

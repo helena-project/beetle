@@ -91,6 +91,11 @@ public:
 	std::vector<UpdateDeviceHandler> updateHandlers;
 
 	/*
+	 * Return a daemon to timeout devices.
+	 */
+	std::function<void()> getDaemon();
+
+	/*
 	 * Global map of all devices at this instance.
 	 */
 	std::map<device_t, std::shared_ptr<Device>> devices;

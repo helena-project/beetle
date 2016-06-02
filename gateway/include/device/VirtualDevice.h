@@ -40,7 +40,13 @@ public:
 
 	int getMTU();
 
+	bool isLive();
+
+	/*
+	 * Get the latencies in ms for the latest transactions.
+	 */
 	std::vector<uint64_t> getTransactionLatencies();
+
 protected:
 	/*
 	 * Cannot instantiate a VirtualDevice
@@ -70,6 +76,7 @@ private:
 	/*
 	 * Number of unfinished client transactions. Only ever accessed
 	 * by the thread that calls readHandler().
+	 *
 	 * TODO: use this to detect misbehaving clients
 	 */
 	int unfinishedClientTransactions;
@@ -81,6 +88,7 @@ private:
 	typedef struct {
 		boost::shared_array<uint8_t> buf;
 		int len;
+		time_t time;
 		std::function<void(uint8_t*, int)> cb;
 	} transaction_t;
 
@@ -94,6 +102,16 @@ private:
 	 * Helper methods
 	 */
 	void discoverNetworkServices(UUID serviceUuid);
+
+
+	/* Timeout transaction and shutdown the device. */
+	static constexpr int ASYNC_TRANSACTION_TIMEOUT = 60;
+
+	/* Timeout blocking transaction, but not shutdown. */
+	static constexpr int BLOCKING_TRANSACTION_TIMEOUT = 5;
+
+	/* Number of datapoints to buffer. */
+	static constexpr int MAX_TRANSACTION_LATENCIES = 20;
 };
 
 #endif /* VIRTUALDEVICE_H_ */

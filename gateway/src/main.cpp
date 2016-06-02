@@ -209,6 +209,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		TimedDaemon timers;
+		timers.repeat(btl.getDaemon(), 5);
 		timers.repeat(cli.getDaemon(), 5);
 		if (autoConnect) {
 			timers.repeat(autoConnect->getDaemon(), 5);
