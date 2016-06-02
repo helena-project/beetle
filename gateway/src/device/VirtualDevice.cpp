@@ -114,6 +114,7 @@ void VirtualDevice::writeTransaction(uint8_t *buf, int len, std::function<void(u
 	memcpy(t->buf.get(), buf, len);
 	t->len = len;
 	t->cb = cb;
+	t->time = time(NULL);
 
 	std::lock_guard<std::mutex> lg(transactionMutex);
 	if (currentTransaction == NULL) {
@@ -226,6 +227,7 @@ void VirtualDevice::handleTransactionResponse(uint8_t *buf, int len) {
 	if (pendingTransactions.size() > 0) {
 		while (pendingTransactions.size() > 0) {
 			currentTransaction = pendingTransactions.front();
+			currentTransaction->time = time(NULL);
 			pendingTransactions.pop();
 			if(!write(currentTransaction->buf.get(), currentTransaction->len)) {
 				currentTransaction->cb(NULL, -1);
