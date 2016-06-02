@@ -54,9 +54,11 @@ bool HCI::setConnectionInterval(uint16_t hciHandle, uint16_t minInterval, uint16
 		uint16_t supervisionTimeout, int to) {
 	std::lock_guard<std::mutex> lg(m);
 	if (hci_le_conn_update(dd, hciHandle, minInterval, maxInterval, latency, supervisionTimeout, to) < 0) {
-		std::stringstream ss;
-		ss << "error setting HCI connection interval : " << strerror(errno);
-		pwarn(ss.str());
+		if (debug) {
+			std::stringstream ss;
+			ss << "error setting HCI connection interval : " << strerror(errno);
+			pwarn(ss.str());
+		}
 		return false;
 	}
 	return true;

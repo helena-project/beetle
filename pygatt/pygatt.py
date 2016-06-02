@@ -1365,9 +1365,7 @@ class GattClient:
 
 		return None
 
-	def __discover_all_services(self):
-		startHandle = 1
-		endHandle = 0xFFFF
+	def __discover_services(self, startHandle=1, endHandle = 0xFFFF):
 		primSvcUuid = UUID(gatt.PRIM_SVC_UUID)
 
 		services = []
@@ -1413,6 +1411,10 @@ class GattClient:
 			else:
 				raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
 
+		return services, serviceHandles
+
+	def __discover_all_services(self):
+		services, serviceHandles = self.__discover_services()
 		self._serviceHandles = serviceHandles
 		self.services = services
 		return services

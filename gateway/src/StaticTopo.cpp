@@ -2,7 +2,7 @@
  * StaticTopo.cpp
  *
  *  Created on: Jun 1, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #include "StaticTopo.h"
@@ -110,11 +110,13 @@ UpdateDeviceHandler StaticTopo::getUpdateDeviceHandler() {
 			std::string otherName = kv.second->getName();
 
 			auto otherEntry = staticMappings.find(otherName);
-			if (otherEntry != staticMappings.end() && otherEntry->second.find(deviceName) != otherEntry->second.end()) {
+			if (otherEntry != staticMappings.end() &&
+					otherEntry->second.find(deviceName) != otherEntry->second.end()) {
 				mapFromIds.insert(kv.first);
 			}
 
-			if (thisEntry != staticMappings.end() && thisEntry->second.find(otherName) != thisEntry->second.end()) {
+			if (thisEntry != staticMappings.end() &&
+					thisEntry->second.find(otherName) != thisEntry->second.end()) {
 				mapToIds.insert(kv.first);
 			}
 		}

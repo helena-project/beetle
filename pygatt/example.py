@@ -35,8 +35,8 @@ def getArguments():
 		help="hostname of the Beetle server")
 	parser.add_argument("--port", "-p", type=int, default=3002, 
 		help="port the Beetle server is runnng on")
-	parser.add_argument("--debug", "-d", action='store_true', 
-		help="print debugging")
+	parser.add_argument("--name", "-n", type=str, default="Virtual HRM", 
+		help="port the Beetle server is runnng on")
 
 	return parser.parse_args()
 
@@ -47,8 +47,6 @@ def printBox(s):
 	print s
 	print "=" * len(s)
 
-DEVICE_NAME = "Virtual HRM"
-
 HEART_RATE_SERVICE_UUID = 0x180D
 HEART_RATE_CONTROL_POINT_CHARAC_UUID = 0x2A39
 HEART_RATE_MEASUREMENT_CHARAC_UUID = 0x2A37
@@ -57,9 +55,9 @@ HEART_RATE_MAX_CHARAC_UUID = 0x2A8D
 BATTERY_SERVICE_UUID = 0x180F
 BATTERY_LEVEL_CHARAC_UUID = 0x2A19
 
-def setUpServer(server):
+def setUpServer(server, deviceName):
 	"""Set up services and characteristic for the server."""
-	server.addGapService(DEVICE_NAME)
+	server.addGapService(deviceName)
 
 	# TODO: Python 2.X limits assignments inside closures...
 	valueDict = {
@@ -214,14 +212,14 @@ def main(args):
 	client = GattClient(managedSocket)
 
 	# Setup the services and characteristics
-	setUpServer(server)
+	setUpServer(server, args.name)
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s = ssl.wrap_socket(s, cert_reqs=ssl.CERT_NONE)	# TODO fix this
 	s.connect((args.host, args.port))
 
 	# Send initial connection parameters.
-	appParams = ["client " + DEVICE_NAME, "server true"]
+	appParams = ["client " + args.name, "server true"]
 
 	print ""
 	printBox("Connection request")

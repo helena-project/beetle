@@ -139,6 +139,7 @@ bool Beetle::mapDevices(device_t from, device_t to, std::string &err) {
 		return false;
 	} else {
 		handle_range_t range = toD->hat->reserve(from);
+		beetleDevice->informServicesChanged(range, to);
 		if (debug) {
 			pdebug("reserved " + range.str() + " at device " + std::to_string(to));
 		}
@@ -172,6 +173,7 @@ bool Beetle::unmapDevices(device_t from, device_t to, std::string &err) {
 
 	std::lock_guard<std::mutex> hatLg(toD->hatMutex);
 	handle_range_t range = toD->hat->free(from);
+	beetleDevice->informServicesChanged(range, to);
 	if (debug) {
 		pdebug("freed " + range.str() + " at device " + std::to_string(to));
 	}

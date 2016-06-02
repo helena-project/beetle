@@ -980,40 +980,40 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 			destinationDevice->writeCommand(buf, len);
 		} else {
 			destinationDevice->writeTransaction(buf, len,
-					[this, opCode, src, dst, handle, remoteHandle](uint8_t *resp, int respLen) {
-						/*
-						 * Lock devices
-						 */
-						boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
+				[this, opCode, src, dst, handle, remoteHandle](uint8_t *resp, int respLen) {
+				/*
+				 * Lock devices
+				 */
+				boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 
-						if (beetle.devices.find(src) == beetle.devices.end()) {
-							pwarn(std::to_string(src) + " does not id a device");
-							return;
-						}
+				if (beetle.devices.find(src) == beetle.devices.end()) {
+					pwarn(std::to_string(src) + " does not id a device");
+					return;
+				}
 
-						if (resp == NULL || respLen <= 0) {
-							uint8_t err[ATT_ERROR_PDU_LEN];
-							pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);
-							beetle.devices[src]->writeResponse(err, ATT_ERROR_PDU_LEN);
+				if (resp == NULL || respLen <= 0) {
+					uint8_t err[ATT_ERROR_PDU_LEN];
+					pack_error_pdu(opCode, handle, ATT_ECODE_UNLIKELY, err);
+					beetle.devices[src]->writeResponse(err, ATT_ERROR_PDU_LEN);
+				} else {
+					if (resp[0] == ATT_OP_READ_RESP) {
+						if (beetle.devices.find(dst) == beetle.devices.end()) {
+							pwarn(std::to_string(dst) + " does not id a device");
 						} else {
-							if (resp[0] == ATT_OP_READ_RESP) {
-								if (beetle.devices.find(dst) == beetle.devices.end()) {
-									pwarn(std::to_string(dst) + " does not id a device");
-								} else {
-									std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
-									std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
-									auto proxyH = destinationDevice->handles[remoteHandle];
-									proxyH->cache.cachedSet.clear();
-									int tmpLen = respLen - 1;
-									auto tmpVal = boost::shared_array<uint8_t>(new uint8_t[tmpLen]);
-									memcpy(tmpVal.get(), resp + 1, tmpLen);
-									proxyH->cache.set(tmpVal, tmpLen);
-									proxyH->cache.cachedSet.insert(src);
-								}
-							}
-							beetle.devices[src]->writeResponse(resp, respLen);
+							std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
+							std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
+							auto proxyH = destinationDevice->handles[remoteHandle];
+							proxyH->cache.cachedSet.clear();
+							int tmpLen = respLen - 1;
+							auto tmpVal = boost::shared_array<uint8_t>(new uint8_t[tmpLen]);
+							memcpy(tmpVal.get(), resp + 1, tmpLen);
+							proxyH->cache.set(tmpVal, tmpLen);
+							proxyH->cache.cachedSet.insert(src);
 						}
-					});
+					}
+					beetle.devices[src]->writeResponse(resp, respLen);
+				}
+			});
 		}
 	}
 	return 0;

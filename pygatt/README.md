@@ -22,4 +22,5 @@ See ```example.py``` for an implementation of a heart rate monitor that also
 acts as a GATT client.
 
 ## Notes
-This library is a work in progress.
+This library is a work in progress. Read, notify, indicate are tested and 
+working. See the example application for details.

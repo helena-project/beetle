@@ -2,7 +2,7 @@
  * StaticTopo.h
  *
  *  Created on: Jun 1, 2016
- *      Author: james
+ *      Author: James Hong
  */
 
 #ifndef STATICTOPO_H_
@@ -17,7 +17,8 @@
 class StaticTopo {
 public:
 	/*
-	 * Read static mappings from file.
+	 * Read static mappings from file. Beetle will attempt to map
+	 * these device pairs when they become available.
 	 */
 	StaticTopo(Beetle &beetle, std::string staticMappingsFile);
 	virtual ~StaticTopo();

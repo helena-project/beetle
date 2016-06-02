@@ -29,13 +29,20 @@ arguments prints usage instructions.
 Parameters are key value pairs sent at the beginning of the connection in 
 ASCII text. 
 
-* ```client name``` *(connect with the client protocol, where name is the 
-name of the client)*
-* ```server bool``` *(where bool is whether the client is running a GATT 
-server)*
-* ```gateway name``` *(connect with the gateway protocol, where name is the 
-name of the gateway)*
-* ```device id``` *(where id is the id of the device at the gateway)*
+* ```client name``` 
+Connect with the client protocol, where name is the name of the client.
+
+* ```server true``` 
+Indicate that the client is running a GATT server.
+
+* ```gateway name``` 
+Connect with the gateway protocol, where name is the name of the gateway.
+
+* ```device id``` 
+Connect the device with local id of the device at the gateway.
+
+## Examples directory
+This contains sample whitelist and static mapping configuration files.
 
 ## Certs directory
 This contains default certificates for testing. Needed for openssl to work.

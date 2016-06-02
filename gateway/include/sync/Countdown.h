@@ -51,6 +51,23 @@ public:
 			cv.wait(ul);
 		}
 	};
+
+	/*
+	 * Try waiting for count to reach 0.
+	 */
+	int try_wait(int seconds) {
+		auto limit = std::chrono::system_clock::now();
+		limit += std::chrono::seconds(seconds);
+
+		std::unique_lock<std::mutex> ul(m);
+		while (count > 0) {
+			if (cv.wait_until(ul, limit) == std::cv_status::timeout) {
+				break;
+			}
+		}
+		return count;
+	};
+
 private:
 	bool waited;
 	int count;

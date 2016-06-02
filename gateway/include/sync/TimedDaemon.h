@@ -15,6 +15,10 @@
 #include <thread>
 #include <vector>
 
+/*
+ * Starts a background thread that runs registered daemon functions
+ * periodically.
+ */
 class TimedDaemon {
 public:
 	TimedDaemon() : t() {
