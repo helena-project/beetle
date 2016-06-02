@@ -40,8 +40,7 @@
 #include "hat/HandleAllocationTable.h"
 #include "Router.h"
 
-CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery,
-		bool daemon) :
+CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery, bool daemon) :
 		beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), inputDaemon() {
 	aliasCounter = 0;
 	useDaemon = daemon;

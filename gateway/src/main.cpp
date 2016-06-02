@@ -26,6 +26,7 @@
 #include "device/socket/tcp/TCPServerProxy.h"
 #include "HCI.h"
 #include "ipc/UnixDomainSocketServer.h"
+#include "StaticTopo.h"
 #include "scan/AutoConnect.h"
 #include "scan/Scanner.h"
 #include "sync/TimedDaemon.h"
@@ -75,6 +76,7 @@ int main(int argc, char *argv[]) {
 	bool enableController = false;
 	bool enableTcp = false;
 	bool enableIpc = false;
+	bool enableStaticTopo = false;
 
 	namespace po = boost::program_options;
 	po::options_description desc("Options");
@@ -87,10 +89,11 @@ int main(int argc, char *argv[]) {
 			("tcp,t", "Enable tcp sockets, overriding config if necessary.")
 			("ipc,i", "Enable ipc sockets, overriding config if necessary.")
 			("controller,C", "Enable controller, overriding config if necessary.")
-			("connect-all,a", "Connect to all nearby BLE peripherals")
+			("static-topo,s", "Enable static mappings, overriding config if necessary.")
+			("connect-all,a", "Connect to all nearby BLE peripherals.")
 			("reset-hci", po::value<bool>(&resetHci)
 					->default_value(true),
-					"Set hci down/up at start-up")
+					"Set hci down/up at start-up.")
 			("debug,d", "")
 			("debug-all,D", "");
 
@@ -123,6 +126,9 @@ int main(int argc, char *argv[]) {
 		if (vm.count("controller")) {
 			enableController = true;
 		}
+		if (vm.count("static-topo")) {
+			enableStaticTopo = true;
+		}
 		po::notify(vm);
 	} catch (po::error& e) {
 		std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
@@ -146,9 +152,6 @@ int main(int argc, char *argv[]) {
 	TCPServerProxy::initSSL(&clientSSLConfig);
 	signal(SIGPIPE, sigpipe_handler_ignore);
 
-	/*
-	 * TODO there is probably an cleaner way than using unique pointers here.
-	 */
 	try {
 		Beetle btl(btlConfig.name);
 
@@ -184,6 +187,12 @@ int main(int argc, char *argv[]) {
 
 			accessControl = std::make_shared<AccessControl>(btl, controllerClient);
 			btl.setAccessControl(accessControl);
+		}
+
+		std::unique_ptr<StaticTopo> staticTopo;
+		if (btlConfig.staticTopoEnabled || enableStaticTopo) {
+			staticTopo = std::make_unique<StaticTopo>(btl, btlConfig.staticTopoMappings);
+			btl.registerUpdateDeviceHandler(staticTopo->getUpdateDeviceHandler());
 		}
 
 		CLI cli(btl, btlConfig, networkDiscovery);

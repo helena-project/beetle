@@ -11,6 +11,17 @@
 #include <unistd.h>
 #include <string>
 #include <fcntl.h>
+#include <exception>
+
+class ParseExecption : public std::exception {
+public:
+	ParseExecption(std::string msg) : msg(msg) {};
+	ParseExecption(const char *msg) : msg(msg) {};
+	~ParseExecption() throw() {};
+	const char *what() const throw() { return this->msg.c_str(); };
+private:
+	std::string msg;
+};
 
 inline bool file_exists(const std::string &name) {
     return (access(name.c_str(), F_OK) != -1);

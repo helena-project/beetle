@@ -11,6 +11,7 @@ CPP_SRCS += \
 ../src/HCI.cpp \
 ../src/Handle.cpp \
 ../src/Router.cpp \
+../src/StaticTopo.cpp \
 ../src/UUID.cpp \
 ../src/main.cpp 
 
@@ -22,6 +23,7 @@ OBJS += \
 ./src/HCI.o \
 ./src/Handle.o \
 ./src/Router.o \
+./src/StaticTopo.o \
 ./src/UUID.o \
 ./src/main.o 
 
@@ -33,6 +35,7 @@ CPP_DEPS += \
 ./src/HCI.d \
 ./src/Handle.d \
 ./src/Router.d \
+./src/StaticTopo.d \
 ./src/UUID.d \
 ./src/main.d 
 

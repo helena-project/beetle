@@ -49,7 +49,7 @@ public:
 	 */
 	bool autoConnectAll = false;
 	double autoConnectMinBackoff = 60.0;
-	std::string autoConnectWhitelist = "";
+	std::string autoConnectWhitelist = "../examples/whitelist.txt";	// whitelist file
 
 	/*
 	 * TCP settings
@@ -70,6 +70,12 @@ public:
 	std::string controllerHost = "localhost";
 	int controllerPort = 443;
 	std::string getControllerHostAndPort() const;
+
+	/*
+	 * Static topology
+	 */
+	bool staticTopoEnabled = false;
+	std::string staticTopoMappings = "../examples/mappings.txt";	// static mappings file
 
 	/*
 	 * SSL settings

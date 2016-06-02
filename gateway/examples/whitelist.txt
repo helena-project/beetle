@@ -1,0 +1,5 @@
+# a comment
+
+98:7B:F3:66:BF:E6 # this is a lightbulb's public addr
+
+66:4E:3B:6A:5C:7C # a random address :(

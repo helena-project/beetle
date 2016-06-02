@@ -104,15 +104,9 @@ AddDeviceHandler NetworkStateClient::getAddDeviceHandler() {
 					pdebug("informing controller of new connection");
 				}
 
-				int maxWait = 60000;
-				int waitInterval = 100;
-				while (device->getName() == "" && maxWait > 0) {
-					std::this_thread::sleep_for(std::chrono::milliseconds(waitInterval));
-					maxWait -= waitInterval;
-				}
-
 				if (device->getName() == "") {
 					pwarn("informing controller of unnamed device");
+					return;
 				}
 
 				try {

@@ -187,6 +187,11 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	autoConnect["whitelist"] = autoConnectWhitelist;
 	config["autoConnect"] = autoConnect;
 
+	json staticTopo;
+	staticTopo["enable"] = staticTopoEnabled;
+	staticTopo["mappings"] = staticTopoMappings;
+	config["staticTopo"] = staticTopo;
+
 	json tcp;
 	tcp["enable"] = tcpEnabled;
 	tcp["port"] = tcpPort;
