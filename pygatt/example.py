@@ -36,7 +36,7 @@ def getArguments():
 	parser.add_argument("--port", "-p", type=int, default=3002, 
 		help="port the Beetle server is runnng on")
 	parser.add_argument("--name", "-n", type=str, default="Virtual HRM", 
-		help="port the Beetle server is runnng on")
+		help="set the device name")
 
 	return parser.parse_args()
 
