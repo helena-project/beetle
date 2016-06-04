@@ -13,8 +13,8 @@ class ConnectedGateway(models.Model):
 	"""A Beetle gateway"""
 
 	class Meta:
-		verbose_name = "Gateway Instance"
-		verbose_name_plural = "Gateway Instances"
+		verbose_name = "Gateway (Instance)"
+		verbose_name_plural = "Gateways (Instance)"
 
 	DEFAULT_GATEWAY_TCP_SERVER_PORT = 3002 
 	CONNECTION_TIMEOUT = timedelta(minutes=60)
@@ -35,8 +35,8 @@ class ConnectedDevice(models.Model):
 	"""An app or peripheral"""
 
 	class Meta:
-		verbose_name = "Device Instance"
-		verbose_name_plural = "Device Instances"
+		verbose_name = "Device (Instance)"
+		verbose_name_plural = "Devices (Instance)"
 
 	CONNECTION_TIMEOUT = timedelta(minutes=15)
 
@@ -52,6 +52,10 @@ class ConnectedDevice(models.Model):
 class ServiceInstance(models.Model):
 	"""An instance of a service"""
 
+	class Meta:
+		verbose_name = "Service (Instance)"
+		verbose_name_plural = "Services (Instance)"
+
 	device_instance = models.ForeignKey("ConnectedDevice")
 	service = models.ForeignKey("gatt.Service") 
 
@@ -59,11 +63,15 @@ class ServiceInstance(models.Model):
 		return self.service.__unicode__()
 
 class CharInstance(models.Model):
-	"""An instance of a characterisic"""
+	"""An instance of a characteristic"""
+
+	class Meta:
+		verbose_name = "Characteristic (Instance)"
+		verbose_name_plural = "Characteristics (Instance)"
 	
 	device_instance = models.ForeignKey("ConnectedDevice")
 	service_instance = models.ForeignKey("ServiceInstance")
-	char = models.ForeignKey("gatt.Characteristic")
+	characteristic = models.ForeignKey("gatt.Characteristic")
 
 	def __unicode__(self):
-		return self.char.__unicode__()
+		return self.characteristic.__unicode__()

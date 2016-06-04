@@ -174,7 +174,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 		for char_instance in CharInstance.objects.filter(
 			service_instance=service_instance):
 			
-			characteristic = char_instance.char
+			characteristic = char_instance.characteristic
 
 			char_rules = service_rules.filter(Q(characteristic=characteristic) | 
 				Q(characteristic__name="*"))

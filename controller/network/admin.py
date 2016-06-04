@@ -15,6 +15,8 @@ class ConnectedDeviceInline(admin.TabularInline):
 
 @admin.register(ConnectedGateway)
 class ConnectedGatewayAdmin(admin.ModelAdmin):
+	"""Show connected Beetle gateways and their devices"""
+
 	list_display = ("get_gateway_name", "last_seen", "ip_address", 
 		"get_device_list")
 	search_fields = ("get_gateway_name", "ip_address", "get_device_list")
@@ -43,13 +45,15 @@ class ServiceInstanceInline(admin.TabularInline):
 
 class CharInstanceInline(admin.TabularInline):
 	model = CharInstance
-	fields = ("service_instance", "char")
+	fields = ("service_instance", "characteristic")
 	readonly_fields = fields
 	def has_add_permission(self, request):
 		return False
 
 @admin.register(ConnectedDevice)
 class ConnectedDeviceAdmin(admin.ModelAdmin):
+	"""Show connected devices and their services and characteristics"""
+
 	list_display = ("get_device_name", "get_gateway_name", "remote_id", 
 		"get_device_link", "last_seen")
 	search_fields = ("get_device_name", "get_gateway_name", "remote_id")

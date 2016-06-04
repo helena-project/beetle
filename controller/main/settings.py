@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'gatt.apps.GattConfig',
     'network.apps.NetworkConfig',
     'access.apps.AccessConfig',
-    'acstate.apps.AcstateConfig',
+    'state.apps.StateConfig',
     'sslserver',
     'polymorphic',
     'solo',

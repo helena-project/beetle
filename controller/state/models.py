@@ -15,8 +15,8 @@ class AdminAuthInstance(models.Model):
 	"""Instance of authorization from admin."""
 
 	class Meta:
-		verbose_name = "AdminAuth state"
-		verbose_name_plural = "AdminAuth state"
+		verbose_name = "Admin Authorization (Record)"
+		verbose_name_plural = verbose_name
 		unique_together = ("rule", "principal")
 
 	rule = models.ForeignKey("access.Rule")
@@ -33,8 +33,8 @@ class UserAuthInstance(models.Model):
 	"""Instance of authentication of user."""
 
 	class Meta:
-		verbose_name = "UserAuth state"
-		verbose_name_plural = "UserAuth state"
+		verbose_name = "User Authentication (Record)"
+		verbose_name_plural = verbose_name
 		unique_together = ("rule", "principal")
 
 	rule = models.ForeignKey("access.Rule")
@@ -51,8 +51,8 @@ class PasscodeAuthInstance(models.Model):
 	"""Instance of password authentication."""
 
 	class Meta:
-		verbose_name = "PasscodeAuth state"
-		verbose_name_plural = "PasscodeAuth state"
+		verbose_name = "Passcode Authentication (Record)"
+		verbose_name_plural = verbose_name
 		unique_together = ("rule", "principal")
 
 	rule = models.ForeignKey("access.Rule")
@@ -65,6 +65,10 @@ class PasscodeAuthInstance(models.Model):
 
 class ExclusiveLease(models.Model):
 	"""A lease of exclusivity"""
+
+	class Meta:
+		verbose_name = "Exclusive (Lease)"
+		verbose_name_plural = verbose_name
 
 	group = models.OneToOneField("access.Exclusive")
 	device_instance = models.ForeignKey("network.ConnectedDevice")

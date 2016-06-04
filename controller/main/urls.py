@@ -26,8 +26,8 @@ urlpatterns = [
     url(r'^beetle/', include('beetle.urls')),
     url(r'^access/', include('access.urls')),
     url(r'^network/', include('network.urls')),
-    url(r'^acstate/', include('acstate.urls')),
-    url(r'^code/', include('acstate.shorturls')),
+    url(r'^state/', include('state.urls')),
+    url(r'^code/', include('state.shorturls')),
     url(r'^admin/', admin.site.urls),
     url(r'^$', lambda r: HttpResponseRedirect('admin/')),
 ]

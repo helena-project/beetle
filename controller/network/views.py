@@ -14,8 +14,8 @@ import json
 from .models import ConnectedGateway, ConnectedDevice, CharInstance, \
 	ServiceInstance
 
-from beetle.models import Gateway, Principal
-from acstate.models import ExclusiveLease
+from beetle.models import Gateway, VirtualDevice
+from state.models import ExclusiveLease
 from gatt.models import Service, Characteristic
 from gatt.shared import convert_uuid, check_uuid
 from access.shared import query_can_map_static
@@ -101,7 +101,7 @@ def _load_services_and_characteristics(services, device_conn):
 				pass
 
 			char_ins, _ = CharInstance.objects.get_or_create(
-				char=char, 
+				characteristic=char, 
 				device_instance=device_conn, 
 				service_instance=service_ins)
 			char_ins.save()
@@ -117,7 +117,7 @@ def connect_device(request, gateway, device, remote_id):
 	remote_id = int(remote_id)
 
 	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
-	device, created = Principal.objects.get_or_create(name=device)
+	device, created = VirtualDevice.objects.get_or_create(name=device)
 	if created:
 		pass
 
@@ -208,15 +208,15 @@ def view_device(request, device, detailed=True):
 				"name": service_ins.service.name,
 				"uuid": service_ins.service.uuid,
 				"chars": [{
-					"name" : x.char.name,
-					"uuid" : x.char.uuid
-				} for x in CharInstance.objects.filter(service=service_ins)]
+					"name" : x.characteristic.name,
+					"uuid" : x.characteristic.uuid
+				} for x in CharInstance.objects.filter(service_instance=service_ins)]
 			})
 		else:
 			response.append({
 				"uuid": service_ins.service.uuid,
-				"chars": [x.char.uuid for x in 
-					CharInstance.objects.filter(service=service_ins)]})
+				"chars": [x.characteristic.uuid for x in 
+					CharInstance.objects.filter(service_instance=service_ins)]})
 	
 	return JsonResponse(response, safe=False)
 
@@ -233,9 +233,9 @@ def discover_devices(request):
 				"id" : conn_device.remote_id,
 			},
 			"gateway" : {
-				"name" : conn_device.gateway.gateway.name,
-				"ip" : conn_device.gateway.ip_address,
-				"port" : conn_device.gateway.port,
+				"name" : conn_device.gateway_instance.gateway.name,
+				"ip" : conn_device.gateway_instance.ip_address,
+				"port" : conn_device.gateway_instance.port,
 			},
 		});
 	return JsonResponse(response, safe=False)
@@ -252,6 +252,8 @@ def discover_with_uuid(request, uuid, is_service=True):
 	###
 	gateway = request.GET.get("gateway", None)
 	remote_id = request.GET.get("remote_id", None)
+	gateway_conn = None
+	device_conn = None
 	if gateway is not None and remote_id is not None:
 		gateway_conn = ConnectedGateway.objects.get(
 			gateway__name=gateway)
@@ -265,26 +267,29 @@ def discover_with_uuid(request, uuid, is_service=True):
 	if is_service:
 		qs = ServiceInstance.objects.filter(service__uuid=uuid)
 	else:
-		qs = CharInstance.objects.filter(char__uuid=uuid)
+		qs = CharInstance.objects.filter(characteristic__uuid=uuid)
 	
 	for x in qs:
 
-		can_map, _ =  query_can_map_static(x.device.gateway.gateway, 
-			x.device.device, gateway_conn.gateway, 
-			device_conn.device, current_time)
+		if gateway_conn is not None and device_conn is not None:
+			can_map, _ = query_can_map_static(x.device_instance.gateway_instance.gateway, 
+				x.device_instance.device, gateway_conn.gateway, 
+				device_conn.device, current_time)
+		else:
+			can_map = True
 		
 		if not can_map:
 			continue
 
 		response.append({
 			"device" : {
-				"name" : x.device.device.name,
-				"id" : x.device.remote_id,
+				"name" : x.device_instance.device.name,
+				"id" : x.device_instance.remote_id,
 			},
 			"gateway" : {
-				"name" : x.device.gateway.gateway.name,
-				"ip" : x.device.gateway.ip_address,
-				"port" : x.device.gateway.port,
+				"name" : x.device_instance.gateway_instance.gateway.name,
+				"ip" : x.device_instance.gateway_instance.ip_address,
+				"port" : x.device_instance.gateway_instance.port,
 			},
 		});
 

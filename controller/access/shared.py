@@ -7,9 +7,7 @@ from .models import Rule, RuleException
 
 def _get_applicable_rules(from_gateway, from_principal, to_gateway, 
 	to_principal, timestamp=None):
-	"""
-	Get the queryset of rules that apply for the mapping.
-	"""
+	"""Get the queryset of rules that apply for the mapping."""
 	to_principal_groups = PrincipalGroup.objects.filter(
 		members_in=[to_principal])
 	from_principal_groups = PrincipalGroup.objects.filter(
@@ -29,9 +27,7 @@ def _get_applicable_rules(from_gateway, from_principal, to_gateway,
 
 def _get_rule_exceptions(rules, from_gateway, from_principal, to_gateway, 
 	to_principal):
-	"""
-	Get the queryset of rule ids that should be excluded.
-	"""
+	"""Get the queryset of rule ids that should be excluded."""
 	return RuleException.objects.filter(
 		Q(from_principal=from_principal) | Q(from_principal__name="*") | 
 			Q(from_principal__in=from_principal_groups),
@@ -43,9 +39,7 @@ def _get_rule_exceptions(rules, from_gateway, from_principal, to_gateway,
 
 def query_can_map_static(from_gateway, from_principal, to_gateway, to_principal, 
 	timestamp):
-	"""
-	Returns all of the static rules that allow a mapping.
-	"""
+	"""Returns all of the static rules that allow a mapping."""
 	rules = _get_applicable_rules(from_gateway, from_principal, 
 		to_gateway, to_principal, timestamp)
 	

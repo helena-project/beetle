@@ -248,9 +248,8 @@ class AdminAuth(DynamicAuth):
 	"""Prompt the admin for permission."""
 
 	class Meta:
-		verbose_name = "Admin"
-		verbose_name_plural = "Admin Auth"
-
+		verbose_name = "Admin Authorization"
+		verbose_name_plural = verbose_name
 	RULE_SCOPE = 1
 	SERVER_SCOPE = 2
 	SCOPE_CHOICES = (
@@ -282,8 +281,8 @@ class UserAuth(DynamicAuth):
 	"""Prompt the user for permission."""
 
 	class Meta:
-		verbose_name = "User Auth"
-		verbose_name_plural = "User Auth"
+		verbose_name = "User Authentication"
+		verbose_name_plural = verbose_name
 
 	RULE_SCOPE = 1
 	SERVER_SCOPE = 2
@@ -313,8 +312,8 @@ class PasscodeAuth(DynamicAuth):
 	"""Prompt user for a passcode."""
 
 	class Meta:
-		verbose_name = "Passcode"
-		verbose_name_plural = "Passcode Auth"
+		verbose_name = "Passcode Authentication"
+		verbose_name_plural = verbose_name
 
 	code = models.CharField(
 		max_length=200,
@@ -347,7 +346,7 @@ class NetworkAuth(DynamicAuth):
 
 	class Meta:
 		verbose_name = "Network"
-		verbose_name_plural = "Network Auth"
+		verbose_name_plural = verbose_name
 
 	is_private = models.BooleanField(
 		default=False,
