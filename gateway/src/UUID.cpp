@@ -55,7 +55,7 @@ UUID::UUID(std::string s) {
 		memset(uuid.value, 0, UUID_LEN);
 		memcpy(uuid.value + 4, BLUETOOTH_BASE_UUID, 12);
 		for (char i = 0; i < (int) s.length(); i += 2) {
-			uuid.value[i / 2] = (char) std::stoi(s.substr(i, 2), NULL, 16);
+			uuid.value[2 + i / 2] = (char) std::stoi(s.substr(i, 2), NULL, 16);
 		}
 	} else if (s.length() == UUID_LEN * 2) {
 		for (int i = 0; i < (int) s.length(); i += 2) {

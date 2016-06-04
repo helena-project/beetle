@@ -33,7 +33,7 @@ NetworkDiscoveryClient::~NetworkDiscoveryClient() {
 
 bool NetworkDiscoveryClient::discoverDevices(std::list<discovery_result_t> &ret) {
 	std::stringstream resource;
-	resource << "network/discover/principals";
+	resource << "network/discover/devices";
 	return queryHelper(resource.str(), ret);
 }
 
@@ -93,8 +93,8 @@ bool NetworkDiscoveryClient::queryHelper(std::string resource, std::list<discove
 			j << ss;
 			for (auto &it : j) {
 				discovery_result_t result;
-				result.name = it["principal"]["name"];
-				result.id = it["principal"]["id"];
+				result.name = it["device"]["name"];
+				result.id = it["device"]["id"];
 				result.gateway = it["gateway"]["name"];
 				result.ip = it["gateway"]["ip"];
 				result.port = it["gateway"]["port"];

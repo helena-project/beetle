@@ -162,7 +162,7 @@ bool AccessControl::acquireExclusiveLease(std::shared_ptr<Device> to, exclusive_
 	leasesLk.unlock();
 
 	std::stringstream resource;
-	resource << "acstate/exclusive/" << std::fixed << exclusiveId << "/" << beetle.name << "/" << std::fixed
+	resource << "state/exclusive/" << std::fixed << exclusiveId << "/" << beetle.name << "/" << std::fixed
 			<< to->getId();
 
 	std::string url = client->getUrl(resource.str());
@@ -211,7 +211,7 @@ void AccessControl::releaseExclusiveLease(std::shared_ptr<Device> to, exclusive_
 	leasesLk.unlock();
 
 	std::stringstream resource;
-	resource << "acstate/exclusive/" << std::fixed << exclusiveId << "/" << beetle.name << "/" << std::fixed
+	resource << "state/exclusive/" << std::fixed << exclusiveId << "/" << beetle.name << "/" << std::fixed
 			<< to->getId();
 
 	std::string url = client->getUrl(resource.str());
