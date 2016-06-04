@@ -2,7 +2,7 @@
   {
     "fields": {
       "name": "Alert Notification Service", 
-      "stype": "org.bluetooth.service.alert_notification", 
+      "type_": "org.bluetooth.service.alert_notification", 
       "uuid": "1811",
       "verified": true
     }, 
@@ -11,7 +11,7 @@
   {
     "fields": {
       "name": "Automation IO", 
-      "stype": "org.bluetooth.service.automation_io", 
+      "type_": "org.bluetooth.service.automation_io", 
       "uuid": "1815",
       "verified": true
     }, 
@@ -20,7 +20,7 @@
   {
     "fields": {
       "name": "Battery Service", 
-      "stype": "org.bluetooth.service.battery_service", 
+      "type_": "org.bluetooth.service.battery_service", 
       "uuid": "180F",
       "verified": true
     }, 
@@ -29,7 +29,7 @@
   {
     "fields": {
       "name": "Blood Pressure", 
-      "stype": "org.bluetooth.service.blood_pressure", 
+      "type_": "org.bluetooth.service.blood_pressure", 
       "uuid": "1810",
       "verified": true
     }, 
@@ -38,7 +38,7 @@
   {
     "fields": {
       "name": "Body Composition", 
-      "stype": "org.bluetooth.service.body_composition", 
+      "type_": "org.bluetooth.service.body_composition", 
       "uuid": "181B",
       "verified": true
     }, 
@@ -47,7 +47,7 @@
   {
     "fields": {
       "name": "Bond Management", 
-      "stype": "org.bluetooth.service.bond_management", 
+      "type_": "org.bluetooth.service.bond_management", 
       "uuid": "181E",
       "verified": true
     }, 
@@ -56,7 +56,7 @@
   {
     "fields": {
       "name": "Continuous Glucose Monitoring", 
-      "stype": "org.bluetooth.service.continuous_glucose_monitoring", 
+      "type_": "org.bluetooth.service.continuous_glucose_monitoring", 
       "uuid": "181F",
       "verified": true
     }, 
@@ -65,7 +65,7 @@
   {
     "fields": {
       "name": "Current Time Service", 
-      "stype": "org.bluetooth.service.current_time", 
+      "type_": "org.bluetooth.service.current_time", 
       "uuid": "1805",
       "verified": true
     }, 
@@ -74,7 +74,7 @@
   {
     "fields": {
       "name": "Cycling Power", 
-      "stype": "org.bluetooth.service.cycling_power", 
+      "type_": "org.bluetooth.service.cycling_power", 
       "uuid": "1818",
       "verified": true
     }, 
@@ -83,7 +83,7 @@
   {
     "fields": {
       "name": "Cycling Speed and Cadence", 
-      "stype": "org.bluetooth.service.cycling_speed_and_cadence", 
+      "type_": "org.bluetooth.service.cycling_speed_and_cadence", 
       "uuid": "1816",
       "verified": true
     }, 
@@ -92,7 +92,7 @@
   {
     "fields": {
       "name": "Device Information", 
-      "stype": "org.bluetooth.service.device_information", 
+      "type_": "org.bluetooth.service.device_information", 
       "uuid": "180A",
       "verified": true
     }, 
@@ -101,7 +101,7 @@
   {
     "fields": {
       "name": "Environmental Sensing", 
-      "stype": "org.bluetooth.service.environmental_sensing", 
+      "type_": "org.bluetooth.service.environmental_sensing", 
       "uuid": "181A",
       "verified": true
     }, 
@@ -110,7 +110,7 @@
   {
     "fields": {
       "name": "Generic Access", 
-      "stype": "org.bluetooth.service.generic_access", 
+      "type_": "org.bluetooth.service.generic_access", 
       "uuid": "1800",
       "verified": true
     }, 
@@ -119,7 +119,7 @@
   {
     "fields": {
       "name": "Generic Attribute", 
-      "stype": "org.bluetooth.service.generic_attribute", 
+      "type_": "org.bluetooth.service.generic_attribute", 
       "uuid": "1801",
       "verified": true
     }, 
@@ -128,7 +128,7 @@
   {
     "fields": {
       "name": "Glucose", 
-      "stype": "org.bluetooth.service.glucose", 
+      "type_": "org.bluetooth.service.glucose", 
       "uuid": "1808",
       "verified": true
     }, 
@@ -137,7 +137,7 @@
   {
     "fields": {
       "name": "Health Thermometer", 
-      "stype": "org.bluetooth.service.health_thermometer", 
+      "type_": "org.bluetooth.service.health_thermometer", 
       "uuid": "1809",
       "verified": true
     }, 
@@ -146,7 +146,7 @@
   {
     "fields": {
       "name": "Heart Rate", 
-      "stype": "org.bluetooth.service.heart_rate", 
+      "type_": "org.bluetooth.service.heart_rate", 
       "uuid": "180D",
       "verified": true
     }, 
@@ -155,7 +155,7 @@
   {
     "fields": {
       "name": "HTTP Proxy", 
-      "stype": "org.bluetooth.service.http_proxy", 
+      "type_": "org.bluetooth.service.http_proxy", 
       "uuid": "1823",
       "verified": true
     }, 
@@ -164,7 +164,7 @@
   {
     "fields": {
       "name": "Human Interface Device", 
-      "stype": "org.bluetooth.service.human_interface_device", 
+      "type_": "org.bluetooth.service.human_interface_device", 
       "uuid": "1812",
       "verified": true
     }, 
@@ -173,7 +173,7 @@
   {
     "fields": {
       "name": "Immediate Alert", 
-      "stype": "org.bluetooth.service.immediate_alert", 
+      "type_": "org.bluetooth.service.immediate_alert", 
       "uuid": "1802",
       "verified": true
     }, 
@@ -182,7 +182,7 @@
   {
     "fields": {
       "name": "Indoor Positioning", 
-      "stype": "org.bluetooth.service.indoor_positioning", 
+      "type_": "org.bluetooth.service.indoor_positioning", 
       "uuid": "1821",
       "verified": true
     }, 
@@ -191,7 +191,7 @@
   {
     "fields": {
       "name": "Internet Protocol Support", 
-      "stype": "org.bluetooth.service.internet_protocol_support", 
+      "type_": "org.bluetooth.service.internet_protocol_support", 
       "uuid": "1820",
       "verified": true
     }, 
@@ -200,7 +200,7 @@
   {
     "fields": {
       "name": "Link Loss", 
-      "stype": "org.bluetooth.service.link_loss", 
+      "type_": "org.bluetooth.service.link_loss", 
       "uuid": "1803",
       "verified": true
     }, 
@@ -209,7 +209,7 @@
   {
     "fields": {
       "name": "Location and Navigation", 
-      "stype": "org.bluetooth.service.location_and_navigation", 
+      "type_": "org.bluetooth.service.location_and_navigation", 
       "uuid": "1819",
       "verified": true
     }, 
@@ -218,7 +218,7 @@
   {
     "fields": {
       "name": "Next DST Change Service", 
-      "stype": "org.bluetooth.service.next_dst_change", 
+      "type_": "org.bluetooth.service.next_dst_change", 
       "uuid": "1807",
       "verified": true
     }, 
@@ -227,7 +227,7 @@
   {
     "fields": {
       "name": "Object Transfer", 
-      "stype": "org.bluetooth.service.object_transfer", 
+      "type_": "org.bluetooth.service.object_transfer", 
       "uuid": "1825",
       "verified": true
     }, 
@@ -236,7 +236,7 @@
   {
     "fields": {
       "name": "Phone Alert Status Service", 
-      "stype": "org.bluetooth.service.phone_alert_status", 
+      "type_": "org.bluetooth.service.phone_alert_status", 
       "uuid": "180E",
       "verified": true
     }, 
@@ -245,7 +245,7 @@
   {
     "fields": {
       "name": "Pulse Oximeter", 
-      "stype": "org.bluetooth.service.pulse_oximeter", 
+      "type_": "org.bluetooth.service.pulse_oximeter", 
       "uuid": "1822",
       "verified": true
     }, 
@@ -254,7 +254,7 @@
   {
     "fields": {
       "name": "Reference Time Update Service", 
-      "stype": "org.bluetooth.service.reference_time_update", 
+      "type_": "org.bluetooth.service.reference_time_update", 
       "uuid": "1806",
       "verified": true
     }, 
@@ -263,7 +263,7 @@
   {
     "fields": {
       "name": "Running Speed and Cadence", 
-      "stype": "org.bluetooth.service.running_speed_and_cadence", 
+      "type_": "org.bluetooth.service.running_speed_and_cadence", 
       "uuid": "1814",
       "verified": true
     }, 
@@ -272,7 +272,7 @@
   {
     "fields": {
       "name": "Scan Parameters", 
-      "stype": "org.bluetooth.service.scan_parameters", 
+      "type_": "org.bluetooth.service.scan_parameters", 
       "uuid": "1813",
       "verified": true
     }, 
@@ -281,7 +281,7 @@
   {
     "fields": {
       "name": "Transport Discovery", 
-      "stype": "org.bluetooth.service.transport_discovery", 
+      "type_": "org.bluetooth.service.transport_discovery", 
       "uuid": "1824",
       "verified": true
     }, 
@@ -290,7 +290,7 @@
   {
     "fields": {
       "name": "Tx Power", 
-      "stype": "org.bluetooth.service.tx_power", 
+      "type_": "org.bluetooth.service.tx_power", 
       "uuid": "1804",
       "verified": true
     }, 
@@ -299,7 +299,7 @@
   {
     "fields": {
       "name": "User Data", 
-      "stype": "org.bluetooth.service.user_data", 
+      "type_": "org.bluetooth.service.user_data", 
       "uuid": "181C",
       "verified": true
     }, 
@@ -308,7 +308,7 @@
   {
     "fields": {
       "name": "Weight Scale", 
-      "stype": "org.bluetooth.service.weight_scale", 
+      "type_": "org.bluetooth.service.weight_scale", 
       "uuid": "181D",
       "verified": true
     }, 

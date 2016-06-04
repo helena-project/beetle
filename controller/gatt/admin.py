@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django import forms
 
-from .models import Characteristic, Service
+from .models import Characteristic, Descriptor, Service
 from .shared import check_uuid, convert_uuid
 
 # Register your models here.
@@ -20,9 +20,9 @@ class ServiceAdminForm(forms.ModelForm):
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
 	form = ServiceAdminForm
-	list_display = ("uuid", "name", "stype", "verified")
+	list_display = ("uuid", "name", "type_", "verified")
 	list_filter = ("verified",)
-	search_fields = ("uuid", "name", "stype")
+	search_fields = ("uuid", "name", "type_")
 	ordering = ("uuid",)
 
 class CharacteristicAdminForm(forms.ModelForm):
@@ -33,13 +33,20 @@ class CharacteristicAdminForm(forms.ModelForm):
 	def clean_uuid(self):
 		uuid = self.cleaned_data["uuid"]
 		if check_uuid(uuid) is False:
-			raise forms.ValidationError("Invalid Characteristic uuid.")
+			raise forms.ValidationError("Invalid characteristic uuid.")
 		return convert_uuid(uuid)
 
 @admin.register(Characteristic)
 class CharacteristicAdmin(admin.ModelAdmin):
 	form = CharacteristicAdminForm
-	list_display = ("uuid", "name", "ctype", "verified")
+	list_display = ("uuid", "name", "type_", "verified")
 	list_filter = ("verified",)
-	search_fields = ("uuid", "name", "ctype")
+	search_fields = ("uuid", "name", "type_")
+	ordering = ("uuid",)
+
+@admin.register(Descriptor)
+class DescriptorAdmin(admin.ModelAdmin):
+	list_display = ("uuid", "name", "type_")
+	list_filter = ("verified",)
+	search_fields = ("uuid", "name", "type_")
 	ordering = ("uuid",)

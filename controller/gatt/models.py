@@ -13,7 +13,7 @@ class Service(models.Model):
 		blank=True, 
 		primary_key=True,
 		help_text="16 or 128-bit UUID.")
-	stype = models.CharField(
+	type_ = models.CharField(
 		max_length=200, 
 		blank=True,
 		verbose_name="type")
@@ -37,7 +37,7 @@ class Characteristic(models.Model):
 		blank=True, 
 		primary_key=True,
 		help_text="16 or 128-bit UUID.")
-	ctype = models.CharField(
+	type_ = models.CharField(
 		max_length=200, 
 		blank=True, 
 		verbose_name="type")
@@ -50,3 +50,24 @@ class Characteristic(models.Model):
 			return self.name
 		else:
 			return "<unk char>." + self.uuid
+
+class Descriptor(models.Model):
+	""" 
+	A GATT descriptor 
+	"""
+	name = models.CharField(max_length=200)
+	uuid = models.CharField(
+		max_length=36, 
+		blank=True, 
+		primary_key=True,
+		help_text="16 or 128-bit UUID.")
+	type_ = models.CharField(
+		max_length=200, 
+		blank=True, 
+		verbose_name="type")
+
+	def __unicode__(self):
+		if self.name != "":
+			return self.name
+		else:
+			return "<unk desc>." + self.uuid

@@ -1,0 +1,122 @@
+[
+  {
+    "fields": {
+      "name": "Characteristic Extended Properties", 
+      "type_": "org.bluetooth.descriptor.gatt.characteristic_extended_properties", 
+      "uuid": "2900"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Characteristic User Description", 
+      "type_": "org.bluetooth.descriptor.gatt.characteristic_user_description", 
+      "uuid": "2901"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Client Characteristic Configuration", 
+      "type_": "org.bluetooth.descriptor.gatt.client_characteristic_configuration", 
+      "uuid": "2902"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Server Characteristic Configuration", 
+      "type_": "org.bluetooth.descriptor.gatt.server_characteristic_configuration", 
+      "uuid": "2903"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Characteristic Presentation Format", 
+      "type_": "org.bluetooth.descriptor.gatt.characteristic_presentation_format", 
+      "uuid": "2904"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Characteristic Presentation Format", 
+      "type_": "org.bluetooth.descriptor.gatt.characteristic_aggregate_format", 
+      "uuid": "2905"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Valid Range", 
+      "type_": "org.bluetooth.descriptor.valid_range", 
+      "uuid": "2906"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "External Report Reference", 
+      "type_": "org.bluetooth.descriptor.external_report_reference", 
+      "uuid": "2907"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Report Reference", 
+      "type_": "org.bluetooth.descriptor.report_reference", 
+      "uuid": "2908"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Number of Digitals", 
+      "type_": "org.bluetooth.descriptor.number_of_digitals", 
+      "uuid": "2909"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Value Trigger Setting", 
+      "type_": "org.bluetooth.descriptor.value_trigger_setting", 
+      "uuid": "290A"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Environmental Sensing Configuration", 
+      "type_": "org.bluetooth.descriptor.es_configuration", 
+      "uuid": "290B"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Environmental Sensing Measurement", 
+      "type_": "org.bluetooth.descriptor.es_measurement", 
+      "uuid": "290C"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Environmental Sensing Trigger Setting", 
+      "type_": "org.bluetooth.descriptor.es_trigger_setting", 
+      "uuid": "290D"
+    }, 
+    "model": "gatt.Descriptor"
+  }, 
+  {
+    "fields": {
+      "name": "Time Trigger Setting", 
+      "type_": "org.bluetooth.descriptor.time_trigger_setting", 
+      "uuid": "290E"
+    }, 
+    "model": "gatt.Descriptor"
+  }
+]
