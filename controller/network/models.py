@@ -20,7 +20,6 @@ class ConnectedGateway(models.Model):
 	CONNECTION_TIMEOUT = timedelta(minutes=60)
 
 	gateway = models.ForeignKey("beetle.Gateway")
-	last_seen = models.DateTimeField(auto_now_add=True)
 	ip_address = models.CharField(
 		max_length=100, 
 		help_text="IP address of the gateway")
@@ -44,7 +43,6 @@ class ConnectedDevice(models.Model):
 	gateway_instance = models.ForeignKey("ConnectedGateway")
 	remote_id = models.IntegerField(
 		help_text="id of the device on the gateway")
-	last_seen = models.DateTimeField(auto_now_add=True)
 
 	def __unicode__(self):
 		return self.device.name + "@" + self.gateway_instance.gateway.name
@@ -75,3 +73,19 @@ class CharInstance(models.Model):
 
 	def __unicode__(self):
 		return self.characteristic.__unicode__()
+
+class DeviceMapping(models.Model):
+	"""Instance where two connected devices have mapped handles"""
+
+	class Meta:
+		verbose_name = "Mapping (Instance)"
+		verbose_name_plural = verbose_name
+
+	from_device = models.ForeignKey("ConnectedDevice", related_name="map_from")
+	to_device = models.ForeignKey("ConnectedDevice", related_name="map_to")
+
+	timestamp = models.DateTimeField(auto_now_add=True)
+
+
+	def __unicode__(self):
+		return from_device.device.__unicode__() + " to " + to.device.__unicode__()

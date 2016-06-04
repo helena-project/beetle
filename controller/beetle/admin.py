@@ -43,9 +43,10 @@ class PrincipalGroupAdmin(PolymorphicChildModelAdmin):
 class VirtualDeviceAdmin(PolymorphicChildModelAdmin):
 	base_model = VirtualDevice
 	# form = PrincipalAdminForm
-	list_display = ("name", "owner", "ttype")
+	list_display = ("name", "owner", "ttype", "auto_created")
 	search_fields = ("name", "owner")
 	list_filter = ("ttype",)
+	list_editable = ("auto_created", "ttype")
 
 # @admin.register(Principal)
 # class PrincipalsAdmin(PolymorphicParentModelAdmin):

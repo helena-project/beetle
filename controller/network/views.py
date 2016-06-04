@@ -49,7 +49,6 @@ def connect_gateway(request, gateway):
 		gateway_conn, created = ConnectedGateway.objects.get_or_create(
 			gateway=gateway)
 		if not created:
-			gateway_conn.last_seen = timezone.now()
 			ConnectedDevice.objects.filter(gateway_instance=gateway_conn).delete()
 
 		gateway_conn.ip_address = ip_address
@@ -57,6 +56,7 @@ def connect_gateway(request, gateway):
 		gateway_conn.save()
 
 		return HttpResponse("connected")
+
 	elif request.method == "DELETE":
 		#################
 		# Disconnection #
@@ -65,6 +65,7 @@ def connect_gateway(request, gateway):
 		gateway_conn.delete()
 
 		return HttpResponse("disconnected")
+		
 	else:
 		return HttpResponse(status=405)
 
@@ -75,7 +76,7 @@ def _load_services_and_characteristics(services, device_conn):
 	ServiceInstance.objects.filter(device_instance=device_conn).delete()
 	CharInstance.objects.filter(device_instance=device_conn).delete()
 
-	# parse and setup service/char heirarchy
+	# parse and setup service/char hierarchy
 	for service_obj in services:
 		service_uuid = service_obj["uuid"]
 		if not check_uuid(service_uuid):
@@ -126,14 +127,12 @@ def connect_device(request, gateway, device, remote_id):
 			device=device, 
 			gateway_instance=gateway_conn)
 		device_conn.remote_id = remote_id
-		device_conn.last_seen = timezone.now()
 	except ConnectedDevice.DoesNotExist:
 		device_conn = ConnectedDevice(
 			device=device, 
 			gateway_instance=gateway_conn, 
 			remote_id=remote_id)
 
-	gateway_conn.last_seen = timezone.now()
 	gateway_conn.save()
 	device_conn.save()
 
@@ -155,7 +154,6 @@ def update_device(request, gateway, remote_id):
 	remote_id = int(remote_id)
 
 	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
-	gateway_conn.last_seen = timezone.now()
 	gateway_conn.save()
 
 	if request.method == "PUT":
@@ -164,7 +162,6 @@ def update_device(request, gateway, remote_id):
 		##########
 		device_conn = ConnectedDevice.objects.get(
 			gateway_instance=gateway_conn, remote_id=remote_id)
-		device_conn.last_seen = timezone.now()
 		device_conn.save()
 
 		services = json.loads(request.body)
@@ -194,8 +191,7 @@ def update_device(request, gateway, remote_id):
 def view_device(request, device, detailed=True):
 	"""Returns in json, the device's service anc characteristic uuids"""
 
-	device_conns = ConnectedDevice.objects.filter(
-		device__name=device).order_by("-last_seen")
+	device_conns = ConnectedDevice.objects.filter(device__name=device)
 	
 	if len(device_conns) == 0:
 		return HttpResponse(status=202)
