@@ -13,5 +13,5 @@ urlpatterns = [
 		views.find_characteristic, 
 		name='find characteristic by uuid'),
 	url(r'^desc/(?P<uuid>[\w\-\']+)$', 
-		view.find_descriptor)
+		views.find_descriptor)
 ]

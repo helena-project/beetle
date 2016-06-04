@@ -1,21 +1,21 @@
-from .models import ConnectedGateway, ConnectedPrincipal
+from .models import ConnectedGateway, ConnectedDevice
 
 from beetle.models import Gateway, Principal
 
-def get_gateway_and_principal_helper(gateway, remote_id):
+def get_gateway_and_device_helper(gateway, remote_id):
 	"""
 	Gateway is a string, remote_id is an int.
 	"""
 	gateway = Gateway.objects.get(name=gateway)
 	conn_gateway = ConnectedGateway.objects.get(gateway=gateway)
-	conn_principal = ConnectedPrincipal.objects.get(gateway=conn_gateway, 
+	conn_device = ConnectedDevice.objects.get(gateway=conn_gateway, 
 		remote_id=remote_id)
-	principal = conn_principal.principal
-	return gateway, principal, conn_gateway, conn_principal
+	device = conn_device.device
+	return gateway, device, conn_gateway, conn_device
 
 def get_gateway_helper(gateway):
 	"""
-	Same as above without an principal.
+	Same as above without an device.
 	"""
 	gateway = Gateway.objects.get(name=gateway)
 	conn_gateway = ConnectedGateway.objects.get(gateway=gateway)

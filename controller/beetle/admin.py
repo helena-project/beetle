@@ -1,44 +1,60 @@
 from django.contrib import admin
 from django.core.validators import validate_email, ValidationError
 from django import forms
+from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
+from solo.admin import SingletonModelAdmin
 
 import re
 import json
 
-from .models import Principal, Gateway, Contact
+from .models import Principal, PrincipalGroup, VirtualDevice, Gateway, Contact, BeetleEmailAccount
 
 # Register your models here.
 
-class PrincipalAdminForm(forms.ModelForm):
-	def clean_members(self):
-		members = self.cleaned_data["members"]
-		ptype = self.cleaned_data["ptype"]
-		if ptype != Principal.GROUP and len(members) > 0:
-			raise ValidationError("Non group type cannot have any members.")
-		return members
-	def clean_owner(self):
-		owner = self.cleaned_data["owner"]
-		ptype = self.cleaned_data["ptype"]
-		print owner, type(owner)
-		if ptype == Principal.GROUP and owner.id != Contact.NULL:
-			raise ValidationError("Groups cannot have owners. Must be null.")
-		return owner
+class BeetleEmailAccountForm(forms.ModelForm):
+	def clean_address(self):
+		address = self.cleaned_data["address"]
+		validate_email(address)
+		return address
+	password = forms.CharField(widget=forms.PasswordInput())
 
-@admin.register(Principal)
-class PrincipalAdmin(admin.ModelAdmin):
-	form = PrincipalAdminForm
-	list_display = ("name", "owner", "ptype", "get_member_list")
-	search_fields = ("name", "owner", "get_member_list")
-	list_filter = ("ptype",)
+@admin.register(BeetleEmailAccount)
+class BeetleEmailAccountAdmin(SingletonModelAdmin):
+	form = BeetleEmailAccountForm
+	list_display = ("address",)
+
+@admin.register(PrincipalGroup)
+class PrincipalGroupAdmin(PolymorphicChildModelAdmin):
+	base_model = PrincipalGroup
+	# form = PrincipalAdminForm
+	list_display = ("name", "get_member_list")
+	search_fields = ("name", "get_member_list")
 
 	def get_member_list(self, obj):
-		if obj.ptype == Principal.GROUP:
+		if obj.ttype == Principal.GROUP:
 			members = ["%s" % (m.name,) 
 				for m in obj.members.all()]
 			return json.dumps(members)
 		else:
 			return ""
 	get_member_list.short_description = "members"
+
+@admin.register(VirtualDevice)
+class VirtualDeviceAdmin(PolymorphicChildModelAdmin):
+	base_model = VirtualDevice
+	# form = PrincipalAdminForm
+	list_display = ("name", "owner", "ttype")
+	search_fields = ("name", "owner")
+	list_filter = ("ttype",)
+
+# @admin.register(Principal)
+# class PrincipalsAdmin(PolymorphicParentModelAdmin):
+# 	""" The parent model admin """
+# 	base_model = Principal
+# 	child_models = (
+# 		(VirtualDevice, VirtualDeviceAdmin),
+# 		(PrincipalGroup, PrincipalGroupAdmin),
+# 	)
 
 @admin.register(Gateway)
 class GatewayAdmin(admin.ModelAdmin):

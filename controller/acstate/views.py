@@ -12,15 +12,15 @@ from django.views.decorators.csrf import csrf_exempt
 from passlib.apps import django_context as pwd_context
 
 from .models import AdminAuthInstance, UserAuthInstance, \
-	PasscodeAuthInstance, BeetleEmailAccount, ExclusiveLease
+	PasscodeAuthInstance, ExclusiveLease
 
-from beetle.models import Principal, Gateway, Contact
+from beetle.models import BeetleEmailAccount, Principal, Gateway, Contact
 from gatt.models import Service, Characteristic
 from access.models import Rule, RuleException, DynamicAuth, PasscodeAuth, \
 	AdminAuth, UserAuth, NetworkAuth, Exclusive
-from network.models import ConnectedGateway, ConnectedPrincipal, \
+from network.models import ConnectedGateway, ConnectedDevice, \
 	ServiceInstance, CharInstance
-from network.shared import get_gateway_and_principal_helper, get_gateway_helper
+from network.shared import get_gateway_and_device_helper, get_gateway_helper
 
 import dateutil.parser
 from dateutil.relativedelta import relativedelta
@@ -270,7 +270,7 @@ def query_passcode_liveness(request, rule_id, to_gateway, to_id):
 	"""
 	rule_id = int(rule_id)
 	to_id = int(to_id)
-	_, to_principal, _, _ = get_gateway_and_principal_helper(to_gateway, to_id)
+	_, to_principal, _, _ = get_gateway_and_device_helper(to_gateway, to_id)
 
 	try:
 		auth_instance = PasscodeAuthInstance.objects.get(
@@ -325,7 +325,7 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 	current_time = timezone.now()
 
 	rule = Rule.objects.get(id=rule_id)
-	_, to_principal, _, _ = get_gateway_and_principal_helper(to_gateway, to_id)
+	_, to_principal, _, _ = get_gateway_and_device_helper(to_gateway, to_id)
 
 	try:
 		admin_auth = DynamicAuth.objects.instance_of(AdminAuth).get(rule=rule)
@@ -461,7 +461,7 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 	current_time = timezone.now()
 
 	rule = Rule.objects.get(id=rule_id)
-	_, to_principal, _, _ = get_gateway_and_principal_helper(to_gateway, to_id)
+	_, to_principal, _, _ = get_gateway_and_device_helper(to_gateway, to_id)
 
 	try:
 		user_auth = DynamicAuth.objects.instance_of(UserAuth).get(rule=rule)
@@ -579,7 +579,7 @@ def request_exclusive_lease(request, exclusive_id, to_gateway, to_id):
 	to_id = int(to_id)
 	current_time = timezone.now()
 
-	_, _, _, to_principal_conn = get_gateway_and_principal_helper(to_gateway, to_id)
+	_, _, _, to_principal_conn = get_gateway_and_device_helper(to_gateway, to_id)
 
 	exclusive = Exclusive.objects.get(id=exclusive_id)
 

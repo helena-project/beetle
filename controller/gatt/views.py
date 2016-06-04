@@ -13,7 +13,8 @@ def list_services(request):
 	Return a list of service names 
 	"""
 	return JsonResponse(
-		[s.name for s in Service.objects.all().order_by("name")], safe=False)
+		[s.name for s in Service.objects.all().exclude(name="*").order_by(
+			"name")], safe=False)
 
 @require_GET
 def list_characteristics(request):
@@ -21,7 +22,8 @@ def list_characteristics(request):
 	Return a list of characteristic names 
 	"""
 	return JsonResponse(
-		[c.name for c in Characteristic.objects.all().order_by("name")], 
+		[c.name for c in Characteristic.objects.all().exclude(name="*"
+			).order_by("name")], 
 		safe=False)
 
 @require_GET
@@ -44,7 +46,7 @@ def find_service(request, uuid):
 	return JsonResponse({
 		"name": service.name,
 		"uuid": service.uuid,
-		"type": service.type_})
+		"type": service.ttype})
 
 @require_GET
 def find_characteristic(request, uuid):
@@ -58,7 +60,7 @@ def find_characteristic(request, uuid):
 	return JsonResponse({
 		"name": characteristic.name,
 		"uuid": characteristic.uuid,
-		"type": characteristic.type_})
+		"type": characteristic.ttype})
 
 @require_GET
 def find_descriptor(request, uuid):
@@ -72,4 +74,4 @@ def find_descriptor(request, uuid):
 	return JsonResponse({
 		"name": characteristic.name,
 		"uuid": characteristic.uuid,
-		"type": characteristic.type_})
+		"type": characteristic.ttype})

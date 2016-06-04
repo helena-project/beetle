@@ -8,20 +8,18 @@
     }
   },
   {
-    "model": "beetle.Principal",
+    "model": "beetle.PrincipalGroup",
+    "pk": 0,
     "fields": {
-      "name": "*",
-      "ptype": "unknown",
-      "verified": true,
-      "owner": 0
+      "name": "*"
     }
   },
   {
     "model": "beetle.Gateway",
+    "pk": 0,
     "fields": {
       "name": "*",
-      "os": "unknown",
-      "trusted": false
+      "os": "unknown"
     }
   }
 ]

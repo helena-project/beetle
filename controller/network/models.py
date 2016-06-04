@@ -4,15 +4,18 @@ from django.db import models
 
 from datetime import timedelta
 
-from beetle.models import Principal, Gateway
+from beetle.models import VirtualDevice, Gateway
 from gatt.models import Service, Characteristic
 
 # Create your models here.
 
 class ConnectedGateway(models.Model):
-	"""
-	A Beetle gateway
-	"""
+	"""A Beetle gateway"""
+
+	class Meta:
+		verbose_name = "Gateway Instance"
+		verbose_name_plural = "Gateway Instances"
+
 	DEFAULT_GATEWAY_TCP_SERVER_PORT = 3002 
 	CONNECTION_TIMEOUT = timedelta(minutes=60)
 
@@ -28,40 +31,38 @@ class ConnectedGateway(models.Model):
 	def __unicode__(self):
 		return self.gateway.name + "@" + self.ip_address
 
-class ConnectedPrincipal(models.Model):
-	"""
-	An app or peripheral
-	"""
+class ConnectedDevice(models.Model):
+	"""An app or peripheral"""
+
 	class Meta:
-		verbose_name_plural = "Connected principals"
+		verbose_name = "Device Instance"
+		verbose_name_plural = "Device Instances"
 
 	CONNECTION_TIMEOUT = timedelta(minutes=15)
 
-	principal = models.ForeignKey("beetle.Principal")
-	gateway = models.ForeignKey("ConnectedGateway")			# TODO bad naming
+	device = models.ForeignKey("beetle.VirtualDevice")
+	gateway_instance = models.ForeignKey("ConnectedGateway")
 	remote_id = models.IntegerField(
 		help_text="id of the device on the gateway")
 	last_seen = models.DateTimeField(auto_now_add=True)
 
 	def __unicode__(self):
-		return self.principal.name + "@" + self.gateway.gateway.name
+		return self.device.name + "@" + self.gateway_instance.gateway.name
 
 class ServiceInstance(models.Model):
-	"""
-	An instance of a service
-	"""
-	principal = models.ForeignKey("ConnectedPrincipal") 	# TODO bad naming
+	"""An instance of a service"""
+
+	device_instance = models.ForeignKey("ConnectedDevice")
 	service = models.ForeignKey("gatt.Service") 
 
 	def __unicode__(self):
 		return self.service.__unicode__()
 
 class CharInstance(models.Model):
-	"""
-	An instance of a characterisic
-	"""
-	principal = models.ForeignKey("ConnectedPrincipal")		# TODO bad naming
-	service = models.ForeignKey("ServiceInstance")			# TODO bad naming
+	"""An instance of a characterisic"""
+	
+	device_instance = models.ForeignKey("ConnectedDevice")
+	service_instance = models.ForeignKey("ServiceInstance")
 	char = models.ForeignKey("gatt.Characteristic")
 
 	def __unicode__(self):

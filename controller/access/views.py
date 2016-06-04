@@ -12,9 +12,9 @@ from .models import Rule, RuleException, DynamicAuth, AdminAuth, UserAuth, \
 
 from beetle.models import Principal, Gateway, Contact
 from gatt.models import Service, Characteristic
-from network.models import ConnectedGateway, ConnectedPrincipal, \
+from network.models import ConnectedGateway, ConnectedDevice, \
 	ServiceInstance, CharInstance
-from network.shared import get_gateway_helper, get_gateway_and_principal_helper
+from network.shared import get_gateway_helper, get_gateway_and_device_helper
 
 import dateutil.parser
 import cronex
@@ -119,11 +119,11 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 
 	from_id = int(from_id)
 	from_gateway, from_principal, conn_from_gateway, conn_from_principal = \
-		get_gateway_and_principal_helper(from_gateway, from_id)
+		get_gateway_and_device_helper(from_gateway, from_id)
 
 	to_id = int(to_id)
 	to_gateway, to_principal, conn_to_gateway, conn_to_principal = \
-		get_gateway_and_principal_helper(to_gateway, to_id)
+		get_gateway_and_device_helper(to_gateway, to_id)
 
 	can_map, applicable_rules = query_can_map_static(from_gateway, 
 		from_principal, to_gateway, to_principal, timestamp)
@@ -165,14 +165,14 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 	services = {}
 	rules = {}
 	for service_instance in ServiceInstance.objects.filter(
-		principal=conn_from_principal):
+		device_instance=conn_from_principal):
 		service_rules = applicable_rules.filter(
 			Q(service=service_instance.service) | Q(service__name="*"))
 
 		service = service_instance.service
 
 		for char_instance in CharInstance.objects.filter(
-			service=service_instance):
+			service_instance=service_instance):
 			
 			characteristic = char_instance.char
 

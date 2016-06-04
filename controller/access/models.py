@@ -11,7 +11,8 @@ from dateutil.relativedelta import relativedelta
 from passlib.apps import django_context as pwd_context
 
 from gatt.models import Service, Characteristic
-from beetle.models import Principal, Gateway, Contact
+from beetle.models import Principal, VirtualDevice, PrincipalGroup, Gateway, \
+	Contact
 
 # Create your models here.
 
@@ -19,9 +20,7 @@ def default_expire(self=None):
 	return timezone.now() + relativedelta(years=1)
 
 class Rule(models.Model):
-	""" 
-	A rule specifying when a GATT server and client may communicate 
-	"""
+	"""A rule specifying when a GATT server and client may communicate"""
 
 	# human searchable name
 	name = models.CharField(
@@ -63,7 +62,8 @@ class Rule(models.Model):
 		help_text="Gateway connected to client.")
 
 	NUM_HIGH_PRIORITY_LEVELS = 1
-	PRIORITY_CHOICES = ((0, "Normal"),) + tuple((i, "High-%d" % i) for i in xrange(1, NUM_HIGH_PRIORITY_LEVELS+1))
+	PRIORITY_CHOICES = ((0, "Normal"),) + tuple((i, "High-%d" % i) for \
+		i in xrange(1, NUM_HIGH_PRIORITY_LEVELS+1))
 
 	priority = models.IntegerField(
 		default=0,
@@ -74,7 +74,8 @@ class Rule(models.Model):
 		max_length=100, 
 		default="* * * * *",
 		verbose_name="Cron",
-		help_text="Standard crontab expression for when rule applies. Format: Min Hour Day-of-Month Month Day-of-Week")
+		help_text="Standard crontab expression for when rule applies. " 
+			+ "Format: Min Hour Day-of-Month Month Day-of-Week")
 
 	# permissions and connection information
 	properties = models.CharField(
@@ -120,8 +121,18 @@ class Rule(models.Model):
 		def _eq(a, b):
 			return a.name == b.name
 		def _lte_principal(a, b):
-			return a == b or (b.ptype == Principal.GROUP and b.members.filter(
-				name=a.name).exists()) or b.name == "*"
+			if a == b:
+				return True 
+			if isinstance(b, PrincipalGroup):
+				if isinstance(a, VirtualDevice):
+					if b.members.filter(name=a.name).exists():
+						return True
+				else:
+					# subset?
+					pass
+			if b.name == "*":
+				return True
+			return False
 		def _eq_principal(a, b):
 			return a == b
 
@@ -155,9 +166,8 @@ class Rule(models.Model):
 		return self.name
 
 class RuleException(models.Model):
-	"""
-	Deny, instead of allow, access. Used for attenuating existing rules.
-	"""
+	"""Deny, instead of allow, access. Used for attenuating existing rules."""
+
 	rule = models.ForeignKey(
 		"Rule",
 		help_text="Rule to invert")
@@ -206,12 +216,9 @@ class Exclusive(models.Model):
 	def __unicode__(self):
 		return self.description
 
-#------------------------------------------------------------------------------
-
 class DynamicAuth(PolymorphicModel):
-	"""
-	Base class for dynamic rules.
-	"""
+	"""Base class for dynamic rules."""
+
 	class Meta:
 		verbose_name_plural = "Dynamic Auth"
 
@@ -237,12 +244,9 @@ class DynamicAuth(PolymorphicModel):
 		editable=False,
 		help_text="A hidden field to ensure evaluation order")
 
-#------------------------------------------------------------------------------
-
 class AdminAuth(DynamicAuth):
-	"""
-	Prompt the admin for permission.
-	"""
+	"""Prompt the admin for permission."""
+
 	class Meta:
 		verbose_name = "Admin"
 		verbose_name_plural = "Admin Auth"
@@ -274,12 +278,9 @@ class AdminAuth(DynamicAuth):
 	def __unicode__(self):
 		return ""
 
-#------------------------------------------------------------------------------
-
 class UserAuth(DynamicAuth):
-	"""
-	Prompt the user for permission.
-	"""
+	"""Prompt the user for permission."""
+
 	class Meta:
 		verbose_name = "User Auth"
 		verbose_name_plural = "User Auth"
@@ -308,12 +309,9 @@ class UserAuth(DynamicAuth):
 	def __unicode__(self):
 		return ""
 
-#------------------------------------------------------------------------------
-
 class PasscodeAuth(DynamicAuth):
-	"""
-	Prompt user for a passcode.
-	"""
+	"""Prompt user for a passcode."""
+
 	class Meta:
 		verbose_name = "Passcode"
 		verbose_name_plural = "Passcode Auth"
@@ -344,12 +342,8 @@ class PasscodeAuth(DynamicAuth):
 	def __unicode__(self):
 		return ""
 
-#------------------------------------------------------------------------------
-
 class NetworkAuth(DynamicAuth):
-	"""
-	Is the client from a specific IP or subnet.
-	"""
+	"""Is the client from a specific IP or subnet."""
 
 	class Meta:
 		verbose_name = "Network"

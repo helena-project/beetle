@@ -4,16 +4,15 @@ from django.db import models
 
 # Create your models here.
 class Service(models.Model):
-	""" 
-	A GATT service 
-	"""
+	"""A GATT service"""
+	
 	name = models.CharField(max_length=200)
 	uuid = models.CharField(
 		max_length=36, 
 		blank=True, 
 		primary_key=True,
 		help_text="16 or 128-bit UUID.")
-	type_ = models.CharField(
+	ttype = models.CharField(
 		max_length=200, 
 		blank=True,
 		verbose_name="type")
@@ -28,16 +27,15 @@ class Service(models.Model):
 			return "<unk serv>." + self.uuid
 
 class Characteristic(models.Model):
-	""" 
-	A GATT characteristic 
-	"""
+	"""A GATT characteristic"""
+
 	name = models.CharField(max_length=200)
 	uuid = models.CharField(
 		max_length=36, 
 		blank=True, 
 		primary_key=True,
 		help_text="16 or 128-bit UUID.")
-	type_ = models.CharField(
+	ttype = models.CharField(
 		max_length=200, 
 		blank=True, 
 		verbose_name="type")
@@ -52,16 +50,15 @@ class Characteristic(models.Model):
 			return "<unk char>." + self.uuid
 
 class Descriptor(models.Model):
-	""" 
-	A GATT descriptor 
-	"""
+	"""A GATT descriptor"""
+
 	name = models.CharField(max_length=200)
 	uuid = models.CharField(
 		max_length=36, 
 		blank=True, 
 		primary_key=True,
 		help_text="16 or 128-bit UUID.")
-	type_ = models.CharField(
+	ttype = models.CharField(
 		max_length=200, 
 		blank=True, 
 		verbose_name="type")

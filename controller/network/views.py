@@ -11,7 +11,7 @@ from ipware.ip import get_ip
 
 import json
 
-from .models import ConnectedGateway, ConnectedPrincipal, CharInstance, \
+from .models import ConnectedGateway, ConnectedDevice, CharInstance, \
 	ServiceInstance
 
 from beetle.models import Gateway, Principal
@@ -22,13 +22,13 @@ from access.shared import query_can_map_static
 
 # Create your views here.
 
+# TODO replace
 @transaction.atomic
 @csrf_exempt
 @require_http_methods(["POST", "DELETE"])
 def connect_gateway(request, gateway):
-	"""
-	Connect or disconnect a gateway to Beetle network
-	"""
+	"""Connect or disconnect a gateway to Beetle network"""
+
 	if gateway == "*":
 		return HttpResponse(status=400)
 
@@ -50,7 +50,7 @@ def connect_gateway(request, gateway):
 			gateway=gateway)
 		if not created:
 			gateway_conn.last_seen = timezone.now()
-			ConnectedPrincipal.objects.filter(gateway=gateway_conn).delete()
+			ConnectedDevice.objects.filter(gateway_instance=gateway_conn).delete()
 
 		gateway_conn.ip_address = ip_address
 		gateway_conn.port = port
@@ -68,13 +68,12 @@ def connect_gateway(request, gateway):
 	else:
 		return HttpResponse(status=405)
 
-def _load_services_and_characteristics(services, principal_conn):
-	"""
-	Parse the services and characteristics
-	"""
+def _load_services_and_characteristics(services, device_conn):
+	"""Parse the services and characteristics"""
+
 	# first clear any existing
-	ServiceInstance.objects.filter(principal=principal_conn).delete()
-	CharInstance.objects.filter(principal=principal_conn).delete()
+	ServiceInstance.objects.filter(device_instance=device_conn).delete()
+	CharInstance.objects.filter(device_instance=device_conn).delete()
 
 	# parse and setup service/char heirarchy
 	for service_obj in services:
@@ -89,7 +88,7 @@ def _load_services_and_characteristics(services, principal_conn):
 
 		service_ins, _ = ServiceInstance.objects.get_or_create(
 			service=service, 
-			principal=principal_conn)
+			device_instance=device_conn)
 		service_ins.save()
 
 		for char_uuid in service_obj["chars"]:
@@ -103,44 +102,43 @@ def _load_services_and_characteristics(services, principal_conn):
 
 			char_ins, _ = CharInstance.objects.get_or_create(
 				char=char, 
-				principal=principal_conn, 
-				service=service_ins)
+				device_instance=device_conn, 
+				service_instance=service_ins)
 			char_ins.save()
 
 @transaction.atomic
 @csrf_exempt
 @require_POST
-def connect_principal(request, gateway, principal, remote_id):
-	"""
-	Connect an application or peripheral
-	"""
-	if gateway == "*" or principal == "*":
+def connect_device(request, gateway, device, remote_id):
+	"""Connect an application or peripheral"""
+
+	if gateway == "*" or device == "*":
 		return HttpResponse(status=400)
 	remote_id = int(remote_id)
 
 	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
-	principal, created = Principal.objects.get_or_create(name=principal)
+	device, created = Principal.objects.get_or_create(name=device)
 	if created:
 		pass
 
 	try:
-		principal_conn = ConnectedPrincipal.objects.get(
-			principal=principal, 
-			gateway=gateway_conn)
-		principal_conn.remote_id = remote_id
-		principal_conn.last_seen = timezone.now()
-	except ConnectedPrincipal.DoesNotExist:
-		principal_conn = ConnectedPrincipal(
-			principal=principal, 
-			gateway=gateway_conn, 
+		device_conn = ConnectedDevice.objects.get(
+			device=device, 
+			gateway_instance=gateway_conn)
+		device_conn.remote_id = remote_id
+		device_conn.last_seen = timezone.now()
+	except ConnectedDevice.DoesNotExist:
+		device_conn = ConnectedDevice(
+			device=device, 
+			gateway_instance=gateway_conn, 
 			remote_id=remote_id)
 
 	gateway_conn.last_seen = timezone.now()
 	gateway_conn.save()
-	principal_conn.save()
+	device_conn.save()
 
 	services = json.loads(request.body)
-	response = _load_services_and_characteristics(services, principal_conn)
+	response = _load_services_and_characteristics(services, device_conn)
 	if response is None:
 		return HttpResponse("connected")
 	else:
@@ -149,10 +147,9 @@ def connect_principal(request, gateway, principal, remote_id):
 @transaction.atomic
 @csrf_exempt
 @require_http_methods(["DELETE", "PUT"])
-def update_principal(request, gateway, remote_id):
-	"""
-	Disconnect an application or peripheral
-	"""
+def update_device(request, gateway, remote_id):
+	"""Disconnect an application or peripheral"""
+
 	if gateway == "*":
 		return HttpResponse(status=400)
 	remote_id = int(remote_id)
@@ -165,13 +162,13 @@ def update_principal(request, gateway, remote_id):
 		##########
 		# Update #
 		##########
-		principal_conn = ConnectedPrincipal.objects.get(
-			gateway=gateway_conn, remote_id=remote_id)
-		principal_conn.last_seen = timezone.now()
-		principal_conn.save()
+		device_conn = ConnectedDevice.objects.get(
+			gateway_instance=gateway_conn, remote_id=remote_id)
+		device_conn.last_seen = timezone.now()
+		device_conn.save()
 
 		services = json.loads(request.body)
-		response = _load_services_and_characteristics(services, principal_conn)
+		response = _load_services_and_characteristics(services, device_conn)
 
 		if response is None:
 			return HttpResponse("updated")
@@ -182,10 +179,10 @@ def update_principal(request, gateway, remote_id):
 		##############
 		# Disconnect #
 		##############
-		principal_conns = ConnectedPrincipal.objects.filter(
-			gateway=gateway_conn, 
+		device_conns = ConnectedDevice.objects.filter(
+			gateway_instance=gateway_conn, 
 			remote_id=remote_id)
-		principal_conns.delete()
+		device_conns.delete()
 
 		return HttpResponse("disconnected")
 	
@@ -194,19 +191,18 @@ def update_principal(request, gateway, remote_id):
 
 @require_GET
 @gzip_page
-def view_principal(request, principal, detailed=True):
-	"""
-	Returns in json, the principal's service anc characteristic uuids
-	"""
-	principal_conns = ConnectedPrincipal.objects.filter(
-		principal__name=principal).order_by("-last_seen")
+def view_device(request, device, detailed=True):
+	"""Returns in json, the device's service anc characteristic uuids"""
+
+	device_conns = ConnectedDevice.objects.filter(
+		device__name=device).order_by("-last_seen")
 	
-	if len(principal_conns) == 0:
+	if len(device_conns) == 0:
 		return HttpResponse(status=202)
 	
 	response = []
-	principal_conn = principal_conns[0]
-	for service_ins in ServiceInstance.objects.filter(principal=principal_conn):
+	device_conn = device_conns[0]
+	for service_ins in ServiceInstance.objects.filter(device_instance=device_conn):
 		if detailed:
 			response.append({
 				"name": service_ins.service.name,
@@ -226,21 +222,20 @@ def view_principal(request, principal, detailed=True):
 
 @require_GET
 @gzip_page
-def discover_principals(request):
-	"""
-	Get list of connnected principals
-	"""
+def discover_devices(request):
+	"""Get list of connnected devices"""
+
 	response = []
-	for conn_principal in ConnectedPrincipal.objects.all():
+	for conn_device in ConnectedDevice.objects.all():
 		response.append({
-			"principal" : {
-				"name" : conn_principal.principal.name,
-				"id" : conn_principal.remote_id,
+			"device" : {
+				"name" : conn_device.device.name,
+				"id" : conn_device.remote_id,
 			},
 			"gateway" : {
-				"name" : conn_principal.gateway.gateway.name,
-				"ip" : conn_principal.gateway.ip_address,
-				"port" : conn_principal.gateway.port,
+				"name" : conn_device.gateway.gateway.name,
+				"ip" : conn_device.gateway.ip_address,
+				"port" : conn_device.gateway.port,
 			},
 		});
 	return JsonResponse(response, safe=False)
@@ -248,9 +243,8 @@ def discover_principals(request):
 @require_GET
 @gzip_page
 def discover_with_uuid(request, uuid, is_service=True):
-	"""
-	Get devices with characteristic 
-	"""
+	"""Get devices with characteristic"""
+
 	if check_uuid(uuid) == False:
 		return HttpResponse("invalid uuid %s" % uuid, status=400)
 	uuid = convert_uuid(uuid)
@@ -261,8 +255,8 @@ def discover_with_uuid(request, uuid, is_service=True):
 	if gateway is not None and remote_id is not None:
 		gateway_conn = ConnectedGateway.objects.get(
 			gateway__name=gateway)
-		principal_conn = ConnectedPrincipal.objects.get(
-			gateway=gateway_conn, remote_id=int(remote_id))
+		device_conn = ConnectedDevice.objects.get(
+			gateway_instance=gateway_conn, remote_id=int(remote_id))
 	###
 
 	current_time = timezone.now()
@@ -275,22 +269,22 @@ def discover_with_uuid(request, uuid, is_service=True):
 	
 	for x in qs:
 
-		can_map, _ =  query_can_map_static(x.principal.gateway.gateway, 
-			x.principal.principal, gateway_conn.gateway, 
-			principal_conn.principal, current_time)
+		can_map, _ =  query_can_map_static(x.device.gateway.gateway, 
+			x.device.device, gateway_conn.gateway, 
+			device_conn.device, current_time)
 		
 		if not can_map:
 			continue
 
 		response.append({
-			"principal" : {
-				"name" : x.principal.principal.name,
-				"id" : x.principal.remote_id,
+			"device" : {
+				"name" : x.device.device.name,
+				"id" : x.device.remote_id,
 			},
 			"gateway" : {
-				"name" : x.principal.gateway.gateway.name,
-				"ip" : x.principal.gateway.ip_address,
-				"port" : x.principal.gateway.port,
+				"name" : x.device.gateway.gateway.name,
+				"ip" : x.device.gateway.ip_address,
+				"port" : x.device.gateway.port,
 			},
 		});
 
@@ -298,6 +292,8 @@ def discover_with_uuid(request, uuid, is_service=True):
 
 @require_GET
 def find_gateway(request, gateway):
+	"""Get information on how to reach a gateway"""
+	
 	try:
 		gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
 	except ConnectedGateway.DoesNotExist:
