@@ -69,7 +69,7 @@ public:
 	bool controllerEnabled = false;
 	std::string controllerHost = "localhost";
 	int controllerPort = 443;
-	bool controllerCommandEnabled = true;
+	bool controllerCommandEnabled = false;
 	int controllerCommandPort = 3003;
 
 	/*
