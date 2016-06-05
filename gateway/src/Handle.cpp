@@ -20,7 +20,13 @@ CachedHandle::~CachedHandle() {
 void CachedHandle::set(boost::shared_array<uint8_t> value_, int len_) {
 	value = value_;
 	len = len_;
-	::time(&(time));
+	time = ::time(NULL);
+}
+
+void CachedHandle::clear() {
+	value.reset();
+	len = 0;
+	time = ::time(NULL);
 }
 
 Handle::Handle() {

@@ -174,7 +174,7 @@ void BeetleInternal::init() {
 	gattServiceChangedAttrHandle->setUuid(UUID(GATT_GATT_CHARAC_SERVICE_CHANGED_UUID));
 	gattServiceChangedAttrHandle->setServiceHandle(gattServiceHandle->getHandle());
 	gattServiceChangedAttrHandle->setCharHandle(gattServiceChangedCharHandle->getHandle());
-	gattServiceChangedAttrHandle->cache.set(NULL, 0);
+	gattServiceChangedAttrHandle->cache.clear();
 	gattServiceChangedAttrHandle->setCacheInfinite(false);
 	handles[gattServiceChangedAttrHandle->getHandle()] = gattServiceChangedAttrHandle;
 
@@ -186,7 +186,7 @@ void BeetleInternal::init() {
 	gattServiceChangedCfgHandle->setHandle(handleAlloc++);
 	gattServiceChangedCfgHandle->setServiceHandle(gattServiceHandle->getHandle());
 	gattServiceChangedCfgHandle->setCharHandle(gattServiceChangedCharHandle->getHandle());
-	gattServiceChangedCfgHandle->cache.set(NULL, 0);
+	gattServiceChangedCfgHandle->cache.clear();
 	gattServiceChangedCfgHandle->setCacheInfinite(false);
 	handles[gattServiceChangedCfgHandle->getHandle()] = gattServiceChangedCfgHandle;
 

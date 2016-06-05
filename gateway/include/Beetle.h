@@ -143,13 +143,13 @@ public:
 	 * Set the access control mechanism.
 	 */
 	void setAccessControl(std::shared_ptr<AccessControl> ac);
-	std::shared_ptr<AccessControl> accessControl = NULL;
+	std::shared_ptr<AccessControl> accessControl;
 
 	/*
 	 * Set the discovery client.
 	 */
 	void setDiscoveryClient(std::shared_ptr<NetworkDiscoveryClient> nd);
-	std::shared_ptr<NetworkDiscoveryClient> discoveryClient = NULL;
+	std::shared_ptr<NetworkDiscoveryClient> discoveryClient;
 
 	/*
 	 * Workers for callbacks.
