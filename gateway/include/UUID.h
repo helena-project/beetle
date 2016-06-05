@@ -38,7 +38,7 @@ public:
 	UUID(uint8_t *buf, size_t len, bool reversed = true);
 
 	/*
-	 * Load uuid from string.
+	 * Load uuid from string. Length is either 4 or 32.
 	 */
 	UUID(std::string s);
 
@@ -64,6 +64,11 @@ public:
 
 	std::string str(bool forceLong = false) const;
 private:
+
+	/*
+	 * By convention, we will store the UUID in the byte order it is to
+	 * be printed.
+	 */
 	uuid_t uuid;
 };
 

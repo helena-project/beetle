@@ -14,6 +14,8 @@
 
 #include "BeetleTypes.h"
 #include "UUID.h"
+#include <Beetle.h>
+#include <functional>
 
 /* Forward declarations */
 class ControllerClient;
@@ -45,6 +47,11 @@ public:
 	 * Look for gateway in the network.
 	 */
 	bool findGatewayByName(std::string name, std::string &ip, int &port);
+
+	/*
+	 * Register interest in the uuid.
+	 */
+	void registerInterestInUuid(device_t id, UUID uuid, bool isService = true, std::function<void()> cb = NULL);
 
 private:
 	Beetle &beetle;

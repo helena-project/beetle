@@ -1,13 +1,24 @@
-from django.conf.urls import include, url
+from django.conf.urls import url
 
-from . import views
+from beetle.regex import gateway
+from network.regex import device_id
+
+from .regex import rule
+from . import views_api as api
+from . import views_user as user
 
 urlpatterns = [
-	url(r'^canMap/(?P<from_gateway>[\w_\-@\']+)/(?P<from_id>\d+)/(?P<to_gateway>[\w_\-@\']+)/(?P<to_id>\d+)$',
-		views.query_can_map,
-		name="can fromId at fromGateway be mapped to toId at toGateway?"),
+
+	# User facing
 	
-	url(r'^view/rule/(?P<rule>\w+)/except$',
-		views.view_rule_exceptions,
+	url(r'^view/rule/' + rule('rule') + r'/except$',
+		user.view_rule_exceptions,
 		name="get list of exceptions"),
+
+	# Internal APIs
+
+	url(r'^canMap/' + gateway("from_gateway") + r'/' + device_id("from_id") 
+		+ r'/' + gateway("to_gateway") + r'/' + device_id("to_id") + r'$',
+		api.query_can_map,
+		name="can fromId at fromGateway be mapped to toId at toGateway?"),
 ]

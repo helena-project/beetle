@@ -1,17 +1,13 @@
 from __future__ import unicode_literals
 
-from django.db import models
-from django.utils import timezone
-from django.core import serializers
-from polymorphic.models import PolymorphicModel
-
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 
-from passlib.apps import django_context as pwd_context
+from django.db import models
+from django.utils import timezone
+from polymorphic.models import PolymorphicModel
 
-from gatt.models import Service, Characteristic
-from beetle.models import Principal, Gateway, Contact
+from passlib.apps import django_context as pwd_context
 
 # Create your models here.
 
@@ -19,9 +15,7 @@ def default_expire(self=None):
 	return timezone.now() + relativedelta(years=1)
 
 class Rule(models.Model):
-	""" 
-	A rule specifying when a GATT server and client may communicate 
-	"""
+	"""A rule specifying when a GATT server and client may communicate"""
 
 	# human searchable name
 	name = models.CharField(
@@ -63,7 +57,8 @@ class Rule(models.Model):
 		help_text="Gateway connected to client.")
 
 	NUM_HIGH_PRIORITY_LEVELS = 1
-	PRIORITY_CHOICES = ((0, "Normal"),) + tuple((i, "High-%d" % i) for i in xrange(1, NUM_HIGH_PRIORITY_LEVELS+1))
+	PRIORITY_CHOICES = ((0, "Normal"),) + tuple((i, "High-%d" % i) for \
+		i in xrange(1, NUM_HIGH_PRIORITY_LEVELS+1))
 
 	priority = models.IntegerField(
 		default=0,
@@ -74,7 +69,8 @@ class Rule(models.Model):
 		max_length=100, 
 		default="* * * * *",
 		verbose_name="Cron",
-		help_text="Standard crontab expression for when rule applies. Format: Min Hour Day-of-Month Month Day-of-Week")
+		help_text="Standard crontab expression for when rule applies. " 
+			+ "Format: Min Hour Day-of-Month Month Day-of-Week")
 
 	# permissions and connection information
 	properties = models.CharField(
@@ -120,10 +116,31 @@ class Rule(models.Model):
 		def _eq(a, b):
 			return a.name == b.name
 		def _lte_principal(a, b):
-			return a == b or (b.ptype == Principal.GROUP and b.members.filter(
-				name=a.name).exists()) or b.name == "*"
-		def _eq_principal(a, b):
-			return a == b
+			if a == b:
+				return True 
+			if isinstance(b, PrincipalGroup):
+				if isinstance(a, VirtualDevice):
+					if b.members.filter(name=a.name).exists():
+						return True
+				else:
+					# subset?
+					pass
+			if b.name == "*":
+				return True
+			return False
+		def _lte_gateway(a, b):
+			if a == b:
+				return True 
+			if isinstance(b, GatewayGroup):
+				if isinstance(a, BeetleGateway):
+					if b.members.filter(name=a.name).exists():
+						return True
+				else:
+					# subset?
+					pass
+			if b.name == "*":
+				return True
+			return False
 
 		if self.priority <= rhs.priority:
 			return True
@@ -137,17 +154,17 @@ class Rule(models.Model):
 
 		from_lte = False
 		if _lte_principal(self.from_principal, rhs.from_principal):
-			if not _eq_principal(self.from_principal, rhs.from_principal):
+			if not self.from_principal == rhs.from_principal:
 				from_lte = True
 			else:
-				from_lte = _lte(self.from_gateway, rhs.from_gateway)
+				from_lte = _lte_gateway(self.from_gateway, rhs.from_gateway)
 
 		to_lte = False
 		if _lte_principal(self.to_principal, rhs.to_principal):
-			if not _eq_principal(self.to_principal, rhs.to_principal):
+			if not self.to_principal == rhs.to_principal:
 				to_lte = True
 			else:
-				to_lte = _lte(self.to_gateway, rhs.to_gateway)
+				to_lte = _lte_gateway(self.to_gateway, rhs.to_gateway)
 
 		return svc_char_lte and from_lte and to_lte
 
@@ -155,9 +172,8 @@ class Rule(models.Model):
 		return self.name
 
 class RuleException(models.Model):
-	"""
-	Deny, instead of allow, access. Used for attenuating existing rules.
-	"""
+	"""Deny, instead of allow, access. Used for attenuating existing rules."""
+
 	rule = models.ForeignKey(
 		"Rule",
 		help_text="Rule to invert")
@@ -185,9 +201,7 @@ class RuleException(models.Model):
 		return "(except) %s" % self.rule
 
 class Exclusive(models.Model):
-	"""
-	Group rules by exclusive access.
-	"""
+	"""Group rules by exclusive access."""
 
 	NULL = -1
 
@@ -206,12 +220,9 @@ class Exclusive(models.Model):
 	def __unicode__(self):
 		return self.description
 
-#------------------------------------------------------------------------------
-
 class DynamicAuth(PolymorphicModel):
-	"""
-	Base class for dynamic rules.
-	"""
+	"""Base class for dynamic rules."""
+
 	class Meta:
 		verbose_name_plural = "Dynamic Auth"
 
@@ -237,16 +248,12 @@ class DynamicAuth(PolymorphicModel):
 		editable=False,
 		help_text="A hidden field to ensure evaluation order")
 
-#------------------------------------------------------------------------------
-
 class AdminAuth(DynamicAuth):
-	"""
-	Prompt the admin for permission.
-	"""
-	class Meta:
-		verbose_name = "Admin"
-		verbose_name_plural = "Admin Auth"
+	"""Prompt the admin for permission."""
 
+	class Meta:
+		verbose_name = "Admin Authorization"
+		verbose_name_plural = verbose_name
 	RULE_SCOPE = 1
 	SERVER_SCOPE = 2
 	SCOPE_CHOICES = (
@@ -274,15 +281,12 @@ class AdminAuth(DynamicAuth):
 	def __unicode__(self):
 		return ""
 
-#------------------------------------------------------------------------------
-
 class UserAuth(DynamicAuth):
-	"""
-	Prompt the user for permission.
-	"""
+	"""Prompt the user for permission."""
+
 	class Meta:
-		verbose_name = "User Auth"
-		verbose_name_plural = "User Auth"
+		verbose_name = "User Authentication"
+		verbose_name_plural = verbose_name
 
 	RULE_SCOPE = 1
 	SERVER_SCOPE = 2
@@ -308,15 +312,12 @@ class UserAuth(DynamicAuth):
 	def __unicode__(self):
 		return ""
 
-#------------------------------------------------------------------------------
-
 class PasscodeAuth(DynamicAuth):
-	"""
-	Prompt user for a passcode.
-	"""
+	"""Prompt user for a passcode."""
+
 	class Meta:
-		verbose_name = "Passcode"
-		verbose_name_plural = "Passcode Auth"
+		verbose_name = "Passcode Authentication"
+		verbose_name_plural = verbose_name
 
 	code = models.CharField(
 		max_length=200,
@@ -344,16 +345,12 @@ class PasscodeAuth(DynamicAuth):
 	def __unicode__(self):
 		return ""
 
-#------------------------------------------------------------------------------
-
 class NetworkAuth(DynamicAuth):
-	"""
-	Is the client from a specific IP or subnet.
-	"""
+	"""Is the client from a specific IP or subnet."""
 
 	class Meta:
-		verbose_name = "Network"
-		verbose_name_plural = "Network Auth"
+		verbose_name = "Network Requirement"
+		verbose_name_plural = verbose_name
 
 	is_private = models.BooleanField(
 		default=False,
@@ -369,3 +366,4 @@ class NetworkAuth(DynamicAuth):
 
 	def __unicode__(self):
 		return self.ip_address
+		

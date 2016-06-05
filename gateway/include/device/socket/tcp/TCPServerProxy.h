@@ -23,7 +23,14 @@ public:
 			struct sockaddr_in serverGatewaySockAddr, device_t remoteProxyTo);
 	virtual ~TCPServerProxy();
 
+	/*
+	 * Returns the id at the remote gateway.
+	 */
 	device_t getRemoteDeviceId();
+
+	/*
+	 * Returns the name of the server gateway.
+	 */
 	std::string getServerGateway();
 
 	/*

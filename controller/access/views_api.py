@@ -1,27 +1,22 @@
-from django.shortcuts import render, render_to_response
-from django.http import JsonResponse, HttpResponse
+
+import cronex
+import dateutil.parser
+
+from django.http import JsonResponse
 from django.db.models import Q
-from django.core import serializers
 from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.http import require_GET
 
-from .shared import query_can_map_static
-from .models import Rule, RuleException, DynamicAuth, AdminAuth, UserAuth, \
+from .lookup import query_can_map_static
+from .models import DynamicAuth, AdminAuth, UserAuth, \
 	PasscodeAuth, NetworkAuth, Exclusive
 
-from beetle.models import Principal, Gateway, Contact
-from gatt.models import Service, Characteristic
-from network.models import ConnectedGateway, ConnectedPrincipal, \
-	ServiceInstance, CharInstance
-from network.shared import get_gateway_helper, get_gateway_and_principal_helper
+from beetle.models import Contact
+from network.models import ServiceInstance, CharInstance
+from network.lookup import get_gateway_and_device_helper
 
-import dateutil.parser
-import cronex
-import json
-import base64
-
-def _get_dynamic_auth(rule, principal):
+def __get_dynamic_auth(rule, principal):
 	result = []
 	for auth in DynamicAuth.objects.filter(rule=rule).order_by("priority"):
 		auth_obj = {
@@ -50,10 +45,9 @@ def _get_dynamic_auth(rule, principal):
 	
 	return True, result
 
-def _get_minimal_rules(rules, cached_relations):
-	"""
-	Returns the rules that are 'minimal'.
-	"""
+def __get_minimal_rules(rules, cached_relations):
+	"""Returns the rules that are 'minimal'."""
+	
 	if rules.count() == 0:
 		return rules
 
@@ -82,24 +76,24 @@ def _get_minimal_rules(rules, cached_relations):
 			else:
 				not_minimal_ids.add(rhs.id)
 
-	for rule_id in not_minimal_ids:
-		rules = rules.exclude(id=rule_id)
+	rules = rules.exclude(id__in=not_minimal_ids)
 
 	return rules
 
-def _evaluate_cron(rule, timestamp, cached_cron):
-	"""
-	Returns whether the timestamp is in the trigger window of the rule
-	"""
+def __evaluate_cron(rule, timestamp, cached_cron):
+	"""Returns whether the timestamp is in the trigger window of the rule"""
+
 	if rule.id in cached_cron:
 		return cached_cron[rule.id]
 
 	result = False
 	try:
-		cron = cronex.CronExpression(rule.cron_expression)
+		cron_str = str(rule.cron_expression)
+		cron = cronex.CronExpression(cron_str)
 		result = cron.check_trigger(timestamp.timetuple()[:5], 
-			utc_offset=timestamp.utcoffset())
-	except:
+			utc_offset=timestamp.utcoffset().seconds / (60 ** 2))
+	except Exception, err:
+		print err
 		result = False
 
 	cached_cron[rule.id] = result
@@ -108,9 +102,7 @@ def _evaluate_cron(rule, timestamp, cached_cron):
 @gzip_page
 @require_GET
 def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
-	"""
-	Return whether fromId at fromGateway can connect to toId at toGateway
-	"""
+	"""Return whether fromId at fromGateway can connect to toId at toGateway"""
 
 	if "timestamp" in request.GET:
 		timestamp = dateutil.parser.parse(request.GET["timestamp"])
@@ -118,12 +110,12 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 		timestamp = timezone.now()
 
 	from_id = int(from_id)
-	from_gateway, from_principal, conn_from_gateway, conn_from_principal = \
-		get_gateway_and_principal_helper(from_gateway, from_id)
+	from_gateway, from_principal, _, conn_from_principal = \
+		get_gateway_and_device_helper(from_gateway, from_id)
 
 	to_id = int(to_id)
-	to_gateway, to_principal, conn_to_gateway, conn_to_principal = \
-		get_gateway_and_principal_helper(to_gateway, to_id)
+	to_gateway, to_principal, _, _ = \
+		get_gateway_and_device_helper(to_gateway, to_id)
 
 	can_map, applicable_rules = query_can_map_static(from_gateway, 
 		from_principal, to_gateway, to_principal, timestamp)
@@ -165,28 +157,28 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 	services = {}
 	rules = {}
 	for service_instance in ServiceInstance.objects.filter(
-		principal=conn_from_principal):
+		device_instance=conn_from_principal):
 		service_rules = applicable_rules.filter(
 			Q(service=service_instance.service) | Q(service__name="*"))
 
 		service = service_instance.service
 
 		for char_instance in CharInstance.objects.filter(
-			service=service_instance):
+			service_instance=service_instance):
 			
-			characteristic = char_instance.char
+			characteristic = char_instance.characteristic
 
 			char_rules = service_rules.filter(Q(characteristic=characteristic) | 
 				Q(characteristic__name="*"))
 
-			for char_rule in _get_minimal_rules(char_rules, cached_relations):
+			for char_rule in __get_minimal_rules(char_rules, cached_relations):
 
 				#####################################
 				# Compute access per characteristic #
 				#####################################
-
+				
 				# Evaluate the cron expression
-				if not _evaluate_cron(char_rule, timestamp, cached_cron):
+				if not __evaluate_cron(char_rule, timestamp, cached_cron):
 					continue
 
 				# Access allowed
@@ -195,7 +187,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 				if characteristic.uuid not in services[service.uuid]:
 					services[service.uuid][characteristic.uuid] = []
 				if char_rule.id not in rules:
-					satisfiable, dauth = _get_dynamic_auth(char_rule, 
+					satisfiable, dauth = __get_dynamic_auth(char_rule, 
 						to_principal)
 					if not satisfiable:
 						continue
@@ -228,22 +220,4 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 			"services" : services,
 		}
 	return JsonResponse(response)
-
-@gzip_page
-@require_GET
-def view_rule_exceptions(request, rule):
-	"""
-	View in admin UI.
-	"""
-	response = []
-	for exception in RuleException.objects.filter(rule__name=rule):
-		response.append({
-			"from_principal" : exception.from_principal.name,
-			"from_gateway" : exception.from_gateway.name,
-			"to_principal" : exception.to_principal.name,
-			"to_gateway" : exception.to_gateway.name,
-			"service" : exception.service.name,
-			"characteristic" : exception.characteristic.name,
-		})
-	return JsonResponse(response, safe=False)
 

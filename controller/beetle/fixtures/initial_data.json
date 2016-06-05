@@ -8,20 +8,17 @@
     }
   },
   {
-    "model": "beetle.Principal",
+    "model": "beetle.Principal", 
+    "pk": "*", 
     "fields": {
-      "name": "*",
-      "ptype": "unknown",
-      "verified": true,
-      "owner": 0
+      "polymorphic_ctype": ["beetle", "principalgroup"]
     }
   },
   {
-    "model": "beetle.Gateway",
+    "model": "beetle.Gateway", 
+    "pk": "*", 
     "fields": {
-      "name": "*",
-      "os": "unknown",
-      "trusted": false
+      "polymorphic_ctype": ["beetle", "gatewaygroup"]
     }
   }
 ]

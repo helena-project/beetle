@@ -1,36 +1,63 @@
-from django.conf.urls import include, url
+from django.conf.urls import url
 
-from . import views
+from beetle.regex import device, gateway
+from gatt.regex import uuid
+
+from .regex import device_id
+
+from . import views_user as user
+from . import views_api as api
 
 urlpatterns = [
-	url(r'^connect/(?P<gateway>[\w\-@\'\. ]+)$', 
-		views.connect_gateway,
+
+	# User facing views
+
+	url(r'^view/' + device("device") + r'$', 
+		user.view_device, 
+		name='view the services and characteristics of an device'),
+
+	url(r'^find/gateway/' + gateway("gateway") + r'$', 
+		user.find_gateway, name='find a gateway by name'),
+	
+	url(r'^discover/devices$', user.discover_devices, 
+		name='discover devices'),
+	url(r'^discover/service/' + uuid("uuid") + r'$', 
+		user.discover_with_uuid, 
+		{ "is_service" : True },
+		name='discover devices with the service uuid'),
+	url(r'^discover/char/' + uuid("uuid") + r'$', 
+		user.discover_with_uuid,  
+		{ "is_service" : False },
+		name='discover devices with the characteristic uuid'),
+
+	# Internal API views
+
+	url(r'^connect/' + gateway("gateway") + r'$', 
+		api.connect_gateway,
 	 	name='connect a gateway'),
 
-	url(r'^connect/(?P<gateway>[\w\-@\'\. ]+)/(?P<principal>[\w\-@\'\. ]+)/(?P<remote_id>\d+)$', 
-		views.connect_principal, 
-		name='connect an principal'),
-	url(r'^connect/(?P<gateway>[\w\-@\'\. ]+)/(?P<remote_id>\d+)$', 
-		views.update_principal, 
-		name='update an principal'),
+	url(r'^connect/' + gateway("gateway") + r'/' + device("device") + r'/' 
+		+ device_id("remote_id") + r'$', 
+		api.connect_device, name='connect an device'),
 
-	url(r'^find/gateway/(?P<gateway>[\w\-@\'\. ]+)$', 
-		views.find_gateway,  
-		name='find a gateway by name'),
+	url(r'^update/' + gateway("gateway") + r'/' + device_id("remote_id") 
+		+ r'$', 
+		api.update_device, name='update an device'),
 
-	url(r'^view/(?P<principal>[\w\-@\'\. ]+)$', 
-		views.view_principal, 
-		name='view the services and characteristics of an principal'),
-	
-	url(r'^discover/principals$', 
-		views.discover_principals, 
-		name='discover principals'),
-	url(r'^discover/service/(?P<uuid>[\w\-]+)$', 
-		views.discover_with_uuid, 
-		{ "is_service" : True },
-		name='discover principals with the service uuid'),
-	url(r'^discover/char/(?P<uuid>[\w\-]+)$', 
-		views.discover_with_uuid,  
-		{ "is_service" : False },
-		name='discover principals with the characteristic uuid'),
+	url(r'^map/' + gateway("from_gateway") + r'/' + device_id("from_id") 
+		+ r'/' + gateway("to_gateway") + r'/' + device_id("to_id") 
+		+ r'$',
+		api.map_devices, name='update mappings on device'),
+
+	url(r'^registerInterest/service/' + gateway("gateway") + r'/' 
+		+ device_id("remote_id") + r'$', 
+		api.register_interest,
+		{"is_service" : True},
+		name='register interest in services or characteristic'),
+
+	url(r'^registerInterest/char/' + gateway("gateway") + r'/' 
+		+ device_id("remote_id") + r'$', 
+		api.register_interest,
+		{"is_service" : False},
+		name='register interest in services or characteristic'),
 ]

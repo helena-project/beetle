@@ -1,15 +1,14 @@
+
+import re
+import cronex
+
 from django.contrib import admin
 from django import forms
-import cronex
-import re
 
 # Register your models here.
 
 from .models import Rule, RuleException, AdminAuth, UserAuth, PasscodeAuth, \
 	NetworkAuth, Exclusive
-
-from beetle.models import Principal, Gateway
-from gatt.models import Service, Characteristic
 
 class RuleAdminForm(forms.ModelForm):
 	description = forms.CharField(widget=forms.Textarea, required=False)

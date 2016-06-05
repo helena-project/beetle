@@ -3,44 +3,18 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils import timezone
 
-from beetle.models import Principal
-from access.models import Rule
-from network.models import ConnectedPrincipal
-
-from solo.models import SingletonModel
-from dateutil.relativedelta import relativedelta
-
 # Create your models here.
 
-class BeetleEmailAccount(SingletonModel):
-	"""
-	Email to access SMS gateways
-	"""
-	class Meta:
-		verbose_name = "Beetle email account"
-
-	address = models.CharField(
-		max_length=100,
-		blank=True,
-		help_text="The email to send SMS from.")
-	password = models.CharField(
-		max_length=100,
-		blank=True)
-
-	def __unicode__(self):
-		return "Beetle Email"
-
 class AdminAuthInstance(models.Model):
-	"""
-	Instance of authorization from admin.
-	"""
+	"""Instance of authorization from admin."""
+
 	class Meta:
-		verbose_name = "AdminAuth state"
-		verbose_name_plural = "AdminAuth state"
+		verbose_name = "Admin Authorization (Record)"
+		verbose_name_plural = verbose_name
 		unique_together = ("rule", "principal")
 
 	rule = models.ForeignKey("access.Rule")
-	principal = models.ForeignKey("beetle.Principal")
+	principal = models.ForeignKey("beetle.VirtualDevice")
 	allow = models.BooleanField(default=True)
 
 	timestamp = models.DateTimeField(auto_now_add=True)
@@ -50,16 +24,15 @@ class AdminAuthInstance(models.Model):
 		return "%d %s" % (self.rule.id, self.principal.name)
 
 class UserAuthInstance(models.Model):
-	"""
-	Instance of authentication of user.
-	"""
+	"""Instance of authentication of user."""
+
 	class Meta:
-		verbose_name = "UserAuth state"
-		verbose_name_plural = "UserAuth state"
+		verbose_name = "User Authentication (Record)"
+		verbose_name_plural = verbose_name
 		unique_together = ("rule", "principal")
 
 	rule = models.ForeignKey("access.Rule")
-	principal = models.ForeignKey("beetle.Principal")
+	principal = models.ForeignKey("beetle.VirtualDevice")
 	allow = models.BooleanField(default=True)
 
 	timestamp = models.DateTimeField(auto_now_add=True)
@@ -69,16 +42,15 @@ class UserAuthInstance(models.Model):
 		return "%d %s" % (self.rule.id, self.principal.name)
 
 class PasscodeAuthInstance(models.Model):
-	"""
-	Instance of password authentication.
-	"""
+	"""Instance of password authentication."""
+
 	class Meta:
-		verbose_name = "PasscodeAuth state"
-		verbose_name_plural = "PasscodeAuth state"
+		verbose_name = "Passcode Authentication (Record)"
+		verbose_name_plural = verbose_name
 		unique_together = ("rule", "principal")
 
 	rule = models.ForeignKey("access.Rule")
-	principal = models.ForeignKey("beetle.Principal")
+	principal = models.ForeignKey("beetle.VirtualDevice")
 	timestamp = models.DateTimeField(auto_now_add=True)
 	expire = models.DateTimeField(default=timezone.now)
 
@@ -86,13 +58,16 @@ class PasscodeAuthInstance(models.Model):
 		return "%d %s" % (self.rule.id, self.principal.name)
 
 class ExclusiveLease(models.Model):
-	"""
-	A lease of exclusivity
-	"""
+	"""A lease of exclusivity"""
+
+	class Meta:
+		verbose_name = "Exclusive (Lease)"
+		verbose_name_plural = verbose_name
+
 	group = models.OneToOneField("access.Exclusive")
-	principal = models.ForeignKey("network.ConnectedPrincipal")
+	device_instance = models.ForeignKey("network.ConnectedDevice")
 	timestamp = models.DateTimeField(auto_now_add=True)
 	expire = models.DateTimeField(default=timezone.now)
 
 	def __unicode__(self):
-		return "%d %s" % (self.group.id, self.principal.name)
+		return "%d %s" % (self.group.id, self.device_instance.name)

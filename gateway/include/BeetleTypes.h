@@ -27,5 +27,7 @@ const device_t NULL_RESERVED_DEVICE = -1;
 typedef std::function<void(device_t d)> AddDeviceHandler;
 typedef std::function<void(device_t d)> RemoveDeviceHandler;
 typedef std::function<void(device_t d)> UpdateDeviceHandler;
+typedef std::function<void(device_t from, device_t to)> MapDevicesHandler;
+typedef std::function<void(device_t from, device_t to)> UnmapDevicesHandler;
 
 #endif /* BEETLETYPES_H_ */

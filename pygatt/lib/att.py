@@ -67,7 +67,7 @@ def opcodeLookup(opcode):
 	return __OPCODE_TO_STRING[opcode] if opcode in __OPCODE_TO_STRING \
 		else "unknown"
 
-__OP_COMMAND = set([OP_WRITE_CMD,OP_SIGNED_WRITE_CMD])
+__OP_COMMAND = set([OP_WRITE_CMD, OP_SIGNED_WRITE_CMD])
 def isCommand(opcode):
 	return opcode in __OP_COMMAND
 
@@ -134,8 +134,7 @@ __STRING_TO_ECODE = {
 }
 __ECODE_TO_STRING = { v: k for k, v in __STRING_TO_ECODE.items() }
 def ecodeLookup(ecode):
-	return __ECODE_TO_STRING[ecode] if ecode in __ECODE_TO_STRING \
-		else "unknown"
+	return __ECODE_TO_STRING[ecode] if ecode in __ECODE_TO_STRING else "unknown"
 
 MAX_VALUE_LEN = 512
 DEFAULT_L2CAP_MTU = 48

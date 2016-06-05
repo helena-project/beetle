@@ -90,7 +90,7 @@ void PasscodeAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_pt
 	case Device::IPC_APPLICATION:
 	case Device::TCP_CLIENT: {
 		std::stringstream resource;
-		resource << "acstate/passcode/isLive/" << std::fixed << ruleId << "/" << cc->getName() << "/" << std::fixed
+		resource << "state/passcode/isLive/" << std::fixed << ruleId << "/" << cc->getName() << "/" << std::fixed
 				<< to->getId();
 		std::string url = cc->getUrl(resource.str());
 
@@ -142,7 +142,7 @@ void AdminAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<D
 		case Device::IPC_APPLICATION:
 		case Device::TCP_CLIENT: {
 			std::stringstream resource;
-			resource << "acstate/admin/request/" << std::fixed << ruleId << "/" << cc->getName() << "/" << std::fixed
+			resource << "state/admin/request/" << std::fixed << ruleId << "/" << cc->getName() << "/" << std::fixed
 					<< to->getId();
 			std::string url = cc->getUrl(resource.str());
 
@@ -195,7 +195,7 @@ void UserAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<De
 		case Device::IPC_APPLICATION:
 		case Device::TCP_CLIENT: {
 			std::stringstream resource;
-			resource << "acstate/user/request/" << std::fixed << ruleId << "/" << cc->getName() << "/" << std::fixed
+			resource << "state/user/request/" << std::fixed << ruleId << "/" << cc->getName() << "/" << std::fixed
 					<< to->getId();
 			std::string url = cc->getUrl(resource.str());
 

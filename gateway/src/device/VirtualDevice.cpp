@@ -274,79 +274,15 @@ void VirtualDevice::readHandler(uint8_t *buf, int len) {
 
 			if (attType == GATT_PRIM_SVC_UUID) {
 				UUID serviceUuid(attValue, attValLen);
-				discoverNetworkServices(serviceUuid);
-			}
-		}
+				boost::shared_array<uint8_t> bufCpy(new uint8_t[len]);
+				memcpy(bufCpy.get(), buf, len);
 
-		beetle.router->route(buf, len, getId());
-	}
-}
-
-void VirtualDevice::discoverNetworkServices(UUID serviceUuid) {
-	std::list<discovery_result_t> discovered;
-	beetle.discoveryClient->discoverByUuid(serviceUuid, discovered, true, getId());
-	for (discovery_result_t &d : discovered) {
-		if (d.gateway == beetle.name) {
-			/*
-			 * Device is local.
-			 */
-			if (d.id == getId()) {
-				continue;
-			}
-			beetle.mapDevices(d.id, getId());
-		} else {
-			/*
-			 * Device is remote.
-			 */
-			device_t localId = NULL_RESERVED_DEVICE;
-
-			/*
-			 * Check if the remote device is already mapped locally.
-			 */
-			beetle.devicesMutex.lock_shared();
-			for (auto &kv : beetle.devices) {
-				auto tcpSp = std::dynamic_pointer_cast<TCPServerProxy>(kv.second);
-				if (tcpSp && tcpSp->getServerGateway() == d.gateway && tcpSp->getRemoteDeviceId() == d.id) {
-					localId = tcpSp->getId();
-				}
-			}
-			beetle.devicesMutex.unlock_shared();
-
-			if (localId == NULL_RESERVED_DEVICE) {
-				Semaphore sync(0);
-				std::thread t([this, &sync, &localId, d] {
-					/*
-					 * Try to connect and map from remote.
-					 */
-					std::shared_ptr<VirtualDevice> device = NULL;
-					try {
-						device.reset(TCPServerProxy::connectRemote(beetle, d.ip, d.port, d.id));
-						localId = device->getId();
-						sync.notify();
-
-						boost::shared_lock<boost::shared_mutex> devicesLk;
-						beetle.addDevice(device, devicesLk);
-
-						device->start();
-
-						if (debug_controller) {
-							pdebug("connected to remote " + std::to_string(device->getId())
-									+ " : " + device->getName());
-						}
-					} catch (DeviceException &e) {
-						pexcept(e);
-						if (device) {
-							beetle.removeDevice(device->getId());
-						}
-						sync.notify();
-					}
+				beetle.discoveryClient->registerInterestInUuid(getId(), serviceUuid, true, [this, bufCpy, len] {
+					beetle.router->route(bufCpy.get(), len, getId());
 				});
-				sync.wait();
 			}
-
-			if (localId != NULL_RESERVED_DEVICE) {
-				beetle.mapDevices(localId, getId());
-			}
+		} else {
+			beetle.router->route(buf, len, getId());
 		}
 	}
 }

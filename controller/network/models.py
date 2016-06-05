@@ -2,22 +2,18 @@ from __future__ import unicode_literals
 
 from django.db import models
 
-from datetime import timedelta
-
-from beetle.models import Principal, Gateway
-from gatt.models import Service, Characteristic
-
 # Create your models here.
 
 class ConnectedGateway(models.Model):
-	"""
-	A Beetle gateway
-	"""
-	DEFAULT_GATEWAY_TCP_SERVER_PORT = 3002 
-	CONNECTION_TIMEOUT = timedelta(minutes=60)
+	"""A Beetle gateway"""
 
-	gateway = models.ForeignKey("beetle.Gateway")
-	last_seen = models.DateTimeField(auto_now_add=True)
+	class Meta:
+		verbose_name = "Gateway (Instance)"
+		verbose_name_plural = "Gateways (Instance)"
+
+	DEFAULT_GATEWAY_TCP_SERVER_PORT = 3002
+
+	gateway = models.ForeignKey("beetle.BeetleGateway")
 	ip_address = models.CharField(
 		max_length=100, 
 		help_text="IP address of the gateway")
@@ -26,43 +22,73 @@ class ConnectedGateway(models.Model):
 		help_text="TCP server port on the gateway")
 
 	def __unicode__(self):
-		return self.gateway.name + "@" + self.ip_address
+		return "%s [%s]" % (self.gateway.name, self.ip_address)
 
-class ConnectedPrincipal(models.Model):
-	"""
-	An app or peripheral
-	"""
+class ConnectedDevice(models.Model):
+	"""An app or peripheral"""
+
 	class Meta:
-		verbose_name_plural = "Connected principals"
+		verbose_name = "Device (Instance)"
+		verbose_name_plural = "Devices (Instance)"
 
-	CONNECTION_TIMEOUT = timedelta(minutes=15)
-
-	principal = models.ForeignKey("beetle.Principal")
-	gateway = models.ForeignKey("ConnectedGateway")			# TODO bad naming
+	device = models.ForeignKey("beetle.VirtualDevice")
+	gateway_instance = models.ForeignKey("ConnectedGateway")
 	remote_id = models.IntegerField(
 		help_text="id of the device on the gateway")
-	last_seen = models.DateTimeField(auto_now_add=True)
+
+	interested_services = models.ManyToManyField(
+		"gatt.Service", 
+		blank=True,
+		help_text="Services that the device has tried to find.")
+
+	interested_characteristics = models.ManyToManyField(
+		"gatt.Characteristic", 
+		blank=True,
+		help_text="Characteristics that the device has tried to find.")
 
 	def __unicode__(self):
-		return self.principal.name + "@" + self.gateway.gateway.name
+		return "%s [%s]" % (self.device.name, self.gateway_instance.gateway.name)
 
 class ServiceInstance(models.Model):
-	"""
-	An instance of a service
-	"""
-	principal = models.ForeignKey("ConnectedPrincipal") 	# TODO bad naming
+	"""An instance of a service"""
+
+	class Meta:
+		verbose_name = "Service (Instance)"
+		verbose_name_plural = "Services (Instance)"
+
+	device_instance = models.ForeignKey("ConnectedDevice")
 	service = models.ForeignKey("gatt.Service") 
 
 	def __unicode__(self):
-		return self.service.__unicode__()
+		return unicode(self.service)
 
 class CharInstance(models.Model):
-	"""
-	An instance of a characterisic
-	"""
-	principal = models.ForeignKey("ConnectedPrincipal")		# TODO bad naming
-	service = models.ForeignKey("ServiceInstance")			# TODO bad naming
-	char = models.ForeignKey("gatt.Characteristic")
+	"""An instance of a characteristic"""
+
+	class Meta:
+		verbose_name = "Characteristic (Instance)"
+		verbose_name_plural = "Characteristics (Instance)"
+	
+	device_instance = models.ForeignKey("ConnectedDevice")
+	service_instance = models.ForeignKey("ServiceInstance")
+	characteristic = models.ForeignKey("gatt.Characteristic")
 
 	def __unicode__(self):
-		return self.char.__unicode__()
+		return unicode(self.characteristic)
+
+class DeviceMapping(models.Model):
+	"""Instance where two connected devices have mapped handles"""
+
+	class Meta:
+		verbose_name = "Mapping (Instance)"
+		verbose_name_plural = "Mappings (Instance)"
+		unique_together = (("from_device", "to_device"),)
+
+	from_device = models.ForeignKey("ConnectedDevice", related_name="map_from")
+	to_device = models.ForeignKey("ConnectedDevice", related_name="map_to")
+
+	timestamp = models.DateTimeField(auto_now_add=True)
+
+	def __unicode__(self):
+		return "%s to %s" % (self.from_device.device, self.to_device)
+		

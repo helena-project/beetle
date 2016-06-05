@@ -3,5 +3,5 @@ from __future__ import unicode_literals
 from django.apps import AppConfig
 
 
-class AcstateConfig(AppConfig):
-    name = 'acstate'
+class StateConfig(AppConfig):
+    name = 'state'

@@ -23,7 +23,14 @@ public:
 			struct sockaddr_in clientGatewaySockAddr, device_t localProxyFor);
 	virtual ~TCPClientProxy();
 
+	/*
+	 * Returns the device id that this is proxying.
+	 */
 	device_t getLocalDeviceId();
+
+	/*
+	 * Returns the name of the client gateway.
+	 */
 	std::string getClientGateway();
 
 private:
