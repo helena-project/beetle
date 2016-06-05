@@ -27,6 +27,10 @@ DynamicAuth::DynamicAuth(rule_t ruleId_) {
 	ruleId = ruleId_;
 }
 
+void DynamicAuth::reset() {
+	state = UNATTEMPTED;
+}
+
 static bool isPrivateAddress(uint32_t ip) {
 	uint8_t b1, b2;
 	b1 = (uint8_t) (ip >> 24);

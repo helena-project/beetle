@@ -40,21 +40,17 @@
 #include "hat/HandleAllocationTable.h"
 #include "Router.h"
 
-#define O_STREAM ((ostream) ? *ostream : std::cout)
-#define I_STREAM ((istream) ? *istream : std::cin)
+#define O_STREAM ((iostream) ? *iostream : std::cout)
+#define I_STREAM ((iostream) ? *iostream : std::cin)
 
 CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery,
-		std::istream *istream_, std::ostream *ostream_, bool useDaemon_) :
+		std::iostream *iostream_, bool useDaemon_) :
 		beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), inputDaemon() {
 	aliasCounter = 0;
 	useDaemon = useDaemon_;
 
-	if (istream_) {
-		istream.reset(istream_);
-	}
-
-	if (ostream_) {
-		ostream.reset(ostream_);
+	if (iostream_) {
+		iostream.reset(iostream_);
 	}
 
 	if (useDaemon) {
