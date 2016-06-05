@@ -9,6 +9,8 @@ from polymorphic.models import PolymorphicModel
 
 from passlib.apps import django_context as pwd_context
 
+from main.constants import NUM_HIGH_PRIORITY_LEVELS
+
 # Create your models here.
 
 def default_expire(self=None):
@@ -56,7 +58,6 @@ class Rule(models.Model):
 		related_name="rule_to_gateway",
 		help_text="Gateway connected to client.")
 
-	NUM_HIGH_PRIORITY_LEVELS = 1
 	PRIORITY_CHOICES = ((0, "Normal"),) + tuple((i, "High-%d" % i) for \
 		i in xrange(1, NUM_HIGH_PRIORITY_LEVELS+1))
 
