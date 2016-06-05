@@ -25,10 +25,10 @@ ControllerCLI::ControllerCLI(Beetle &beetle, std::string host, int port, BeetleC
 
 	stream->connect(host, std::to_string(port));
 	if(stream->fail()) {
-		throw ControllerException("Could not connect to server.");
+		throw ControllerException("Could not connect to command server.");
 	}
 
-	cli = std::make_unique<CLI>(beetle, beetleConfig, discovery, stream, useDaemon);
+	cli = std::make_unique<CLI>(beetle, beetleConfig, discovery, stream, useDaemon, false);
 }
 
 ControllerCLI::~ControllerCLI() {

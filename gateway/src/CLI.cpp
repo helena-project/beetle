@@ -44,10 +44,11 @@
 #define I_STREAM ((iostream) ? *iostream : std::cin)
 
 CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery,
-		std::iostream *iostream_, bool useDaemon_) :
+		std::iostream *iostream_, bool useDaemon_, bool verbose_) :
 		beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), inputDaemon() {
 	aliasCounter = 0;
 	useDaemon = useDaemon_;
+	verbose = verbose_;
 
 	if (iostream_) {
 		iostream.reset(iostream_);
@@ -176,7 +177,9 @@ void CLI::cmdLineDaemon() {
 
 bool CLI::getCommand(std::vector<std::string> &ret) {
 	assert(ret.empty());
-	O_STREAM << "> ";
+	if (verbose) {
+		O_STREAM << "> ";
+	}
 	std::string line;
 	getline(I_STREAM, line);
 	transform(line.begin(), line.end(), line.begin(), ::tolower);

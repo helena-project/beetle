@@ -69,7 +69,8 @@ public:
 	bool controllerEnabled = false;
 	std::string controllerHost = "localhost";
 	int controllerPort = 443;
-	std::string getControllerHostAndPort() const;
+	bool controllerCommandEnabled = true;
+	int controllerCommandPort = 3003;
 
 	/*
 	 * Static topology

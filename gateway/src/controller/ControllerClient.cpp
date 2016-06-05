@@ -18,8 +18,12 @@
 
 static const int CLIENT_TIMEOUT = 180;
 
-ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, bool verifyPeers) :
-		beetle(beetle), hostAndPort(hostAndPort) {
+static std::string get_host_and_port(std::string host, int port) {
+	return host + ":" + std::to_string(port);
+}
+
+ControllerClient::ControllerClient(Beetle &beetle, std::string host, int port, bool verifyPeers) :
+		beetle(beetle), hostAndPort(get_host_and_port(host, port)) {
 	using namespace boost::network;
 	http::client::options options;
 	options.follow_redirects(false).cache_resolved(true).always_verify_peer(verifyPeers)
@@ -30,9 +34,9 @@ ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, bool
 	client.reset(new http::client(options));
 }
 
-ControllerClient::ControllerClient(Beetle &beetle, std::string hostAndPort, std::string cert, std::string caCerts,
+ControllerClient::ControllerClient(Beetle &beetle, std::string host, int port, std::string cert, std::string caCerts,
 		bool verifyPeers) :
-		beetle(beetle), hostAndPort(hostAndPort) {
+		beetle(beetle), hostAndPort(get_host_and_port(host, port)) {
 	assert(file_exists(cert));
 	assert(file_exists(caCerts));
 

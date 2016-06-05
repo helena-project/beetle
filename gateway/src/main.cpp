@@ -22,6 +22,7 @@
 #include "controller/ControllerClient.h"
 #include "controller/NetworkDiscoveryClient.h"
 #include "controller/NetworkStateClient.h"
+#include "controller/ControllerCLI.h"
 #include "Debug.h"
 #include "device/socket/tcp/TCPServerProxy.h"
 #include "HCI.h"
@@ -173,9 +174,10 @@ int main(int argc, char *argv[]) {
 		std::shared_ptr<NetworkStateClient> networkState;
 		std::shared_ptr<AccessControl> accessControl;
 		std::shared_ptr<NetworkDiscoveryClient> networkDiscovery;
+		std::shared_ptr<ControllerCLI> controllerCli;
 		if (btlConfig.controllerEnabled || enableController) {
-			controllerClient = std::make_shared<ControllerClient>(btl, btlConfig.getControllerHostAndPort(),
-					btlConfig.sslVerifyPeers);
+			controllerClient = std::make_shared<ControllerClient>(btl, btlConfig.controllerHost,
+					btlConfig.controllerPort, btlConfig.sslVerifyPeers);
 
 			networkState = std::make_shared<NetworkStateClient>(btl, controllerClient, btlConfig.tcpPort);
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());
@@ -189,6 +191,11 @@ int main(int argc, char *argv[]) {
 
 			accessControl = std::make_shared<AccessControl>(btl, controllerClient);
 			btl.setAccessControl(accessControl);
+
+			if (btlConfig.controllerCommandEnabled) {
+				controllerCli = std::make_shared<ControllerCLI>(btl, btlConfig.controllerHost,
+						btlConfig.controllerCommandPort, btlConfig, networkDiscovery, true);
+			}
 		}
 
 		std::unique_ptr<StaticTopo> staticTopo;
@@ -218,6 +225,11 @@ int main(int argc, char *argv[]) {
 		}
 
 		cli.join();
+
+		if (controllerCli) {
+			controllerCli->join();
+		}
+
 	} catch (std::exception& e) {
 		std::cerr << "Unhandled exception reached the top of main: " << std::endl
 				<< "  " << e.what() << std::endl;
