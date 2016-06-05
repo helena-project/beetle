@@ -1,25 +1,21 @@
-from django.shortcuts import render
+
+import json
+
 from django.db import transaction
-from django.http import JsonResponse, HttpResponse
-from django.utils import timezone
-from django.views.decorators.http import require_http_methods, require_GET, \
+from django.http import HttpResponse
+from django.views.decorators.http import require_http_methods, \
 	require_POST
-from django.views.decorators.gzip import gzip_page
 from django.views.decorators.csrf import csrf_exempt
 
 from ipware.ip import get_ip
-
-import json
 
 from .lookup import get_gateway_and_device_helper
 from .models import ConnectedGateway, ConnectedDevice, CharInstance, \
 	ServiceInstance, DeviceMapping
 
 from beetle.models import BeetleGateway, VirtualDevice
-from state.models import ExclusiveLease
 from gatt.models import Service, Characteristic
 from gatt.uuid import convert_uuid, check_uuid
-from access.lookup import query_can_map_static
 
 @transaction.atomic
 @csrf_exempt
@@ -34,7 +30,7 @@ def connect_gateway(request, gateway):
 		##############
 		# Connection #
 		##############
-		port = int(request.POST["port"]);
+		port = int(request.POST["port"])
 		ip_address = get_ip(request)
 		if ip_address is None:
 			return HttpResponse(status=400)
@@ -243,3 +239,4 @@ def register_interest(request, gateway, remote_id, uuid, is_service=True):
 	device_instance.save()
 
 	return HttpResponse()
+	

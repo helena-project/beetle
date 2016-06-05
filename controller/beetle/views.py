@@ -1,9 +1,7 @@
-from django.shortcuts import render
-from django.http import JsonResponse, HttpResponse
-from django.core import serializers
+from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 
-from .models import Gateway, Principal, VirtualDevice
+from .models import Gateway, VirtualDevice
 
 @require_GET
 def list_devices(request):

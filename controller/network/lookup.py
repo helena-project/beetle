@@ -5,8 +5,8 @@ from beetle.models import BeetleGateway
 def get_gateway_and_device_helper(gateway, remote_id):
 	"""Gateway is a string, remote_id is an int."""
 
-	assert type(gateway) is str or type(gateway) is unicode
-	assert type(remote_id) is int
+	assert isinstance(gateway, str) or isinstance(gateway, unicode)
+	assert isinstance(remote_id, int)
 
 	gateway = BeetleGateway.objects.get(name=gateway)
 	conn_gateway = ConnectedGateway.objects.get(gateway=gateway)
@@ -19,7 +19,7 @@ def get_gateway_and_device_helper(gateway, remote_id):
 def get_gateway_helper(gateway):
 	"""Same as above without an device."""
 
-	assert type(gateway) is str or type(gateway) is unicode
+	assert isinstance(gateway, str) or isinstance(gateway, unicode)
 	
 	gateway = BeetleGateway.objects.get(name=gateway)
 	conn_gateway = ConnectedGateway.objects.get(gateway=gateway)

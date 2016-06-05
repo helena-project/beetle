@@ -68,3 +68,4 @@ class Descriptor(models.Model):
 			return self.name
 		else:
 			return "<unk desc>." + self.uuid
+			

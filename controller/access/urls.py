@@ -1,9 +1,9 @@
-from django.conf.urls import include, url
+from django.conf.urls import url
 
-from .regex import rule
 from beetle.regex import gateway
 from network.regex import device_id
 
+from .regex import rule
 from . import views_api as api
 from . import views_user as user
 

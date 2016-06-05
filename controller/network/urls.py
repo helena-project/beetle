@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.conf.urls import url
 
 from beetle.regex import device, gateway
 from gatt.regex import uuid

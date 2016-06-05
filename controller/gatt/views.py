@@ -1,6 +1,5 @@
-from django.shortcuts import render
+
 from django.http import JsonResponse, HttpResponse
-from django.core import serializers
 from django.views.decorators.http import require_GET
 
 from .models import Service, Characteristic, Descriptor
@@ -71,6 +70,8 @@ def find_descriptor(request, uuid):
 	uuid = convert_uuid(uuid)
 	descriptor = Descriptor.objects.get(uuid=uuid)
 	return JsonResponse({
-		"name": characteristic.name,
-		"uuid": characteristic.uuid,
-		"type": characteristic.ttype})
+		"name": descriptor.name,
+		"uuid": descriptor.uuid,
+		"type": descriptor.ttype
+	})
+

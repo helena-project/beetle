@@ -1,18 +1,13 @@
 from __future__ import unicode_literals
 
-from django.db import models
-from django.utils import timezone
-from django.core import serializers
-from polymorphic.models import PolymorphicModel
-
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 
-from passlib.apps import django_context as pwd_context
+from django.db import models
+from django.utils import timezone
+from polymorphic.models import PolymorphicModel
 
-from gatt.models import Service, Characteristic
-from beetle.models import Principal, VirtualDevice, PrincipalGroup, Gateway, \
-	BeetleGateway, GatewayGroup, Contact 
+from passlib.apps import django_context as pwd_context
 
 # Create your models here.
 
@@ -371,3 +366,4 @@ class NetworkAuth(DynamicAuth):
 
 	def __unicode__(self):
 		return self.ip_address
+		

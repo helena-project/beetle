@@ -1,10 +1,9 @@
-from django.shortcuts import render, render_to_response
-from django.http import JsonResponse, HttpResponse
-from django.core import serializers
+
+from django.http import JsonResponse
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.http import require_GET
 
-from .models import Rule, RuleException
+from .models import RuleException
 
 @gzip_page
 @require_GET

@@ -1,6 +1,5 @@
+
 from django.contrib import admin
-from django.core.validators import validate_email
-from django import forms
 
 from .models import AdminAuthInstance, PasscodeAuthInstance, UserAuthInstance, ExclusiveLease
 
@@ -32,3 +31,4 @@ class ExclusiveLeaseAdmin(admin.ModelAdmin):
 	list_display = ("device_instance", "group", "timestamp", "expire")
 	search_fields = ("device_instance", "group")
 	readonly_fields = list_display
+	

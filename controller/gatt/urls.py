@@ -1,7 +1,6 @@
-from django.conf.urls import include, url
+from django.conf.urls import url
 
-from gatt.regex import uuid
-
+from .regex import uuid
 from . import views
 
 urlpatterns = [

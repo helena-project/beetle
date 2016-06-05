@@ -1,31 +1,4 @@
-from django.shortcuts import render, render_to_response
-from django.http import JsonResponse, HttpResponse
-from django.db import transaction
-from django.db.models import Q
-from django.core import serializers
-from django.utils import timezone
-from django.views.decorators.http import require_GET, require_POST, \
-	require_http_methods
-from django.template import RequestContext
-from django.views.decorators.csrf import csrf_exempt
 
-from passlib.apps import django_context as pwd_context
-
-from .models import AdminAuthInstance, UserAuthInstance, \
-	PasscodeAuthInstance, ExclusiveLease
-
-from beetle.models import BeetleEmailAccount, Principal, Gateway, Contact
-from gatt.models import Service, Characteristic
-from access.models import Rule, RuleException, DynamicAuth, PasscodeAuth, \
-	AdminAuth, UserAuth, NetworkAuth, Exclusive
-from network.models import ConnectedGateway, ConnectedDevice, \
-	ServiceInstance, CharInstance
-from network.lookup import get_gateway_and_device_helper, get_gateway_helper
-
-import dateutil.parser
-from dateutil.relativedelta import relativedelta
-import json
-import base64
 import random
 import string
 import time
@@ -35,6 +8,22 @@ import smtplib
 import imaplib
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
+
+from dateutil.relativedelta import relativedelta
+
+from django.http import HttpResponse
+from django.db import transaction
+from django.utils import timezone
+from django.views.decorators.http import require_GET, require_POST, \
+	require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+
+from .models import AdminAuthInstance, UserAuthInstance, \
+	PasscodeAuthInstance, ExclusiveLease
+
+from beetle.models import BeetleEmailAccount
+from access.models import Rule, DynamicAuth, AdminAuth, UserAuth, Exclusive
+from network.lookup import get_gateway_and_device_helper
 
 @require_GET
 def query_passcode_liveness(request, rule_id, to_gateway, to_id):
@@ -156,7 +145,7 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 	while timezone.now() < timeout:
 		time.sleep(5)
 		mail.select("inbox")
-		result, data = mail.search(None, '(HEADER Subject "%s")' % (subject,))
+		_, data = mail.search(None, '(HEADER Subject "%s")' % (subject,))
 		ids = data[0].split()
 
 		if not ids:
@@ -164,7 +153,7 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 			continue
 		
 		latest_email_id = ids[-1]
-		result, data = mail.fetch(latest_email_id, "(RFC822)") 
+		_, data = mail.fetch(latest_email_id, "(RFC822)") 
 		raw_email = data[0][1]
 		
 		email_match = EMAIL_REPLY_REGEX.search(raw_email)
@@ -259,9 +248,9 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 		return HttpResponse("no sender address set up at server", status=500)
 
 	# TODO fix this to not be AT&T
-	email = to_principal.owner.phone_number.replace("-","") + "@" \
+	email = to_principal.owner.phone_number.replace("-", "") + "@" \
 		+ SMS_GATEWAYS[ATT]
-	email = email.encode('ascii','ignore')
+	email = email.encode('ascii', 'ignore')
 
 	server = smtplib.SMTP('smtp.gmail.com', 587)
 	server.starttls()
@@ -289,7 +278,7 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 	while timezone.now() < timeout:
 		time.sleep(5)
 		mail.select("inbox")
-		result, data = mail.search(None, '(HEADER Subject "%s")' % (subject,))
+		_, data = mail.search(None, '(HEADER Subject "%s")' % (subject,))
 		ids = data[0].split()
 
 		if not ids:
@@ -297,7 +286,7 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 			continue
 		
 		latest_email_id = ids[-1]
-		result, data = mail.fetch(latest_email_id, "(RFC822)") 
+		_, data = mail.fetch(latest_email_id, "(RFC822)") 
 		raw_email = data[0][1]
 		
 		email_match = EMAIL_REPLY_REGEX.search(raw_email)

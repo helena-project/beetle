@@ -1,25 +1,20 @@
-from django.shortcuts import render, render_to_response
-from django.http import JsonResponse, HttpResponse
+
+import cronex
+import dateutil.parser
+
+from django.http import JsonResponse
 from django.db.models import Q
-from django.core import serializers
 from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.http import require_GET
 
 from .lookup import query_can_map_static
-from .models import Rule, RuleException, DynamicAuth, AdminAuth, UserAuth, \
+from .models import DynamicAuth, AdminAuth, UserAuth, \
 	PasscodeAuth, NetworkAuth, Exclusive
 
-from beetle.models import Principal, Gateway, Contact
-from gatt.models import Service, Characteristic
-from network.models import ConnectedGateway, ConnectedDevice, \
-	ServiceInstance, CharInstance
-from network.lookup import get_gateway_helper, get_gateway_and_device_helper
-
-import dateutil.parser
-import cronex
-import json
-import base64
+from beetle.models import Contact
+from network.models import ServiceInstance, CharInstance
+from network.lookup import get_gateway_and_device_helper
 
 def __get_dynamic_auth(rule, principal):
 	result = []
@@ -115,11 +110,11 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 		timestamp = timezone.now()
 
 	from_id = int(from_id)
-	from_gateway, from_principal, conn_from_gateway, conn_from_principal = \
+	from_gateway, from_principal, _, conn_from_principal = \
 		get_gateway_and_device_helper(from_gateway, from_id)
 
 	to_id = int(to_id)
-	to_gateway, to_principal, conn_to_gateway, conn_to_principal = \
+	to_gateway, to_principal, _, _ = \
 		get_gateway_and_device_helper(to_gateway, to_id)
 
 	can_map, applicable_rules = query_can_map_static(from_gateway, 

@@ -1,20 +1,12 @@
-from django.shortcuts import render
-from django.db import transaction
+
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
-from django.views.decorators.http import require_http_methods, require_GET, \
-	require_POST
+from django.views.decorators.http import require_GET
 from django.views.decorators.gzip import gzip_page
-from django.views.decorators.csrf import csrf_exempt
-
-from ipware.ip import get_ip
 
 from .models import ConnectedGateway, ConnectedDevice, CharInstance, \
 	ServiceInstance
 
-from beetle.models import VirtualDevice
-from state.models import ExclusiveLease
-from gatt.models import Service, Characteristic
 from gatt.uuid import convert_uuid, check_uuid
 from access.lookup import query_can_map_static
 
@@ -73,7 +65,7 @@ def discover_devices(request):
 def discover_with_uuid(request, uuid, is_service=True):
 	"""Get devices with characteristic"""
 
-	if check_uuid(uuid) == False:
+	if not check_uuid(uuid):
 		return HttpResponse("invalid uuid %s" % uuid, status=400)
 	uuid = convert_uuid(uuid)
 
@@ -120,7 +112,7 @@ def discover_with_uuid(request, uuid, is_service=True):
 				"ip" : x.device_instance.gateway_instance.ip_address,
 				"port" : x.device_instance.gateway_instance.port,
 			},
-		});
+		})
 
 	return JsonResponse(response, safe=False)
 

@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.conf.urls import url
 
 from access.regex import rule, rule_id, exclusive_id
 from beetle.regex import gateway, device

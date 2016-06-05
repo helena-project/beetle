@@ -1,52 +1,27 @@
-from django.shortcuts import render, render_to_response
-from django.http import JsonResponse, HttpResponse
+
+
+from django.shortcuts import render_to_response
+from django.http import HttpResponse
 from django.db import transaction
 from django.db.models import Q
-from django.core import serializers
 from django.utils import timezone
-from django.views.decorators.http import require_GET, require_POST, \
-	require_http_methods
+from django.views.decorators.http import require_http_methods
 from django.template import RequestContext
-from django.views.decorators.csrf import csrf_exempt
 
 from passlib.apps import django_context as pwd_context
 
-from .models import AdminAuthInstance, UserAuthInstance, \
-	PasscodeAuthInstance, ExclusiveLease
-
-from beetle.models import BeetleEmailAccount, Principal, Gateway, Contact
-from gatt.models import Service, Characteristic
-from access.models import Rule, RuleException, DynamicAuth, PasscodeAuth, \
-	AdminAuth, UserAuth, NetworkAuth, Exclusive
-from network.models import ConnectedGateway, ConnectedDevice, \
-	ServiceInstance, CharInstance
-from network.lookup import get_gateway_and_device_helper, get_gateway_helper
-
-import dateutil.parser
-from dateutil.relativedelta import relativedelta
-import json
-import base64
-import random
-import string
-import time
-import re
-
-import smtplib
-import imaplib
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
+from beetle.models import Principal
+from access.models import Rule, RuleException, DynamicAuth, PasscodeAuth
 
 def __is_rule_exempt_helper(rule, principal):
 	return bool(RuleException.objects.filter(
 		Q(to_principal=principal) | Q(to_principal__name="*"),
 		rule=rule))
 
-@require_http_methods(["GET","POST"])
+@require_http_methods(["GET", "POST"])
 @transaction.atomic
 def view_form_passcode(request, rule, principal):
-	"""
-	Serve the password form and receive responses.
-	"""
+	"""Serve the password form and receive responses."""
 	context = RequestContext(request)
 
 	try:
@@ -125,7 +100,7 @@ def view_form_passcode(request, rule, principal):
 		allowed = False
 		try:
 			allowed = pwd_context.verify(code, passcode_auth.chash) 
-		except:
+		except Exception:
 			pass
 
 		if not allowed:
@@ -158,9 +133,7 @@ def view_form_passcode(request, rule, principal):
 @require_http_methods(["GET","POST"])
 @transaction.atomic
 def view_form_passcode_generic(request, rule):
-	"""
-	Serve the password form and receive responses.
-	"""
+	"""Serve the password form and receive responses."""
 	context = RequestContext(request)
 
 	try:
@@ -234,7 +207,7 @@ def view_form_passcode_generic(request, rule):
 				allowed = pwd_context.verify(code, passcode_auth.chash) 
 			elif code == "":
 				allowed = True
-		except:
+		except Exception:
 			pass
 
 		if not allowed:

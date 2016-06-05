@@ -1,8 +1,6 @@
 from django.db.models import Q
 
-from beetle.models import Principal, PrincipalGroup, VirtualDevice, \
-	GatewayGroup, BeetleGateway
-from django.contrib.contenttypes.models import ContentType
+from beetle.models import PrincipalGroup, GatewayGroup
 
 from .models import Rule, RuleException
 

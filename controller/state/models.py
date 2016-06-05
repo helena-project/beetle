@@ -3,12 +3,6 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils import timezone
 
-from beetle.models import Principal
-from access.models import Rule
-from network.models import ConnectedDevice
-
-from dateutil.relativedelta import relativedelta
-
 # Create your models here.
 
 class AdminAuthInstance(models.Model):

@@ -2,11 +2,6 @@ from __future__ import unicode_literals
 
 from django.db import models
 
-from datetime import timedelta
-
-from beetle.models import VirtualDevice, BeetleGateway
-from gatt.models import Service, Characteristic
-
 # Create your models here.
 
 class ConnectedGateway(models.Model):
@@ -65,7 +60,7 @@ class ServiceInstance(models.Model):
 	service = models.ForeignKey("gatt.Service") 
 
 	def __unicode__(self):
-		return self.service.__unicode__()
+		return unicode(self.service)
 
 class CharInstance(models.Model):
 	"""An instance of a characteristic"""
@@ -79,7 +74,7 @@ class CharInstance(models.Model):
 	characteristic = models.ForeignKey("gatt.Characteristic")
 
 	def __unicode__(self):
-		return self.characteristic.__unicode__()
+		return unicode(self.characteristic)
 
 class DeviceMapping(models.Model):
 	"""Instance where two connected devices have mapped handles"""
@@ -96,3 +91,4 @@ class DeviceMapping(models.Model):
 
 	def __unicode__(self):
 		return "%s to %s" % (self.from_device.device, self.to_device)
+		

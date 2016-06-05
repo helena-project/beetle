@@ -1,13 +1,13 @@
+
+import json
+
 from django.contrib import admin
 from django.core.validators import validate_email, ValidationError
 from django import forms
-from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
+from polymorphic.admin import PolymorphicChildModelAdmin
 from solo.admin import SingletonModelAdmin
 
-import re
-import json
-
-from .models import Principal, PrincipalGroup, VirtualDevice, Gateway, \
+from .models import PrincipalGroup, VirtualDevice, \
 	BeetleGateway, GatewayGroup, Contact, BeetleEmailAccount
 
 # Register your models here.
