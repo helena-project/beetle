@@ -8,8 +8,6 @@ This module implements a virtual heart rate monitor server and a client
 that performs discovery.
 """
 
-
-import sys
 import os
 import socket
 import ssl
@@ -20,11 +18,7 @@ import random
 import struct
 import traceback
 
-import lib.gatt as gatt
-import lib.att as att
-import lib.uuid as uuid
-
-from pygatt import *
+from pygatt import ManagedSocket, GattServer, GattClient, ClientError
 
 def getArguments():
 	"""
@@ -74,7 +68,7 @@ def setUpServer(server, deviceName):
 	def cntlPtWriteCallback(val):
  		print "Client wrote HR control point: " + " ".join("%02X" % x for x \
  			in val)
- 		valueDict[cntlPt] = val
+ 		valueDict["cntlPt"] = val
 	cntlPtChar.setWriteCallback(cntlPtWriteCallback)
 
 	# Demonstrate notifications
@@ -243,7 +237,7 @@ def main(args):
 	# Transfer ownership of the socket
 	managedSocket.bind(s, True)
 
-	runClient(client);
+	runClient(client)
 
 if __name__ == "__main__":
 	try:

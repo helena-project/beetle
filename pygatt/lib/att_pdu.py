@@ -1,5 +1,6 @@
-import att
-import uuid
+
+import lib.att as att
+import lib.uuid as uuid
 
 ERROR_PDU_LEN = 5
 
@@ -12,9 +13,9 @@ def pack_handle(handle):
 	return bytearray([handle & 0xFF, (handle >> 8) & 0xFF])
 
 def new_error_resp(op, handle, ecode):
-	assert type(op) is int
-	assert type(handle) is int
-	assert type(ecode) is int
+	assert isinstance(op, int)
+	assert isinstance(handle, int)
+	assert isinstance(ecode, int)
 
 	err = bytearray(ERROR_PDU_LEN)
 	err[0] = att.OP_ERROR
@@ -53,7 +54,7 @@ def new_find_by_type_value_req(startHandle, endHandle, uuid, value):
 	return pdu
 
 def parse_read_req(pdu):
-	assert type(pdu) is bytearray
+	assert isinstance(pdu, bytearray)
 	return pdu[0], unpack_handle(pdu, 1)
 
 def parse_write(pdu):
@@ -76,3 +77,4 @@ def parse_read_by_group_req(pdu):
 
 def parse_notify_indicate(pdu):
 	return pdu[0], unpack_handle(pdu, 1), pdu[3:]
+	
