@@ -114,3 +114,28 @@ bool NetworkDiscoveryClient::queryHelper(std::string resource, std::list<discove
 		return false;
 	}
 }
+
+void NetworkDiscoveryClient::registerInterestInUuid(device_t id, UUID uuid, bool isService, std::function<void()> cb) {
+	std::stringstream resource;
+	resource << "network/registerInterest/" << ((isService) ? "service" : "char") << "/" << beetle.name << "/"
+			<< std::fixed << id << "/" << uuid.str();
+
+	std::string url = client->getUrl(resource.str());
+
+	using namespace boost::network;
+	http::client::request request(url);
+	request << header("User-Agent", "linux");
+
+	try {
+		auto response = client->getClient()->post(request);
+		if (response.status() != 200) {
+			if (debug_controller) {
+				std::stringstream ss;
+				ss << "error registering interest: " << body(response);
+				pdebug(ss.str());
+			}
+		}
+	} catch (std::exception &e) {
+		pexcept(e);
+	}
+}

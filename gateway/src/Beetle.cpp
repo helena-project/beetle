@@ -13,8 +13,12 @@
 #include "hat/HandleAllocationTable.h"
 #include "Router.h"
 
+static const int NUM_WORKERS = 4;
+static const int NUM_WRITERS = 1;
+static const int NUM_READERS = 1;
+
 Beetle::Beetle(std::string name_) :
-		workers(2), writers(1), readers(1) {
+		workers(NUM_WORKERS), writers(NUM_WRITERS), readers(NUM_READERS) {
 	router = std::make_unique<Router>(*this);
 	beetleDevice = std::make_shared<BeetleInternal>(*this, name_);
 	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
@@ -146,6 +150,10 @@ bool Beetle::mapDevices(device_t from, device_t to, std::string &err) {
 		}
 	}
 
+	for (auto &h : mapHandlers) {
+		workers.schedule([h,from,to] {h(from,to);});
+	}
+
 	return true;
 }
 
@@ -179,6 +187,10 @@ bool Beetle::unmapDevices(device_t from, device_t to, std::string &err) {
 		pdebug("freed " + range.str() + " at device " + std::to_string(to));
 	}
 
+	for (auto &h : unmapHandlers) {
+		workers.schedule([h,from,to] {h(from,to);});
+	}
+
 	return true;
 }
 
@@ -192,6 +204,14 @@ void Beetle::registerRemoveDeviceHandler(RemoveDeviceHandler h) {
 
 void Beetle::registerUpdateDeviceHandler(UpdateDeviceHandler h) {
 	updateHandlers.push_back(h);
+}
+
+void Beetle::registerMapDevicesHandler(MapDevicesHandler h) {
+	mapHandlers.push_back(h);
+}
+
+void Beetle::registerUnmapDevicesHandler(UnmapDevicesHandler h) {
+	unmapHandlers.push_back(h);
 }
 
 std::function<void()> Beetle::getDaemon() {

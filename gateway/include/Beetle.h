@@ -91,6 +91,18 @@ public:
 	std::vector<UpdateDeviceHandler> updateHandlers;
 
 	/*
+	 * Register handler to be called after mapping two devices.
+	 */
+	void registerMapDevicesHandler(MapDevicesHandler h);
+	std::vector<MapDevicesHandler> mapHandlers;
+
+	/*
+	 * Register handler to be called after unmapping two devices.
+	 */
+	void registerUnmapDevicesHandler(UnmapDevicesHandler h);
+	std::vector<UnmapDevicesHandler> unmapHandlers;
+
+	/*
 	 * Return a daemon to timeout devices.
 	 */
 	std::function<void()> getDaemon();

@@ -181,6 +181,8 @@ int main(int argc, char *argv[]) {
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());
 			btl.registerRemoveDeviceHandler(networkState->getRemoveDeviceHandler());
 			btl.registerUpdateDeviceHandler(networkState->getUpdateDeviceHandler());
+			btl.registerMapDevicesHandler(networkState->getMapDevicesHandler());
+			btl.registerUnmapDevicesHandler(networkState->getUnmapDevicesHandler());
 
 			networkDiscovery = std::make_shared<NetworkDiscoveryClient>(btl, controllerClient);
 			btl.setDiscoveryClient(networkDiscovery);

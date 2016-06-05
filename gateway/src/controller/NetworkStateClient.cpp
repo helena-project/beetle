@@ -27,6 +27,7 @@
 
 #include "Beetle.h"
 #include "controller/ControllerClient.h"
+#include "device/socket/tcp/TCPServerProxy.h"
 #include "Debug.h"
 #include "Device.h"
 #include "Handle.h"
@@ -161,6 +162,131 @@ RemoveDeviceHandler NetworkStateClient::getRemoveDeviceHandler() {
 	return [this](device_t d) {
 		try {
 			removeDeviceHelper(d);
+		} catch (std::exception &e) {
+			pexcept(e);
+		}
+	};
+}
+
+bool NetworkStateClient::lookupNamesAndIds(device_t from, device_t to, std::string &fromGateway, device_t &fromId,
+		std::string &toGateway, device_t &toId) {
+	boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
+	if (beetle.devices.find(from) == beetle.devices.end()) {
+		return false;
+	}
+	auto fromDevice = beetle.devices[from];
+	if (beetle.devices.find(to) == beetle.devices.end()) {
+		return false;
+	}
+	auto toDevice = beetle.devices[to];
+
+	switch (fromDevice->getType()) {
+	case Device::BEETLE_INTERNAL:
+		return false;
+	case Device::IPC_APPLICATION:
+	case Device::LE_PERIPHERAL:
+	case Device::TCP_CLIENT: {
+		fromGateway = beetle.name;
+		fromId = fromDevice->getId();
+		break;
+	}
+	case Device::TCP_CLIENT_PROXY:
+		return false;
+	case Device::TCP_SERVER_PROXY: {
+		auto fromCast = std::dynamic_pointer_cast<TCPServerProxy>(fromDevice);
+		fromGateway = fromCast->getServerGateway();
+		fromId = fromCast->getRemoteDeviceId();
+		break;
+	}
+	case Device::UNKNOWN:
+	default:
+		return false;
+	}
+
+	switch (toDevice->getType()) {
+	case Device::BEETLE_INTERNAL:
+		return false;
+	case Device::IPC_APPLICATION:
+	case Device::LE_PERIPHERAL:
+	case Device::TCP_CLIENT: {
+		toGateway = beetle.name;
+		toId = toDevice->getId();
+		break;
+	}
+	case Device::TCP_CLIENT_PROXY:
+	case Device::TCP_SERVER_PROXY:
+	case Device::UNKNOWN:
+	default:
+		return false;
+	}
+
+	return true;
+}
+
+MapDevicesHandler NetworkStateClient::getMapDevicesHandler() {
+	return [this](device_t from, device_t to) {
+		device_t fromId;
+		device_t toId;
+		std::string fromGateway;
+		std::string toGateway;
+		if (!lookupNamesAndIds(from, to, fromGateway, fromId, toGateway, toId)) {
+			return;
+		}
+
+		std::stringstream resource;
+		resource << "network/map/" << fromGateway << "/" << std::fixed << fromId << "/" << toGateway << "/"
+				<< std::fixed << toId;
+
+		std::string url = client->getUrl(resource.str());
+
+		using namespace boost::network;
+		http::client::request request(url);
+		request << header("User-Agent", "linux");
+
+		try {
+			auto response = client->getClient()->post(request);
+			if (response.status() != 200) {
+				if (debug_controller) {
+					std::stringstream ss;
+					ss << "error informing controller of map: " << body(response);
+					pdebug(ss.str());
+				}
+			}
+		} catch (std::exception &e) {
+			pexcept(e);
+		}
+	};
+}
+
+MapDevicesHandler NetworkStateClient::getUnmapDevicesHandler() {
+	return [this](device_t from, device_t to) {
+		device_t fromId;
+		device_t toId;
+		std::string fromGateway;
+		std::string toGateway;
+		if (!lookupNamesAndIds(from, to, fromGateway, fromId, toGateway, toId)) {
+			return;
+		}
+
+		std::stringstream resource;
+		resource << "network/map/" << fromGateway << "/" << std::fixed << fromId << "/" << toGateway << "/"
+				<< std::fixed << toId;
+
+		std::string url = client->getUrl(resource.str());
+
+		using namespace boost::network;
+		http::client::request request(url);
+		request << header("User-Agent", "linux");
+
+		try {
+			auto response = client->getClient()->delete_(request);
+			if (response.status() != 200) {
+				if (debug_controller) {
+					std::stringstream ss;
+					ss << "error informing controller of unmap: " << body(response);
+					pdebug(ss.str());
+				}
+			}
 		} catch (std::exception &e) {
 			pexcept(e);
 		}

@@ -26,6 +26,10 @@ public:
 	AddDeviceHandler getAddDeviceHandler();
 	RemoveDeviceHandler getRemoveDeviceHandler();
 	UpdateDeviceHandler getUpdateDeviceHandler();
+
+	MapDevicesHandler getMapDevicesHandler();
+	UnmapDevicesHandler getUnmapDevicesHandler();
+
 private:
 	Beetle &beetle;
 
@@ -34,6 +38,9 @@ private:
 	void addDeviceHelper(std::shared_ptr<Device> device);
 	void updateDeviceHelper(std::shared_ptr<Device> device);
 	void removeDeviceHelper(device_t d);
+
+	bool lookupNamesAndIds(device_t from, device_t to, std::string &fromGateway, device_t &fromId,
+			std::string &toGateway, device_t &toId);
 };
 
 #endif /* INCLUDE_CONTROLLER_NETWORKREPORTER_H_ */

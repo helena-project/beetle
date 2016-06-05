@@ -9,13 +9,14 @@
 
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <cstring>
-#include <sstream>
 #include <atomic>
 #include <cstdlib>
+#include <cstring>
+#include <set>
+#include <sstream>
+#include <sys/socket.h>
 #include <thread>
+#include <unistd.h>
 
 #include "ble/helper.h"
 #include "Debug.h"
@@ -23,7 +24,27 @@
 #define EIR_NAME_SHORT		0x08
 #define EIR_NAME_COMPLETE  	0x09
 
+/*
+ * Not very clean, but only way to clean up HCI sockets.
+ */
+static std::atomic_flag staticInitDone;
+static std::set<int> staticDeviceHandles;
+
 Scanner::Scanner() {
+	/*
+	 * Setup static variables exactly once.
+	 */
+	if (!staticInitDone.test_and_set()) {
+		std::atexit([]{
+			for (int dd : staticDeviceHandles) {
+				if (debug_scan) {
+					pdebug("stopping scan and closing device");
+				}
+				hci_close_dev(dd);
+			}
+		});
+	}
+
 	/*
 	 * Set these intervals high since we are filtering duplicates manually.
 	 */
@@ -37,12 +58,14 @@ Scanner::~Scanner() {
 	running->clear();
 
 	/*
-	 * Can't join daemon since shutdown(SHUR_RDWR) doesn't work on hci sockets. Have to destruct without waiting.
+	 * Can't join daemon since shutdown(SHUR_RDWR) doesn't work on hci sockets.
+	 * Have to destruct without waiting.
 	 */
 }
 
-static void scanDaemon(std::shared_ptr<std::atomic_flag> terminated, std::vector<DiscoveryHandler> handlers,
-		uint16_t scanInterval, uint16_t scanWindow);
+static void scanDaemon(std::shared_ptr<std::atomic_flag> terminated,
+		std::vector<DiscoveryHandler> handlers, uint16_t scanInterval,
+		uint16_t scanWindow);
 void Scanner::start() {
 	std::thread t = std::thread(&scanDaemon, running, handlers, scanInterval, scanWindow);
 	t.detach();
@@ -52,7 +75,8 @@ void Scanner::registerHandler(DiscoveryHandler handler) {
 	handlers.push_back(handler);
 }
 
-static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval, uint16_t scanWindow) {
+static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval,
+		uint16_t scanWindow) {
 	int result = hci_le_set_scan_parameters(deviceHandle,
 			0,						// type (0 is passive)
 			htobs(scanInterval),	// interval
@@ -91,25 +115,6 @@ static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval
 	return oldFilter;
 }
 
-//static void stopScanHelper(int deviceHandle, struct hci_filter oldFilter) {
-//	int result = hci_le_set_scan_enable(deviceHandle,
-//			0, 		// disable
-//			1, 		// filter_dup
-//			1000);	// to
-//	if (result < 0) {
-//		pwarn("failed to disable scan");
-//	}
-//
-//	result = setsockopt(deviceHandle, SOL_HCI, HCI_FILTER, &oldFilter, sizeof(oldFilter));
-//	if (result < 0) {
-//		pwarn("failed to replace old hci filter");
-//	}
-//}
-
-/*
- * TODO: this is a hack
- */
-static int staticDeviceHandle = -1;
 static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<DiscoveryHandler> handlers,
 		uint16_t scanInterval, uint16_t scanWindow) {
 	if (debug) {
@@ -125,19 +130,10 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 	if (deviceHandle < 0) {
 		throw ScannerException("could not get handle to hci device");
 	} else {
-		staticDeviceHandle = deviceHandle;
+		staticDeviceHandles.insert(deviceHandle);
 	}
 
  	startScanHelper(deviceHandle, scanInterval, scanWindow);
-	std::atexit([]{
-		if (staticDeviceHandle >= 0) {
-			if (debug_scan) {
-				pdebug("stopping scan and closing device");
-			}
-//			stopScanHelper(staticDeviceHandle, staticOldFilter);
-			hci_close_dev(staticDeviceHandle);
-		}
-	});
 
 	uint8_t buf[HCI_MAX_EVENT_SIZE];
 	while (running->test_and_set()) {
@@ -162,7 +158,7 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 			std::string name = "";
 			int i = 0;
 			while (i < info->length) {
-				int len = info->data[i];
+				int len = ((uint8_t *)(info->data))[i]; // Hack to suppress warning ...
 				if (info->data[i + 1] == EIR_NAME_SHORT || info->data[i + 1] == EIR_NAME_COMPLETE) {
 					char name_c_str[len];
 					name_c_str[len - 1] = '\0';
@@ -175,7 +171,8 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 			if (debug_scan) {
 				std::stringstream ss;
 				ss << "advertisement for " << addr << "\t"
-						<< ((addrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random") << "\t" << name;
+						<< ((addrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random")
+						<< "\t" << name;
 				pdebug(ss.str());
 			}
 
