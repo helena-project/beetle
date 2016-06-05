@@ -23,6 +23,7 @@ public:
 	virtual ~CachedHandle();
 
 	void set(boost::shared_array<uint8_t> value, int len);
+	void clear();
 	boost::shared_array<uint8_t> value;
 
 	int len = 0;
