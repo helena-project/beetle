@@ -35,6 +35,8 @@ public:
 
 	virtual void evaluate(std::shared_ptr<ControllerClient> cc,
 			std::shared_ptr<Device> server, std::shared_ptr<Device> client) = 0;
+
+	void reset();
 protected:
 	rule_t ruleId;
 };

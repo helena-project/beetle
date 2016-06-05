@@ -25,7 +25,7 @@ class NetworkDiscoveryClient;
 class CLI {
 public:
 	CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery = NULL,
-			std::istream *istream = NULL, std::ostream *ostream = NULL, bool useDaemon = false);
+			std::iostream *iostream = NULL, bool useDaemon = false, bool verbose = true);
 
 	virtual ~CLI();
 	/*
@@ -54,14 +54,15 @@ private:
 	/*
 	 * Use a stream other than stdin and stdout.
 	 */
-	std::unique_ptr<std::ostream> ostream;
-	std::unique_ptr<std::istream> istream;
+	std::unique_ptr<std::iostream> iostream;
 
 	std::shared_ptr<NetworkDiscoveryClient> networkDiscovery;
 
 	bool useDaemon;
 	std::thread inputDaemon;
 	void cmdLineDaemon();
+
+	bool pretty;
 
 	void printUsage(std::string usage);
 	void printUsageError(std::string error);

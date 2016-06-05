@@ -120,6 +120,10 @@ BeetleConfig::BeetleConfig(std::string filename) {
 				controllerHost = it.value();
 			} else if (it.key() == "port") {
 				controllerPort = it.value();
+			} else if (it.key() == "commandEnable") {
+				controllerCommandEnabled = it.value();
+			} else if (it.key() == "commandPort") {
+				controllerCommandPort = it.value();
 			} else {
 				throw ConfigException("unknown controller param: " + it.key());
 			}
@@ -183,10 +187,6 @@ BeetleConfig::~BeetleConfig() {
 	// nothing to do
 }
 
-std::string BeetleConfig::getControllerHostAndPort() const {
-	return controllerHost + ":" + std::to_string(controllerPort);
-}
-
 std::string BeetleConfig::str(unsigned int indent) const {
 	using json = nlohmann::json;
 
@@ -222,6 +222,8 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	controller["enable"] = controllerEnabled;
 	controller["host"] = controllerHost;
 	controller["port"] = controllerPort;
+	controller["commandEnable"] = controllerCommandEnabled;
+	controller["commandPort"] = controllerCommandPort;
 	config["controller"] = controller;
 
 	json ssl;

@@ -29,8 +29,8 @@ class ControllerException : public std::exception {
 
 class ControllerClient {
 public:
-	ControllerClient(Beetle &beetle, std::string hostAndPort, bool verifyPeers);
-	ControllerClient(Beetle &beetle, std::string hostAndPort, std::string cert,
+	ControllerClient(Beetle &beetle, std::string host, int port, bool verifyPeers);
+	ControllerClient(Beetle &beetle, std::string host, int port, std::string cert,
 			std::string caCerts, bool verifyPeers);
 	virtual ~ControllerClient();
 	std::string getUrl(std::string resource);
