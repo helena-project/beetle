@@ -26,9 +26,15 @@ class BeetleInternal;
 class NetworkDiscoveryClient;
 class Router;
 
+/* Defaults parallelism */
+const int DEFAULT_NUM_WORKERS = 4;
+const int DEFAULT_NUM_WRITERS = 1;
+const int DEFAULT_NUM_READERS = 1;
+
 class Beetle {
 public:
-	Beetle(std::string name);
+	Beetle(std::string name, int numWorkers = DEFAULT_NUM_WORKERS, int numWriters = DEFAULT_NUM_WRITERS,
+			int numReaders = DEFAULT_NUM_READERS);
 	virtual ~Beetle();
 
 	/*

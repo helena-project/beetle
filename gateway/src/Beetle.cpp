@@ -13,12 +13,8 @@
 #include "hat/HandleAllocationTable.h"
 #include "Router.h"
 
-static const int NUM_WORKERS = 4;
-static const int NUM_WRITERS = 1;
-static const int NUM_READERS = 1;
-
-Beetle::Beetle(std::string name_) :
-		workers(NUM_WORKERS), writers(NUM_WRITERS), readers(NUM_READERS) {
+Beetle::Beetle(std::string name_, int numWorkers, int numWriters, int numReaders) :
+		workers(numWorkers), writers(numWriters), readers(numReaders) {
 	router = std::make_unique<Router>(*this);
 	beetleDevice = std::make_shared<BeetleInternal>(*this, name_);
 	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
