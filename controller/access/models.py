@@ -195,9 +195,7 @@ class RuleException(models.Model):
 		return "(except) %s" % self.rule
 
 class Exclusive(models.Model):
-	"""
-	Group rules by exclusive access.
-	"""
+	"""Group rules by exclusive access."""
 
 	NULL = -1
 

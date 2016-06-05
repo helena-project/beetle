@@ -49,13 +49,13 @@ urlpatterns = [
 		+ r'$',
 		api.map_devices, name='update mappings on device'),
 
-	url(r'^interest/service/' + gateway("gateway") + r'/' 
+	url(r'^registerInterest/service/' + gateway("gateway") + r'/' 
 		+ regex.device_id("remote_id") + r'$', 
 		api.register_interest,
 		{"is_service" : True},
 		name='register interest in services or characteristic'),
 
-	url(r'^interest/char/' + gateway("gateway") + r'/' 
+	url(r'^registerInterest/char/' + gateway("gateway") + r'/' 
 		+ regex.device_id("remote_id") + r'$', 
 		api.register_interest,
 		{"is_service" : False},

@@ -12,7 +12,7 @@ from ipware.ip import get_ip
 import json
 
 from .models import ConnectedGateway, ConnectedDevice, CharInstance, \
-	ServiceInstance
+	ServiceInstance, DeviceMapping
 
 from beetle.models import Gateway, VirtualDevice
 from state.models import ExclusiveLease
@@ -189,11 +189,58 @@ def update_device(request, gateway, remote_id):
 @csrf_exempt
 @require_http_methods(["POST", "DELETE"])
 def map_devices(request, from_gateway, from_id, to_gateway, to_id):
-	pass
+	"""Insert or remove mapping between devices"""
 
+	from_id = int(from_id)
+	_, _, _, conn_from_device = \
+		get_gateway_and_device_helper(from_gateway, from_id)
+
+	to_id = int(to_id)
+	_, _, _, conn_to_device = \
+		get_gateway_and_device_helper(to_gateway, to_id)
+
+	if request.method == "POST":
+		mapping, _ = DeviceMapping.objects.get_or_create(
+			from_device=conn_from_device, 
+			to_device=conn_to_device)
+		return HttpResponse()
+
+	elif request.method == "DELETE":
+		mappings = DeviceMapping.objects.filter(
+			from_device=conn_from_device, 
+			to_device=conn_to_device)
+		mappings.delete()
+		return HttpResponse()
+
+	return HttpResponse(status=405)
 
 @transaction.atomic
 @csrf_exempt
 @require_POST
 def register_interest(request, gateway, remote_id, uuid, is_service=True):
-	pass
+	"""Register interest for a service or characteristic"""
+
+	device_instance = ConnectedDevice.objects.get(
+		gateway_instance__gateway__name=gateway, remote_id=remote_id)
+
+	if not check_uuid(uuid):
+		return HttpResponse(status=400)
+
+	uuid = convert_uuid(uuid) 
+
+	if is_service:
+		try:
+			service = Service.objects.get(uuid=uuid)
+			device_instance.interested_services.add(service)
+		except Service.DoesNotExist:
+			pass
+	else:
+		try:
+			characteristic = Characteristic.objects.get(uuid=uuid)
+			device_instance.interested_characteristics.add(characteristic)
+		except Characteristic.DoesNotExist:
+			pass
+
+	device_instance.save()
+
+	return HttpResponse()

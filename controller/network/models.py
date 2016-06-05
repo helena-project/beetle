@@ -16,8 +16,7 @@ class ConnectedGateway(models.Model):
 		verbose_name = "Gateway (Instance)"
 		verbose_name_plural = "Gateways (Instance)"
 
-	DEFAULT_GATEWAY_TCP_SERVER_PORT = 3002 
-	CONNECTION_TIMEOUT = timedelta(minutes=60)
+	DEFAULT_GATEWAY_TCP_SERVER_PORT = 3002
 
 	gateway = models.ForeignKey("beetle.Gateway")
 	ip_address = models.CharField(
@@ -36,8 +35,6 @@ class ConnectedDevice(models.Model):
 	class Meta:
 		verbose_name = "Device (Instance)"
 		verbose_name_plural = "Devices (Instance)"
-
-	CONNECTION_TIMEOUT = timedelta(minutes=15)
 
 	device = models.ForeignKey("beetle.VirtualDevice")
 	gateway_instance = models.ForeignKey("ConnectedGateway")
@@ -90,6 +87,7 @@ class DeviceMapping(models.Model):
 	class Meta:
 		verbose_name = "Mapping (Instance)"
 		verbose_name_plural = "Mappings (Instance)"
+		unique_together = (("from_device", "to_device"),)
 
 	from_device = models.ForeignKey("ConnectedDevice", related_name="map_from")
 	to_device = models.ForeignKey("ConnectedDevice", related_name="map_to")
