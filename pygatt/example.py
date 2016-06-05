@@ -21,9 +21,8 @@ import traceback
 from pygatt import ManagedSocket, GattServer, GattClient, ClientError
 
 def getArguments():
-	"""
-	Arguments for script.
-	"""
+	"""Arguments for script."""
+
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--host", default="localhost", 
 		help="hostname of the Beetle server")
@@ -51,6 +50,7 @@ BATTERY_LEVEL_CHARAC_UUID = 0x2A19
 
 def setUpServer(server, deviceName):
 	"""Set up services and characteristic for the server."""
+	
 	server.addGapService(deviceName)
 
 	# TODO: Python 2.X limits assignments inside closures...
