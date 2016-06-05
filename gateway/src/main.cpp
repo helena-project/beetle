@@ -156,6 +156,7 @@ int main(int argc, char *argv[]) {
 	try {
 		Beetle btl(btlConfig.name);
 
+		/* Listen for remote connections */
 		std::unique_ptr<TCPDeviceServer> tcpServer;
 		if (btlConfig.tcpEnabled || enableTcp) {
 			std::cout << "using certificate: " << btlConfig.sslServerCert << std::endl;
@@ -165,11 +166,13 @@ int main(int argc, char *argv[]) {
 					btlConfig.tcpPort);
 		}
 
+		/* Listen for local applications */
 		std::unique_ptr<UnixDomainSocketServer> ipcServer;
 		if (btlConfig.ipcEnabled || enableIpc) {
 			ipcServer.reset(new UnixDomainSocketServer(btl, btlConfig.ipcPath));
 		}
 
+		/* Setup controller modules */
 		std::shared_ptr<ControllerClient> controllerClient;
 		std::shared_ptr<NetworkStateClient> networkState;
 		std::shared_ptr<AccessControl> accessControl;
@@ -198,34 +201,53 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
+		/* Setup static topology listener */
 		std::unique_ptr<StaticTopo> staticTopo;
 		if (btlConfig.staticTopoEnabled || enableStaticTopo) {
 			staticTopo = std::make_unique<StaticTopo>(btl, btlConfig.staticTopoMappings);
 			btl.registerUpdateDeviceHandler(staticTopo->getUpdateDeviceHandler());
 		}
 
-		CLI cli(btl, btlConfig, networkDiscovery);
+		/* Make a CLI if remote control is disabled */
+		std::unique_ptr<CLI> cli;
+		if (!controllerCli) {
+			cli = std::make_unique<CLI>(btl, btlConfig, networkDiscovery);
+		}
 
+		/* Setup scanning and autoconnect modules */
 		std::unique_ptr<AutoConnect> autoConnect;
 		std::unique_ptr<Scanner> scanner;
 		if (btlConfig.scanEnabled) {
 			scanner = std::make_unique<Scanner>();
 			autoConnect = std::make_unique<AutoConnect>(btl, autoConnectAll || btlConfig.autoConnectAll,
 					btlConfig.autoConnectMinBackoff, btlConfig.autoConnectWhitelist);
-			scanner->registerHandler(cli.getDiscoveryHander());
 			scanner->registerHandler(autoConnect->getDiscoveryHandler());
+			if (cli) {
+				scanner->registerHandler(cli->getDiscoveryHander());
+			}
+			if (controllerCli) {
+				scanner->registerHandler(controllerCli->get()->getDiscoveryHander());
+			}
 			scanner->start();
 		}
 
+		/* Initialize all timers */
 		TimedDaemon timers;
 		timers.repeat(btl.getDaemon(), 5);
-		timers.repeat(cli.getDaemon(), 5);
+		if (cli) {
+			timers.repeat(cli->getDaemon(), 5);
+		}
+		if (controllerCli) {
+			timers.repeat(controllerCli->get()->getDaemon(), 5);
+		}
 		if (autoConnect) {
 			timers.repeat(autoConnect->getDaemon(), 5);
 		}
 
-		cli.join();
-
+		/* Block on exit */
+		if (cli) {
+			cli->join();
+		}
 		if (controllerCli) {
 			controllerCli->join();
 		}

@@ -44,11 +44,11 @@
 #define I_STREAM ((iostream) ? *iostream : std::cin)
 
 CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery,
-		std::iostream *iostream_, bool useDaemon_, bool verbose_) :
+		std::iostream *iostream_, bool useDaemon_, bool pretty_) :
 		beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), inputDaemon() {
 	aliasCounter = 0;
 	useDaemon = useDaemon_;
-	verbose = verbose_;
+	pretty = pretty_;
 
 	if (iostream_) {
 		iostream.reset(iostream_);
@@ -118,11 +118,16 @@ void CLI::printUsageError(std::string error) {
 }
 
 void CLI::printMessage(std::string message) {
-	O_STREAM << "  " << message << std::endl;
+	if (pretty) {
+		O_STREAM << "  ";
+	}
+	O_STREAM << message << std::endl;
 }
 
 void CLI::cmdLineDaemon() {
-	printMessage("Welcome to Beetle CLI. Use 'help' for a list of commands.");
+	if (pretty) {
+		printMessage("Welcome to Beetle CLI. Use 'help' for a list of commands.");
+	}
 
 	while (true) {
 		std::vector<std::string> cmd;
@@ -177,7 +182,7 @@ void CLI::cmdLineDaemon() {
 
 bool CLI::getCommand(std::vector<std::string> &ret) {
 	assert(ret.empty());
-	if (verbose) {
+	if (pretty) {
 		O_STREAM << "> ";
 	}
 	std::string line;

@@ -28,7 +28,7 @@ ControllerCLI::ControllerCLI(Beetle &beetle, std::string host, int port, BeetleC
 		throw ControllerException("Could not connect to command server.");
 	}
 
-	cli = std::make_unique<CLI>(beetle, beetleConfig, discovery, stream, useDaemon, false);
+	cli = std::make_unique<CLI>(beetle, beetleConfig, discovery, stream, useDaemon, true);
 }
 
 ControllerCLI::~ControllerCLI() {
@@ -39,3 +39,6 @@ void ControllerCLI::join() {
 	cli->join();
 }
 
+CLI *ControllerCLI::get() {
+	return cli.get();
+}

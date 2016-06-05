@@ -30,6 +30,11 @@ public:
 	 * Blocks, waiting for CLI to exit.
 	 */
 	void join();
+
+	/*
+	 * Return the internal CLI owned by this.
+	 */
+	CLI *get();
 private:
 	std::unique_ptr<CLI> cli;
 };
