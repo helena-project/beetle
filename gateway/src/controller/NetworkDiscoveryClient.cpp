@@ -138,4 +138,9 @@ void NetworkDiscoveryClient::registerInterestInUuid(device_t id, UUID uuid, bool
 	} catch (std::exception &e) {
 		pexcept(e);
 	}
+
+	/*
+	 * TODO: might want to wait
+	 */
+	cb();
 }

@@ -1,5 +1,6 @@
 
 import json
+import re
 
 from django.contrib import admin
 from django.core.validators import validate_email, ValidationError
@@ -42,7 +43,7 @@ class VirtualDeviceAdmin(PolymorphicChildModelAdmin):
 	list_display = ("name", "owner", "ttype", "auto_created")
 	search_fields = ("name", "owner")
 	list_filter = ("ttype",)
-	list_editable = ("auto_created", "ttype")
+	list_editable = ("auto_created", "ttype", "owner")
 
 @admin.register(BeetleGateway)
 class BeetleGatewayAdmin(PolymorphicChildModelAdmin):

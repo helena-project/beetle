@@ -1,5 +1,5 @@
 
-class UUID:
+class UUID(object):
 	def __init__(self, value, reverse=False):
 		"""A Bluetooth UUID type
 
@@ -10,18 +10,18 @@ class UUID:
 			value (int, str, bytearray) : the uuid
 			reverse : whether to the input value is reversed 
 		"""
-		if type(value) is int:
+		if isinstance(value, int):
 			assert (value >> 16) == 0
-			assert reverse == False
+			assert reverse is False
 			self._raw = bytearray([(value >> 8) & 0xFF, value & 0xFF])
 		
-		elif type(value) is str:
+		elif isinstance(value, str):
 			value = value.replace("-", "")
-			assert reverse == False
+			assert reverse is False
 			assert len(value) == 4 or len(value) == 32
 			self._raw = bytearray.fromhex(value)
 
-		elif type(value) is bytearray:
+		elif isinstance(value, bytearray):
 			assert len(value) == 2 or len(value) == 16
 			if reverse:
 				self._raw = value[::-1]
@@ -46,3 +46,4 @@ class UUID:
 
 	def __ne__(self, other):
 		return not self.__eq__(other)
+		

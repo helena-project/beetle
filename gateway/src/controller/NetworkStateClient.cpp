@@ -393,7 +393,7 @@ void NetworkStateClient::updateDeviceHelper(std::shared_ptr<Device> d) {
 }
 
 void NetworkStateClient::removeDeviceHelper(device_t d) {
-	std::string url = client->getUrl("network/connect/" + beetle.name + "/" + std::to_string(d));
+	std::string url = client->getUrl("network/update/" + beetle.name + "/" + std::to_string(d));
 	if (debug_controller) {
 		pdebug("delete: " + url);
 	}

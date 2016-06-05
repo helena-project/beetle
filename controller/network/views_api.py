@@ -198,6 +198,7 @@ def map_devices(request, from_gateway, from_id, to_gateway, to_id):
 		mapping, _ = DeviceMapping.objects.get_or_create(
 			from_device=conn_from_device, 
 			to_device=conn_to_device)
+		mapping.save()
 		return HttpResponse()
 
 	elif request.method == "DELETE":

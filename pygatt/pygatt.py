@@ -32,7 +32,7 @@ class ClientError(Exception):
 
 #------------------------------------------------------------------------------
 
-class ManagedSocket:
+class ManagedSocket(object):
 	def __init__(self, recv_mtu=att.DEFAULT_LE_MTU, 
 		send_mtu=att.DEFAULT_LE_MTU, daemon=False):
 		"""Create a managed socket wrapping around a regular socket.
@@ -43,9 +43,9 @@ class ManagedSocket:
 			daemon : if true, then then this class will use a daemon thread
 		"""
 
-		assert type(recv_mtu) is int
+		assert isinstance(recv_mtu, int)
 		assert recv_mtu > 0
-		assert type(send_mtu) is int
+		assert isinstance(send_mtu, int)
 		assert send_mtu > 0
 
 		self._server = None
@@ -104,7 +104,7 @@ class ManagedSocket:
 	def _send(self, pdu):
 		"""Send an ATT packet"""
 		
-		assert type(pdu) is bytearray
+		assert isinstance(pdu, bytearray)
 		assert len(pdu) > 0
 		if len(pdu) > self._send_mtu:
 			tmp = " ".join("%02x" % x for x in pdu)
@@ -154,8 +154,8 @@ class ManagedSocket:
 		if op == att.OP_MTU_REQ:
 			resp = bytearray(3)
 			resp[0] = att.OP_MTU_RESP
-			resp[1] = self.mtu & 0xFF
-			resp[2] = (self.mtu >> 8) & 0xFF
+			resp[1] = self._recv_mtu & 0xFF
+			resp[2] = (self._recv_mtu >> 8) & 0xFF
 			self._send(resp)
 
 		elif (att.isRequest(op) or op == att.OP_WRITE_CMD 
@@ -202,7 +202,7 @@ class ManagedSocket:
 
 #------------------------------------------------------------------------------
 
-class _ServerHandle:
+class _ServerHandle(object):
 	"""Protected server handle"""
 	
 	def __init__(self, server, owner, uuid):
@@ -223,20 +223,20 @@ class _ServerHandle:
 	def _read(self):
 		try:
 			return self._read_callback()
-		except ServerError, err:
+		except ServerError:
 			return None
 
 	def _write(self, value):
-		assert type(value) is bytearray
+		assert isinstance(value, bytearray)
 		try:
 			self._write_callback(value)
-		except ServerError, err:
+		except ServerError:
 			pass
 
 	def __convert_to_bytearray(self, value):
-		if type(value) is bytearray:
+		if isinstance(value, bytearray):
 			return value
-		elif type(value) is str:
+		elif isinstance(value, str):
 			return bytearray(ord(x) for x in value)
 		else:
 			raise ValueError("unsupported value type: " + str(type(value)))
@@ -260,7 +260,7 @@ class _ServerHandle:
 	def __str__(self):
 		return "Handle - %d" % self._no
 
-class _ServerService:
+class _ServerService(object):
 	"""Protected server service"""
 
 	def __init__(self, server, uuid):
@@ -293,7 +293,7 @@ class _ServerService:
 	def __str__(self):
 		return "Service - %s" % str(self.uuid)
 
-class _ServerCharacteristic:
+class _ServerCharacteristic(object):
 	def __init__(self, server, uuid, staticValue=None, allowNotify=False, 
 		allowIndicate=False):
 		assert isinstance(server, GattServer)
@@ -327,7 +327,8 @@ class _ServerCharacteristic:
 			self._cccd = _ServerDescriptor(server, 
 				UUID(gatt.CLIENT_CHARAC_CFG_UUID))
 			def cccd_cb(value):
-				assert type(value) is bytearray
+				"""Special callback for CCCD"""
+				assert isinstance(value, bytearray)
 				if len(value) != 2:
 					raise ServerError("invalid cccd pdu")
 				else:
@@ -412,7 +413,7 @@ class _ServerCharacteristic:
 		Args:
 			value : a bytearray of length with max length of send MTU - 3
 		"""
-		assert type(value) is bytearray
+		assert isinstance(value, bytearray)
 		assert self._cccd != None
 		
 		cccdValue = self._cccd.read()
@@ -430,7 +431,7 @@ class _ServerCharacteristic:
 		Returns: 
 			Whether the indicate packet was successfully sent.
 		"""
-		assert type(value) is bytearray
+		assert isinstance(value, bytearray)
 		assert self._cccd != None
 
 		cccdValue = self._cccd.read()
@@ -467,7 +468,7 @@ class _ServerCharacteristic:
 	def __str__(self):
 		return "Characteristic - %s" % str(self.uuid)
 
-class _ServerDescriptor:
+class _ServerDescriptor(object):
 	def __init__(self, server, uuid, value=None):
 		assert isinstance(server, GattServer)
 		assert isinstance(uuid, UUID)
@@ -492,7 +493,7 @@ class _ServerDescriptor:
 		Args:
 			value : a bytearray with length not exceeding send MTU - 3
 		"""
-		assert type(value) is bytearray
+		assert isinstance(value, bytearray)
 		self._value = value
 		self._handle._set_read_value(self._value)
 
@@ -507,7 +508,7 @@ class _ServerDescriptor:
 	def __str__(self):
 		return "Descriptor - %s" % str(self.uuid)
 
-class GattServer:
+class GattServer(object):
 	def __init__(self, socket, onDisconnect=None):
 		"""Make a GATT server
 
@@ -540,7 +541,7 @@ class GattServer:
 			deviceName : name of the device advertised to the other side
 		"""
 		assert len(self._handles) == 1
-		assert type(deviceName) is str
+		assert isinstance(deviceName, str)
 
 		self.addService(gatt.GAP_SERVICE_UUID)
 		self.addCharacteristic(gatt.GAP_CHARAC_DEVICE_NAME_UUID, deviceName)
@@ -661,6 +662,8 @@ class GattServer:
 		for handle in self._handles[startHandle:endHandle+1]:
 			if handle._uuid != uuid:
 				continue
+			if handle._read() != value:
+				continue
 			if len(resp) + 4 > self._socket.getSendMtu():
 				break
 			resp += handle._get_handle_as_bytearray()
@@ -696,7 +699,7 @@ class GattServer:
 				return att_pdu.new_error_resp(op, startHandle, 
 					att.ECODE_READ_NOT_PERM)
 
-			assert type(valRead) is bytearray
+			assert isinstance(valRead, bytearray)
 			if not valLen:
 				assert len(valRead) <= 0xFF - 2
 				valLen = len(valRead)
@@ -738,7 +741,7 @@ class GattServer:
 				return att_pdu.new_error_resp(op, startHandle, 
 					att.ECODE_READ_NOT_PERM)
 
-			assert type(valRead) is bytearray
+			assert isinstance(valRead, bytearray)
 			if not valLen:
 				assert len(valRead) <= 0xFF - 4 
 				valLen = len(valRead)
@@ -776,7 +779,7 @@ class GattServer:
 				return resp
 			except int, ecode:
 				return att_pdu.new_error_resp(op, handleNo, ecode)
-			except ServerError, err:
+			except ServerError:
 				return att_pdu.new_error_resp(op, handleNo, 
 					att.ECODE_UNLIKELY)
 		else:
@@ -785,8 +788,7 @@ class GattServer:
 
 	def __handle_write_cmd_req(self, op, pdu):
 		if len(pdu) < 3:
-			return att_pdu.new_error_resp(op, handleNo, 
-				att.ECODE_INVALID_PDU)
+			return att_pdu.new_error_resp(op, 0, att.ECODE_INVALID_PDU)
 
 		_, handleNo, value = att_pdu.parse_write(pdu)
 
@@ -803,7 +805,7 @@ class GattServer:
 				return bytearray([att.OP_WRITE_RESP])
 			except int, ecode:
 				return att_pdu.new_error_resp(op, handleNo, ecode)
-			except ServerError, err:
+			except ServerError:
 				return att_pdu.new_error_resp(op, handleNo, 
 					att.ECODE_UNLIKELY)
 		else:
@@ -815,7 +817,7 @@ class GattServer:
 			self._indicateQueue.pop(0)()
 		except IndexError:
 			pass
-		except ServerError, err:
+		except ServerError:
 			pass
 
 	def _handle_packet(self, pdu):
@@ -856,12 +858,12 @@ def _handle_to_bytearray(handle):
 	assert handle >= 0
 	return bytearray([handle & 0xFF, (handle >> 8) & 0xFF])
 
-class _ClientService:
+class _ClientService(object):
 	def __init__(self, client, uuid, handleNo, endGroup):
 		assert isinstance(uuid, UUID)
 		assert isinstance(client, GattClient)
-		assert type(handleNo) is int
-		assert type(endGroup) is int
+		assert isinstance(handleNo, int)
+		assert isinstance(endGroup, int)
 
 		# Public members
 		self.client = client
@@ -895,7 +897,7 @@ class _ClientService:
 			self.characteristics = allCharacs
 			return allCharacs
 		else:
-			characs = filter(lambda x: x.uuid == uuid, allCharacs)
+			characs = [x for x in allCharacs if x.uuid == uuid]
 			for charac in characs:
 				if charac._handleNo not in self._characteristicHandles:
 					self._characteristicHandles[charac._handleNo] = charac
@@ -968,20 +970,20 @@ class _ClientService:
 		return characs, characHandles
 
 	def __len__(self):
-		return len(characteristics)
+		return len(self.characteristics)
 
 	def __str__(self):
 		return "Service - %s" % str(self.uuid)
 
-class _ClientCharacteristic:
+class _ClientCharacteristic(object):
 	def __init__(self, client, service, uuid, handleNo, properties, 
 		valHandleNo, endGroup=None):
 		assert isinstance(uuid, UUID)
 		assert isinstance(client, GattClient)
 		assert isinstance(service, _ClientService)
-		assert type(handleNo) is int
-		assert type(valHandleNo) is int
-		assert type(properties) is int
+		assert isinstance(handleNo, int)
+		assert isinstance(valHandleNo, int)
+		assert isinstance(properties, int)
 
 		# Public members
 		
@@ -1110,7 +1112,7 @@ class _ClientCharacteristic:
 		self._subscribeCallback = None
 
 		if self._cccd is not None:
-			self._cccd.write( ytearray([0,0]))
+			self._cccd.write(bytearray([0, 0]))
 
 	def read(self):
 		"""Blocking read of the characteristic.
@@ -1143,7 +1145,7 @@ class _ClientCharacteristic:
 		Raises:
 			ClientError on failure
 		"""
-		assert type(value) is bytearray
+		assert isinstance(value, bytearray)
 		if "w" not in self.permissions:
 			raise ClientError("write not permitted")
 
@@ -1167,17 +1169,17 @@ class _ClientCharacteristic:
 		self._endGroup = endGroup
 
 	def __len__(self):
-		return len(descriptors)
+		return len(self.descriptors)
 
 	def __str__(self):
 		return "Characteristic - %s" % str(self.uuid)
 
-class _ClientDescriptor:
+class _ClientDescriptor(object):
 	def __init__(self, client, characteristic, uuid, handleNo):
 		assert isinstance(uuid, UUID)
 		assert isinstance(client, GattClient)
 		assert isinstance(characteristic, _ClientCharacteristic)
-		assert type(handleNo) is int
+		assert isinstance(handleNo, int)
 
 		# Public members
 		self.client = client
@@ -1219,7 +1221,7 @@ class _ClientDescriptor:
 			ClientError on failure
 		"""
 
-		assert type(value) is bytearray
+		assert isinstance(value, bytearray)
 
 		req = bytearray([att.OP_WRITE_REQ])
 		req += _handle_to_bytearray(self._handleNo)
@@ -1240,7 +1242,7 @@ class _ClientDescriptor:
 	def __str__(self):
 		return "Descriptor - %s" % str(self.uuid)
 
-class GattClient:
+class GattClient(object):
 	def __init__(self, socket, onDisconnect=None, timeout=60):
 		"""Make a GATT client
 
@@ -1303,7 +1305,7 @@ class GattClient:
 			self._responseEvent.set()
 
 	def _new_transaction(self, req):
-		assert type(req) is bytearray
+		assert isinstance(req, bytearray)
 		assert att.isRequest(req[0])
 
 		self._transactionLock.acquire()
@@ -1365,7 +1367,7 @@ class GattClient:
 
 		return None
 
-	def __discover_services(self, startHandle=1, endHandle = 0xFFFF):
+	def __discover_services(self, startHandle=1, endHandle=0xFFFF):
 		primSvcUuid = UUID(gatt.PRIM_SVC_UUID)
 
 		services = []
@@ -1419,7 +1421,7 @@ class GattClient:
 		self.services = services
 		return services
 
-	def __discover_service_by_uuid(self, uuid):
+	def __discover_services_by_uuid(self, uuid):
 		startHandle = 1
 		endHandle = 0xFFFF
 		primSvcUuid = UUID(gatt.PRIM_SVC_UUID)
