@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from .models import Rule, RuleException
 
-def _get_applicable_rules(from_gateway, from_principal, to_gateway, 
+def __get_applicable_rules(from_gateway, from_principal, to_gateway, 
 	to_principal, timestamp=None):
 	"""Get the queryset of rules that apply for the mapping."""
 	to_principal_groups = PrincipalGroup.objects.filter(
@@ -25,7 +25,7 @@ def _get_applicable_rules(from_gateway, from_principal, to_gateway,
 		| rules.filter(expire__isnull=True)
 	return rules
 
-def _get_rule_exceptions(rules, from_gateway, from_principal, to_gateway, 
+def __get_rule_exceptions(rules, from_gateway, from_principal, to_gateway, 
 	to_principal):
 	"""Get the queryset of rule ids that should be excluded."""
 	return RuleException.objects.filter(
@@ -40,10 +40,10 @@ def _get_rule_exceptions(rules, from_gateway, from_principal, to_gateway,
 def query_can_map_static(from_gateway, from_principal, to_gateway, to_principal, 
 	timestamp):
 	"""Returns all of the static rules that allow a mapping."""
-	rules = _get_applicable_rules(from_gateway, from_principal, 
+	rules = __get_applicable_rules(from_gateway, from_principal, 
 		to_gateway, to_principal, timestamp)
 	
-	exceptions = _get_rule_exceptions(rules, from_gateway, from_principal, 
+	exceptions = __get_rule_exceptions(rules, from_gateway, from_principal, 
 		to_gateway, to_principal)
 	
 	rules = rules.exclude(id__in=exceptions)

@@ -237,7 +237,7 @@ void NetworkStateClient::addDeviceHelper(std::shared_ptr<Device> d) {
 }
 
 void NetworkStateClient::updateDeviceHelper(std::shared_ptr<Device> d) {
-	std::string url = client->getUrl("network/connect/" + beetle.name + "/" + std::to_string(d->getId()));
+	std::string url = client->getUrl("network/update/" + beetle.name + "/" + std::to_string(d->getId()));
 	if (debug_controller) {
 		pdebug("put: " + url);
 	}

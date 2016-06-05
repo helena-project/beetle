@@ -44,6 +44,16 @@ class ConnectedDevice(models.Model):
 	remote_id = models.IntegerField(
 		help_text="id of the device on the gateway")
 
+	interested_services = models.ManyToManyField(
+		"gatt.Service", 
+		blank=True,
+		help_text="Services that the device has tried to find.")
+
+	interested_characteristics = models.ManyToManyField(
+		"gatt.Characteristic", 
+		blank=True,
+		help_text="Characteristics that the device has tried to find.")
+
 	def __unicode__(self):
 		return self.device.name + "@" + self.gateway_instance.gateway.name
 
@@ -79,13 +89,12 @@ class DeviceMapping(models.Model):
 
 	class Meta:
 		verbose_name = "Mapping (Instance)"
-		verbose_name_plural = verbose_name
+		verbose_name_plural = "Mappings (Instance)"
 
 	from_device = models.ForeignKey("ConnectedDevice", related_name="map_from")
 	to_device = models.ForeignKey("ConnectedDevice", related_name="map_to")
 
 	timestamp = models.DateTimeField(auto_now_add=True)
-
 
 	def __unicode__(self):
 		return from_device.device.__unicode__() + " to " + to.device.__unicode__()

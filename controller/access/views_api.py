@@ -14,14 +14,14 @@ from beetle.models import Principal, Gateway, Contact
 from gatt.models import Service, Characteristic
 from network.models import ConnectedGateway, ConnectedDevice, \
 	ServiceInstance, CharInstance
-from network.shared import get_gateway_helper, get_gateway_and_device_helper
+from network.lookup import get_gateway_helper, get_gateway_and_device_helper
 
 import dateutil.parser
 import cronex
 import json
 import base64
 
-def _get_dynamic_auth(rule, principal):
+def __get_dynamic_auth(rule, principal):
 	result = []
 	for auth in DynamicAuth.objects.filter(rule=rule).order_by("priority"):
 		auth_obj = {
@@ -50,10 +50,9 @@ def _get_dynamic_auth(rule, principal):
 	
 	return True, result
 
-def _get_minimal_rules(rules, cached_relations):
-	"""
-	Returns the rules that are 'minimal'.
-	"""
+def __get_minimal_rules(rules, cached_relations):
+	"""Returns the rules that are 'minimal'."""
+	
 	if rules.count() == 0:
 		return rules
 
@@ -88,9 +87,8 @@ def _get_minimal_rules(rules, cached_relations):
 	return rules
 
 def _evaluate_cron(rule, timestamp, cached_cron):
-	"""
-	Returns whether the timestamp is in the trigger window of the rule
-	"""
+	"""Returns whether the timestamp is in the trigger window of the rule"""
+
 	if rule.id in cached_cron:
 		return cached_cron[rule.id]
 
@@ -108,9 +106,7 @@ def _evaluate_cron(rule, timestamp, cached_cron):
 @gzip_page
 @require_GET
 def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
-	"""
-	Return whether fromId at fromGateway can connect to toId at toGateway
-	"""
+	"""Return whether fromId at fromGateway can connect to toId at toGateway"""
 
 	if "timestamp" in request.GET:
 		timestamp = dateutil.parser.parse(request.GET["timestamp"])
@@ -179,7 +175,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 			char_rules = service_rules.filter(Q(characteristic=characteristic) | 
 				Q(characteristic__name="*"))
 
-			for char_rule in _get_minimal_rules(char_rules, cached_relations):
+			for char_rule in __get_minimal_rules(char_rules, cached_relations):
 
 				#####################################
 				# Compute access per characteristic #
@@ -195,7 +191,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 				if characteristic.uuid not in services[service.uuid]:
 					services[service.uuid][characteristic.uuid] = []
 				if char_rule.id not in rules:
-					satisfiable, dauth = _get_dynamic_auth(char_rule, 
+					satisfiable, dauth = __get_dynamic_auth(char_rule, 
 						to_principal)
 					if not satisfiable:
 						continue
@@ -228,22 +224,4 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 			"services" : services,
 		}
 	return JsonResponse(response)
-
-@gzip_page
-@require_GET
-def view_rule_exceptions(request, rule):
-	"""
-	View in admin UI.
-	"""
-	response = []
-	for exception in RuleException.objects.filter(rule__name=rule):
-		response.append({
-			"from_principal" : exception.from_principal.name,
-			"from_gateway" : exception.from_gateway.name,
-			"to_principal" : exception.to_principal.name,
-			"to_gateway" : exception.to_gateway.name,
-			"service" : exception.service.name,
-			"characteristic" : exception.characteristic.name,
-		})
-	return JsonResponse(response, safe=False)
 
