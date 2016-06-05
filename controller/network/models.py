@@ -4,7 +4,7 @@ from django.db import models
 
 from datetime import timedelta
 
-from beetle.models import VirtualDevice, Gateway
+from beetle.models import VirtualDevice, BeetleGateway
 from gatt.models import Service, Characteristic
 
 # Create your models here.
@@ -18,7 +18,7 @@ class ConnectedGateway(models.Model):
 
 	DEFAULT_GATEWAY_TCP_SERVER_PORT = 3002
 
-	gateway = models.ForeignKey("beetle.Gateway")
+	gateway = models.ForeignKey("beetle.BeetleGateway")
 	ip_address = models.CharField(
 		max_length=100, 
 		help_text="IP address of the gateway")
@@ -27,7 +27,7 @@ class ConnectedGateway(models.Model):
 		help_text="TCP server port on the gateway")
 
 	def __unicode__(self):
-		return self.gateway.name + "@" + self.ip_address
+		return "%s [%s]" % (self.gateway.name, self.ip_address)
 
 class ConnectedDevice(models.Model):
 	"""An app or peripheral"""
@@ -52,7 +52,7 @@ class ConnectedDevice(models.Model):
 		help_text="Characteristics that the device has tried to find.")
 
 	def __unicode__(self):
-		return self.device.name + "@" + self.gateway_instance.gateway.name
+		return "%s [%s]" % (self.device.name, self.gateway_instance.gateway.name)
 
 class ServiceInstance(models.Model):
 	"""An instance of a service"""
@@ -95,4 +95,4 @@ class DeviceMapping(models.Model):
 	timestamp = models.DateTimeField(auto_now_add=True)
 
 	def __unicode__(self):
-		return from_device.device.__unicode__() + " to " + to.device.__unicode__()
+		return "%s to %s" % (self.from_device.device, self.to_device)

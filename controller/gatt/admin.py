@@ -2,7 +2,7 @@ from django.contrib import admin
 from django import forms
 
 from .models import Characteristic, Descriptor, Service
-from .shared import check_uuid, convert_uuid
+from .uuid import check_uuid, convert_uuid
 
 # Register your models here.
 

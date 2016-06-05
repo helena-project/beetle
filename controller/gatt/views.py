@@ -4,9 +4,8 @@ from django.core import serializers
 from django.views.decorators.http import require_GET
 
 from .models import Service, Characteristic, Descriptor
-from .shared import check_uuid, convert_uuid
+from .uuid import check_uuid, convert_uuid
 
-# Create your views here.
 @require_GET
 def list_services(request):
 	""" 

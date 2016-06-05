@@ -8,6 +8,7 @@ from polymorphic.models import PolymorphicModel
 
 class BeetleEmailAccount(SingletonModel):
 	"""Email to access SMS gateways"""
+
 	class Meta:
 		verbose_name = "Beetle Email"
 
@@ -46,7 +47,7 @@ class Contact(models.Model):
 		return self.first_name + " " + self.last_name
 
 class Principal(PolymorphicModel):
-	"""An application or peripheral device, using GATT"""
+	"""An application, peripheral, or group"""
 	
 	class Meta:
 		verbose_name = "Principal"
@@ -93,8 +94,12 @@ class VirtualDevice(Principal):
 		default=False,
 		help_text="Added automatically by Beetle.")
 
+	def __unicode__(self):
+		return self.name
+
 class PrincipalGroup(Principal):
 	"""A logical group of virtual devices"""
+	
 	class Meta:
 		verbose_name = "Group (Principal)"
 		verbose_name_plural = "Groups (Principal)"
@@ -104,7 +109,20 @@ class PrincipalGroup(Principal):
 		blank=True,
 		help_text="Group members.")
 
-class Gateway(models.Model):
+	def __unicode__(self):
+		return self.name + " (Group)"
+
+class Gateway(PolymorphicModel):
+	"""A beetle gateway or group"""
+
+	name = models.CharField(
+		max_length=20, 
+		primary_key=True)
+
+	def __unicode__(self):
+		return self.name
+
+class BeetleGateway(Gateway):
 	"""A gateway in the network, serving as a GATT translator"""
 
 	class Meta:
@@ -121,13 +139,22 @@ class Gateway(models.Model):
 		(UNKNOWN, "unknown"),
 	)
 
-	name = models.CharField(
-		max_length=20, 
-		primary_key=True)
 	os = models.CharField(
 		max_length=20, 
 		default=LINUX, 
 		choices=OS_CHOICES)
 
+class GatewayGroup(Gateway):
+	"""A logical group of gateways"""
+
+	class Meta:
+		verbose_name = "Group (Gateway)"
+		verbose_name_plural = "Groups (Gateway)"
+
+	members = models.ManyToManyField(
+		"BeetleGateway", 
+		blank=True,
+		help_text="Group members.")
+
 	def __unicode__(self):
-		return self.name
+		return self.name + " (Group)"

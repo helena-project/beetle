@@ -11,16 +11,15 @@ from ipware.ip import get_ip
 
 import json
 
+from .lookup import get_gateway_and_device_helper
 from .models import ConnectedGateway, ConnectedDevice, CharInstance, \
 	ServiceInstance, DeviceMapping
 
-from beetle.models import Gateway, VirtualDevice
+from beetle.models import BeetleGateway, VirtualDevice
 from state.models import ExclusiveLease
 from gatt.models import Service, Characteristic
 from gatt.uuid import convert_uuid, check_uuid
 from access.lookup import query_can_map_static
-
-# Create your views here.
 
 @transaction.atomic
 @csrf_exempt
@@ -41,8 +40,8 @@ def connect_gateway(request, gateway):
 			return HttpResponse(status=400)
 
 		try:
-			gateway = Gateway.objects.get(name=gateway)
-		except Gateway.DoesNotExist:
+			gateway = BeetleGateway.objects.get(name=gateway)
+		except BeetleGateway.DoesNotExist:
 			return HttpResponse("no gateway named " + gateway, status=400)
 
 		gateway_conn, created = ConnectedGateway.objects.get_or_create(

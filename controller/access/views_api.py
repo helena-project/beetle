@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.http import require_GET
 
-from .shared import query_can_map_static
+from .lookup import query_can_map_static
 from .models import Rule, RuleException, DynamicAuth, AdminAuth, UserAuth, \
 	PasscodeAuth, NetworkAuth, Exclusive
 
@@ -81,12 +81,11 @@ def __get_minimal_rules(rules, cached_relations):
 			else:
 				not_minimal_ids.add(rhs.id)
 
-	for rule_id in not_minimal_ids:
-		rules = rules.exclude(id=rule_id)
+	rules = rules.exclude(id__in=not_minimal_ids)
 
 	return rules
 
-def _evaluate_cron(rule, timestamp, cached_cron):
+def __evaluate_cron(rule, timestamp, cached_cron):
 	"""Returns whether the timestamp is in the trigger window of the rule"""
 
 	if rule.id in cached_cron:
@@ -94,10 +93,12 @@ def _evaluate_cron(rule, timestamp, cached_cron):
 
 	result = False
 	try:
-		cron = cronex.CronExpression(rule.cron_expression)
+		cron_str = str(rule.cron_expression)
+		cron = cronex.CronExpression(cron_str)
 		result = cron.check_trigger(timestamp.timetuple()[:5], 
-			utc_offset=timestamp.utcoffset())
-	except:
+			utc_offset=timestamp.utcoffset().seconds / (60 ** 2))
+	except Exception, err:
+		print err
 		result = False
 
 	cached_cron[rule.id] = result
@@ -180,9 +181,9 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 				#####################################
 				# Compute access per characteristic #
 				#####################################
-
+				
 				# Evaluate the cron expression
-				if not _evaluate_cron(char_rule, timestamp, cached_cron):
+				if not __evaluate_cron(char_rule, timestamp, cached_cron):
 					continue
 
 				# Access allowed

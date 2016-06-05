@@ -30,7 +30,8 @@ class ConnectedGatewayAdmin(admin.ModelAdmin):
 
 	def get_device_list(self, obj):
 		ces = ["%d. %s" % (i + 1, ce.device.name) 
-			for i, ce in enumerate(ConnectedDevice.objects.filter(gateway=obj))]
+			for i, ce in enumerate(ConnectedDevice.objects.filter(
+				gateway_instance=obj))]
 		return "<br>".join(ces)
 	get_device_list.short_description = "connected"
 	get_device_list.allow_tags = True

@@ -1,12 +1,19 @@
 from django.conf.urls import include, url
 
-from . import views
+from access.regex import rule
+from beetle.regex import device
+
+from . import views_user as user
 
 urlpatterns = [
-	url(r'^(?P<rule>[\w\-]+)/?$',
-		views.view_form_passcode_generic,
+
+	# User facing views
+
+	url(r'^' + rule("rule") + r'/?$', 
+		user.view_form_passcode_generic, 
 		name="passcode form"),
-	url(r'^(?P<rule>[\w\-]+)/(?P<principal>[\w_\-@\' ]+)$',
-		views.view_form_passcode,
+
+	url(r'^' + rule("rule") + r'/' + device("principal") + r'$',
+		user.view_form_passcode,
 		name="passcode form"),
 ]

@@ -9,18 +9,14 @@ from django.views.decorators.csrf import csrf_exempt
 
 from ipware.ip import get_ip
 
-import json
-
 from .models import ConnectedGateway, ConnectedDevice, CharInstance, \
 	ServiceInstance
 
-from beetle.models import Gateway, VirtualDevice
+from beetle.models import VirtualDevice
 from state.models import ExclusiveLease
 from gatt.models import Service, Characteristic
 from gatt.uuid import convert_uuid, check_uuid
 from access.lookup import query_can_map_static
-
-# Create your views here.
 
 @require_GET
 @gzip_page

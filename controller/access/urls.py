@@ -1,7 +1,6 @@
 from django.conf.urls import include, url
 
-from . import regex
-
+from .regex import rule
 from beetle.regex import gateway
 from network.regex import device_id
 
@@ -12,7 +11,7 @@ urlpatterns = [
 
 	# User facing
 	
-	url(r'^view/rule/' + regex.rule('rule') + r'/except$',
+	url(r'^view/rule/' + rule('rule') + r'/except$',
 		user.view_rule_exceptions,
 		name="get list of exceptions"),
 

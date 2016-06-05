@@ -4,7 +4,6 @@ from django.core import serializers
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.http import require_GET
 
-from .shared import query_can_map_static
 from .models import Rule, RuleException
 
 @gzip_page

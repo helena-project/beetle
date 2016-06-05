@@ -12,7 +12,7 @@ from passlib.apps import django_context as pwd_context
 
 from gatt.models import Service, Characteristic
 from beetle.models import Principal, VirtualDevice, PrincipalGroup, Gateway, \
-	Contact
+	BeetleGateway, GatewayGroup, Contact 
 
 # Create your models here.
 
@@ -133,8 +133,19 @@ class Rule(models.Model):
 			if b.name == "*":
 				return True
 			return False
-		def _eq_principal(a, b):
-			return a == b
+		def _lte_gateway(a, b):
+			if a == b:
+				return True 
+			if isinstance(b, GatewayGroup):
+				if isinstance(a, BeetleGateway):
+					if b.members.filter(name=a.name).exists():
+						return True
+				else:
+					# subset?
+					pass
+			if b.name == "*":
+				return True
+			return False
 
 		if self.priority <= rhs.priority:
 			return True
@@ -148,17 +159,17 @@ class Rule(models.Model):
 
 		from_lte = False
 		if _lte_principal(self.from_principal, rhs.from_principal):
-			if not _eq_principal(self.from_principal, rhs.from_principal):
+			if not self.from_principal == rhs.from_principal:
 				from_lte = True
 			else:
-				from_lte = _lte(self.from_gateway, rhs.from_gateway)
+				from_lte = _lte_gateway(self.from_gateway, rhs.from_gateway)
 
 		to_lte = False
 		if _lte_principal(self.to_principal, rhs.to_principal):
-			if not _eq_principal(self.to_principal, rhs.to_principal):
+			if not self.to_principal == rhs.to_principal:
 				to_lte = True
 			else:
-				to_lte = _lte(self.to_gateway, rhs.to_gateway)
+				to_lte = _lte_gateway(self.to_gateway, rhs.to_gateway)
 
 		return svc_char_lte and from_lte and to_lte
 
@@ -343,7 +354,7 @@ class NetworkAuth(DynamicAuth):
 	"""Is the client from a specific IP or subnet."""
 
 	class Meta:
-		verbose_name = "Network"
+		verbose_name = "Network Requirement"
 		verbose_name_plural = verbose_name
 
 	is_private = models.BooleanField(

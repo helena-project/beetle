@@ -20,7 +20,7 @@ class AdminAuthInstance(models.Model):
 		unique_together = ("rule", "principal")
 
 	rule = models.ForeignKey("access.Rule")
-	principal = models.ForeignKey("beetle.Principal")
+	principal = models.ForeignKey("beetle.VirtualDevice")
 	allow = models.BooleanField(default=True)
 
 	timestamp = models.DateTimeField(auto_now_add=True)
@@ -38,7 +38,7 @@ class UserAuthInstance(models.Model):
 		unique_together = ("rule", "principal")
 
 	rule = models.ForeignKey("access.Rule")
-	principal = models.ForeignKey("beetle.Principal")
+	principal = models.ForeignKey("beetle.VirtualDevice")
 	allow = models.BooleanField(default=True)
 
 	timestamp = models.DateTimeField(auto_now_add=True)
@@ -56,7 +56,7 @@ class PasscodeAuthInstance(models.Model):
 		unique_together = ("rule", "principal")
 
 	rule = models.ForeignKey("access.Rule")
-	principal = models.ForeignKey("beetle.Principal")
+	principal = models.ForeignKey("beetle.VirtualDevice")
 	timestamp = models.DateTimeField(auto_now_add=True)
 	expire = models.DateTimeField(default=timezone.now)
 
