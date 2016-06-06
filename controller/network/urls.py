@@ -32,16 +32,16 @@ urlpatterns = [
 
 	# Internal API views
 
-	url(r'^connect/' + gateway("gateway") + r'$', 
+	url(r'^connectGateway/' + gateway("gateway") + r'$', 
 		api.connect_gateway,
 	 	name='connect a gateway'),
+	url(r'^connectGateway/$', api.connect_gateway,
+		name='disconnect a gateway'),
 
-	url(r'^connect/' + gateway("gateway") + r'/' + device("device") + r'/' 
-		+ device_id("remote_id") + r'$', 
-		api.connect_device, name='connect an device'),
-
-	url(r'^update/' + gateway("gateway") + r'/' + device_id("remote_id") 
+	url(r'^connectDevice/' + device("device") + r'/' + device_id("remote_id") 
 		+ r'$', 
+		api.connect_device, name='connect an device'),
+	url(r'^updateDevice/' + device_id("remote_id") + r'$', 
 		api.update_device, name='update an device'),
 
 	url(r'^map/' + gateway("from_gateway") + r'/' + device_id("from_id") 
@@ -49,14 +49,12 @@ urlpatterns = [
 		+ r'$',
 		api.map_devices, name='update mappings on device'),
 
-	url(r'^registerInterest/service/' + gateway("gateway") + r'/' 
-		+ device_id("remote_id") + r'$', 
+	url(r'^registerInterest/service/' + device_id("remote_id") + r'$', 
 		api.register_interest,
 		{"is_service" : True},
 		name='register interest in services or characteristic'),
 
-	url(r'^registerInterest/char/' + gateway("gateway") + r'/' 
-		+ device_id("remote_id") + r'$', 
+	url(r'^registerInterest/char/' + device_id("remote_id") + r'$', 
 		api.register_interest,
 		{"is_service" : False},
 		name='register interest in services or characteristic'),

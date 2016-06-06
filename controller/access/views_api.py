@@ -220,4 +220,4 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 			"services" : services,
 		}
 	return JsonResponse(response)
-
+	

@@ -17,51 +17,47 @@ from beetle.models import BeetleGateway, VirtualDevice
 from gatt.models import Service, Characteristic
 from gatt.uuid import convert_uuid, check_uuid
 
+def __get_session_token(request):
+	return request.META["HTTP_BEETLE_GATEWAY_SESSION"]
+
 @transaction.atomic
 @csrf_exempt
-@require_http_methods(["POST", "DELETE"])
+@require_POST
 def connect_gateway(request, gateway):
 	"""Connect or disconnect a gateway to Beetle network"""
 
 	if gateway == "*":
 		return HttpResponse(status=400)
 
-	if request.method == "POST":
-		##############
-		# Connection #
-		##############
-		port = int(request.POST["port"])
-		ip_address = get_ip(request)
-		if ip_address is None:
-			return HttpResponse(status=400)
+	port = int(request.POST["port"])
+	ip_address = get_ip(request)
+	if ip_address is None:
+		return HttpResponse(status=400)
 
-		try:
-			gateway = BeetleGateway.objects.get(name=gateway)
-		except BeetleGateway.DoesNotExist:
-			return HttpResponse("no gateway named " + gateway, status=400)
+	try:
+		gateway = BeetleGateway.objects.get(name=gateway)
+	except BeetleGateway.DoesNotExist:
+		return HttpResponse("no gateway named " + gateway, status=400)
 
-		gateway_conn, created = ConnectedGateway.objects.get_or_create(
-			gateway=gateway)
-		if not created:
-			ConnectedDevice.objects.filter(gateway_instance=gateway_conn).delete()
+	gateway_conn = ConnectedGateway(
+		gateway=gateway,
+		ip_address = ip_address,
+		port = port)
+	gateway_conn.save()
 
-		gateway_conn.ip_address = ip_address
-		gateway_conn.port = port
-		gateway_conn.save()
+	return HttpResponse(gateway_conn.session_token)
 
-		return HttpResponse("connected")
+@transaction.atomic
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def disconnect_gateway(request):
+	"""Disconnect a gateway to Beetle network"""
 
-	elif request.method == "DELETE":
-		#################
-		# Disconnection #
-		#################
-		gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
-		gateway_conn.delete()
+	gateway_conn = ConnectedGateway.objects.get(
+		session_token=__get_session_token(request))
+	gateway_conn.delete()
 
-		return HttpResponse("disconnected")
-		
-	else:
-		return HttpResponse(status=405)
+	return HttpResponse("disconnected")
 
 def __load_services_and_characteristics(services, device_conn):
 	"""Parse the services and characteristics"""
@@ -91,7 +87,8 @@ def __load_services_and_characteristics(services, device_conn):
 				return HttpResponse("invalid uuid %s" % char_uuid, status=400)
 			else:
 				char_uuid = convert_uuid(char_uuid)
-			char, created = Characteristic.objects.get_or_create(uuid=char_uuid)
+			char, created = Characteristic.objects.get_or_create(
+				uuid=char_uuid)
 			if created:
 				pass
 
@@ -104,14 +101,13 @@ def __load_services_and_characteristics(services, device_conn):
 @transaction.atomic
 @csrf_exempt
 @require_POST
-def connect_device(request, gateway, device, remote_id):
+def connect_device(request, device, remote_id):
 	"""Connect an application or peripheral"""
 
-	if gateway == "*" or device == "*":
-		return HttpResponse(status=400)
 	remote_id = int(remote_id)
 
-	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
+	gateway_conn = ConnectedGateway.objects.get(
+		session_token=__get_session_token(request))
 	device, created = VirtualDevice.objects.get_or_create(name=device)
 	if created:
 		pass
@@ -140,14 +136,13 @@ def connect_device(request, gateway, device, remote_id):
 @transaction.atomic
 @csrf_exempt
 @require_http_methods(["DELETE", "PUT"])
-def update_device(request, gateway, remote_id):
+def update_device(request, remote_id):
 	"""Disconnect an application or peripheral"""
 
-	if gateway == "*":
-		return HttpResponse(status=400)
 	remote_id = int(remote_id)
 
-	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
+	gateway_conn = ConnectedGateway.objects.get(
+		session_token=__get_session_token(request))
 	gateway_conn.save()
 
 	if request.method == "PUT":
@@ -213,11 +208,12 @@ def map_devices(request, from_gateway, from_id, to_gateway, to_id):
 @transaction.atomic
 @csrf_exempt
 @require_POST
-def register_interest(request, gateway, remote_id, uuid, is_service=True):
+def register_interest(request, remote_id, uuid, is_service=True):
 	"""Register interest for a service or characteristic"""
 
 	device_instance = ConnectedDevice.objects.get(
-		gateway_instance__gateway__name=gateway, remote_id=remote_id)
+		gateway_instance__session_token=__get_session_token(request), 
+		remote_id=remote_id)
 
 	if not check_uuid(uuid):
 		return HttpResponse(status=400)

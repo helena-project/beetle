@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'network.apps.NetworkConfig',
     'access.apps.AccessConfig',
     'state.apps.StateConfig',
+    'manager.apps.ManagerConfig',
     'sslserver',
     'polymorphic',
     'solo',
