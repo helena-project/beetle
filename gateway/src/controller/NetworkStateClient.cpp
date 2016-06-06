@@ -42,7 +42,7 @@ NetworkStateClient::NetworkStateClient(Beetle &beetle, std::shared_ptr<Controlle
 	std::string postParams = "port=" + std::to_string(tcpPort);
 
 	using namespace boost::network;
-	http::client::request request(client->getUrl("network/connect/" + beetle.name));
+	http::client::request request(client->getUrl("network/connectGateway/" + beetle.name));
 	request << header("User-Agent", "linux");
 	request << header("Content-Type", "application/x-www-form-urlencoded");
 	request << header("Content-Length", std::to_string(postParams.length()));
@@ -55,17 +55,19 @@ NetworkStateClient::NetworkStateClient(Beetle &beetle, std::shared_ptr<Controlle
 		throw ControllerException(ss.str());
 	} else {
 		if (debug_controller) {
-			std::stringstream ss;
-			ss << "beetle controller: " << body(response);
-			pdebug(ss.str());
+			pdebug("beetle controller: connected");
 		}
+		std::stringstream ss;
+		ss << body(response);
+		client->setSessionToken(ss.str());
 	}
 }
 
 NetworkStateClient::~NetworkStateClient() {
 	using namespace boost::network;
-	http::client::request request(client->getUrl("network/connect/" + beetle.name));
+	http::client::request request(client->getUrl("network/connectGateway/"));
 	request << header("User-Agent", "linux");
+	request << header(ControllerClient::SESSION_HEADER, client->getSessionToken());
 
 	try {
 		auto response = client->getClient()->delete_(request);
@@ -242,6 +244,7 @@ MapDevicesHandler NetworkStateClient::getMapDevicesHandler() {
 		using namespace boost::network;
 		http::client::request request(url);
 		request << header("User-Agent", "linux");
+		request << header(ControllerClient::SESSION_HEADER, client->getSessionToken());
 
 		try {
 			auto response = client->getClient()->post(request);
@@ -277,6 +280,7 @@ MapDevicesHandler NetworkStateClient::getUnmapDevicesHandler() {
 		using namespace boost::network;
 		http::client::request request(url);
 		request << header("User-Agent", "linux");
+		request << header(ControllerClient::SESSION_HEADER, client->getSessionToken());
 
 		try {
 			auto response = client->getClient()->delete_(request);
@@ -333,7 +337,7 @@ static std::string serializeHandles(std::shared_ptr<Device> d) {
 
 void NetworkStateClient::addDeviceHelper(std::shared_ptr<Device> d) {
 	std::string url = client->getUrl(
-			"network/connect/" + beetle.name + "/" + d->getName() + "/" + std::to_string(d->getId()));
+			"network/connectDevice/" + d->getName() + "/" + std::to_string(d->getId()));
 	if (debug_controller) {
 		pdebug("post: " + url);
 	}
@@ -343,6 +347,7 @@ void NetworkStateClient::addDeviceHelper(std::shared_ptr<Device> d) {
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
+	request << header(ControllerClient::SESSION_HEADER, client->getSessionToken());
 	request << header("Content-Length", std::to_string(requestBody.length()));
 	request << body(requestBody);
 
@@ -363,7 +368,7 @@ void NetworkStateClient::addDeviceHelper(std::shared_ptr<Device> d) {
 }
 
 void NetworkStateClient::updateDeviceHelper(std::shared_ptr<Device> d) {
-	std::string url = client->getUrl("network/update/" + beetle.name + "/" + std::to_string(d->getId()));
+	std::string url = client->getUrl("network/updateDevice/" + std::to_string(d->getId()));
 	if (debug_controller) {
 		pdebug("put: " + url);
 	}
@@ -373,6 +378,7 @@ void NetworkStateClient::updateDeviceHelper(std::shared_ptr<Device> d) {
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
+	request << header(ControllerClient::SESSION_HEADER, client->getSessionToken());
 	request << header("Content-Length", std::to_string(requestBody.length()));
 	request << body(requestBody);
 
@@ -393,7 +399,7 @@ void NetworkStateClient::updateDeviceHelper(std::shared_ptr<Device> d) {
 }
 
 void NetworkStateClient::removeDeviceHelper(device_t d) {
-	std::string url = client->getUrl("network/update/" + beetle.name + "/" + std::to_string(d));
+	std::string url = client->getUrl("network/updateDevice/" + std::to_string(d));
 	if (debug_controller) {
 		pdebug("delete: " + url);
 	}
@@ -401,6 +407,7 @@ void NetworkStateClient::removeDeviceHelper(device_t d) {
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
+	request << header(ControllerClient::SESSION_HEADER, client->getSessionToken());
 
 	try {
 		auto response = client->getClient()->delete_(request);

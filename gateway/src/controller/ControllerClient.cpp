@@ -18,12 +18,10 @@
 
 static const int CLIENT_TIMEOUT = 180;
 
-static std::string get_host_and_port(std::string host, int port) {
-	return host + ":" + std::to_string(port);
-}
+const std::string ControllerClient::SESSION_HEADER = "Beetle-Gateway-Session";
 
 ControllerClient::ControllerClient(Beetle &beetle, std::string host, int port, bool verifyPeers) :
-		beetle(beetle), hostAndPort(get_host_and_port(host, port)) {
+		beetle(beetle), host(host), port(port) {
 	using namespace boost::network;
 	http::client::options options;
 	options.follow_redirects(false).cache_resolved(true).always_verify_peer(verifyPeers)
@@ -36,7 +34,7 @@ ControllerClient::ControllerClient(Beetle &beetle, std::string host, int port, b
 
 ControllerClient::ControllerClient(Beetle &beetle, std::string host, int port, std::string cert, std::string caCerts,
 		bool verifyPeers) :
-		beetle(beetle), hostAndPort(get_host_and_port(host, port)) {
+		beetle(beetle), host(host), port(port) {
 	assert(file_exists(cert));
 	assert(file_exists(caCerts));
 
@@ -57,7 +55,7 @@ std::string ControllerClient::getUrl(std::string resource) {
 	// TODO more robust escaping
 	boost::replace_all(resource, " ", "%20");
 	std::stringstream ss;
-	ss << "https://" << hostAndPort << "/" << resource;
+	ss << "https://" << host << ":" << port << "/" << resource;
 	return ss.str();
 }
 
@@ -67,4 +65,20 @@ std::shared_ptr<boost::network::http::client> ControllerClient::getClient() {
 
 std::string ControllerClient::getName() {
 	return beetle.name;
+}
+
+std::string ControllerClient::getHost() {
+	return host;
+}
+
+int ControllerClient::getPort() {
+	return port;
+}
+
+void ControllerClient::setSessionToken(std::string token) {
+	sessionToken = token;
+}
+
+std::string ControllerClient::getSessionToken() {
+	return sessionToken;
 }

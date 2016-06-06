@@ -182,6 +182,9 @@ int main(int argc, char *argv[]) {
 			controllerClient = std::make_shared<ControllerClient>(btl, btlConfig.controllerHost,
 					btlConfig.controllerPort, btlConfig.sslVerifyPeers);
 
+			/*
+			 * Informs controller of gateway events. Also, adds session token to controller client.
+			 */
 			networkState = std::make_shared<NetworkStateClient>(btl, controllerClient, btlConfig.tcpPort);
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());
 			btl.registerRemoveDeviceHandler(networkState->getRemoveDeviceHandler());
@@ -197,7 +200,8 @@ int main(int argc, char *argv[]) {
 
 			if (btlConfig.controllerCommandEnabled) {
 				controllerCli = std::make_shared<ControllerCLI>(btl, btlConfig.controllerHost,
-						btlConfig.controllerCommandPort, btlConfig, networkDiscovery, true);
+						btlConfig.controllerCommandPort, controllerClient->getSessionToken(),
+						btlConfig, networkDiscovery, true);
 			}
 		}
 

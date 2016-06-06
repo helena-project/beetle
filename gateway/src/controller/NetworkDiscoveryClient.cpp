@@ -117,14 +117,15 @@ bool NetworkDiscoveryClient::queryHelper(std::string resource, std::list<discove
 
 void NetworkDiscoveryClient::registerInterestInUuid(device_t id, UUID uuid, bool isService, std::function<void()> cb) {
 	std::stringstream resource;
-	resource << "network/registerInterest/" << ((isService) ? "service" : "char") << "/" << beetle.name << "/"
-			<< std::fixed << id << "/" << uuid.str();
+	resource << "network/registerInterest/" << ((isService) ? "service" : "char") << "/" << std::fixed << id
+			<< "/" << uuid.str();
 
 	std::string url = client->getUrl(resource.str());
 
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
+	request << header(ControllerClient::SESSION_HEADER, client->getSessionToken());
 
 	try {
 		auto response = client->getClient()->post(request);

@@ -16,8 +16,8 @@
 #include "CLI.h"
 #include "controller/ControllerClient.h"
 
-ControllerCLI::ControllerCLI(Beetle &beetle, std::string host, int port, BeetleConfig beetleConfig,
-		std::shared_ptr<NetworkDiscoveryClient> discovery, bool useDaemon) {
+ControllerCLI::ControllerCLI(Beetle &beetle, std::string host, int port, std::string session_token,
+		BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery, bool useDaemon) {
 	auto stream = new boost::asio::ip::tcp::iostream;
 
 	// TODO SSL this
@@ -28,7 +28,9 @@ ControllerCLI::ControllerCLI(Beetle &beetle, std::string host, int port, BeetleC
 		throw ControllerException("Could not connect to command server.");
 	}
 
-	cli = std::make_unique<CLI>(beetle, beetleConfig, discovery, stream, useDaemon, true);
+	*stream << session_token;
+
+	cli = std::make_unique<CLI>(beetle, beetleConfig, discovery, stream, useDaemon, false);
 }
 
 ControllerCLI::~ControllerCLI() {

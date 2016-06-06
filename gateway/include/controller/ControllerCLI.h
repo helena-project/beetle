@@ -15,6 +15,7 @@
 
 class BeetleConfig;
 class CLI;
+class ControllerClient;
 class NetworkDiscoveryClient;
 
 /*
@@ -22,7 +23,7 @@ class NetworkDiscoveryClient;
  */
 class ControllerCLI {
 public:
-	ControllerCLI(Beetle &beetle, std::string host, int port, BeetleConfig beetleConfig,
+	ControllerCLI(Beetle &beetle, std::string host, int port, std::string session_token, BeetleConfig beetleConfig,
 			std::shared_ptr<NetworkDiscoveryClient> discovery = NULL, bool useDaemon = true);
 	virtual ~ControllerCLI();
 

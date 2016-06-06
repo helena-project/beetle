@@ -36,9 +36,17 @@ public:
 	std::string getUrl(std::string resource);
 	std::shared_ptr<boost::network::http::client> getClient();
 	std::string getName();
+	std::string getHost();
+	int getPort();
+	std::string getSessionToken();
+	void setSessionToken(std::string token);
+
+	static const std::string SESSION_HEADER;
 private:
 	Beetle &beetle;
-	std::string hostAndPort;
+	std::string host;
+	int port;
+	std::string sessionToken;
 	std::shared_ptr<boost::network::http::client> client;
 };
 
