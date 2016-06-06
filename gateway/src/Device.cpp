@@ -27,7 +27,7 @@ const std::string Device::deviceType2Str[] = {
 		"IpcApplication",	// 3
 		"TcpClientProxy",	// 4
 		"TcpServerProxy",	// 5
-		};
+};
 
 Device::Device(Beetle &beetle_, HandleAllocationTable *hat_) :
 		Device(beetle_, idCounter++, hat_) {

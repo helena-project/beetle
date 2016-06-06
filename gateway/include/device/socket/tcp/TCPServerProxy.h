@@ -8,11 +8,14 @@
 #ifndef BLE_REMOTESERVERPROXY_H_
 #define BLE_REMOTESERVERPROXY_H_
 
+#include <ctime>
 #include <string>
 #include <openssl/ossl_typ.h>
 
+#include "BeetleTypes.h"
 #include "device/socket/TCPConnection.h"
-#include "tcp/SSLConfig.h"
+
+class SSLConfig;
 
 /*
  * Dummy device representing a server at a different Beetle gateway.
@@ -34,6 +37,14 @@ public:
 	std::string getServerGateway();
 
 	/*
+	 * Returns whether the internal virtual device has timed out.
+	 */
+	bool isLive();
+
+	/* Time to timeout proxy after unuse */
+	static constexpr int PROXY_UNUSED_TIMEOUT = 60;
+
+	/*
 	 * Static methods for connection establishment.
 	 */
 	static void initSSL(SSLConfig *sslConfig);
@@ -42,6 +53,8 @@ public:
 private:
 	device_t remoteProxyTo;
 	std::string serverGateway;
+
+	time_t createdAt;
 
 	static SSLConfig *sslConfig;
 };

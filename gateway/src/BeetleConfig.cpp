@@ -40,6 +40,10 @@ BeetleConfig::BeetleConfig(std::string filename) {
 		name = getDefaultName();
 	}
 
+	if (config.count("cli")) {
+		cliEnabled = config["cli"];
+	}
+
 	if (config.count("scan")) {
 		json scanConfig = config["scan"];
 		for (json::iterator it = scanConfig.begin(); it != scanConfig.end(); ++it) {
@@ -192,6 +196,7 @@ std::string BeetleConfig::str(unsigned int indent) const {
 
 	json config;
 	config["name"] = name;
+	config["cli"] = cliEnabled;
 
 	json scan;
 	scan["enable"] = scanEnabled;

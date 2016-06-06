@@ -16,6 +16,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <set>
 
 #include "BeetleTypes.h"
 
@@ -84,6 +85,12 @@ public:
 	 */
 	std::unique_ptr<HandleAllocationTable> hat;
 	std::mutex hatMutex;
+
+	/*
+	 * Devices that have this device in their client handle space.
+	 */
+	std::set<device_t> mappedTo;
+	std::mutex mappedToMutex;
 
 	/*
 	 * Unsubscribe from all of this device's handles.

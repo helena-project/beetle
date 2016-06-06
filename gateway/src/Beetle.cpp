@@ -79,16 +79,17 @@ bool Beetle::removeDevice(device_t id, std::string &err) {
 		}
 		d->hatMutex.unlock();
 
-		for (auto &kv : devices) {
-			/*
-			 * Cancel subscriptions and inform that services have changed
-			 */
-			assert(kv.first != id);
-			std::lock_guard<std::mutex> otherHatLg(kv.second->hatMutex);
-			if (!kv.second->hat->getDeviceRange(id).isNull()) {
-				beetleDevice->informServicesChanged(kv.second->hat->free(id), kv.first);
+		d->mappedToMutex.lock();
+		for (device_t other : d->mappedTo) {
+			assert(devices.find(other) != devices.end());
+			auto otherDevice = devices[other];
+			std::lock_guard<std::mutex> otherHatLg(otherDevice->hatMutex);
+			if (!otherDevice->hat->getDeviceRange(id).isNull()) {
+				beetleDevice->informServicesChanged(otherDevice->hat->free(id), other);
 			}
 		}
+		d->mappedTo.clear();
+		d->mappedToMutex.unlock();
 
 		for (auto &h : removeHandlers) {
 			workers.schedule([h,id] {h(id);});
@@ -133,13 +134,15 @@ bool Beetle::mapDevices(device_t from, device_t to, std::string &err) {
 	}
 
 	std::lock_guard<std::mutex> hatLg(toD->hatMutex);
-	if (!toD->hat->getDeviceRange(from).isNull()) {
+	std::lock_guard<std::mutex> mappedToLg(fromD->mappedToMutex);
+	if (fromD->mappedTo.find(to) != fromD->mappedTo.end()) {
 		std::stringstream ss;
 		ss << from << " is already mapped into " << to << "'s space";
 		err = ss.str();
 		return false;
 	} else {
 		handle_range_t range = toD->hat->reserve(from);
+		fromD->mappedTo.insert(to);
 		beetleDevice->informServicesChanged(range, to);
 		if (debug) {
 			pdebug("reserved " + range.str() + " at device " + std::to_string(to));
@@ -175,12 +178,23 @@ bool Beetle::unmapDevices(device_t from, device_t to, std::string &err) {
 	}
 
 	std::shared_ptr<Device> toD = devices[to];
+	std::shared_ptr<Device> fromD = devices[from];
 
 	std::lock_guard<std::mutex> hatLg(toD->hatMutex);
+	std::lock_guard<std::mutex> mappedToLg(fromD->mappedToMutex);
 	handle_range_t range = toD->hat->free(from);
-	beetleDevice->informServicesChanged(range, to);
-	if (debug) {
-		pdebug("freed " + range.str() + " at device " + std::to_string(to));
+	fromD->mappedTo.erase(to);
+
+	if (!range.isNull()) {
+		beetleDevice->informServicesChanged(range, to);
+		if (debug) {
+			pdebug("freed " + range.str() + " at device " + std::to_string(to));
+		}
+	} else {
+		std::stringstream ss;
+		ss << from << " was not found in " << to << "'s space";
+		err = ss.str();
+		return false;
 	}
 
 	for (auto &h : unmapHandlers) {

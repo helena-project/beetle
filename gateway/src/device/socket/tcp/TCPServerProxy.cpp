@@ -26,6 +26,7 @@
 #include "Device.h"
 #include "hat/SingleAllocator.h"
 #include "tcp/TCPConnParams.h"
+#include "tcp/SSLConfig.h"
 #include "util/file.h"
 #include "util/write.h"
 
@@ -33,6 +34,8 @@ TCPServerProxy::TCPServerProxy(Beetle &beetle, SSL *ssl, int sockfd, std::string
 		struct sockaddr_in serverGatewaySockAddr_, device_t remoteProxyTo_) :
 		TCPConnection(beetle, ssl, sockfd, serverGatewaySockAddr_, new SingleAllocator(NULL_RESERVED_DEVICE)) {
 	type = TCP_SERVER_PROXY;
+
+	createdAt = time(NULL);
 
 	name = "Proxy to " + std::to_string(remoteProxyTo_) + " from " + serverGateway_;
 	serverGateway = serverGateway_;
@@ -49,6 +52,20 @@ device_t TCPServerProxy::getRemoteDeviceId() {
 
 std::string TCPServerProxy::getServerGateway() {
 	return serverGateway;
+}
+
+bool TCPServerProxy::isLive() {
+	std::unique_lock<std::mutex> mappedToLk(mappedToMutex);
+	if (mappedTo.empty() && difftime(time(NULL), createdAt) > PROXY_UNUSED_TIMEOUT) {
+		if (debug) {
+			std::stringstream ss;
+			ss << "timed out server proxy " << getId();
+			pdebug(ss.str());
+		}
+		return false;
+	}
+	mappedToLk.unlock();
+	return VirtualDevice::isLive();
 }
 
 /*

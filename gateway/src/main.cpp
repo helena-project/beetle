@@ -214,7 +214,7 @@ int main(int argc, char *argv[]) {
 
 		/* Make a CLI if remote control is disabled */
 		std::unique_ptr<CLI> cli;
-		if (!controllerCli) {
+		if (btlConfig.cliEnabled) {
 			cli = std::make_unique<CLI>(btl, btlConfig, networkDiscovery);
 		}
 

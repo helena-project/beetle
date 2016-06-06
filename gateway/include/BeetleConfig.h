@@ -40,6 +40,11 @@ public:
 	std::string name;
 
 	/*
+	 * Run command line interface.
+	 */
+	bool cliEnabled = true;
+
+	/*
 	 * Scan settings
 	 */
 	bool scanEnabled = true;
