@@ -4,16 +4,19 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/tcp/RemoteCLI.cpp \
 ../src/tcp/SSLConfig.cpp \
 ../src/tcp/TCPConnParams.cpp \
 ../src/tcp/TCPDeviceServer.cpp 
 
 OBJS += \
+./src/tcp/RemoteCLI.o \
 ./src/tcp/SSLConfig.o \
 ./src/tcp/TCPConnParams.o \
 ./src/tcp/TCPDeviceServer.o 
 
 CPP_DEPS += \
+./src/tcp/RemoteCLI.d \
 ./src/tcp/SSLConfig.d \
 ./src/tcp/TCPConnParams.d \
 ./src/tcp/TCPDeviceServer.d 

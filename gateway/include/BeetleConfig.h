@@ -73,9 +73,9 @@ public:
 	 */
 	bool controllerEnabled = false;
 	std::string controllerHost = "localhost";
-	int controllerPort = 3003;
-	bool controllerCommandEnabled = false;
-	int controllerCommandPort = 3004;
+	int controllerApiPort = 3003;
+	bool controllerControlEnabled = true;
+	int controllerControlPort = 3004;
 
 	/*
 	 * Static topology

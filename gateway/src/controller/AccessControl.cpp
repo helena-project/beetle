@@ -87,7 +87,7 @@ bool AccessControl::canMap(std::shared_ptr<Device> from, std::shared_ptr<Device>
 	resource << "access/canMap/" << fromGateway << "/" << std::fixed << fromId << "/" << toGateway << "/" << std::fixed
 			<< toId;
 
-	std::string url = client->getUrl(resource.str());
+	std::string url = client->getApiUrl(resource.str());
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
@@ -165,7 +165,7 @@ bool AccessControl::acquireExclusiveLease(std::shared_ptr<Device> to, exclusive_
 	resource << "state/exclusive/" << std::fixed << exclusiveId << "/" << beetle.name << "/" << std::fixed
 			<< to->getId();
 
-	std::string url = client->getUrl(resource.str());
+	std::string url = client->getApiUrl(resource.str());
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
@@ -214,7 +214,7 @@ void AccessControl::releaseExclusiveLease(std::shared_ptr<Device> to, exclusive_
 	resource << "state/exclusive/" << std::fixed << exclusiveId << "/" << beetle.name << "/" << std::fixed
 			<< to->getId();
 
-	std::string url = client->getUrl(resource.str());
+	std::string url = client->getApiUrl(resource.str());
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");

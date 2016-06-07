@@ -20,9 +20,9 @@
 #include "CLI.h"
 #include "controller/AccessControl.h"
 #include "controller/ControllerClient.h"
+#include "controller/ControllerConnection.h"
 #include "controller/NetworkDiscoveryClient.h"
 #include "controller/NetworkStateClient.h"
-#include "controller/ControllerCLI.h"
 #include "Debug.h"
 #include "device/socket/tcp/TCPServerProxy.h"
 #include "HCI.h"
@@ -177,10 +177,10 @@ int main(int argc, char *argv[]) {
 		std::shared_ptr<NetworkStateClient> networkState;
 		std::shared_ptr<AccessControl> accessControl;
 		std::shared_ptr<NetworkDiscoveryClient> networkDiscovery;
-		std::shared_ptr<ControllerCLI> controllerCli;
+		std::shared_ptr<ControllerConnection> controllerConnection;
 		if (btlConfig.controllerEnabled || enableController) {
 			controllerClient = std::make_shared<ControllerClient>(btl, btlConfig.controllerHost,
-					btlConfig.controllerPort, btlConfig.sslVerifyPeers);
+					btlConfig.controllerApiPort, btlConfig.controllerControlPort, btlConfig.sslVerifyPeers);
 
 			/*
 			 * Informs controller of gateway events. Also, adds session token to controller client.
@@ -198,10 +198,8 @@ int main(int argc, char *argv[]) {
 			accessControl = std::make_shared<AccessControl>(btl, controllerClient);
 			btl.setAccessControl(accessControl);
 
-			if (btlConfig.controllerCommandEnabled) {
-				controllerCli = std::make_shared<ControllerCLI>(btl, btlConfig.controllerHost,
-						btlConfig.controllerCommandPort, controllerClient->getSessionToken(),
-						btlConfig, networkDiscovery, true);
+			if (btlConfig.controllerControlEnabled) {
+				controllerConnection = std::make_shared<ControllerConnection>(btl, controllerClient);
 			}
 		}
 
@@ -229,9 +227,6 @@ int main(int argc, char *argv[]) {
 			if (cli) {
 				scanner->registerHandler(cli->getDiscoveryHander());
 			}
-			if (controllerCli) {
-				scanner->registerHandler(controllerCli->get()->getDiscoveryHander());
-			}
 			scanner->start();
 		}
 
@@ -241,9 +236,6 @@ int main(int argc, char *argv[]) {
 		if (cli) {
 			timers.repeat(cli->getDaemon(), 5);
 		}
-		if (controllerCli) {
-			timers.repeat(controllerCli->get()->getDaemon(), 5);
-		}
 		if (autoConnect) {
 			timers.repeat(autoConnect->getDaemon(), 5);
 		}
@@ -252,8 +244,8 @@ int main(int argc, char *argv[]) {
 		if (cli) {
 			cli->join();
 		}
-		if (controllerCli) {
-			controllerCli->join();
+		if (controllerConnection) {
+			controllerConnection->join();
 		}
 
 	} catch (std::exception& e) {

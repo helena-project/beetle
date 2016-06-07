@@ -5,8 +5,8 @@
  *      Author: james
  */
 
-#ifndef CONTROLLER_CONTROLLERCLI_H_
-#define CONTROLLER_CONTROLLERCLI_H_
+#ifndef CONTROLLER_REMOTECLI_H_
+#define CONTROLLER_REMOTECLI_H_
 
 #include <memory>
 #include <string>
@@ -21,11 +21,11 @@ class NetworkDiscoveryClient;
 /*
  * Export CLI over a TCP socket
  */
-class ControllerCLI {
+class RemoteCLI {
 public:
-	ControllerCLI(Beetle &beetle, std::string host, int port, std::string session_token, BeetleConfig beetleConfig,
+	RemoteCLI(Beetle &beetle, std::string host, int port, BeetleConfig beetleConfig,
 			std::shared_ptr<NetworkDiscoveryClient> discovery = NULL, bool useDaemon = true);
-	virtual ~ControllerCLI();
+	virtual ~RemoteCLI();
 
 	/*
 	 * Blocks, waiting for CLI to exit.
@@ -40,4 +40,4 @@ private:
 	std::unique_ptr<CLI> cli;
 };
 
-#endif /* CONTROLLER_CONTROLLERCLI_H_ */
+#endif /* CONTROLLER_REMOTECLI_H_ */

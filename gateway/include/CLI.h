@@ -62,7 +62,7 @@ private:
 	std::thread inputDaemon;
 	void cmdLineDaemon();
 
-	bool pretty;
+	bool verbose;
 
 	void printUsage(std::string usage);
 	void printUsageError(std::string error);
