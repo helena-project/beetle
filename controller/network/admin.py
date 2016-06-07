@@ -82,6 +82,6 @@ class ConnectedDeviceAdmin(admin.ModelAdmin):
 class DeviceMappingAdmin(admin.ModelAdmin):
 	"""Show which devices have handles mapped"""
 
-	list_display = ("from_device", "to_device",)
+	list_display = ("from_device", "to_device", "timestamp")
 	search_fields = ("from_device", "to_device",)
 	readonly_fields = ("from_device", "to_device",)
