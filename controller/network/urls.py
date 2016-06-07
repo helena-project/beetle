@@ -35,11 +35,11 @@ urlpatterns = [
 	url(r'^connectGateway/' + gateway("gateway") + r'$', 
 		api.connect_gateway,
 	 	name='connect a gateway'),
-	url(r'^connectGateway/$', api.connect_gateway,
+	url(r'^connectGateway/$', 
+		api.disconnect_gateway,
 		name='disconnect a gateway'),
 
-	url(r'^connectDevice/' + device("device") + r'/' + device_id("remote_id") 
-		+ r'$', 
+	url(r'^connectDevice/' + device("device") + r'/' + device_id("remote_id") + r'$', 
 		api.connect_device, name='connect an device'),
 	url(r'^updateDevice/' + device_id("remote_id") + r'$', 
 		api.update_device, name='update an device'),

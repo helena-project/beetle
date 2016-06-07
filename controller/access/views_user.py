@@ -25,7 +25,7 @@ def view_rule_exceptions(request, rule):
 @gzip_page
 @require_http_methods(["GET", "POST"])
 def view_allowed_clients(request):
-	"""Return the set of rules that are most specific for the query params"""
+	"""Return the set of rules that are most specific for the query params."""
 
 	if request.method == "GET":
 		pass

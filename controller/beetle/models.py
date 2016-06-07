@@ -90,14 +90,9 @@ class VirtualDevice(Principal):
 		default=Contact.NULL,
 		help_text="Contact associated with this device.")
 
-	server_to = models.ManyToManyField(
+	serve_to = models.ManyToManyField(
 		"Principal", blank=True, related_name="vd_server_to",
 		help_text="Devices and groups to serve handles to " + 
-			"whenever possible and allowed.")
-
-	client_of = models.ManyToManyField(
-		"Principal", blank=True, related_name="vd_client_of",
-		help_text="Devices and groups to consume handles from " + 
 			"whenever possible and allowed.")
 
 	discoverable_by = models.ManyToManyField(
@@ -108,6 +103,12 @@ class VirtualDevice(Principal):
 	auto_created = models.BooleanField(
 		default=False,
 		help_text="Added automatically by Beetle.")
+
+	@property
+	def client_to(self):
+		groups = PrincipalGroup.objects.filter(members__in=[self])
+		return VirtualDevice.objects.filter(serve_to__in=[self]) | \
+			VirtualDevice.objects.filter(serve_to__in=groups)
 
 	def __unicode__(self):
 		return self.name

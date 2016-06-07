@@ -17,6 +17,8 @@ from beetle.models import BeetleGateway, VirtualDevice
 from gatt.models import Service, Characteristic
 from gatt.uuid import convert_uuid, check_uuid
 
+from manager.tasks import add_new_device
+
 def __get_session_token(request):
 	return request.META["HTTP_BEETLE_GATEWAY_SESSION"]
 
@@ -38,6 +40,8 @@ def connect_gateway(request, gateway):
 		gateway = BeetleGateway.objects.get(name=gateway)
 	except BeetleGateway.DoesNotExist:
 		return HttpResponse("no gateway named " + gateway, status=400)
+
+	ConnectedGateway.objects.filter(gateway=gateway).delete()
 
 	gateway_conn = ConnectedGateway(
 		gateway=gateway,
@@ -128,6 +132,10 @@ def connect_device(request, device, remote_id):
 
 	services = json.loads(request.body)
 	response = __load_services_and_characteristics(services, device_conn)
+
+	# Asynchronous task
+	add_new_device(device_conn.id)
+
 	if response is None:
 		return HttpResponse("connected")
 	else:

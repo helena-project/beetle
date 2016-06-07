@@ -1,8 +1,9 @@
+cronex
 django
+django-celery
 django-ipware
-django-sslserver
 django-polymorphic
 django-solo
-cronex
-passlib
+django-sslserver
 gunicorn
+passlib

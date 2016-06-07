@@ -69,7 +69,7 @@ void ControllerConnection::socketDaemon() {
 	while (daemonRunning) {
 		std::vector<std::string> cmd;
 		if (!getCommand(cmd)) {
-			break;
+			throw ControllerException("failed to read server command!");
 		}
 		if (cmd.size() == 0) {
 			continue;
@@ -79,7 +79,7 @@ void ControllerConnection::socketDaemon() {
 		if (c1 == "map-local") {
 			doMapLocal(cmd);
 		} else if (c1 == "unmap-local") {
-				doUnmapLocal(cmd);
+			doUnmapLocal(cmd);
 		} else if (c1 == "map-remote") {
 			doMapRemote(cmd);
 		} else if (c1 == "unmap-remote") {
@@ -102,6 +102,9 @@ bool ControllerConnection::getCommand(std::vector<std::string> &ret) {
 	} else if ((*stream).bad()) {
 		throw std::runtime_error("IO exception");
 	} else {
+		if (debug) {
+			pdebug("command from controller: " + line);
+		}
 		boost::char_separator<char> sep { " " };
 		boost::tokenizer<boost::char_separator<char>> tokenizer { line, sep };
 		for (const auto &t : tokenizer) {
