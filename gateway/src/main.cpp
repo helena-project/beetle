@@ -245,6 +245,7 @@ int main(int argc, char *argv[]) {
 			cli->join();
 		}
 		if (controllerConnection) {
+			std::cout << "Waiting for controller:" << std::endl;
 			controllerConnection->join();
 		}
 

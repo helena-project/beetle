@@ -99,7 +99,6 @@ class Manager(object):
 
 	def __find_managed_gateway(self, gateway_instance):
 		for gateway in self._gateways.values():
-			print gateway._session_token, gateway_instance.session_token
 			if gateway._session_token == gateway_instance.session_token:
 				return gateway
 		return None
@@ -114,9 +113,12 @@ class Manager(object):
 		s.listen(10)
 		while self._running:
 			conn, _ = s.accept()
-			command = conn.recv(1024)
-			if command:
+			while True:
+				command = conn.recv(1024)
+				if command == "":
+					break
 				self.__process_request(command)
+			conn.shutdown(socket.SHUT_RDWR)
 			conn.close()
 
 	def __process_request(self, command):

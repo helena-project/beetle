@@ -117,13 +117,24 @@ bool ControllerConnection::getCommand(std::vector<std::string> &ret) {
 void ControllerConnection::doMapLocal(const std::vector<std::string>& cmd) {
 	device_t from = std::stol(cmd[1]);
 	device_t to = std::stol(cmd[2]);
-	beetle.mapDevices(from, to);
+
+	std::string err;
+	if (!beetle.mapDevices(from, to, err)) {
+		if (debug) {
+			pdebug(err);
+		}
+	}
 }
 
 void ControllerConnection::doUnmapLocal(const std::vector<std::string>& cmd) {
 	device_t from = std::stol(cmd[1]);
 	device_t to = std::stol(cmd[2]);
-	beetle.unmapDevices(from, to);
+	std::string err;
+	if (!beetle.unmapDevices(from, to, err)) {
+		if (debug) {
+			pdebug(err);
+		}
+	}
 }
 
 void ControllerConnection::doMapRemote(const std::vector<std::string>& cmd) {
