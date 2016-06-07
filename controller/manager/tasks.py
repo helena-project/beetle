@@ -1,25 +1,25 @@
 
 import socket
-import warnings
 
 from celery import task
 
 from beetle.models import VirtualDevice, PrincipalGroup
-from network.models import ConnectedDevice, DeviceMapping
+from network.models import ConnectedDevice, DeviceMapping, ServiceInstance
 
 from .application.manager import IPC_COMMAND_PATH
 
 def _expand_principal_list(principals):
+	contains_all = False
 	ret = set()
 	for principal in principals:
 		if principal.name == "*":
-			continue
+			contains_all = True
 		elif isinstance(principal, VirtualDevice):
 			ret.add(principal)
 		elif isinstance(principal, PrincipalGroup):
 			for member in principal.members.all():
 				ret.add(principal)
-	return ret
+	return ret, contains_all
 
 def _get_device_instances(devices):
 	ret = set()
@@ -33,8 +33,8 @@ def _get_device_instances(devices):
 	return ret
 
 def _filter_not_mapped_already_from(from_device, to_devices):
-	existing_mappings = DeviceMapping.objects.filter(from_device=from_device, 
-		to_device__in=to_devices)
+	existing_mappings = DeviceMapping.objects.filter(
+		from_device=from_device, to_device__in=to_devices)
 	for mapping in existing_mappings:
 		to_devices.discard(mapping.to_device)
 
@@ -44,26 +44,44 @@ def _filter_not_mapped_already_to(from_devices, to_device):
 	for mapping in existing_mappings:
 		from_devices.discard(mapping.from_device)
 
-def _make_mapping(s, from_device, to_device):
-	msg = "map %d %d" % (from_device.id, to_device.id)
-	print msg
-	s.send(msg)
-
-def _make_mappings(device_instance, serve_to, client_to):
+def _make_mappings(device_instance, serve_to=None, client_to=None):
 	if not serve_to and not client_to:
 		return 
+
+	def _make_single_mapping(s, from_device, to_device):
+		msg = "map %d %d" % (from_device.id, to_device.id)
+		print msg
+		s.send(msg)
 
 	s = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
 	s.connect(IPC_COMMAND_PATH)
 
-	for other_device in serve_to:
-		_make_mapping(s, device_instance, other_device)
+	if serve_to:
+		for other_device in serve_to:
+			_make_single_mapping(s, device_instance, other_device)
 
-	for other_device in client_to:
-		_make_mapping(s, other_device, device_instance)
+	if client_to:
+		for other_device in client_to:
+			_make_single_mapping(s, other_device, device_instance)
 	
 	s.shutdown(socket.SHUT_RDWR)
 	s.close()
+
+def _get_discoverers(device_instance):
+
+	disc_by, disc_by_all = _expand_principal_list(device_instance.device.discoverable_by.all())
+
+	def _discovery_allowed(other_instance):
+		return disc_by_all or other_instance.device in disc_by
+
+	services = ServiceInstance.objects.filter(device_instance=device_instance).values("service")
+
+	potential_clients = ConnectedDevice.objects.filter(
+		interested_services__in=services)
+	potential_clients = set(x for x in potential_clients if _discovery_allowed(x))
+	_filter_not_mapped_already_to(potential_clients, device_instance)
+
+	return potential_clients
 
 @task
 def connect_device_evt(device_instance_id):
@@ -71,13 +89,13 @@ def connect_device_evt(device_instance_id):
 
 	device_instance = ConnectedDevice.objects.get(id=device_instance_id)
 
-	serve_to = _expand_principal_list(device_instance.device.serve_to.all())
+	serve_to, _ = _expand_principal_list(device_instance.device.serve_to.all())
 	serve_to = _get_device_instances(serve_to)
 
-	client_to = _expand_principal_list(device_instance.device.client_to.all())
+	client_to, _ = _expand_principal_list(device_instance.device.client_to.all())
 	client_to = _get_device_instances(client_to)
 
-	_make_mappings(device_instance, serve_to, client_to)
+	_make_mappings(device_instance, serve_to=serve_to, client_to=client_to)
 
 @task
 def update_device_evt(device_instance_id):
@@ -85,13 +103,39 @@ def update_device_evt(device_instance_id):
 
 	device_instance = ConnectedDevice.objects.get(id=device_instance_id)
 
-	serve_to = _expand_principal_list(device_instance.device.serve_to.all())
+	serve_to, _= _expand_principal_list(device_instance.device.serve_to.all())
 	serve_to = _get_device_instances(serve_to)
+	serve_to |= _get_discoverers(device_instance)
 	_filter_not_mapped_already_from(device_instance, serve_to)
 
-	client_to = _expand_principal_list(device_instance.device.client_to.all())
+	client_to, _ = _expand_principal_list(device_instance.device.client_to.all())
 	client_to = _get_device_instances(client_to)
 	_filter_not_mapped_already_to(client_to, device_instance)
 
-	_make_mappings(device_instance, serve_to, client_to)
+	_make_mappings(device_instance, serve_to=serve_to, client_to=client_to)
+
+@task
+def register_interest_service_evt(device_instance_id, service_uuid):
+	"""Find devices in the network with the service."""
+
+	device_instance = ConnectedDevice.objects.get(id=device_instance_id)
+
+	def _discovery_allowed(other_instance):
+		for principal in other_instance.device.discoverable_by.all():
+			if principal.name == "*":
+				return True
+			elif principal.name == device_instance.device.name: 
+				return True
+			elif isinstance(principal, PrincipalGroup):
+				for member in principal.members.all():
+					if member.name == device_instance.device.name:
+						return True
+		return False
+
+	potential_servers = set(x.device_instance for x in \
+		ServiceInstance.objects.filter(service__uuid=service_uuid))
+	potential_servers = set(x for x in potential_servers if _discovery_allowed(x))
+	_filter_not_mapped_already_to(potential_servers, device_instance)
+
+	_make_mappings(device_instance, client_to=potential_servers)
 
