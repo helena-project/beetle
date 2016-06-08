@@ -20,12 +20,15 @@ from gatt.uuid import convert_uuid, check_uuid
 from manager.tasks import connect_device_evt, update_device_evt, \
 	register_interest_service_evt
 
+from utils.decorators import require_api_port
+
 def __get_session_token(request):
 	return request.META["HTTP_BEETLE_GATEWAY_SESSION"]
 
-@transaction.atomic
 @csrf_exempt
+@require_api_port
 @require_POST
+@transaction.atomic
 def connect_gateway(request, gateway):
 	"""Connect or disconnect a gateway to Beetle network"""
 
@@ -52,9 +55,11 @@ def connect_gateway(request, gateway):
 
 	return HttpResponse(gateway_conn.session_token)
 
-@transaction.atomic
+
 @csrf_exempt
+@require_api_port
 @require_http_methods(["DELETE"])
+@transaction.atomic
 def disconnect_gateway(request):
 	"""Disconnect a gateway to Beetle network"""
 
@@ -103,9 +108,10 @@ def __load_services_and_characteristics(services, device_conn):
 				service_instance=service_ins)
 			char_ins.save()
 
-@transaction.atomic
 @csrf_exempt
+@require_api_port
 @require_POST
+@transaction.atomic
 def connect_device(request, device, remote_id):
 	"""Connect an application or peripheral"""
 
@@ -142,9 +148,10 @@ def connect_device(request, device, remote_id):
 	else:
 		return response
 
-@transaction.atomic
 @csrf_exempt
+@require_api_port
 @require_http_methods(["DELETE", "PUT"])
+@transaction.atomic
 def update_device(request, remote_id):
 	"""Disconnect an application or peripheral"""
 
@@ -187,9 +194,10 @@ def update_device(request, remote_id):
 	else:
 		return HttpResponse(status=405)
 
-@transaction.atomic
 @csrf_exempt
+@require_api_port
 @require_http_methods(["POST", "DELETE"])
+@transaction.atomic
 def map_devices(request, from_gateway, from_id, to_gateway, to_id):
 	"""Insert or remove mapping between devices"""
 
@@ -217,9 +225,10 @@ def map_devices(request, from_gateway, from_id, to_gateway, to_id):
 
 	return HttpResponse(status=405)
 
-@transaction.atomic
 @csrf_exempt
+@require_api_port
 @require_POST
+@transaction.atomic
 def register_interest(request, remote_id, uuid, is_service=True):
 	"""Register interest for a service or characteristic"""
 

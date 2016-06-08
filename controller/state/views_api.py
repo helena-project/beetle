@@ -25,6 +25,9 @@ from beetle.models import BeetleEmailAccount
 from access.models import Rule, DynamicAuth, AdminAuth, UserAuth, Exclusive
 from network.lookup import get_gateway_and_device_helper
 
+from utils.decorators import require_api_port
+
+@require_api_port
 @require_GET
 def query_passcode_liveness(request, rule_id, to_gateway, to_id):
 	"""Query for whether the password has been added."""
@@ -72,6 +75,7 @@ def __format_admin_auth_body(rule, principal, auth):
 	return msg
 
 @csrf_exempt
+@require_api_port
 @require_POST
 def request_admin_auth(request, rule_id, to_gateway, to_id):
 	"""Request for admin authorization"""
@@ -205,6 +209,7 @@ def __format_user_auth_body(rule, principal, auth):
 	return msg
 
 @csrf_exempt
+@require_api_port
 @require_POST
 def request_user_auth(request, rule_id, to_gateway, to_id):
 	"""Request for user authentication"""
@@ -320,6 +325,7 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 	return HttpResponse("no response from user", status=408)
 
 @csrf_exempt
+@require_api_port
 @require_http_methods(["POST", "DELETE"])
 @transaction.atomic
 def request_exclusive_lease(request, exclusive_id, to_gateway, to_id):

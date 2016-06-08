@@ -16,6 +16,8 @@ from beetle.models import Contact
 from network.models import ServiceInstance, CharInstance
 from network.lookup import get_gateway_and_device_helper
 
+from utils.decorators import require_api_port
+
 def __get_dynamic_auth(rule, principal):
 	result = []
 	for auth in DynamicAuth.objects.filter(rule=rule).order_by("priority"):
@@ -99,6 +101,7 @@ def __evaluate_cron(rule, timestamp, cached_cron):
 	cached_cron[rule.id] = result
 	return result
 
+@require_api_port
 @gzip_page
 @require_GET
 def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
