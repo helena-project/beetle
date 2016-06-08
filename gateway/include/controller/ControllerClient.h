@@ -29,16 +29,26 @@ class ControllerException : public std::exception {
 
 class ControllerClient {
 public:
-	ControllerClient(Beetle &beetle, std::string host, int port, bool verifyPeers);
-	ControllerClient(Beetle &beetle, std::string host, int port, std::string cert,
+	ControllerClient(Beetle &beetle, std::string host, int apiPort, int ctrlPort, bool verifyPeers);
+	ControllerClient(Beetle &beetle, std::string host, int apiPort, int ctrlPort, std::string cert,
 			std::string caCerts, bool verifyPeers);
 	virtual ~ControllerClient();
-	std::string getUrl(std::string resource);
+	std::string getApiUrl(std::string resource);
 	std::shared_ptr<boost::network::http::client> getClient();
 	std::string getName();
+	std::string getHost();
+	int getApiPort();
+	int getCtrlPort();
+	std::string getSessionToken();
+	void setSessionToken(std::string token);
+
+	static const std::string SESSION_HEADER;
 private:
 	Beetle &beetle;
-	std::string hostAndPort;
+	std::string host;
+	int apiPort;
+	int ctrlPort;
+	std::string sessionToken;
 	std::shared_ptr<boost::network::http::client> client;
 };
 

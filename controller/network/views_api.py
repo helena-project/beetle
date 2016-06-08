@@ -17,51 +17,52 @@ from beetle.models import BeetleGateway, VirtualDevice
 from gatt.models import Service, Characteristic
 from gatt.uuid import convert_uuid, check_uuid
 
+from manager.tasks import connect_device_evt, update_device_evt, \
+	register_interest_service_evt
+
+def __get_session_token(request):
+	return request.META["HTTP_BEETLE_GATEWAY_SESSION"]
+
 @transaction.atomic
 @csrf_exempt
-@require_http_methods(["POST", "DELETE"])
+@require_POST
 def connect_gateway(request, gateway):
 	"""Connect or disconnect a gateway to Beetle network"""
 
 	if gateway == "*":
 		return HttpResponse(status=400)
 
-	if request.method == "POST":
-		##############
-		# Connection #
-		##############
-		port = int(request.POST["port"])
-		ip_address = get_ip(request)
-		if ip_address is None:
-			return HttpResponse(status=400)
+	port = int(request.POST["port"])
+	ip_address = get_ip(request)
+	if ip_address is None:
+		return HttpResponse(status=400)
 
-		try:
-			gateway = BeetleGateway.objects.get(name=gateway)
-		except BeetleGateway.DoesNotExist:
-			return HttpResponse("no gateway named " + gateway, status=400)
+	try:
+		gateway = BeetleGateway.objects.get(name=gateway)
+	except BeetleGateway.DoesNotExist:
+		return HttpResponse("no gateway named " + gateway, status=400)
 
-		gateway_conn, created = ConnectedGateway.objects.get_or_create(
-			gateway=gateway)
-		if not created:
-			ConnectedDevice.objects.filter(gateway_instance=gateway_conn).delete()
+	ConnectedGateway.objects.filter(gateway=gateway).delete()
 
-		gateway_conn.ip_address = ip_address
-		gateway_conn.port = port
-		gateway_conn.save()
+	gateway_conn = ConnectedGateway(
+		gateway=gateway,
+		ip_address = ip_address,
+		port = port)
+	gateway_conn.save()
 
-		return HttpResponse("connected")
+	return HttpResponse(gateway_conn.session_token)
 
-	elif request.method == "DELETE":
-		#################
-		# Disconnection #
-		#################
-		gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
-		gateway_conn.delete()
+@transaction.atomic
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def disconnect_gateway(request):
+	"""Disconnect a gateway to Beetle network"""
 
-		return HttpResponse("disconnected")
-		
-	else:
-		return HttpResponse(status=405)
+	gateway_conn = ConnectedGateway.objects.get(
+		session_token=__get_session_token(request))
+	gateway_conn.delete()
+
+	return HttpResponse("disconnected")
 
 def __load_services_and_characteristics(services, device_conn):
 	"""Parse the services and characteristics"""
@@ -91,7 +92,8 @@ def __load_services_and_characteristics(services, device_conn):
 				return HttpResponse("invalid uuid %s" % char_uuid, status=400)
 			else:
 				char_uuid = convert_uuid(char_uuid)
-			char, created = Characteristic.objects.get_or_create(uuid=char_uuid)
+			char, created = Characteristic.objects.get_or_create(
+				uuid=char_uuid)
 			if created:
 				pass
 
@@ -104,14 +106,13 @@ def __load_services_and_characteristics(services, device_conn):
 @transaction.atomic
 @csrf_exempt
 @require_POST
-def connect_device(request, gateway, device, remote_id):
+def connect_device(request, device, remote_id):
 	"""Connect an application or peripheral"""
 
-	if gateway == "*" or device == "*":
-		return HttpResponse(status=400)
 	remote_id = int(remote_id)
 
-	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
+	gateway_conn = ConnectedGateway.objects.get(
+		session_token=__get_session_token(request))
 	device, created = VirtualDevice.objects.get_or_create(name=device)
 	if created:
 		pass
@@ -132,6 +133,10 @@ def connect_device(request, gateway, device, remote_id):
 
 	services = json.loads(request.body)
 	response = __load_services_and_characteristics(services, device_conn)
+
+	# Asynchronous task
+	connect_device_evt.delay(device_conn.id)
+
 	if response is None:
 		return HttpResponse("connected")
 	else:
@@ -140,14 +145,13 @@ def connect_device(request, gateway, device, remote_id):
 @transaction.atomic
 @csrf_exempt
 @require_http_methods(["DELETE", "PUT"])
-def update_device(request, gateway, remote_id):
+def update_device(request, remote_id):
 	"""Disconnect an application or peripheral"""
 
-	if gateway == "*":
-		return HttpResponse(status=400)
 	remote_id = int(remote_id)
 
-	gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
+	gateway_conn = ConnectedGateway.objects.get(
+		session_token=__get_session_token(request))
 	gateway_conn.save()
 
 	if request.method == "PUT":
@@ -160,6 +164,9 @@ def update_device(request, gateway, remote_id):
 
 		services = json.loads(request.body)
 		response = __load_services_and_characteristics(services, device_conn)
+
+		# Asynchronous task
+		update_device_evt.delay(device_conn.id)
 
 		if response is None:
 			return HttpResponse("updated")
@@ -213,11 +220,12 @@ def map_devices(request, from_gateway, from_id, to_gateway, to_id):
 @transaction.atomic
 @csrf_exempt
 @require_POST
-def register_interest(request, gateway, remote_id, uuid, is_service=True):
+def register_interest(request, remote_id, uuid, is_service=True):
 	"""Register interest for a service or characteristic"""
 
 	device_instance = ConnectedDevice.objects.get(
-		gateway_instance__gateway__name=gateway, remote_id=remote_id)
+		gateway_instance__session_token=__get_session_token(request), 
+		remote_id=remote_id)
 
 	if not check_uuid(uuid):
 		return HttpResponse(status=400)
@@ -228,6 +236,8 @@ def register_interest(request, gateway, remote_id, uuid, is_service=True):
 		try:
 			service = Service.objects.get(uuid=uuid)
 			device_instance.interested_services.add(service)
+			
+			register_interest_service_evt.delay(device_instance.id, service.uuid)
 		except Service.DoesNotExist:
 			pass
 	else:

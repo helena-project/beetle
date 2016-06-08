@@ -5,22 +5,22 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/controller/AccessControl.cpp \
-../src/controller/ControllerCLI.cpp \
 ../src/controller/ControllerClient.cpp \
+../src/controller/ControllerConnection.cpp \
 ../src/controller/NetworkDiscoveryClient.cpp \
 ../src/controller/NetworkStateClient.cpp 
 
 OBJS += \
 ./src/controller/AccessControl.o \
-./src/controller/ControllerCLI.o \
 ./src/controller/ControllerClient.o \
+./src/controller/ControllerConnection.o \
 ./src/controller/NetworkDiscoveryClient.o \
 ./src/controller/NetworkStateClient.o 
 
 CPP_DEPS += \
 ./src/controller/AccessControl.d \
-./src/controller/ControllerCLI.d \
 ./src/controller/ControllerClient.d \
+./src/controller/ControllerConnection.d \
 ./src/controller/NetworkDiscoveryClient.d \
 ./src/controller/NetworkStateClient.d 
 

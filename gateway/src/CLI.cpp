@@ -44,11 +44,11 @@
 #define I_STREAM ((iostream) ? *iostream : std::cin)
 
 CLI::CLI(Beetle &beetle, BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery,
-		std::iostream *iostream_, bool useDaemon_, bool pretty_) :
+		std::iostream *iostream_, bool useDaemon_, bool verbose_) :
 		beetle(beetle), beetleConfig(beetleConfig), networkDiscovery(discovery), inputDaemon() {
 	aliasCounter = 0;
 	useDaemon = useDaemon_;
-	pretty = pretty_;
+	verbose = verbose_;
 
 	if (iostream_) {
 		iostream.reset(iostream_);
@@ -110,29 +110,36 @@ void CLI::join() {
 }
 
 void CLI::printUsage(std::string usage) {
-	O_STREAM << "Usage: " << usage << std::endl;
+	if (verbose) {
+		O_STREAM << "Usage: " << usage << std::endl;
+	}
 }
 
 void CLI::printUsageError(std::string error) {
-	O_STREAM << "Error: " << error << std::endl;
+	if (verbose) {
+		O_STREAM << "Error: " << error << std::endl;
+	}
 }
 
 void CLI::printMessage(std::string message) {
-	if (pretty) {
-		O_STREAM << "  ";
+	if (verbose) {
+		O_STREAM << "  " << message << std::endl;
 	}
-	O_STREAM << message << std::endl;
 }
 
 void CLI::cmdLineDaemon() {
-	if (pretty) {
+	if (verbose) {
 		printMessage("Welcome to Beetle CLI. Use 'help' for a list of commands.");
 	}
 
 	while (true) {
 		std::vector<std::string> cmd;
-		if (!getCommand(cmd)) return;
-		if (cmd.size() == 0) continue;
+		if (!getCommand(cmd)) {
+			return;
+		}
+		if (cmd.size() == 0) {
+			continue;
+		}
 
 		std::string c1 = cmd[0];
 		if (c1 == "h" || c1 == "help") {
@@ -182,7 +189,7 @@ void CLI::cmdLineDaemon() {
 
 bool CLI::getCommand(std::vector<std::string> &ret) {
 	assert(ret.empty());
-	if (pretty) {
+	if (verbose) {
 		O_STREAM << "> ";
 	}
 	std::string line;

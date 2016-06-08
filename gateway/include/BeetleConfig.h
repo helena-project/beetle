@@ -40,6 +40,11 @@ public:
 	std::string name;
 
 	/*
+	 * Run command line interface.
+	 */
+	bool cliEnabled = true;
+
+	/*
 	 * Scan settings
 	 */
 	bool scanEnabled = true;
@@ -68,9 +73,10 @@ public:
 	 */
 	bool controllerEnabled = false;
 	std::string controllerHost = "localhost";
-	int controllerPort = 443;
-	bool controllerCommandEnabled = false;
-	int controllerCommandPort = 3003;
+	int controllerApiPort = 3003;
+	bool controllerControlEnabled = true;
+	int controllerControlPort = 3004;
+	int controllerControlMaxReconnect = 5;
 
 	/*
 	 * Static topology

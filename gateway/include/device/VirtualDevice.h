@@ -40,7 +40,7 @@ public:
 
 	int getMTU();
 
-	bool isLive();
+	virtual bool isLive();
 
 	/*
 	 * Get the latencies in ms for the latest transactions.

@@ -7,6 +7,7 @@
 ./manage.py makemigrations access
 ./manage.py makemigrations network
 ./manage.py makemigrations state
+./manage.py makemigrations manager
 
 ./manage.py migrate
 

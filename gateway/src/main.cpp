@@ -20,9 +20,9 @@
 #include "CLI.h"
 #include "controller/AccessControl.h"
 #include "controller/ControllerClient.h"
+#include "controller/ControllerConnection.h"
 #include "controller/NetworkDiscoveryClient.h"
 #include "controller/NetworkStateClient.h"
-#include "controller/ControllerCLI.h"
 #include "Debug.h"
 #include "device/socket/tcp/TCPServerProxy.h"
 #include "HCI.h"
@@ -177,11 +177,14 @@ int main(int argc, char *argv[]) {
 		std::shared_ptr<NetworkStateClient> networkState;
 		std::shared_ptr<AccessControl> accessControl;
 		std::shared_ptr<NetworkDiscoveryClient> networkDiscovery;
-		std::shared_ptr<ControllerCLI> controllerCli;
+		std::shared_ptr<ControllerConnection> controllerConnection;
 		if (btlConfig.controllerEnabled || enableController) {
 			controllerClient = std::make_shared<ControllerClient>(btl, btlConfig.controllerHost,
-					btlConfig.controllerPort, btlConfig.sslVerifyPeers);
+					btlConfig.controllerApiPort, btlConfig.controllerControlPort, btlConfig.sslVerifyPeers);
 
+			/*
+			 * Informs controller of gateway events. Also, adds session token to controller client.
+			 */
 			networkState = std::make_shared<NetworkStateClient>(btl, controllerClient, btlConfig.tcpPort);
 			btl.registerAddDeviceHandler(networkState->getAddDeviceHandler());
 			btl.registerRemoveDeviceHandler(networkState->getRemoveDeviceHandler());
@@ -195,9 +198,9 @@ int main(int argc, char *argv[]) {
 			accessControl = std::make_shared<AccessControl>(btl, controllerClient);
 			btl.setAccessControl(accessControl);
 
-			if (btlConfig.controllerCommandEnabled) {
-				controllerCli = std::make_shared<ControllerCLI>(btl, btlConfig.controllerHost,
-						btlConfig.controllerCommandPort, btlConfig, networkDiscovery, true);
+			if (btlConfig.controllerControlEnabled) {
+				controllerConnection = std::make_shared<ControllerConnection>(btl, controllerClient,
+						btlConfig.controllerControlMaxReconnect);
 			}
 		}
 
@@ -210,7 +213,7 @@ int main(int argc, char *argv[]) {
 
 		/* Make a CLI if remote control is disabled */
 		std::unique_ptr<CLI> cli;
-		if (!controllerCli) {
+		if (btlConfig.cliEnabled) {
 			cli = std::make_unique<CLI>(btl, btlConfig, networkDiscovery);
 		}
 
@@ -225,9 +228,6 @@ int main(int argc, char *argv[]) {
 			if (cli) {
 				scanner->registerHandler(cli->getDiscoveryHander());
 			}
-			if (controllerCli) {
-				scanner->registerHandler(controllerCli->get()->getDiscoveryHander());
-			}
 			scanner->start();
 		}
 
@@ -237,9 +237,6 @@ int main(int argc, char *argv[]) {
 		if (cli) {
 			timers.repeat(cli->getDaemon(), 5);
 		}
-		if (controllerCli) {
-			timers.repeat(controllerCli->get()->getDaemon(), 5);
-		}
 		if (autoConnect) {
 			timers.repeat(autoConnect->getDaemon(), 5);
 		}
@@ -248,8 +245,9 @@ int main(int argc, char *argv[]) {
 		if (cli) {
 			cli->join();
 		}
-		if (controllerCli) {
-			controllerCli->join();
+		if (controllerConnection) {
+			std::cout << "Waiting for controller:" << std::endl;
+			controllerConnection->join();
 		}
 
 	} catch (std::exception& e) {

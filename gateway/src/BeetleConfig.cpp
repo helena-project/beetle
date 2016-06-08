@@ -40,6 +40,10 @@ BeetleConfig::BeetleConfig(std::string filename) {
 		name = getDefaultName();
 	}
 
+	if (config.count("cli")) {
+		cliEnabled = config["cli"];
+	}
+
 	if (config.count("scan")) {
 		json scanConfig = config["scan"];
 		for (json::iterator it = scanConfig.begin(); it != scanConfig.end(); ++it) {
@@ -118,13 +122,15 @@ BeetleConfig::BeetleConfig(std::string filename) {
 				controllerEnabled = it.value();
 			} else if (it.key() == "host") {
 				controllerHost = it.value();
-			} else if (it.key() == "port") {
-				controllerPort = it.value();
-			} else if (it.key() == "commandEnable") {
-				controllerCommandEnabled = it.value();
-			} else if (it.key() == "commandPort") {
-				controllerCommandPort = it.value();
-			} else {
+			} else if (it.key() == "apiPort") {
+				controllerApiPort = it.value();
+			} else if (it.key() == "controlEnable") {
+				controllerControlEnabled = it.value();
+			} else if (it.key() == "controlPort") {
+				controllerControlPort = it.value();
+			} else if (it.key() == "controlMaxReconnect") {
+				controllerControlMaxReconnect = it.value();
+			}else {
 				throw ConfigException("unknown controller param: " + it.key());
 			}
 		}
@@ -192,6 +198,7 @@ std::string BeetleConfig::str(unsigned int indent) const {
 
 	json config;
 	config["name"] = name;
+	config["cli"] = cliEnabled;
 
 	json scan;
 	scan["enable"] = scanEnabled;
@@ -221,9 +228,10 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	json controller;
 	controller["enable"] = controllerEnabled;
 	controller["host"] = controllerHost;
-	controller["port"] = controllerPort;
-	controller["commandEnable"] = controllerCommandEnabled;
-	controller["commandPort"] = controllerCommandPort;
+	controller["apiPort"] = controllerApiPort;
+	controller["controlEnable"] = controllerControlEnabled;
+	controller["controlPort"] = controllerControlPort;
+	controller["controlMaxReconnect"] = controllerControlMaxReconnect;
 	config["controller"] = controller;
 
 	json ssl;

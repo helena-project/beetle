@@ -5,7 +5,7 @@
  *      Author: james
  */
 
-#include "controller/ControllerCLI.h"
+#include <tcp/RemoteCLI.h>
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/basic_socket_iostream.hpp>
@@ -16,8 +16,8 @@
 #include "CLI.h"
 #include "controller/ControllerClient.h"
 
-ControllerCLI::ControllerCLI(Beetle &beetle, std::string host, int port, BeetleConfig beetleConfig,
-		std::shared_ptr<NetworkDiscoveryClient> discovery, bool useDaemon) {
+RemoteCLI::RemoteCLI(Beetle &beetle, std::string host, int port,
+		BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery, bool useDaemon) {
 	auto stream = new boost::asio::ip::tcp::iostream;
 
 	// TODO SSL this
@@ -28,17 +28,17 @@ ControllerCLI::ControllerCLI(Beetle &beetle, std::string host, int port, BeetleC
 		throw ControllerException("Could not connect to command server.");
 	}
 
-	cli = std::make_unique<CLI>(beetle, beetleConfig, discovery, stream, useDaemon, true);
+	cli = std::make_unique<CLI>(beetle, beetleConfig, discovery, stream, useDaemon, false);
 }
 
-ControllerCLI::~ControllerCLI() {
+RemoteCLI::~RemoteCLI() {
 
 }
 
-void ControllerCLI::join() {
+void RemoteCLI::join() {
 	cli->join();
 }
 
-CLI *ControllerCLI::get() {
+CLI *RemoteCLI::get() {
 	return cli.get();
 }

@@ -17,8 +17,9 @@ class ConnectedDeviceInline(admin.TabularInline):
 class ConnectedGatewayAdmin(admin.ModelAdmin):
 	"""Show connected Beetle gateways and their devices"""
 
-	list_display = ("get_gateway_name", "ip_address", 
-		"get_device_list")
+	list_display = ("get_gateway_name", "ip_address", "get_device_list", 
+		"is_connected", "last_updated", "session_token")
+	filter_fields = ("is_connected",)
 	search_fields = ("get_gateway_name", "ip_address", "get_device_list")
 	inlines = (ConnectedDeviceInline,)
 	readonly_fields = ("ip_address", "port", "gateway")
@@ -81,6 +82,6 @@ class ConnectedDeviceAdmin(admin.ModelAdmin):
 class DeviceMappingAdmin(admin.ModelAdmin):
 	"""Show which devices have handles mapped"""
 
-	list_display = ("from_device", "to_device",)
+	list_display = ("from_device", "to_device", "timestamp")
 	search_fields = ("from_device", "to_device",)
 	readonly_fields = ("from_device", "to_device",)

@@ -15,6 +15,9 @@ urlpatterns = [
 		user.view_rule_exceptions,
 		name="get list of exceptions"),
 
+	url(r'^view/clients/', user.view_allowed_clients, 
+		name="get a list of clients that can access the server"),
+
 	# Internal APIs
 
 	url(r'^canMap/' + gateway("from_gateway") + r'/' + device_id("from_id") 

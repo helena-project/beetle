@@ -47,7 +47,7 @@ bool NetworkDiscoveryClient::discoverByUuid(UUID uuid, std::list<discovery_resul
 }
 
 bool NetworkDiscoveryClient::findGatewayByName(std::string name, std::string &ip, int &port) {
-	std::string url = client->getUrl("network/find/gateway/" + name);
+	std::string url = client->getApiUrl("network/find/gateway/" + name);
 
 	using namespace boost::network;
 	http::client::request request(url);
@@ -78,7 +78,7 @@ bool NetworkDiscoveryClient::findGatewayByName(std::string name, std::string &ip
 }
 
 bool NetworkDiscoveryClient::queryHelper(std::string resource, std::list<discovery_result_t> &ret) {
-	std::string url = client->getUrl(resource);
+	std::string url = client->getApiUrl(resource);
 
 	using namespace boost::network;
 	http::client::request request(url);
@@ -117,14 +117,15 @@ bool NetworkDiscoveryClient::queryHelper(std::string resource, std::list<discove
 
 void NetworkDiscoveryClient::registerInterestInUuid(device_t id, UUID uuid, bool isService, std::function<void()> cb) {
 	std::stringstream resource;
-	resource << "network/registerInterest/" << ((isService) ? "service" : "char") << "/" << beetle.name << "/"
-			<< std::fixed << id << "/" << uuid.str();
+	resource << "network/registerInterest/" << ((isService) ? "service" : "char") << "/" << std::fixed << id
+			<< "/" << uuid.str();
 
-	std::string url = client->getUrl(resource.str());
+	std::string url = client->getApiUrl(resource.str());
 
 	using namespace boost::network;
 	http::client::request request(url);
 	request << header("User-Agent", "linux");
+	request << header(ControllerClient::SESSION_HEADER, client->getSessionToken());
 
 	try {
 		auto response = client->getClient()->post(request);

@@ -1,8 +1,18 @@
 from __future__ import unicode_literals
 
+import os
+import binascii
+
 from django.db import models
+from django.utils import timezone
+
+from main.constants import GATEWAY_TCP_SERVER_PORT, SESSION_TOKEN_LEN
 
 # Create your models here.
+
+def _generate_session_token():
+	"""Create a random session id"""
+	return binascii.b2a_hex(os.urandom(SESSION_TOKEN_LEN))
 
 class ConnectedGateway(models.Model):
 	"""A Beetle gateway"""
@@ -11,15 +21,30 @@ class ConnectedGateway(models.Model):
 		verbose_name = "Gateway (Instance)"
 		verbose_name_plural = "Gateways (Instance)"
 
-	DEFAULT_GATEWAY_TCP_SERVER_PORT = 3002
-
 	gateway = models.ForeignKey("beetle.BeetleGateway")
 	ip_address = models.CharField(
 		max_length=100, 
-		help_text="IP address of the gateway")
+		help_text="IP address of the gateway.")
 	port = models.IntegerField(
-		default=DEFAULT_GATEWAY_TCP_SERVER_PORT,
-		help_text="TCP server port on the gateway")
+		default=GATEWAY_TCP_SERVER_PORT,
+		help_text="TCP server port on the gateway.")
+
+	session_token = models.CharField(
+		max_length=100, editable=False,
+		default=_generate_session_token,
+		help_text="Hidden session token.")
+
+	is_connected = models.BooleanField(
+		default=False,
+		help_text="Is manager connected.")
+
+	last_updated = models.DateTimeField(
+		default=timezone.now,
+		editable=False)
+
+	def save(self, *args, **kwargs):
+		self.last_updated = timezone.now()
+		super(ConnectedGateway, self).save(*args, **kwargs)
 
 	def __unicode__(self):
 		return "%s [%s]" % (self.gateway.name, self.ip_address)
@@ -34,7 +59,7 @@ class ConnectedDevice(models.Model):
 	device = models.ForeignKey("beetle.VirtualDevice")
 	gateway_instance = models.ForeignKey("ConnectedGateway")
 	remote_id = models.IntegerField(
-		help_text="id of the device on the gateway")
+		help_text="Id of the device on the gateway.")
 
 	interested_services = models.ManyToManyField(
 		"gatt.Service", 

@@ -96,7 +96,7 @@ void PasscodeAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_pt
 		std::stringstream resource;
 		resource << "state/passcode/isLive/" << std::fixed << ruleId << "/" << cc->getName() << "/" << std::fixed
 				<< to->getId();
-		std::string url = cc->getUrl(resource.str());
+		std::string url = cc->getApiUrl(resource.str());
 
 		using namespace boost::network;
 		http::client::request request(url);
@@ -148,7 +148,7 @@ void AdminAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<D
 			std::stringstream resource;
 			resource << "state/admin/request/" << std::fixed << ruleId << "/" << cc->getName() << "/" << std::fixed
 					<< to->getId();
-			std::string url = cc->getUrl(resource.str());
+			std::string url = cc->getApiUrl(resource.str());
 
 			using namespace boost::network;
 			http::client::request request(url);
@@ -201,7 +201,7 @@ void UserAuth::evaluate(std::shared_ptr<ControllerClient> cc, std::shared_ptr<De
 			std::stringstream resource;
 			resource << "state/user/request/" << std::fixed << ruleId << "/" << cc->getName() << "/" << std::fixed
 					<< to->getId();
-			std::string url = cc->getUrl(resource.str());
+			std::string url = cc->getApiUrl(resource.str());
 
 			using namespace boost::network;
 			http::client::request request(url);
