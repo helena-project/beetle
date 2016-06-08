@@ -128,7 +128,9 @@ BeetleConfig::BeetleConfig(std::string filename) {
 				controllerControlEnabled = it.value();
 			} else if (it.key() == "controlPort") {
 				controllerControlPort = it.value();
-			} else {
+			} else if (it.key() == "controlMaxReconnect") {
+				controllerControlMaxReconnect = it.value();
+			}else {
 				throw ConfigException("unknown controller param: " + it.key());
 			}
 		}
@@ -229,6 +231,7 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	controller["apiPort"] = controllerApiPort;
 	controller["controlEnable"] = controllerControlEnabled;
 	controller["controlPort"] = controllerControlPort;
+	controller["controlMaxReconnect"] = controllerControlMaxReconnect;
 	config["controller"] = controller;
 
 	json ssl;

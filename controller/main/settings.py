@@ -12,11 +12,6 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 
-# Celery
-import djcelery
-djcelery.setup_loader()
-BROKER_URL = 'django://'
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -49,8 +44,6 @@ INSTALLED_APPS = [
     'sslserver',
     'polymorphic',
     'solo',
-    'djcelery',
-    'kombu.transport.django',
     'django.contrib.admin',
     'django.contrib.auth',
     'passlib.ext.django',
@@ -146,3 +139,11 @@ STATIC_URL = '/static/'
 
 # SSL settings
 SECURE_SSL_REDIRECT = True
+
+# Celery
+BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE 

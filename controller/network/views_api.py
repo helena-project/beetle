@@ -135,7 +135,7 @@ def connect_device(request, device, remote_id):
 	response = __load_services_and_characteristics(services, device_conn)
 
 	# Asynchronous task
-	connect_device_evt(device_conn.id)
+	connect_device_evt.delay(device_conn.id)
 
 	if response is None:
 		return HttpResponse("connected")
@@ -166,7 +166,7 @@ def update_device(request, remote_id):
 		response = __load_services_and_characteristics(services, device_conn)
 
 		# Asynchronous task
-		update_device_evt(device_conn.id)
+		update_device_evt.delay(device_conn.id)
 
 		if response is None:
 			return HttpResponse("updated")
@@ -236,7 +236,8 @@ def register_interest(request, remote_id, uuid, is_service=True):
 		try:
 			service = Service.objects.get(uuid=uuid)
 			device_instance.interested_services.add(service)
-			register_interest_service_evt(device_instance.id, service.uuid)
+			
+			register_interest_service_evt.delay(device_instance.id, service.uuid)
 		except Service.DoesNotExist:
 			pass
 	else:

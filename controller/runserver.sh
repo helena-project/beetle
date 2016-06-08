@@ -1,8 +1,8 @@
 #!/bin/bash
 
-./manage.py celery worker &
+celery worker -A main -B -l info &
 ./manage.py runmanager &
-./manage.py runserver 0.0.0.0:80 &
+sudo ./manage.py runserver 0.0.0.0:80 &
 
 if [ "$#" -eq 2 ];
 then
@@ -13,7 +13,7 @@ else
 	./manage.py runsslserver 0.0.0.0:3003
 fi
 
+pkill -f 'celery worker -A main'
 pkill -f './manage.py runmanager'
-pkill -f './manage.py celery worker'
 pkill -f './manage.py runserver'
 pkill -f './manage.py runsslserver'

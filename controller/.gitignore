@@ -2,3 +2,6 @@
 *_auto_*.py
 *.pyc
 */migrations/*
+celerybeat-schedule
+celerybeat.pid
+manager-ipc

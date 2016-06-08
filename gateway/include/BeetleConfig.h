@@ -76,6 +76,7 @@ public:
 	int controllerApiPort = 3003;
 	bool controllerControlEnabled = true;
 	int controllerControlPort = 3004;
+	int controllerControlMaxReconnect = 5;
 
 	/*
 	 * Static topology

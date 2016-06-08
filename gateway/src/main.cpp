@@ -199,7 +199,8 @@ int main(int argc, char *argv[]) {
 			btl.setAccessControl(accessControl);
 
 			if (btlConfig.controllerControlEnabled) {
-				controllerConnection = std::make_shared<ControllerConnection>(btl, controllerClient);
+				controllerConnection = std::make_shared<ControllerConnection>(btl, controllerClient,
+						btlConfig.controllerControlMaxReconnect);
 			}
 		}
 

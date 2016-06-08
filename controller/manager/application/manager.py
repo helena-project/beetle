@@ -6,10 +6,11 @@ import threading
 import warnings
 
 from main.constants import SESSION_TOKEN_LEN
+from main.settings import BASE_DIR
 
 from network.models import ConnectedGateway, ConnectedDevice
 
-IPC_COMMAND_PATH = "/tmp/rsb0dsLArGPfOCbWRSIo"
+IPC_COMMAND_PATH = BASE_DIR + "/manager-ipc"
 
 class ManagerException(Exception):
 	"""Exception thrown by manager functions"""

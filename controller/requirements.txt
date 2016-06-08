@@ -1,9 +1,10 @@
+celery
 cronex
 django
-django-celery
 django-ipware
 django-polymorphic
 django-solo
 django-sslserver
 gunicorn
+redis
 passlib

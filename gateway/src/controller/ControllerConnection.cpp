@@ -28,31 +28,60 @@
 #include "Debug.h"
 #include "Device.h"
 
-ControllerConnection::ControllerConnection(Beetle &beetle, std::shared_ptr<ControllerClient> client_) :
+using namespace boost::asio;
+
+// TODO SSL this
+// http://www.boost.org/doc/libs/1_45_0/doc/html/boost_asio/example/ssl/client.cpp
+
+static ip::tcp::iostream *connect_controller(ControllerClient *client) {
+	auto stream = new ip::tcp::iostream;
+
+	try{
+		stream->connect(client->getHost(), std::to_string(client->getCtrlPort()));
+	} catch (std::exception &e) {
+		stream->close();
+		delete stream;
+		return NULL;
+	}
+
+	if(stream->fail()) {
+		stream->close();
+		delete stream;
+		return NULL;
+	}
+
+	*stream << client->getSessionToken();
+	sleep(1);
+	if (stream->eof()) {
+		stream->close();
+		delete stream;
+		return NULL;
+	}
+
+	return stream;
+}
+
+ControllerConnection::ControllerConnection(Beetle &beetle, std::shared_ptr<ControllerClient> client_,
+		int maxReconnectionAttempts_) :
 	beetle(beetle), daemonThread() {
 	client = client_;
 
-	stream = new boost::asio::ip::tcp::iostream;
+	maxReconnectionAttempts = maxReconnectionAttempts_;
 
-	// TODO SSL this
-	// http://www.boost.org/doc/libs/1_45_0/doc/html/boost_asio/example/ssl/client.cpp
-
-	stream->connect(client->getHost(), std::to_string(client->getCtrlPort()));
-	if(stream->fail()) {
+	stream.reset(connect_controller(client.get()));
+	if(!stream) {
 		throw ControllerException("Could not connect to command server.");
 	}
-
-	/*
-	 * Send initial token.
-	 */
-	*stream << client->getSessionToken();
 
 	daemonRunning = true;
 	daemonThread = std::thread(&ControllerConnection::socketDaemon, this);
 }
 
 ControllerConnection::~ControllerConnection() {
-	stream->close();
+	if (stream) {
+		stream->close();
+		stream.reset();
+	}
 	daemonRunning = false;
 	if (daemonThread.joinable()) {
 		daemonThread.join();
@@ -65,11 +94,42 @@ void ControllerConnection::join() {
 	}
 }
 
+bool ControllerConnection::reconnect() {
+	int backoff = 1;
+	bool success = false;
+
+	for (int i = 0; i < maxReconnectionAttempts; i++) {
+		if (debug) {
+			pdebug("reconnecting to controller: " + std::to_string(i));
+		}
+		stream.reset(connect_controller(client.get()));
+		if (stream) {
+			if (debug) {
+				pdebug("reconnected to controller");
+			}
+			success = true;
+			break;
+		} else {
+			if (debug) {
+				backoff *= 2;
+				pdebug("failed to reconnect to controller: trying again in " + std::to_string(backoff));
+				sleep(backoff);
+			}
+		}
+	}
+
+	return success;
+}
+
 void ControllerConnection::socketDaemon() {
 	while (daemonRunning) {
 		std::vector<std::string> cmd;
 		if (!getCommand(cmd)) {
-			throw ControllerException("failed to read server command!");
+			stream->close();
+			stream.reset();
+			if (!reconnect()) {
+				throw ControllerException("max controller reconnection attempts exceeded");
+			}
 		}
 		if (cmd.size() == 0) {
 			continue;
@@ -100,7 +160,7 @@ bool ControllerConnection::getCommand(std::vector<std::string> &ret) {
 	if ((*stream).eof()) {
 		return false;
 	} else if ((*stream).bad()) {
-		throw std::runtime_error("IO exception");
+		return false;
 	} else {
 		if (debug) {
 			pdebug("command from controller: " + line);

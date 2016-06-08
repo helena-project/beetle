@@ -1,12 +1,22 @@
 
 import socket
+from datetime import timedelta
 
-from celery import task
+from celery.decorators import task, periodic_task
+from celery.utils.log import get_task_logger
+from django.utils import timezone
 
 from beetle.models import VirtualDevice, PrincipalGroup
-from network.models import ConnectedDevice, DeviceMapping, ServiceInstance
+from network.models import ConnectedGateway, ConnectedDevice, DeviceMapping, \
+	ServiceInstance
+from state.models import AdminAuthInstance, UserAuthInstance, \
+	PasscodeAuthInstance, ExclusiveLease
+
+from main.constants import GATEWAY_CONNECTION_TIMEOUT
 
 from .application.manager import IPC_COMMAND_PATH
+
+logger = get_task_logger(__name__)
 
 def _expand_principal_list(principals):
 	contains_all = False
@@ -50,7 +60,7 @@ def _make_mappings(device_instance, serve_to=None, client_to=None):
 
 	def _make_single_mapping(s, from_device, to_device):
 		msg = "map %d %d" % (from_device.id, to_device.id)
-		print msg
+		logger.info(msg)
 		s.send(msg)
 
 	s = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
@@ -69,12 +79,14 @@ def _make_mappings(device_instance, serve_to=None, client_to=None):
 
 def _get_discoverers(device_instance):
 
-	disc_by, disc_by_all = _expand_principal_list(device_instance.device.discoverable_by.all())
+	disc_by, disc_by_all = _expand_principal_list(
+		device_instance.device.discoverable_by.all())
 
 	def _discovery_allowed(other_instance):
 		return disc_by_all or other_instance.device in disc_by
 
-	services = ServiceInstance.objects.filter(device_instance=device_instance).values("service")
+	services = ServiceInstance.objects.filter(device_instance=device_instance
+		).values("service")
 
 	potential_clients = ConnectedDevice.objects.filter(
 		interested_services__in=services)
@@ -83,7 +95,7 @@ def _get_discoverers(device_instance):
 
 	return potential_clients
 
-@task
+@task(name="connect_device")
 def connect_device_evt(device_instance_id):
 	"""Create mappings when a device first connects."""
 
@@ -97,7 +109,7 @@ def connect_device_evt(device_instance_id):
 
 	_make_mappings(device_instance, serve_to=serve_to, client_to=client_to)
 
-@task
+@task(name="update_device")
 def update_device_evt(device_instance_id):
 	"""Create mappings when a device has been updated."""
 
@@ -114,7 +126,7 @@ def update_device_evt(device_instance_id):
 
 	_make_mappings(device_instance, serve_to=serve_to, client_to=client_to)
 
-@task
+@task(name="register_device_interest")
 def register_interest_service_evt(device_instance_id, service_uuid):
 	"""Find devices in the network with the service."""
 
@@ -139,3 +151,33 @@ def register_interest_service_evt(device_instance_id, service_uuid):
 
 	_make_mappings(device_instance, client_to=potential_servers)
 
+@periodic_task(
+	run_every=timedelta(seconds=60), 
+	name="timeout_gateways", 
+	ignore_result=True
+)
+def timeout_gateways():
+	"""Remove lingering gateway sessions"""
+
+	logger.info("Timing out gateway instances.")
+
+	threshold = timezone.now() - timedelta(seconds=GATEWAY_CONNECTION_TIMEOUT)
+	ConnectedGateway.objects.filter(is_connected=False, 
+		last_updated__lt=threshold).delete()
+
+@periodic_task(
+	run_every=timedelta(seconds=60), 
+	name="timeout_access_control_state", 
+	ignore_result=True
+)
+def timeout_access_control_state():
+	"""Obliterate any expired state."""
+
+	logger.info("Timing out access control state.")
+
+	current_time = timezone.now()
+
+	AdminAuthInstance.objects.filter(expire__lt=current_time).delete()
+	UserAuthInstance.objects.filter(expire__lt=current_time).delete()
+	PasscodeAuthInstance.objects.filter(expire__lt=current_time).delete()
+	ExclusiveLease.objects.filter(expire__lt=current_time).delete()
