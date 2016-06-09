@@ -72,8 +72,8 @@ BeetleConfig::BeetleConfig(std::string filename) {
 	}
 
 	if (config.count("autoConnect")) {
-		json scanConfig = config["scan"];
-		for (json::iterator it = scanConfig.begin(); it != scanConfig.end(); ++it) {
+		json autoConnectConfig = config["autoConnect"];
+		for (json::iterator it = autoConnectConfig.begin(); it != autoConnectConfig.end(); ++it) {
 			if (it.key() == "all") {
 				autoConnectAll = it.value();
 			} else if (it.key() == "minBackoff") {
