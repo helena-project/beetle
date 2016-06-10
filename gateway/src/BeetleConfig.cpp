@@ -161,6 +161,11 @@ BeetleConfig::BeetleConfig(std::string filename) {
 				if (sslClientCert != "" && !file_exists(sslClientCert)) {
 					throw ConfigException("file does not exist: " + sslClientCert);
 				}
+			} else if (it.key() == "caCert") {
+				sslCaCert = it.value();
+				if (sslCaCert != "" && !file_exists(sslCaCert)) {
+					throw ConfigException("file does not exist: " + sslCaCert);
+				}
 			} else {
 				throw ConfigException("unknown ssl param: " + it.key());
 			}
@@ -240,6 +245,7 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	ssl["serverKey"] = sslServerKey;
 	ssl["clientCert"] = sslClientCert;
 	ssl["clientKey"] = sslClientKey;
+	ssl["caCert"] = sslCaCert;
 	config["ssl"] = ssl;
 
 	json debug;

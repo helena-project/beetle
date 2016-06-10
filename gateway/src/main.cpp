@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
 		HCI::resetHCI();
 	}
 
-	SSLConfig clientSSLConfig(btlConfig.sslVerifyPeers);
+	SSLConfig clientSSLConfig(btlConfig.sslVerifyPeers, false, btlConfig.sslClientCert, btlConfig.sslClientKey);
 	TCPServerProxy::initSSL(&clientSSLConfig);
 	signal(SIGPIPE, sigpipe_handler_ignore);
 

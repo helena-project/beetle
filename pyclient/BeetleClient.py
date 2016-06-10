@@ -7,14 +7,12 @@
 import argparse
 import os
 import re
-import sys
 import signal
 import socket
 import ssl
 import struct
 import threading
 import time
-import traceback
 import random
 import numpy as np
 
@@ -24,14 +22,15 @@ def getTimeMillis():
 	return int(time.time() * 1000)
 
 def getArguments():
-	"""
-	Arguments for script.
-	"""
+	"""Arguments for script."""
+
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--host", default="localhost", 
 		help="hostname of the Beetle server")
 	parser.add_argument("--port", "-p", type=int, default=3002, 
 		help="port the server is runnng on")
+	parser.add_argument("--rootca", "-r", 
+		help="root CA certificate")
 	parser.add_argument("--measure", "-m", action='store_true', 
 		help="print performance measurements")
 	parser.add_argument("--debug", "-d", action='store_true', 
@@ -41,8 +40,11 @@ def getArguments():
 args = getArguments()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s = ssl.wrap_socket(s, cert_reqs=ssl.CERT_NONE)	# TODO fix this
+s = ssl.wrap_socket(s, ca_certs=args.rootca, 
+	cert_reqs=ssl.CERT_REQUIRED)
 s.connect((args.host, args.port))
+
+print s.getpeercert()
 
 lastRequestTime = 0.0
 
@@ -50,9 +52,8 @@ lastRequestTime = 0.0
 transactSema = threading.BoundedSemaphore(1)
 
 def outputPrinter(s):
-	"""
-	Print the output in a separate thread.
-	"""
+	"""Print the output in a separate thread."""
+
 	try:
 		while True:
 			n = s.recv(1)
@@ -84,9 +85,8 @@ def outputPrinter(s):
 		os.kill(os.getpid(), signal.SIGTERM)
 
 def readClientParams():
-	"""
-	Ask the user for params until done.
-	"""
+	"""Ask the user for params until done."""
+
 	print "Enter connection parameters (\"\" when done): 'param value'"
 	paramPattern = re.compile(r"^[^ ]+ .*$")
 	params = []
@@ -126,9 +126,8 @@ readPattern = re.compile(r"^read (?P<handle>[\d+]+)$")
 repeatPattern = re.compile(r"^repeat (?P<ntimes>\d+) (?P<minPause>\d+)-(?P<maxPause>\d+) (?P<value>.*)$")
 
 def printHelp():
-	"""
-	Print a list of commands.
-	"""
+	"""Print a list of commands."""
+
 	print "  help,h"
 	print "  r\t\t\t\tRepeat last line."
 	print "  read h|h+ofs\t\t\tRead handle h."
@@ -137,9 +136,8 @@ def printHelp():
 	print "  repeat n min-maxPause pdu\tRepeat the packet n times."
 
 def sendMessage(s, message):
-	"""
-	Helper to send a ATT packet.
-	"""
+	"""Helper to send a ATT packet."""
+
 	opcode = message[0]
 	if att.isRequest(opcode):
 		transactSema.acquire()
@@ -152,9 +150,8 @@ def sendMessage(s, message):
 		raise RuntimeError("failed to write packet")
 
 def inputReader(s):
-	"""
-	Consume user input in the main thread.
-	"""
+	"""Consume user input in the main thread."""
+
 	print "Connection ready (type 'help' for usage):"
 
 	previousLine = ""

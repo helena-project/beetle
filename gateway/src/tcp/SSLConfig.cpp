@@ -47,24 +47,22 @@ SSLConfig::SSLConfig(bool verifyPeers, bool isServer, std::string cert, std::str
 	SSL_CTX_set_cipher_list(ctx, "HIGH");
 	SSL_CTX_set_options(ctx, SSL_OP_SINGLE_DH_USE);
 
-	if (isServer) {
-		if (!file_exists(cert)) {
-			throw std::invalid_argument("cert not found: " + cert);
-		}
-		if (!file_exists(key)) {
-			throw std::invalid_argument("key not found: " + key);
-		}
+	if (!file_exists(cert)) {
+		throw std::invalid_argument("cert not found: " + cert);
+	}
+	if (!file_exists(key)) {
+		throw std::invalid_argument("key not found: " + key);
+	}
 
-		/* Set the key and cert */
-		if (SSL_CTX_use_certificate_file(ctx, cert.c_str(), SSL_FILETYPE_PEM) < 0) {
-			ERR_print_errors_fp(stderr);
-			exit(EXIT_FAILURE);
-		}
+	/* Set the key and cert */
+	if (SSL_CTX_use_certificate_file(ctx, cert.c_str(), SSL_FILETYPE_PEM) < 0) {
+		ERR_print_errors_fp(stderr);
+		exit(EXIT_FAILURE);
+	}
 
-		if (SSL_CTX_use_PrivateKey_file(ctx, key.c_str(), SSL_FILETYPE_PEM) < 0) {
-			ERR_print_errors_fp(stderr);
-			exit(EXIT_FAILURE);
-		}
+	if (SSL_CTX_use_PrivateKey_file(ctx, key.c_str(), SSL_FILETYPE_PEM) < 0) {
+		ERR_print_errors_fp(stderr);
+		exit(EXIT_FAILURE);
 	}
 }
 
