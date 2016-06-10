@@ -55,7 +55,11 @@ SSLConfig::SSLConfig(bool verifyPeers, bool isServer, std::string cert, std::str
 			 * and the application specific data stored into the SSL object.
 			 */
 			X509_NAME_oneline(X509_get_subject_name(err_cert), buf, sizeof(buf));
-			std::cout << buf << std::endl;
+			if (debug) {
+				std::stringstream ss;
+				ss << buf;
+				pdebug(ss.str());
+			}
 
 			/*
 			 * At this point, err contains the last verification error. We can use
@@ -63,7 +67,7 @@ SSLConfig::SSLConfig(bool verifyPeers, bool isServer, std::string cert, std::str
 			 */
 			if (!preverify_ok && (err == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT))
 			{
-				X509_NAME_oneline(X509_get_issuer_name(ctx->current_cert), buf, 256);
+				X509_NAME_oneline(X509_get_issuer_name(ctx->current_cert), buf, sizeof(buf));
 				printf("issuer= %s\n", buf);
 			}
 
