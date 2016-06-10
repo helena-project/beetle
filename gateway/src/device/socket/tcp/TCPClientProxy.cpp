@@ -11,13 +11,25 @@
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <netinet/in.h>
 #include <map>
+#include <openssl/ssl.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #include "Beetle.h"
 #include "hat/SingleAllocator.h"
+#include "BeetleTypes.h"
+#include "Device.h"
+
 
 TCPClientProxy::TCPClientProxy(Beetle &beetle, SSL *ssl, int sockfd, std::string clientGateway_,
 		struct sockaddr_in clientGatewaySockAddr_, device_t localProxyFor_) :
 		TCPConnection(beetle, ssl, sockfd, clientGatewaySockAddr_, false, new SingleAllocator(localProxyFor_)) {
+
+	name = "Proxy for " + std::to_string(localProxyFor_) + " to " + clientGateway_;
+	type = TCP_CLIENT_PROXY;
+	clientGateway = clientGateway_;
+	localProxyFor = localProxyFor_;
+
 	/*
 	 * Make sure the device exists locally.
 	 */
@@ -36,11 +48,6 @@ TCPClientProxy::TCPClientProxy(Beetle &beetle, SSL *ssl, int sockfd, std::string
 	default:
 		throw DeviceException("cannot proxy to device type");
 	}
-
-	name = "Proxy for " + std::to_string(localProxyFor_) + " to " + clientGateway_;
-	type = TCP_CLIENT_PROXY;
-	clientGateway = clientGateway_;
-	localProxyFor = localProxyFor_;
 }
 
 TCPClientProxy::~TCPClientProxy() {
@@ -50,9 +57,7 @@ TCPClientProxy::~TCPClientProxy() {
 device_t TCPClientProxy::getLocalDeviceId() {
 	return localProxyFor;
 }
-;
 
 std::string TCPClientProxy::getClientGateway() {
 	return clientGateway;
 }
-;
