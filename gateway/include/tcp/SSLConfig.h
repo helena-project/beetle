@@ -14,7 +14,8 @@
 
 class SSLConfig {
 public:
-	SSLConfig(bool verifyPeers, bool isServer = false, std::string cert = "", std::string key = "");
+	SSLConfig(bool verifyPeers, bool isServer = false, std::string cert = "", std::string key = "",
+			std::string caCert = "");
 	virtual ~SSLConfig();
 	SSL_CTX *getCtx();
 private:

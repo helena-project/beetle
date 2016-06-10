@@ -92,7 +92,7 @@ public:
 	std::string sslClientKey = "../certs/key.pem";
 	std::string sslClientCert = "../certs/cert.pem";
 	std::string sslCaCert = "../certs/cert.pem";
-	bool sslVerifyPeers = false;
+	bool sslVerifyPeers = true;
 
 	/*
 	 * Debug settings

@@ -149,7 +149,8 @@ int main(int argc, char *argv[]) {
 		HCI::resetHCI();
 	}
 
-	SSLConfig clientSSLConfig(btlConfig.sslVerifyPeers, false, btlConfig.sslClientCert, btlConfig.sslClientKey);
+	SSLConfig clientSSLConfig(btlConfig.sslVerifyPeers, false, btlConfig.sslClientCert,
+			btlConfig.sslClientKey, btlConfig.sslCaCert);
 	TCPServerProxy::initSSL(&clientSSLConfig);
 	signal(SIGPIPE, sigpipe_handler_ignore);
 
@@ -162,7 +163,8 @@ int main(int argc, char *argv[]) {
 			std::cout << "using certificate: " << btlConfig.sslServerCert << std::endl;
 			std::cout << "using key: " << btlConfig.sslServerKey << std::endl;
 			tcpServer = std::make_unique<TCPDeviceServer>(btl,
-					new SSLConfig(btlConfig.sslVerifyPeers, true, btlConfig.sslServerCert, btlConfig.sslServerKey),
+					new SSLConfig(btlConfig.sslVerifyPeers, true, btlConfig.sslServerCert,
+							btlConfig.sslServerKey, btlConfig.sslCaCert),
 					btlConfig.tcpPort);
 		}
 
@@ -180,7 +182,8 @@ int main(int argc, char *argv[]) {
 		std::shared_ptr<ControllerConnection> controllerConnection;
 		if (btlConfig.controllerEnabled || enableController) {
 			controllerClient = std::make_shared<ControllerClient>(btl, btlConfig.controllerHost,
-					btlConfig.controllerApiPort, btlConfig.controllerControlPort, btlConfig.sslVerifyPeers);
+					btlConfig.controllerApiPort, btlConfig.controllerControlPort,
+					btlConfig.sslVerifyPeers);
 
 			/*
 			 * Informs controller of gateway events. Also, adds session token to controller client.
