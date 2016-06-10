@@ -183,7 +183,8 @@ int main(int argc, char *argv[]) {
 		if (btlConfig.controllerEnabled || enableController) {
 			controllerClient = std::make_shared<ControllerClient>(btl, btlConfig.controllerHost,
 					btlConfig.controllerApiPort, btlConfig.controllerControlPort,
-					btlConfig.sslVerifyPeers);
+					btlConfig.sslVerifyPeers, btlConfig.sslClientCert, btlConfig.sslClientKey,
+					btlConfig.sslCaCert);
 
 			/*
 			 * Informs controller of gateway events. Also, adds session token to controller client.

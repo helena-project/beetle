@@ -29,9 +29,8 @@ class ControllerException : public std::exception {
 
 class ControllerClient {
 public:
-	ControllerClient(Beetle &beetle, std::string host, int apiPort, int ctrlPort, bool verifyPeers);
-	ControllerClient(Beetle &beetle, std::string host, int apiPort, int ctrlPort, std::string cert,
-			std::string caCerts, bool verifyPeers);
+	ControllerClient(Beetle &beetle, std::string host, int apiPort, int ctrlPort,
+			bool verifyPeers, std::string clientCert, std::string clientKey, std::string caCert);
 	virtual ~ControllerClient();
 	std::string getApiUrl(std::string resource);
 	std::shared_ptr<boost::network::http::client> getClient();

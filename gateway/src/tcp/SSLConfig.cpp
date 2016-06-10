@@ -15,7 +15,9 @@
 #include <unistd.h>
 #include <cassert>
 #include <iostream>
+#include <sstream>
 
+#include "Debug.h"
 #include "util/file.h"
 
 bool SSLConfig::initialized = false;
