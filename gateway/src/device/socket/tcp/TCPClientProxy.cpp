@@ -23,7 +23,7 @@ TCPClientProxy::TCPClientProxy(Beetle &beetle, SSL *ssl, int sockfd, std::string
 	 */
 	boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 	if (beetle.devices.find(localProxyFor_) == beetle.devices.end()) {
-		throw new DeviceException("no device for " + std::to_string(localProxyFor_));
+		throw DeviceException("no device for " + std::to_string(localProxyFor_));
 	}
 
 	switch (beetle.devices[localProxyFor_]->getType()) {
@@ -34,7 +34,7 @@ TCPClientProxy::TCPClientProxy(Beetle &beetle, SSL *ssl, int sockfd, std::string
 	case BEETLE_INTERNAL:
 		break;
 	default:
-		throw new DeviceException("cannot proxy to device type");
+		throw DeviceException("cannot proxy to device type");
 	}
 
 	name = "Proxy for " + std::to_string(localProxyFor_) + " to " + clientGateway_;

@@ -40,35 +40,35 @@ SSLConfig::SSLConfig(bool verifyPeers, bool isServer, std::string cert, std::str
 	ctx = SSL_CTX_new(method);
 	SSL_CTX_load_verify_locations(ctx, caCert.c_str(), NULL);
 	if (verifyPeers) {
-		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
-//				[](int preverify_ok, X509_STORE_CTX *ctx) -> int {
-//			char buf[256];
-//			X509 *err_cert;
-//			int err, depth;
-//
-//			err_cert = X509_STORE_CTX_get_current_cert(ctx);
-//			err = X509_STORE_CTX_get_error(ctx);
-//			depth = X509_STORE_CTX_get_error_depth(ctx);
-//
-//			/*
-//			 * Retrieve the pointer to the SSL of the connection currently treated
-//			 * and the application specific data stored into the SSL object.
-//			 */
-//			X509_NAME_oneline(X509_get_subject_name(err_cert), buf, 256);
-//			std::cout << buf << std::endl;
-//
-//			/*
-//			 * At this point, err contains the last verification error. We can use
-//			 * it for something special
-//			 */
-//			if (!preverify_ok && (err == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT))
-//			{
-//				X509_NAME_oneline(X509_get_issuer_name(ctx->current_cert), buf, 256);
-//				printf("issuer= %s\n", buf);
-//			}
-//
-//			return preverify_ok;
-//		});
+		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
+				[](int preverify_ok, X509_STORE_CTX *ctx) -> int {
+			char buf[512];
+			X509 *err_cert;
+			int err, depth;
+
+			err_cert = X509_STORE_CTX_get_current_cert(ctx);
+			err = X509_STORE_CTX_get_error(ctx);
+			depth = X509_STORE_CTX_get_error_depth(ctx);
+
+			/*
+			 * Retrieve the pointer to the SSL of the connection currently treated
+			 * and the application specific data stored into the SSL object.
+			 */
+			X509_NAME_oneline(X509_get_subject_name(err_cert), buf, sizeof(buf));
+			std::cout << buf << std::endl;
+
+			/*
+			 * At this point, err contains the last verification error. We can use
+			 * it for something special
+			 */
+			if (!preverify_ok && (err == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT))
+			{
+				X509_NAME_oneline(X509_get_issuer_name(ctx->current_cert), buf, 256);
+				printf("issuer= %s\n", buf);
+			}
+
+			return preverify_ok;
+		});
 	} else {
 		SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
 	}

@@ -151,6 +151,8 @@ static void startTcpDeviceHelper(Beetle &beetle, SSL *ssl, int clifd, struct soc
 		}
 	}
 
+	pdebug("1");
+
 	/*
 	 * Instantiate the virtual device around the client socket.
 	 */
@@ -159,6 +161,7 @@ static void startTcpDeviceHelper(Beetle &beetle, SSL *ssl, int clifd, struct soc
 		/*
 		 * Takes over the clifd
 		 */
+
 		if (clientParams.find(TCP_PARAM_GATEWAY) == clientParams.end()) {
 			device = std::make_shared<TCPClient>(beetle, ssl, clifd, clientParams[TCP_PARAM_CLIENT], cliaddr);
 		} else {

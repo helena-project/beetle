@@ -72,7 +72,6 @@ void SocketSelect::daemon() {
 			std::stringstream ss;
 			ss << "select failed : " << strerror(errno);
 			pdebug(ss.str());
-			exit(EXIT_FAILURE);
 		} else if (result == 0) {
 			continue;
 		}
