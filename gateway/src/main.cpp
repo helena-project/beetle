@@ -149,8 +149,8 @@ int main(int argc, char *argv[]) {
 		HCI::resetHCI();
 	}
 
-	SSLConfig clientSSLConfig(btlConfig.sslVerifyPeers, false, btlConfig.sslClientCert,
-			btlConfig.sslClientKey, btlConfig.sslCaCert);
+	SSLConfig clientSSLConfig(btlConfig.sslVerifyPeers, false, btlConfig.sslCert,
+			btlConfig.sslKey, btlConfig.sslCaCert);
 	TCPServerProxy::initSSL(&clientSSLConfig);
 	signal(SIGPIPE, sigpipe_handler_ignore);
 
@@ -160,11 +160,11 @@ int main(int argc, char *argv[]) {
 		/* Listen for remote connections */
 		std::unique_ptr<TCPDeviceServer> tcpServer;
 		if (btlConfig.tcpEnabled || enableTcp) {
-			std::cout << "using certificate: " << btlConfig.sslServerCert << std::endl;
-			std::cout << "using key: " << btlConfig.sslServerKey << std::endl;
+			std::cout << "using certificate: " << btlConfig.sslCert << std::endl;
+			std::cout << "using key: " << btlConfig.sslKey << std::endl;
 			tcpServer = std::make_unique<TCPDeviceServer>(btl,
-					new SSLConfig(btlConfig.sslVerifyPeers, true, btlConfig.sslServerCert,
-							btlConfig.sslServerKey, btlConfig.sslCaCert),
+					new SSLConfig(btlConfig.sslVerifyPeers, true, btlConfig.sslCert,
+							btlConfig.sslKey, btlConfig.sslCaCert),
 					btlConfig.tcpPort);
 		}
 
@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
 		if (btlConfig.controllerEnabled || enableController) {
 			controllerClient = std::make_shared<ControllerClient>(btl, btlConfig.controllerHost,
 					btlConfig.controllerApiPort, btlConfig.controllerControlPort,
-					btlConfig.sslVerifyPeers, btlConfig.sslClientCert, btlConfig.sslClientKey,
+					btlConfig.sslVerifyPeers, btlConfig.sslCert, btlConfig.sslKey,
 					btlConfig.sslCaCert);
 
 			/*

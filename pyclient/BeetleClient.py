@@ -29,19 +29,28 @@ def getArguments():
 		help="hostname of the Beetle server")
 	parser.add_argument("--port", "-p", type=int, default=3002, 
 		help="port the server is runnng on")
+	parser.add_argument("--cert", "-c", type=str,
+		help="client certificate")
+	parser.add_argument("--key", "-k", type=str,
+		help="private key for client certificate")
 	parser.add_argument("--rootca", "-r", 
 		help="root CA certificate")
 	parser.add_argument("--measure", "-m", action='store_true', 
 		help="print performance measurements")
 	parser.add_argument("--debug", "-d", action='store_true', 
 		help="print debugging")
+	parser.add_argument("--nocerts", "-x", action="store_true", 
+		help="disable verification and use of client certificates")
 	return parser.parse_args()
 
 args = getArguments()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s = ssl.wrap_socket(s, ca_certs=args.rootca, 
-	cert_reqs=ssl.CERT_REQUIRED)
+if args.nocerts:
+	s = ssl.wrap_socket(s, cert_reqs=ssl.CERT_NONE)
+else:
+	s = ssl.wrap_socket(s, keyfile=args.key, certfile=args.cert, 
+		ca_certs=args.rootca, cert_reqs=ssl.CERT_REQUIRED)
 s.connect((args.host, args.port))
 
 print s.getpeercert()

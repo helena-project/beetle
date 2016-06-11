@@ -141,25 +141,15 @@ BeetleConfig::BeetleConfig(std::string filename) {
 		for (json::iterator it = sslConfig.begin(); it != sslConfig.end(); ++it) {
 			if (it.key() == "verifyPeers") {
 				sslVerifyPeers = it.value();
-			} else if (it.key() == "serverKey") {
-				sslServerKey = it.value();
-				if (sslServerKey != "" && !file_exists(sslServerKey)) {
-					throw ConfigException("file does not exist: " + sslServerKey);
+			} else if (it.key() == "key") {
+				sslKey = it.value();
+				if (sslKey != "" && !file_exists(sslKey)) {
+					throw ConfigException("file does not exist: " + sslKey);
 				}
-			} else if (it.key() == "serverCert") {
-				sslServerCert = it.value();
-				if (sslServerCert != "" && !file_exists(sslServerCert)) {
-					throw ConfigException("file does not exist: " + sslServerCert);
-				}
-			} else if (it.key() == "clientKey") {
-				sslClientKey = it.value();
-				if (sslClientKey != "" && !file_exists(sslClientKey)) {
-					throw ConfigException("file does not exist: " + sslClientKey);
-				}
-			} else if (it.key() == "clientCert") {
-				sslClientCert = it.value();
-				if (sslClientCert != "" && !file_exists(sslClientCert)) {
-					throw ConfigException("file does not exist: " + sslClientCert);
+			} else if (it.key() == "cert") {
+				sslCert = it.value();
+				if (sslCert != "" && !file_exists(sslCert)) {
+					throw ConfigException("file does not exist: " + sslCert);
 				}
 			} else if (it.key() == "caCert") {
 				sslCaCert = it.value();
@@ -241,10 +231,8 @@ std::string BeetleConfig::str(unsigned int indent) const {
 
 	json ssl;
 	ssl["verifyPeers"] = sslVerifyPeers;
-	ssl["serverCert"] = sslServerCert;
-	ssl["serverKey"] = sslServerKey;
-	ssl["clientCert"] = sslClientCert;
-	ssl["clientKey"] = sslClientKey;
+	ssl["cert"] = sslCert;
+	ssl["key"] = sslKey;
 	ssl["caCert"] = sslCaCert;
 	config["ssl"] = ssl;
 
