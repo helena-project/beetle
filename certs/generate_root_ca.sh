@@ -2,10 +2,10 @@
 
 OUTFILE=rootCA
 
-COMMON_NAME=Beetle CA
+COMMON_NAME=Beetle\ CA
 COUNTRY=US
 STATE=California
-LOCALITY=Santa Clara
+LOCALITY=Santa\ Clara
 ORGANIZATION=beetle
 ORGANIZATIONAL_UNIT=beetle
 EMAIL=none@none.com

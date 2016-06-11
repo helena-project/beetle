@@ -6,7 +6,7 @@ ROOT_CERT=rootCA
 
 COUNTRY=US
 STATE=California
-LOCALITY=Santa Clara
+LOCALITY=Santa\ Clara
 ORGANIZATION=beetle
 ORGANIZATIONAL_UNIT=beetle
 EMAIL=none@none.com
