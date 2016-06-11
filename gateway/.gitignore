@@ -1,5 +1,7 @@
 /Debug/Beetle
+/Debug/*.json
 /Release/Beetle
+/Release/*.json
 *~
 /.settings/
 *.o

@@ -12,8 +12,8 @@ In ```pygatt``` subdirectory.
 ## Python controller
 In ```controller``` subdirectory. Needed to run with the controller enabled.
 
-## Certs
-Scripts to generate self-signed certificates for Beetle.
+## Certs directory
+Basic scripts to generate self-signed certificates for Beetle.
 
 # License
 Copyright 2016 James Hong, Amit Levy
