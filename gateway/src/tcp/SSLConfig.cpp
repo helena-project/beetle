@@ -53,6 +53,10 @@ SSLConfig::SSLConfig(bool verifyPeers, bool isServer, std::string cert, std::str
 			depth = X509_STORE_CTX_get_error_depth(ctx);
 
 			/*
+			 * TODO: use fields to identify gateway, controller, applications
+			 */
+
+			/*
 			 * Retrieve the pointer to the SSL of the connection currently treated
 			 * and the application specific data stored into the SSL object.
 			 */
