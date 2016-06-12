@@ -81,7 +81,7 @@ void TCPServerProxy::initSSL(SSLConfig *sslConfig_) {
 
 TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, int port, device_t remoteProxyTo) {
 	struct sockaddr_in serv_addr = { 0 };
-	if (inet_pton(AF_INET, host.c_str(), &serv_addr) == -1) {
+	if (inet_pton(AF_INET, host.c_str(), &serv_addr.sin_addr.s_addr) == -1) {
 		/*
 		 * TODO: this can block for a while
 		 */
