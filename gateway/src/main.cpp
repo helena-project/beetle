@@ -78,6 +78,7 @@ int main(int argc, char *argv[]) {
 	bool enableTcp = false;
 	bool enableIpc = false;
 	bool enableStaticTopo = false;
+	bool verifyCerts = true;
 
 	namespace po = boost::program_options;
 	po::options_description desc("Options");
@@ -92,6 +93,7 @@ int main(int argc, char *argv[]) {
 			("controller,C", "Enable controller, overriding config if necessary.")
 			("static-topo,s", "Enable static mappings, overriding config if necessary.")
 			("connect-all,a", "Connect to all nearby BLE peripherals.")
+			("no-verify,x", "Do not verify SSL certificates.")
 			("reset-hci", po::value<bool>(&resetHci)
 					->default_value(true),
 					"Set hci down/up at start-up.")
@@ -130,6 +132,9 @@ int main(int argc, char *argv[]) {
 		if (vm.count("static-topo")) {
 			enableStaticTopo = true;
 		}
+		if (vm.count("no-verify")) {
+			verifyCerts = false;
+		}
 		po::notify(vm);
 	} catch (po::error& e) {
 		std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
@@ -163,7 +168,7 @@ int main(int argc, char *argv[]) {
 			std::cout << "using certificate: " << btlConfig.sslCert << std::endl;
 			std::cout << "using key: " << btlConfig.sslKey << std::endl;
 			tcpServer = std::make_unique<TCPDeviceServer>(btl,
-					new SSLConfig(btlConfig.sslVerifyPeers, true, btlConfig.sslCert,
+					new SSLConfig(verifyCerts && btlConfig.sslVerifyPeers, true, btlConfig.sslCert,
 							btlConfig.sslKey, btlConfig.sslCaCert),
 					btlConfig.tcpPort);
 		}
@@ -183,7 +188,7 @@ int main(int argc, char *argv[]) {
 		if (btlConfig.controllerEnabled || enableController) {
 			controllerClient = std::make_shared<ControllerClient>(btl, btlConfig.controllerHost,
 					btlConfig.controllerApiPort, btlConfig.controllerControlPort,
-					btlConfig.sslVerifyPeers, btlConfig.sslCert, btlConfig.sslKey,
+					verifyCerts && btlConfig.sslVerifyPeers, btlConfig.sslCert, btlConfig.sslKey,
 					btlConfig.sslCaCert);
 
 			/*
