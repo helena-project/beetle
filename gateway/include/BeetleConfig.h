@@ -87,11 +87,10 @@ public:
 	/*
 	 * SSL settings
 	 */
-	std::string sslServerKey = "../certs/key.pem";
-	std::string sslServerCert = "../certs/cert.pem";
-	std::string sslClientKey = "../certs/key.pem";
-	std::string sslClientCert = "../certs/cert.pem";
-	bool sslVerifyPeers = false;
+	std::string sslKey = "../certs/key.pem";
+	std::string sslCert = "../certs/cert.pem";
+	std::string sslCaCert = "../certs/cert.pem";
+	bool sslVerifyPeers = true;
 
 	/*
 	 * Debug settings

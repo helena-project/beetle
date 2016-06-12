@@ -7,6 +7,8 @@
 
 #include "controller/ControllerClient.h"
 
+#define BOOST_NETWORK_ENABLE_HTTPS
+
 #include <boost/network/protocol/http/client/options.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <cassert>
@@ -18,32 +20,25 @@
 
 static const int CLIENT_TIMEOUT = 180;
 
+/* Custom header to identify gateway */
 const std::string ControllerClient::SESSION_HEADER = "Beetle-Gateway-Session";
 
-ControllerClient::ControllerClient(Beetle &beetle, std::string host, int apiPort, int ctrlPort, bool verifyPeers) :
+ControllerClient::ControllerClient(Beetle &beetle, std::string host, int apiPort, int ctrlPort,
+		bool verifyPeers, std::string clientCert, std::string clientKey, std::string caCert) :
 		beetle(beetle), host(host), apiPort(apiPort), ctrlPort(ctrlPort) {
-	using namespace boost::network;
-	http::client::options options;
-	options.follow_redirects(false).cache_resolved(true).always_verify_peer(verifyPeers)
-//	       .openssl_certificate(defaultVerifyFile)
-//	       .openssl_verify_path(defaultCertPath)
-	.timeout(CLIENT_TIMEOUT);
-	// TODO use certs
-	client.reset(new http::client(options));
-}
-
-ControllerClient::ControllerClient(Beetle &beetle, std::string host, int apiPort, int ctrlPort, std::string cert,
-		std::string caCerts, bool verifyPeers) :
-		beetle(beetle), host(host), apiPort(apiPort), ctrlPort(ctrlPort) {
-	assert(file_exists(cert));
-	assert(file_exists(caCerts));
+	assert(file_exists(clientCert));
+	assert(file_exists(clientKey));
+	assert(file_exists(caCert));
 
 	using namespace boost::network;
 	http::client::options options;
-	options.follow_redirects(false).cache_resolved(true).always_verify_peer(verifyPeers)
-//	       .openssl_certificate(cert)
-//	       .openssl_verify_path(caCerts)
-	.timeout(CLIENT_TIMEOUT);
+	options.follow_redirects(false)
+		.cache_resolved(true)
+		.always_verify_peer(verifyPeers)
+		.timeout(CLIENT_TIMEOUT)
+		.openssl_certificate(caCert)
+		.openssl_certificate_file(clientCert)
+		.openssl_private_key_file(clientKey);
 	client.reset(new http::client(options));
 }
 
