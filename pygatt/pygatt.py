@@ -1012,9 +1012,24 @@ class _ClientCharacteristic(object):
 		self._subscribeCallback = None
 
 		self._cccd = None
+		self._user_desc = None
 		self.descriptors = []
 
 	# Public methods
+
+	def getValHandle(self):
+		"""Returns the handle of the characteristic attribute value."""
+
+		return self._valHandleNo
+
+	def getUserDescription(self):
+		"""Return the user description if it exists."""
+
+		if self._user_desc:
+			ret = self._user_desc.read()
+			if ret:
+				return str(ret)
+		return ""
 
 	def discoverDescriptors(self):
 		"""Return a list of descriptors"""
@@ -1030,6 +1045,9 @@ class _ClientCharacteristic(object):
 
 		cccdUuid = UUID(gatt.CLIENT_CHARAC_CFG_UUID)
 		cccd = None
+
+		userDescUuid = UUID(gatt.CHARAC_USER_DESC_UUID)
+		userDesc = None 
 		
 		currHandle = startHandle
 		while True:
@@ -1053,8 +1071,14 @@ class _ClientCharacteristic(object):
 						idx += attDataLen
 						continue
 
-					descriptor = _ClientDescriptor(self.client, self, uuid, 
-						handleNo)
+					if uuid == userDescUuid:
+						descriptor = _ClientDescriptor(self.client, self, uuid, 
+							handleNo, cacheable=True)
+						userDesc = descriptor
+					else:
+						descriptor = _ClientDescriptor(self.client, self, uuid, 
+							handleNo)
+						
 					if uuid == cccdUuid:
 						# hide the cccd from users
 						cccd = descriptor
@@ -1081,6 +1105,7 @@ class _ClientCharacteristic(object):
 
 		self.descriptors = descriptors
 		self._cccd = cccd
+		self._user_desc = userDesc
 		return descriptors
 
 	def subscribe(self, cb):
@@ -1175,7 +1200,7 @@ class _ClientCharacteristic(object):
 		return "Characteristic - %s" % str(self.uuid)
 
 class _ClientDescriptor(object):
-	def __init__(self, client, characteristic, uuid, handleNo):
+	def __init__(self, client, characteristic, uuid, handleNo, cacheable=False):
 		assert isinstance(uuid, UUID)
 		assert isinstance(client, GattClient)
 		assert isinstance(characteristic, _ClientCharacteristic)
@@ -1188,6 +1213,8 @@ class _ClientDescriptor(object):
 
 		# Protected members
 		self._handleNo = handleNo
+		self._cachable = cacheable
+		self._cached = None
 
 	# Public methods
 
@@ -1200,13 +1227,19 @@ class _ClientDescriptor(object):
 			ClientError on failure
 		"""
 
+		if self._cachable and self._cached is not None:
+			return self._cached
+
 		req = bytearray([att.OP_READ_REQ])
 		req += _handle_to_bytearray(self._handleNo)
 		resp = self.client._new_transaction(req)
 		if resp is None:
 			raise ClientError("no response")
 		elif resp[0] == att.OP_READ_RESP:
-			return resp[1:]
+			ret = resp[1:]
+			if self._cachable:
+				self._cached = ret
+			return ret
 		elif resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN:
 			raise ClientError("read failed - %s" % att.ecodeLookup(resp[4]))
 		else:
@@ -1292,6 +1325,19 @@ class GattClient(object):
 			return self.__discover_all_services()
 		else:
 			return self.__discover_services_by_uuid(uuid)
+
+	def discoverAll(self):
+		"""Discover all of the handles on the server
+
+		Returns:
+			A list of services.
+		"""
+		services = []
+		services = self.discoverServices()
+		for service in services:
+			for charac in service.discoverCharacteristics():
+				charac.discoverDescriptors()
+		return services
 
 	# Protected and private methods
 
