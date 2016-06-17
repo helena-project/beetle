@@ -196,10 +196,10 @@ def printHelp():
 	"""Print a list of commands."""
 
 	print "  help,h"
-	print "  subscribe,s h"
-	print "  unsubscribe,u h"
-	print "  read,r h"
-	print "  write,w h"
+	print "  subscribe,s handleNo"
+	print "  unsubscribe,u handleNo"
+	print "  read,r handleNo"
+	print "  write,w handleNo"
 	print "  quit,q"
 
 def runClient(client):

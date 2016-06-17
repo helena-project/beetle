@@ -1162,11 +1162,12 @@ class _ClientCharacteristic(object):
 		else:
 			raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
 
-	def write(self, value):
+	def write(self, value, withResponse=True):
 		"""Blocking write of the characteristic.
 
 		Args:
 			value : a bytearray of length at most send MTU - 3
+			withResponse : whether the write should be a request or command
 		Raises:
 			ClientError on failure
 		"""
@@ -1174,9 +1175,14 @@ class _ClientCharacteristic(object):
 		if "w" not in self.permissions:
 			raise ClientError("write not permitted")
 
-		req = bytearray([att.OP_WRITE_REQ])
+		op = att.OP_WRITE_REQ if withResponse else att.OP_WRITE_CMD
+		req = bytearray([op])
 		req += _handle_to_bytearray(self._valHandleNo)
 		req += value
+
+		if not withResponse:
+			self.client._socket._send(req)
+			return
 
 		resp = self.client._new_transaction(req)
 		if resp is None:
@@ -1186,7 +1192,7 @@ class _ClientCharacteristic(object):
 		elif resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN:
 			raise ClientError("write failed - %s" % att.ecodeLookup(resp[4]))
 		else:
-			raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
+			raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))	
 
 	# Private and protected methods
 
@@ -1245,7 +1251,7 @@ class _ClientDescriptor(object):
 		else:
 			raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
 
-	def write(self, value):
+	def write(self, value, withResponse=False):
 		"""Blocking write of the descriptor.
 
 		Args:
@@ -1256,9 +1262,14 @@ class _ClientDescriptor(object):
 
 		assert isinstance(value, bytearray)
 
-		req = bytearray([att.OP_WRITE_REQ])
+		op = att.OP_WRITE_REQ if withResponse else att.OP_WRITE_CMD
+		req = bytearray([op])
 		req += _handle_to_bytearray(self._handleNo)
 		req += value
+
+		if not withResponse:
+			self.client._socket._send(req)
+			return
 
 		resp = self.client._new_transaction(req)
 		if resp is None:
