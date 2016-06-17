@@ -7,6 +7,7 @@
 
 #include "device/socket/tcp/TCPServerProxy.h"
 
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -79,23 +80,24 @@ void TCPServerProxy::initSSL(SSLConfig *sslConfig_) {
 }
 
 TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, int port, device_t remoteProxyTo) {
-	struct hostent *server;
-	server = gethostbyname(host.c_str());
-	if (server == NULL) {
-		throw DeviceException("could not get host");
+	struct sockaddr_in serv_addr = { 0 };
+	if (inet_pton(AF_INET, host.c_str(), &serv_addr.sin_addr.s_addr) != 1) {
+		/*
+		 * TODO: this can block for a while
+		 */
+		struct hostent *server = gethostbyname(host.c_str());
+		if (server == NULL) {
+			throw DeviceException("could not get host");
+		}
+		bcopy((char *) server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
 	}
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_port = htons(port);
 
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) {
 		throw DeviceException("error opening socket");
 	}
-
-	struct sockaddr_in serv_addr = { 0 };
-	serv_addr.sin_family = AF_INET;
-	bcopy((char *) server->h_addr,
-	(char *)&serv_addr.sin_addr.s_addr,
-	server->h_length);
-	serv_addr.sin_port = htons(port);
 
 	if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
 		shutdown(sockfd, SHUT_RDWR);
@@ -103,6 +105,9 @@ TCPServerProxy *TCPServerProxy::connectRemote(Beetle &beetle, std::string host, 
 		throw DeviceException("error connecting");
 	}
 
+	/*
+	 * SSL handshake.
+	 */
 	SSL *ssl = SSL_new(sslConfig->getCtx());
 	SSL_set_fd(ssl, sockfd);
 	if (SSL_connect(ssl) <= 0) {

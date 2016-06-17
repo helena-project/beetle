@@ -21,6 +21,10 @@ services, characteristics, and descriptors.
 See ```example.py``` for an implementation of a heart rate monitor that also 
 acts as a GATT client.
 
+## CLI
+```gattcli.py``` implements a command line interface that supports read, write,
+subscription, discovery features.
+
 ## Notes
-This library is a work in progress. Read, notify, indicate are tested and 
+This library is a work in progress. Read, notify, indicate, write are tested and 
 working. See the example application for details.
