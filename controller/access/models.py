@@ -21,40 +21,40 @@ class Rule(models.Model):
 
 	# human searchable name
 	name = models.CharField(
-		max_length=100, 
+		max_length=100,
 		unique=True,
 		help_text="A human readable rule for searching and indexing.")
 
 	description = models.CharField(
 		max_length=500,
-		default="", 
+		default="",
 		blank=True,
 		help_text="Description of the rule.")
 
 	# fields queried using SQL
 	service = models.ForeignKey(
-		"gatt.Service", 
+		"gatt.Service",
 		default="")
 	characteristic = models.ForeignKey(
 		"gatt.Characteristic",
 		default="")
 
 	from_principal = models.ForeignKey(
-		"beetle.Principal", 
+		"beetle.Principal",
 		related_name="rule_from",
 		verbose_name="Server Principal",
 		help_text="Application or peripheral acting as server.")
 	from_gateway = models.ForeignKey(
-		"beetle.Gateway", 
+		"beetle.Gateway",
 		related_name="rule_from_gateway",
 		help_text="Gateway connected to server.")
 	to_principal = models.ForeignKey(
-		"beetle.Principal", 
+		"beetle.Principal",
 		related_name="rule_to",
 		verbose_name="Client Principal",
 		help_text="Application or peripheral acting as client.")
 	to_gateway = models.ForeignKey(
-		"beetle.Gateway", 
+		"beetle.Gateway",
 		related_name="rule_to_gateway",
 		help_text="Gateway connected to client.")
 
@@ -67,15 +67,15 @@ class Rule(models.Model):
 
 	# fields verified programatically
 	cron_expression = models.CharField(
-		max_length=100, 
+		max_length=100,
 		default="* * * * *",
 		verbose_name="Cron",
-		help_text="Standard crontab expression for when rule applies. " 
+		help_text="Standard crontab expression for when rule applies. "
 			+ "Format: Min Hour Day-of-Month Month Day-of-Week")
 
 	# permissions and connection information
 	properties = models.CharField(
-		max_length=100, 
+		max_length=100,
 		blank=True,
 		default="brwni",
 		verbose_name="Props",
@@ -95,7 +95,7 @@ class Rule(models.Model):
 		verbose_name="ENC",
 		help_text="Link layer encryption required.")
 	lease_duration = models.DurationField(
-		default=timedelta(minutes=15), 
+		default=timedelta(minutes=15),
 		verbose_name="Lease",
 		help_text="Maximum amount of time results may be cached. Hint: HH:mm:ss")
 
@@ -118,7 +118,7 @@ class Rule(models.Model):
 			return a.name == b.name
 		def _lte_principal(a, b):
 			if a == b:
-				return True 
+				return True
 			if isinstance(b, PrincipalGroup):
 				if isinstance(a, VirtualDevice):
 					if b.members.filter(name=a.name).exists():
@@ -131,7 +131,7 @@ class Rule(models.Model):
 			return False
 		def _lte_gateway(a, b):
 			if a == b:
-				return True 
+				return True
 			if isinstance(b, GatewayGroup):
 				if isinstance(a, BeetleGateway):
 					if b.members.filter(name=a.name).exists():
@@ -180,21 +180,21 @@ class RuleException(models.Model):
 		help_text="Rule to invert")
 
 	from_principal = models.ForeignKey(
-		"beetle.Principal", 
+		"beetle.Principal",
 		related_name="except_from",
 		verbose_name="Server Principal",
 		help_text="Application or peripheral acting as server.")
 	from_gateway = models.ForeignKey(
-		"beetle.Gateway", 
+		"beetle.Gateway",
 		related_name="except_from_gateway",
 		help_text="Gateway connected to server.")
 	to_principal = models.ForeignKey(
-		"beetle.Principal", 
+		"beetle.Principal",
 		related_name="except_to",
 		verbose_name="Client Principal",
 		help_text="Application or peripheral acting as client.")
 	to_gateway = models.ForeignKey(
-		"beetle.Gateway", 
+		"beetle.Gateway",
 		related_name="except_to_gateway",
 		help_text="Gateway connected to client.")
 
@@ -215,7 +215,7 @@ class Exclusive(models.Model):
 		help_text="Logical description of this group.")
 
 	default_lease = models.DurationField(
-		default=timedelta(hours=1), 
+		default=timedelta(hours=1),
 		help_text="Length of the lease. Hint: HH:mm:ss")
 
 	def __unicode__(self):
@@ -237,7 +237,7 @@ class DynamicAuth(PolymorphicModel):
 	rule = models.ForeignKey("Rule")
 
 	session_length = models.DurationField(
-		default=timedelta(hours=1), 
+		default=timedelta(hours=1),
 		help_text="Time before reauthentication. Hint: HH:mm:ss")
 	require_when = models.IntegerField(
 		default=ON_MAP,
@@ -263,7 +263,7 @@ class AdminAuth(DynamicAuth):
 	)
 
 	message = models.CharField(
-		max_length=100, 
+		max_length=100,
 		blank=True,
 		help_text="Any additional message to present to the admin.")
 
@@ -271,7 +271,7 @@ class AdminAuth(DynamicAuth):
 		help_text="User with authority over this rule")
 
 	scope = models.IntegerField(
-		choices=SCOPE_CHOICES, 
+		choices=SCOPE_CHOICES,
 		default=RULE_SCOPE,
 		help_text="Scope of the permission granted.")
 
@@ -297,12 +297,12 @@ class UserAuth(DynamicAuth):
 	)
 
 	message = models.CharField(
-		max_length=100, 
+		max_length=100,
 		blank=True,
 		help_text="Any additional message to present to the user.")
 
 	scope = models.IntegerField(
-		choices=SCOPE_CHOICES, 
+		choices=SCOPE_CHOICES,
 		default=RULE_SCOPE,
 		help_text="Scope of the permission granted.")
 
@@ -326,7 +326,7 @@ class PasscodeAuth(DynamicAuth):
 		help_text="Enter a passcode for this rule.")
 	chash = models.CharField(
 		max_length=200,
-		blank=True, 
+		blank=True,
 		editable=False,
 		help_text="Hashed passcode.")
 	hint = models.CharField(
@@ -357,7 +357,7 @@ class NetworkAuth(DynamicAuth):
 		default=False,
 		help_text="Allow access from any private IP.")
 	ip_address = models.CharField(
-		max_length=45, 
+		max_length=45,
 		default="127.0.0.1",
 		help_text="IP address to be matched exactly.")
 
@@ -367,4 +367,3 @@ class NetworkAuth(DynamicAuth):
 
 	def __unicode__(self):
 		return self.ip_address
-		

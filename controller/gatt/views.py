@@ -7,8 +7,8 @@ from .uuid import check_uuid, convert_uuid
 
 @require_GET
 def list_services(request):
-	""" 
-	Return a list of service names 
+	"""
+	Return a list of service names
 	"""
 	return JsonResponse(
 		[s.name for s in Service.objects.all().exclude(name="*").order_by(
@@ -16,26 +16,26 @@ def list_services(request):
 
 @require_GET
 def list_characteristics(request):
-	""" 
-	Return a list of characteristic names 
+	"""
+	Return a list of characteristic names
 	"""
 	return JsonResponse(
 		[c.name for c in Characteristic.objects.all().exclude(name="*"
-			).order_by("name")], 
+			).order_by("name")],
 		safe=False)
 
 @require_GET
 def list_descriptors(request):
-	""" 
-	Return a list of descriptors names 
+	"""
+	Return a list of descriptors names
 	"""
 	return JsonResponse(
 		[c.name for c in Descriptor.objects.all().order_by("name")], safe=False)
 
 @require_GET
 def find_service(request, uuid):
-	""" 
-	Return service info 
+	"""
+	Return service info
 	"""
 	if check_uuid(uuid) is None:
 		return HttpResponse(status=400)
@@ -48,8 +48,8 @@ def find_service(request, uuid):
 
 @require_GET
 def find_characteristic(request, uuid):
-	""" 
-	Return characteristic info 
+	"""
+	Return characteristic info
 	"""
 	if check_uuid(uuid) is None:
 		return HttpResponse(status=400)
@@ -62,8 +62,8 @@ def find_characteristic(request, uuid):
 
 @require_GET
 def find_descriptor(request, uuid):
-	""" 
-	Return characteristic info 
+	"""
+	Return characteristic info
 	"""
 	if check_uuid(uuid) is None:
 		return HttpResponse(status=400)

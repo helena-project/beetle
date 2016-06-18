@@ -8,7 +8,7 @@ urlpatterns = [
 	# User facing views
 
 	url(r'^device?/$', views.list_devices, name='list devices'),
-	url(r'^device/' + regex.gateway("device") + r'$', views.find_device, 
+	url(r'^device/' + regex.gateway("device") + r'$', views.find_device,
 		name='find device by name'),
 
 	url(r'^gateway?/$', views.list_gateways, name='list gateways'),

@@ -63,7 +63,7 @@ class GatewayGroupAdmin(PolymorphicChildModelAdmin):
 		return json.dumps(members)
 
 	get_member_list.short_description = "members"
-	
+
 class ContactAdminForm(forms.ModelForm):
 	def clean_phone_number(self):
 		number = self.cleaned_data["phone_number"]
@@ -71,9 +71,9 @@ class ContactAdminForm(forms.ModelForm):
 		if regex_match is None:
 			raise forms.ValidationError("Invalid phone number.")
 		else:
-			return "%s-%s-%s" % (regex_match.group(1), regex_match.group(2), 
+			return "%s-%s-%s" % (regex_match.group(1), regex_match.group(2),
 				regex_match.group(3))
-			
+
 	def clean_first_name(self):
 		first_name = self.cleaned_data["first_name"]
 		if re.match(r"^\w+", first_name) is None:
@@ -88,6 +88,6 @@ class ContactAdminForm(forms.ModelForm):
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
 	form = ContactAdminForm
-	
+
 	list_display = ("first_name", "last_name", "phone_number", "email_address")
 	search_fields = ("first_name", "last_name", "phone_number", "email_address")

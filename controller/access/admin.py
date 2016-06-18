@@ -77,9 +77,9 @@ class RuleAdmin(admin.ModelAdmin):
 		"priority",
 		"service",
 		"characteristic",
-		"from_principal", 
-		"from_gateway", 
-		"to_principal", 
+		"from_principal",
+		"from_gateway",
+		"to_principal",
 		"to_gateway",
 		# "get_exceptions_link",
 		"cron_expression",
@@ -93,25 +93,25 @@ class RuleAdmin(admin.ModelAdmin):
 		"active")
 	actions = [make_active, make_inactive]
 	search_fields = (
-		"to_principal", 
-		"to_gateway", 
-		"from_principal", 
+		"to_principal",
+		"to_gateway",
+		"from_principal",
 		"from_gateway",
 		"service",
 		"characteristic")
 	list_filter = ("active", "priority", "integrity", "encryption")
 	inlines = (
 		RuleExceptionInline,
-		AdminAuthInline, 
+		AdminAuthInline,
 		UserAuthInline,
-		PasscodeAuthInline, 
+		PasscodeAuthInline,
 		NetworkAuthInline,)
 
 	def get_description(self, obj):
 		if len(obj.description) > 40:
 			return obj.description[:40] + "..."
 		else:
-			return obj.description 
+			return obj.description
 	get_description.short_description = "description"
 
 	def get_exceptions_link(self, obj):

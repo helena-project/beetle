@@ -2,7 +2,7 @@
 pygatt module
 =============
 
-This module implements GATT above the socket layer. For a usage example see 
+This module implements GATT above the socket layer. For a usage example see
 example.py.
 """
 
@@ -18,7 +18,7 @@ from lib.uuid import UUID
 
 class ServerError(Exception):
 	"""Standard error type raised by GattServer.
-	
+
 	Note: may safely be raised by callbacks
 	"""
 	pass
@@ -33,12 +33,12 @@ class ClientError(Exception):
 #------------------------------------------------------------------------------
 
 class ManagedSocket(object):
-	def __init__(self, recv_mtu=att.DEFAULT_LE_MTU, 
+	def __init__(self, recv_mtu=att.DEFAULT_LE_MTU,
 		send_mtu=att.DEFAULT_LE_MTU, daemon=False):
 		"""Create a managed socket wrapping around a regular socket.
-		
+
 		Args:
-			recv_mtu : the MTU supported by the other side of the connection 
+			recv_mtu : the MTU supported by the other side of the connection
 			send_mtu : the MTU supported by this side of the connection
 			daemon : if true, then then this class will use a daemon thread
 		"""
@@ -54,7 +54,7 @@ class ManagedSocket(object):
 		self._stream = None
 		self._sock = None
 		self._lock = threading.Lock()
-		
+
 		self._recv_mtu = recv_mtu
 		self._send_mtu = send_mtu
 
@@ -103,7 +103,7 @@ class ManagedSocket(object):
 
 	def _send(self, pdu):
 		"""Send an ATT packet"""
-		
+
 		assert isinstance(pdu, bytearray)
 		assert len(pdu) > 0
 		if len(pdu) > self._send_mtu:
@@ -148,7 +148,7 @@ class ManagedSocket(object):
 			if pdu == "":
 				raise RuntimeError("socket connection broken")
 			pdu = bytearray(ord(x) for x in pdu)
-		
+
 		op = pdu[0]
 
 		if op == att.OP_MTU_REQ:
@@ -158,7 +158,7 @@ class ManagedSocket(object):
 			resp[2] = (self._recv_mtu >> 8) & 0xFF
 			self._send(resp)
 
-		elif (att.isRequest(op) or op == att.OP_WRITE_CMD 
+		elif (att.isRequest(op) or op == att.OP_WRITE_CMD
 			or op == att.OP_SIGNED_WRITE_CMD or op == att.OP_HANDLE_CNF):
 
 			if self._server is not None:
@@ -170,7 +170,7 @@ class ManagedSocket(object):
 				resp = att_pdu.new_error_resp(op, 0, att.ECODE_REQ_NOT_SUPP)
 				self._send(resp)
 
-		elif (att.isResponse(op) 
+		elif (att.isResponse(op)
 			or (op == att.OP_ERROR and len(pdu) >= 2 and att.isRequest(pdu[1]))
 			or op == att.OP_HANDLE_NOTIFY or op == att.OP_HANDLE_IND):
 
@@ -187,7 +187,7 @@ class ManagedSocket(object):
 		try:
 			while self._running:
 				self.__recv_single()
-				
+
 			# normal teardown
 			self._running = False
 			self._teardown(None)
@@ -196,7 +196,7 @@ class ManagedSocket(object):
 			traceback.print_exc()
 			self._running = False
 			self._teardown(err)
-		
+
 		finally:
 			self._sock.close()
 
@@ -204,7 +204,7 @@ class ManagedSocket(object):
 
 class _ServerHandle(object):
 	"""Protected server handle"""
-	
+
 	def __init__(self, server, owner, uuid):
 		assert isinstance(server, GattServer)
 		assert isinstance(uuid, UUID)
@@ -294,7 +294,7 @@ class _ServerService(object):
 		return "Service - %s" % str(self.uuid)
 
 class _ServerCharacteristic(object):
-	def __init__(self, server, uuid, staticValue=None, allowNotify=False, 
+	def __init__(self, server, uuid, staticValue=None, allowNotify=False,
 		allowIndicate=False):
 		assert isinstance(server, GattServer)
 		assert isinstance(uuid, UUID)
@@ -304,7 +304,7 @@ class _ServerCharacteristic(object):
 		self.uuid = uuid
 		self.descriptors = []
 		self.service = server.services[-1]
-		
+
 		self.service._add_characteristic(self)
 
 		# Protected members
@@ -312,7 +312,7 @@ class _ServerCharacteristic(object):
 		if staticValue:
 			self._properties |= gatt.CHARAC_PROP_READ
 		if allowNotify:
-			self._properties |= gatt.CHARAC_PROP_NOTIFY	
+			self._properties |= gatt.CHARAC_PROP_NOTIFY
 		if allowIndicate:
 			self._properties |= gatt.CHARAC_PROP_IND
 
@@ -324,7 +324,7 @@ class _ServerCharacteristic(object):
 		self._valHandle = _ServerHandle(server, self, self.uuid)
 
 		if allowNotify or allowIndicate:
-			self._cccd = _ServerDescriptor(server, 
+			self._cccd = _ServerDescriptor(server,
 				UUID(gatt.CLIENT_CHARAC_CFG_UUID))
 			def cccd_cb(value):
 				"""Special callback for CCCD"""
@@ -348,14 +348,14 @@ class _ServerCharacteristic(object):
 			self._cccd = None
 
 		if staticValue:
-			self._valHandle._set_read_value(staticValue) 
+			self._valHandle._set_read_value(staticValue)
 
 		def read_cb():
 			"""Properties may change."""
 			handleValue = bytearray([self._properties])
 			handleValue += self._valHandle._get_handle_as_bytearray()
 			handleValue += self.uuid.raw()[::-1]
-			return handleValue	
+			return handleValue
 		self._handle._set_read_callback(read_cb)
 
 	# Public methods
@@ -363,7 +363,7 @@ class _ServerCharacteristic(object):
 	def setReadCallback(self, cb):
 		"""Allow reads and sets a callback to handle client reads.
 
-		Args: 
+		Args:
 			cb : a function that returns a bytearray
 		"""
 		self._properties |= gatt.CHARAC_PROP_READ
@@ -371,8 +371,8 @@ class _ServerCharacteristic(object):
 
 	def setReadValue(self, value):
 		"""Allow reads and sets a static value.
-		
-		Args: 
+
+		Args:
 			value : a bytearray, should be shorter than the the send MTU - 3
 		"""
 		self._properties |= gatt.CHARAC_PROP_READ
@@ -391,7 +391,7 @@ class _ServerCharacteristic(object):
 		"""Sets a callback for subscription changes
 
 		Args:
-			cb : a function that takes a bytearray of length 2. 
+			cb : a function that takes a bytearray of length 2.
 		"""
 		if self._cccd is None:
 			raise ServerError("subscriptions not allowed")
@@ -415,7 +415,7 @@ class _ServerCharacteristic(object):
 		"""
 		assert isinstance(value, bytearray)
 		assert self._cccd != None
-		
+
 		cccdValue = self._cccd.read()
 		if cccdValue is not None and cccdValue[0] == 1:
 			pdu = bytearray([att.OP_HANDLE_NOTIFY])
@@ -424,11 +424,11 @@ class _ServerCharacteristic(object):
 			self.server._socket._send(pdu)
 
 	def sendIndicate(self, value, cb):
-		"""Send an indication and sets a callback for the confirmation. 
+		"""Send an indication and sets a callback for the confirmation.
 
 		Args:
 			value : a bytearray of length with max length of send MTU - 3
-		Returns: 
+		Returns:
 			Whether the indicate packet was successfully sent.
 		"""
 		assert isinstance(value, bytearray)
@@ -489,7 +489,7 @@ class _ServerDescriptor(object):
 
 	def write(self, value):
 		"""Write a value to the descriptor.
-		
+
 		Args:
 			value : a bytearray with length not exceeding send MTU - 3
 		"""
@@ -500,7 +500,7 @@ class _ServerDescriptor(object):
 	def read(self):
 		"""Read the descriptor value.
 
-		Returns: 
+		Returns:
 			A bytearray
 		"""
 		return self._value
@@ -548,7 +548,7 @@ class GattServer(object):
 
 	def addService(self, uuid):
 		"""Add a service of type uuid.
-		
+
 		Returns:
 			The newly added service.
 		"""
@@ -559,10 +559,10 @@ class GattServer(object):
 		self.services.append(service)
 		return service
 
-	def addCharacteristic(self, uuid, value=None, allowNotify=False, 
+	def addCharacteristic(self, uuid, value=None, allowNotify=False,
 		allowIndicate=False):
 		"""Add a characteristic to the last service.
-		
+
 		Notes: permissions are learned by adding callbacks and values to the
 		characteristic.
 
@@ -577,9 +577,9 @@ class GattServer(object):
 		if not isinstance(uuid, UUID):
 			uuid = UUID(uuid)
 
-		return _ServerCharacteristic(self, uuid, value, allowNotify, 
+		return _ServerCharacteristic(self, uuid, value, allowNotify,
 			allowIndicate)
-	
+
 	def addDescriptor(self, uuid, value=None):
 		"""Add a descriptor to the last characteristic
 
@@ -611,8 +611,8 @@ class GattServer(object):
 			 self._onDisconnect(err)
 
 	UNSUPPORTED_REQ = set([
-		att.OP_READ_BLOB_REQ, att.OP_READ_MULTI_REQ, 
-		att.OP_PREP_WRITE_REQ, att.OP_EXEC_WRITE_REQ, 
+		att.OP_READ_BLOB_REQ, att.OP_READ_MULTI_REQ,
+		att.OP_PREP_WRITE_REQ, att.OP_EXEC_WRITE_REQ,
 		att.OP_SIGNED_WRITE_CMD])
 
 	def __handle_find_info_req(self, op, pdu):
@@ -622,7 +622,7 @@ class GattServer(object):
 		_, startHandle, endHandle = att_pdu.parse_find_info_req(pdu)
 
 		if startHandle == 0 or startHandle > endHandle:
-			return att_pdu.new_error_resp(op, startHandle, 
+			return att_pdu.new_error_resp(op, startHandle,
 				att.ECODE_INVALID_HANDLE)
 
 		respCount = 0
@@ -654,7 +654,7 @@ class GattServer(object):
 			att_pdu.parse_find_by_type_req(pdu)
 
 		if startHandle == 0 or startHandle > endHandle:
-			return att_pdu.new_error_resp(op, startHandle, 
+			return att_pdu.new_error_resp(op, startHandle,
 				att.ECODE_INVALID_HANDLE)
 
 		respCount = 0
@@ -684,7 +684,7 @@ class GattServer(object):
 			att_pdu.parse_read_by_type_req(pdu)
 
 		if startHandle == 0 or startHandle > endHandle:
-			return att_pdu.new_error_resp(op, startHandle, 
+			return att_pdu.new_error_resp(op, startHandle,
 				att.ECODE_INVALID_HANDLE)
 
 		respCount = 0
@@ -696,7 +696,7 @@ class GattServer(object):
 
 			valRead = handle._read()
 			if valRead is None:
-				return att_pdu.new_error_resp(op, startHandle, 
+				return att_pdu.new_error_resp(op, startHandle,
 					att.ECODE_READ_NOT_PERM)
 
 			assert isinstance(valRead, bytearray)
@@ -726,7 +726,7 @@ class GattServer(object):
 			att_pdu.parse_read_by_group_req(pdu)
 
 		if startHandle == 0 or startHandle > endHandle:
-			return att_pdu.new_error_resp(op, startHandle, 
+			return att_pdu.new_error_resp(op, startHandle,
 				att.ECODE_INVALID_HANDLE)
 
 		respCount = 0
@@ -738,12 +738,12 @@ class GattServer(object):
 
 			valRead = handle._read()
 			if valRead is None:
-				return att_pdu.new_error_resp(op, startHandle, 
+				return att_pdu.new_error_resp(op, startHandle,
 					att.ECODE_READ_NOT_PERM)
 
 			assert isinstance(valRead, bytearray)
 			if not valLen:
-				assert len(valRead) <= 0xFF - 4 
+				assert len(valRead) <= 0xFF - 4
 				valLen = len(valRead)
 				resp[1] = valLen + 4
 			if valLen != len(valRead):
@@ -768,9 +768,9 @@ class GattServer(object):
 		_, handleNo = att_pdu.parse_read_req(pdu)
 
 		if not self.__is_valid_handle(handleNo):
-			return att_pdu.new_error_resp(op, handleNo, 
+			return att_pdu.new_error_resp(op, handleNo,
 				att.ECODE_INVALID_HANDLE)
-		
+
 		if self._handles[handleNo]._read_callback:
 			try:
 				value = self._handles[handleNo]._read_callback()
@@ -780,10 +780,10 @@ class GattServer(object):
 			except int, ecode:
 				return att_pdu.new_error_resp(op, handleNo, ecode)
 			except ServerError:
-				return att_pdu.new_error_resp(op, handleNo, 
+				return att_pdu.new_error_resp(op, handleNo,
 					att.ECODE_UNLIKELY)
 		else:
-			return att_pdu.new_error_resp(op, 0, 
+			return att_pdu.new_error_resp(op, 0,
 				att.ECODE_READ_NOT_PERM)
 
 	def __handle_write_cmd_req(self, op, pdu):
@@ -794,7 +794,7 @@ class GattServer(object):
 
 		if not self.__is_valid_handle(handleNo):
 			if op == att.OP_WRITE_REQ:
-				return att_pdu.new_error_resp(op, handleNo, 
+				return att_pdu.new_error_resp(op, handleNo,
 					att.ECODE_INVALID_HANDLE)
 			else:
 				return None
@@ -806,10 +806,10 @@ class GattServer(object):
 			except int, ecode:
 				return att_pdu.new_error_resp(op, handleNo, ecode)
 			except ServerError:
-				return att_pdu.new_error_resp(op, handleNo, 
+				return att_pdu.new_error_resp(op, handleNo,
 					att.ECODE_UNLIKELY)
 		else:
-			return att_pdu.new_error_resp(op, 0, 
+			return att_pdu.new_error_resp(op, 0,
 				att.ECODE_WRITE_NOT_PERM)
 
 	def __handle_confirm(self, op, pdu):
@@ -872,7 +872,7 @@ class _ClientService(object):
 
 		# Protected members
 		self._handleNo = handleNo
-		self._endGroup = endGroup 
+		self._endGroup = endGroup
 
 		self._characteristicHandles = {}
 
@@ -881,7 +881,7 @@ class _ClientService(object):
 	def discoverCharacteristics(self, uuid=None):
 		"""Find characteristics under the service
 
-		Notes: if uuid is None, all characteristics are discovered. Any 
+		Notes: if uuid is None, all characteristics are discovered. Any
 			previously discovered characteristics are invalidated.
 		Args:
 			uuid : a specific uuid to discover
@@ -912,14 +912,14 @@ class _ClientService(object):
 		endHandle = self._endGroup
 		if startHandle > endHandle:
 			return [], {}
-			
+
 		characUuid = UUID(gatt.CHARAC_UUID)
 
 		characs = []
 		characHandles = {}
 		currHandle = startHandle
 		while True:
-			req = att_pdu.new_read_by_type_req(currHandle, endHandle, 
+			req = att_pdu.new_read_by_type_req(currHandle, endHandle,
 				characUuid)
 
 			resp = self.client._new_transaction(req)
@@ -931,13 +931,13 @@ class _ClientService(object):
 				idx = 2
 
 				maxHandleNo = currHandle # not needed
-				while idx < len(resp) and idx + attDataLen <= len(resp): 
+				while idx < len(resp) and idx + attDataLen <= len(resp):
 					handleNo = att_pdu.unpack_handle(resp, idx)
 					properties = resp[idx+2]
 					valHandleNo = att_pdu.unpack_handle(resp, idx + 3)
 					uuid = UUID(resp[idx+5:idx+attDataLen], reverse=True)
 
-					charac = _ClientCharacteristic(self.client, self, uuid, 
+					charac = _ClientCharacteristic(self.client, self, uuid,
 						handleNo, properties, valHandleNo)
 					characs.append(charac)
 					characHandles[handleNo] = characs
@@ -949,12 +949,12 @@ class _ClientService(object):
 				if currHandle >= endHandle:
 					break
 
-			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN
 				and resp[1] == att.OP_READ_BY_TYPE_REQ
 				and resp[4] == att.ECODE_ATTR_NOT_FOUND):
 				break
 
-			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN
 				and resp[1] == att.OP_READ_BY_TYPE_REQ):
 				raise ClientError("error - %s" % att.ecodeLookup(resp[4]))
 
@@ -976,7 +976,7 @@ class _ClientService(object):
 		return "Service - %s" % str(self.uuid)
 
 class _ClientCharacteristic(object):
-	def __init__(self, client, service, uuid, handleNo, properties, 
+	def __init__(self, client, service, uuid, handleNo, properties,
 		valHandleNo, endGroup=None):
 		assert isinstance(uuid, UUID)
 		assert isinstance(client, GattClient)
@@ -986,12 +986,12 @@ class _ClientCharacteristic(object):
 		assert isinstance(properties, int)
 
 		# Public members
-		
+
 		self.client = client
 		self.uuid = uuid
 		self.service = service
 	 	self.permissions = set()
-		
+
 		if (properties & gatt.CHARAC_PROP_READ) != 0:
 			self.permissions.add('r')
 		if (properties & gatt.CHARAC_PROP_WRITE) != 0:
@@ -1035,20 +1035,20 @@ class _ClientCharacteristic(object):
 		"""Return a list of descriptors"""
 
 		assert self._endGroup is not None
-		
+
 		startHandle = self._handleNo + 1
 		endHandle = self._endGroup
 		if startHandle > endHandle:
 			return []
-		
+
 		descriptors = []
 
 		cccdUuid = UUID(gatt.CLIENT_CHARAC_CFG_UUID)
 		cccd = None
 
 		userDescUuid = UUID(gatt.CHARAC_USER_DESC_UUID)
-		userDesc = None 
-		
+		userDesc = None
+
 		currHandle = startHandle
 		while True:
 			req = att_pdu.new_find_info_req(currHandle, endHandle)
@@ -1063,7 +1063,7 @@ class _ClientCharacteristic(object):
 				idx = 2
 
 				handleNo = currHandle # not needed
-				while idx < len(resp) and idx + attDataLen <= len(resp): 
+				while idx < len(resp) and idx + attDataLen <= len(resp):
 					handleNo = att_pdu.unpack_handle(resp, idx)
 					uuid = UUID(resp[idx+2:idx+attDataLen], reverse=True)
 
@@ -1072,13 +1072,13 @@ class _ClientCharacteristic(object):
 						continue
 
 					if uuid == userDescUuid:
-						descriptor = _ClientDescriptor(self.client, self, uuid, 
+						descriptor = _ClientDescriptor(self.client, self, uuid,
 							handleNo, cacheable=True)
 						userDesc = descriptor
 					else:
-						descriptor = _ClientDescriptor(self.client, self, uuid, 
+						descriptor = _ClientDescriptor(self.client, self, uuid,
 							handleNo)
-						
+
 					if uuid == cccdUuid:
 						# hide the cccd from users
 						cccd = descriptor
@@ -1091,12 +1091,12 @@ class _ClientCharacteristic(object):
 				if currHandle >= endHandle:
 					break
 
-			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN
 				and resp[1] == att.OP_FIND_INFO_REQ
 				and resp[4] == att.ECODE_ATTR_NOT_FOUND):
 				break
 
-			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN
 				and resp[1] == att.OP_FIND_INFO_REQ):
 				raise ClientError("error - %s" % att.ecodeLookup(resp[4]))
 
@@ -1142,7 +1142,7 @@ class _ClientCharacteristic(object):
 	def read(self):
 		"""Blocking read of the characteristic.
 
-		Returns: 
+		Returns:
 			A bytearray
 		Raises:
 			ClientError on failure
@@ -1192,7 +1192,7 @@ class _ClientCharacteristic(object):
 		elif resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN:
 			raise ClientError("write failed - %s" % att.ecodeLookup(resp[4]))
 		else:
-			raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))	
+			raise ClientError("unexpected - %s" % att.opcodeLookup(resp[0]))
 
 	# Private and protected methods
 
@@ -1227,7 +1227,7 @@ class _ClientDescriptor(object):
 	def read(self):
 		"""Blocking read of the descriptor.
 
-		Returns: 
+		Returns:
 			A bytearray
 		Raises:
 			ClientError on failure
@@ -1310,20 +1310,20 @@ class GattClient(object):
 		self._timeout = timeout
 		self._transactionLock = threading.Lock()
 		self._responseEvent = threading.Event()
-		
+
 		self._currentRequest = None
 		self._currentResponse = None
 
 		self._valHandles = {}
 
 		self._serviceHandles = {}
-		
+
 	# Public methods
 
 	def discoverServices(self, uuid=None):
 		"""Find services on the server.
 
-		Notes: if uuid is None, all services are discovered. Any previously 
+		Notes: if uuid is None, all services are discovered. Any previously
 			discovered services are invalidated.
 		Args:
 			uuid : type of service to discover
@@ -1368,7 +1368,7 @@ class GattClient(object):
 		self._transactionLock.acquire()
 		assert self._currentRequest is None
 		assert self._currentResponse is None
-		
+
 		try:
 			if self._disconnected:
 				return None
@@ -1387,8 +1387,8 @@ class GattClient(object):
 
 	def _handle_packet(self, pdu):
 		op = pdu[0]
-		if (att.isResponse(op) or (op == att.OP_ERROR 
-			and self._currentRequest and self._currentResponse is None 
+		if (att.isResponse(op) or (op == att.OP_ERROR
+			and self._currentRequest and self._currentResponse is None
 			and pdu[1] == self._currentRequest[0])):
 
 			self._currentResponse = pdu
@@ -1398,7 +1398,7 @@ class GattClient(object):
 		if op == att.OP_HANDLE_NOTIFY or op == att.OP_HANDLE_IND:
 			if len(pdu) < 3:
 				return att_pdu.new_error_resp(op, 0, att.ECODE_INVALID_PDU)
-			
+
 			_, handleNo, value = att_pdu.parse_notify_indicate(pdu)
 
 			if handleNo not in self._valHandles:
@@ -1431,7 +1431,7 @@ class GattClient(object):
 		serviceHandles = {}
 		currHandle = startHandle
 		while True:
-			req = att_pdu.new_read_by_group_req(currHandle, endHandle, 
+			req = att_pdu.new_read_by_group_req(currHandle, endHandle,
 				primSvcUuid)
 
 			resp = self._new_transaction(req)
@@ -1443,7 +1443,7 @@ class GattClient(object):
 				idx = 2
 
 				endGroup = currHandle # not needed
-				while idx < len(resp) and idx + attDataLen <= len(resp): 
+				while idx < len(resp) and idx + attDataLen <= len(resp):
 					handleNo = att_pdu.unpack_handle(resp, idx)
 					endGroup = att_pdu.unpack_handle(resp, idx + 2)
 					uuid = UUID(resp[idx+4:idx+attDataLen], reverse=True)
@@ -1463,7 +1463,7 @@ class GattClient(object):
 				and resp[4] == att.ECODE_ATTR_NOT_FOUND):
 				break
 
-			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN
 				and resp[1] == att.OP_READ_BY_GROUP_REQ):
 				raise ClientError("error - %s" % att.ecodeLookup(resp[4]))
 
@@ -1489,7 +1489,7 @@ class GattClient(object):
 		currHandle = startHandle
 
 		while True:
-			req = att_pdu.new_find_by_type_value_req(currHandle, endHandle, 
+			req = att_pdu.new_find_by_type_value_req(currHandle, endHandle,
 				primSvcUuid, uuid.raw()[::-1])
 
 			resp = self._new_transaction(req)
@@ -1500,7 +1500,7 @@ class GattClient(object):
 				idx = 2
 
 				endGroup = currHandle # not needed
-				while idx < len(resp) and idx + 4 <= len(resp): 
+				while idx < len(resp) and idx + 4 <= len(resp):
 					handleNo = att_pdu.unpack_handle(resp, idx)
 					endGroup = att_pdu.unpack_handle(resp, idx + 2)
 
@@ -1518,12 +1518,12 @@ class GattClient(object):
 				if currHandle >= endHandle:
 					break
 
-			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN
 				and resp[1] == att.OP_FIND_BY_TYPE_REQ
 				and resp[4] == att.ECODE_ATTR_NOT_FOUND):
 				break
 
-			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN 
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN
 				and resp[1] == att.OP_FIND_BY_TYPE_REQ):
 				raise ClientError("error - %s" % att.ecodeLookup(resp[4]))
 

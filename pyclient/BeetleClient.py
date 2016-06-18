@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-# 
-# Basic Beetle TCP client 
+#
+# Basic Beetle TCP client
 # =======================
 # Write hex bytes to Beetle, get hex bytes response back.
- 
+
 import argparse
 import os
 import re
@@ -25,21 +25,21 @@ def getArguments():
 	"""Arguments for script."""
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--host", default="localhost", 
+	parser.add_argument("--host", default="localhost",
 		help="hostname of the Beetle server")
-	parser.add_argument("--port", "-p", type=int, default=3002, 
+	parser.add_argument("--port", "-p", type=int, default=3002,
 		help="port the server is runnng on")
 	parser.add_argument("--cert", "-c", type=str,
 		help="client certificate")
 	parser.add_argument("--key", "-k", type=str,
 		help="private key for client certificate")
-	parser.add_argument("--rootca", "-r", 
+	parser.add_argument("--rootca", "-r",
 		help="root CA certificate")
-	parser.add_argument("--measure", "-m", action='store_true', 
+	parser.add_argument("--measure", "-m", action='store_true',
 		help="print performance measurements")
-	parser.add_argument("--debug", "-d", action='store_true', 
+	parser.add_argument("--debug", "-d", action='store_true',
 		help="print debugging")
-	parser.add_argument("--nocerts", "-x", action="store_true", 
+	parser.add_argument("--nocerts", "-x", action="store_true",
 		help="disable verification and use of client certificates")
 	return parser.parse_args()
 
@@ -49,7 +49,7 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 if args.nocerts:
 	s = ssl.wrap_socket(s, cert_reqs=ssl.CERT_NONE)
 else:
-	s = ssl.wrap_socket(s, keyfile=args.key, certfile=args.cert, 
+	s = ssl.wrap_socket(s, keyfile=args.key, certfile=args.cert,
 		ca_certs=args.rootca, cert_reqs=ssl.CERT_REQUIRED)
 s.connect((args.host, args.port))
 
@@ -172,14 +172,14 @@ def inputReader(s):
 			line = previousLine
 		else:
 			previousLine = line
-		
+
 		if line == "h" or line == "help":
 			printHelp()
 			continue
 
 		ntimes = 1
 		pause = (0, 0)
-		try: 
+		try:
 			writeRequest = writePattern.match(line)
 			readRequest = readPattern.match(line)
 			repeatRequest = repeatPattern.match(line)
@@ -245,7 +245,7 @@ def inputReader(s):
 			print "start: %d" % (startTime,)
 			print "end: %d" % (endTime,)
 			print "elapsed: %dms mean: %0.3fms median: %dms stdev: %0.3fms" % (
-				endTime - startTime, np.mean(latencies), np.median(latencies), 
+				endTime - startTime, np.mean(latencies), np.median(latencies),
 				np.std(latencies))
 
 		else:
@@ -253,7 +253,7 @@ def inputReader(s):
 
 		time.sleep(1) # Give beetle some time to respond
 
-try: 
+try:
 	inputReader(s)
 except KeyboardInterrupt, err:
 	s.shutdown(socket.SHUT_WR)

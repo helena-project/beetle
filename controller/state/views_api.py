@@ -63,14 +63,14 @@ EMAIL_REPLY_REGEX = re.compile(
 	r"X-OPWV-Extra-Message-Type:Reply\s+(\w+?)\s+-----Original Message-----")
 
 def __generate_rand_string(otp_len=6):
-	return ''.join(random.choice(string.ascii_uppercase + string.digits) 
+	return ''.join(random.choice(string.ascii_uppercase + string.digits)
 		for _ in range(otp_len))
 
 def __format_admin_auth_body(rule, principal, auth):
-	msg = "'%s' is requesting access for rule '%s'." % (principal.name, 
+	msg = "'%s' is requesting access for rule '%s'." % (principal.name,
 		rule.name)
 	if auth.message:
-		msg += " %s." % (auth.message,) 
+		msg += " %s." % (auth.message,)
 	msg += " Text OK to approve."
 	return msg
 
@@ -102,7 +102,7 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 					######################
 					# Already authorized #
 					######################
-					return HttpResponse(auth_instance.expire.strftime("%s"), 
+					return HttpResponse(auth_instance.expire.strftime("%s"),
 						status=202)
 				else:
 					auth_instance.delete()
@@ -131,7 +131,7 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 	msg_id = __generate_rand_string()
 	subject = "Admin Auth (%s)" % (msg_id,)
 	body = __format_admin_auth_body(rule, to_principal, admin_auth)
-	
+
 	msg = MIMEMultipart()
 	msg['From'] = controller_email_acct.address
 	msg['To'] = admin_auth.admin.first_name
@@ -155,11 +155,11 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 		if not ids:
 			print "still waiting..."
 			continue
-		
+
 		latest_email_id = ids[-1]
-		_, data = mail.fetch(latest_email_id, "(RFC822)") 
+		_, data = mail.fetch(latest_email_id, "(RFC822)")
 		raw_email = data[0][1]
-		
+
 		email_match = EMAIL_REPLY_REGEX.search(raw_email)
 		if email_match is not None:
 			reply = email_match.group(1).lower()
@@ -168,22 +168,22 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 				# Allow once #
 				##############
 				auth_instance = AdminAuthInstance(
-					rule=rule, 
+					rule=rule,
 					principal=to_principal,
 					expire=current_time + admin_auth.session_length)
 				auth_instance.save()
-				return HttpResponse(auth_instance.expire.strftime("%s"), 
+				return HttpResponse(auth_instance.expire.strftime("%s"),
 					status=202)
 			elif reply == "always":
 				################
 				# Allow always #
 				################
 				auth_instance = AdminAuthInstance(
-					rule=rule, 
+					rule=rule,
 					principal=to_principal,
 					expire=current_time + relativedelta(years=1))
 				auth_instance.save()
-				return HttpResponse(auth_instance.expire.strftime("%s"), 
+				return HttpResponse(auth_instance.expire.strftime("%s"),
 					status=202)
 			elif reply == "never":
 				###############
@@ -204,7 +204,7 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 def __format_user_auth_body(rule, principal, auth):
 	msg = "Confirm access for '%s' to rule '%s'." % (principal.name, rule.name)
 	if auth.message:
-		msg += " %s." % (auth.message,) 
+		msg += " %s." % (auth.message,)
 	msg += " Text OK to approve."
 	return msg
 
@@ -236,7 +236,7 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 					######################
 					# Already authorized #
 					######################
-					return HttpResponse(auth_instance.expire.strftime("%s"), 
+					return HttpResponse(auth_instance.expire.strftime("%s"),
 						status=202)
 				else:
 					auth_instance.delete()
@@ -265,7 +265,7 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 	msg_id = __generate_rand_string()
 	subject = "User Auth (%s)" % (msg_id,)
 	body = __format_user_auth_body(rule, to_principal, user_auth)
-	
+
 	msg = MIMEMultipart()
 	msg['From'] = controller_email_acct.address
 	msg['To'] = to_principal.owner.first_name
@@ -289,11 +289,11 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 		if not ids:
 			print "still waiting..."
 			continue
-		
+
 		latest_email_id = ids[-1]
-		_, data = mail.fetch(latest_email_id, "(RFC822)") 
+		_, data = mail.fetch(latest_email_id, "(RFC822)")
 		raw_email = data[0][1]
-		
+
 		email_match = EMAIL_REPLY_REGEX.search(raw_email)
 		if email_match is not None:
 			reply = email_match.group(1).lower()
@@ -302,18 +302,18 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 				# Allow once #
 				##############
 				auth_instance = UserAuthInstance(
-					rule=rule, 
+					rule=rule,
 					principal=to_principal,
 					expire=current_time + user_auth.session_length)
 				auth_instance.save()
-				return HttpResponse(auth_instance.expire.strftime("%s"), 
+				return HttpResponse(auth_instance.expire.strftime("%s"),
 					status=202)
 			elif reply == "never":
 				###############
 				# Deny always #
 				###############
 				auth_instance = UserAuthInstance(
-					rule=rule, 
+					rule=rule,
 					allow=False,
 					principal=to_principal,
 					expire=current_time + relativedelta(years=100))
@@ -330,7 +330,7 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 @transaction.atomic
 def request_exclusive_lease(request, exclusive_id, to_gateway, to_id):
 	"""Acquire or release a lease on an exclusive group."""
-	
+
 	exclusive_id = int(exclusive_id)
 	to_id = int(to_id)
 	current_time = timezone.now()

@@ -17,7 +17,7 @@ class ConnectedDeviceInline(admin.TabularInline):
 class ConnectedGatewayAdmin(admin.ModelAdmin):
 	"""Show connected Beetle gateways and their devices"""
 
-	list_display = ("get_gateway_name", "ip_address", "get_device_list", 
+	list_display = ("get_gateway_name", "ip_address", "get_device_list",
 		"is_connected", "last_updated", "session_token")
 	filter_fields = ("is_connected",)
 	search_fields = ("get_gateway_name", "ip_address", "get_device_list")
@@ -30,7 +30,7 @@ class ConnectedGatewayAdmin(admin.ModelAdmin):
 	get_gateway_name.admin_order_field = "gateway__name"
 
 	def get_device_list(self, obj):
-		ces = ["%d. %s" % (i + 1, ce.device.name) 
+		ces = ["%d. %s" % (i + 1, ce.device.name)
 			for i, ce in enumerate(ConnectedDevice.objects.filter(
 				gateway_instance=obj))]
 		return "<br>".join(ces)
@@ -55,7 +55,7 @@ class CharInstanceInline(admin.TabularInline):
 class ConnectedDeviceAdmin(admin.ModelAdmin):
 	"""Show connected devices and their services and characteristics"""
 
-	list_display = ("get_device_name", "get_gateway_name", "remote_id", 
+	list_display = ("get_device_name", "get_gateway_name", "remote_id",
 		"get_device_link",)
 	search_fields = ("get_device_name", "get_gateway_name", "remote_id")
 	list_filter = ("gateway_instance",)

@@ -35,26 +35,26 @@ class Contact(models.Model):
 	first_name = models.CharField(
 		max_length=100)
 	last_name = models.CharField(
-		max_length=100, 
+		max_length=100,
 		blank=True)
 	phone_number = models.CharField(
 		max_length=100)
 	email_address = models.CharField(
-		max_length=100, 
+		max_length=100,
 		blank=True)
-	
+
 	def __unicode__(self):
 		return self.first_name + " " + self.last_name
 
 class Principal(PolymorphicModel):
 	"""An application, peripheral, or group"""
-	
+
 	class Meta:
 		verbose_name = "Principal"
 		verbose_name_plural = "Principals"
 
 	name = models.CharField(
-		max_length=100, 
+		max_length=100,
 		primary_key=True)
 
 	def __unicode__(self):
@@ -80,26 +80,26 @@ class VirtualDevice(Principal):
 	)
 
 	ttype = models.CharField(
-		max_length=20, 
-		choices=TYPE_CHOICES, 
-		default=UNKNOWN, 
+		max_length=20,
+		choices=TYPE_CHOICES,
+		default=UNKNOWN,
 		verbose_name="type")
 
 	owner = models.ForeignKey(
-		"Contact", 
+		"Contact",
 		default=Contact.NULL,
 		help_text="Contact associated with this device.")
 
 	serve_to = models.ManyToManyField(
 		"Principal", blank=True, related_name="vd_server_to",
-		help_text="Devices and groups to serve handles to " + 
+		help_text="Devices and groups to serve handles to " +
 			"whenever possible and allowed.")
 
 	discoverable_by = models.ManyToManyField(
 		"Principal", blank=True, related_name="vd_discoverable_by",
-		help_text="Devices and groups that may discover and connect in an " 
+		help_text="Devices and groups that may discover and connect in an "
 			+ "ad-hoc manner.")
-	
+
 	auto_created = models.BooleanField(
 		default=False,
 		help_text="Added automatically by Beetle.")
@@ -115,13 +115,13 @@ class VirtualDevice(Principal):
 
 class PrincipalGroup(Principal):
 	"""A logical group of virtual devices"""
-	
+
 	class Meta:
 		verbose_name = "Group (Principal)"
 		verbose_name_plural = "Groups (Principal)"
 
 	members = models.ManyToManyField(
-		"VirtualDevice", 
+		"VirtualDevice",
 		blank=True,
 		help_text="Group members.")
 
@@ -132,7 +132,7 @@ class Gateway(PolymorphicModel):
 	"""A beetle gateway or group"""
 
 	name = models.CharField(
-		max_length=20, 
+		max_length=20,
 		primary_key=True)
 
 	def __unicode__(self):
@@ -156,8 +156,8 @@ class BeetleGateway(Gateway):
 	)
 
 	os = models.CharField(
-		max_length=20, 
-		default=LINUX, 
+		max_length=20,
+		default=LINUX,
 		choices=OS_CHOICES)
 
 class GatewayGroup(Gateway):
@@ -168,7 +168,7 @@ class GatewayGroup(Gateway):
 		verbose_name_plural = "Groups (Gateway)"
 
 	members = models.ManyToManyField(
-		"BeetleGateway", 
+		"BeetleGateway",
 		blank=True,
 		help_text="Group members.")
 

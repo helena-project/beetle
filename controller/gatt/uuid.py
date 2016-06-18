@@ -12,7 +12,7 @@ def convert_uuid(uuid):
 	uuid = uuid.upper()
 	if len(uuid) > 4 and uuid[9:] == BLUETOOTH_BASE_UUID:
 		uuid = uuid[4:8]
-		
+
 	return uuid
 
 __UUID_RE = re.compile(r"^("  + UUID_REGEX + ")$")
@@ -23,4 +23,3 @@ def check_uuid(uuid):
 
 	uuid = uuid.upper()
 	return __UUID_RE.match(uuid) is not None
-	

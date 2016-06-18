@@ -77,4 +77,3 @@ def parse_read_by_group_req(pdu):
 
 def parse_notify_indicate(pdu):
 	return pdu[0], unpack_handle(pdu, 1), pdu[3:]
-	

@@ -23,7 +23,7 @@ class ConnectedGateway(models.Model):
 
 	gateway = models.ForeignKey("beetle.BeetleGateway")
 	ip_address = models.CharField(
-		max_length=100, 
+		max_length=100,
 		help_text="IP address of the gateway.")
 	port = models.IntegerField(
 		default=GATEWAY_TCP_SERVER_PORT,
@@ -62,12 +62,12 @@ class ConnectedDevice(models.Model):
 		help_text="Id of the device on the gateway.")
 
 	interested_services = models.ManyToManyField(
-		"gatt.Service", 
+		"gatt.Service",
 		blank=True,
 		help_text="Services that the device has tried to find.")
 
 	interested_characteristics = models.ManyToManyField(
-		"gatt.Characteristic", 
+		"gatt.Characteristic",
 		blank=True,
 		help_text="Characteristics that the device has tried to find.")
 
@@ -82,7 +82,7 @@ class ServiceInstance(models.Model):
 		verbose_name_plural = "Services (Instance)"
 
 	device_instance = models.ForeignKey("ConnectedDevice")
-	service = models.ForeignKey("gatt.Service") 
+	service = models.ForeignKey("gatt.Service")
 
 	def __unicode__(self):
 		return unicode(self.service)
@@ -93,7 +93,7 @@ class CharInstance(models.Model):
 	class Meta:
 		verbose_name = "Characteristic (Instance)"
 		verbose_name_plural = "Characteristics (Instance)"
-	
+
 	device_instance = models.ForeignKey("ConnectedDevice")
 	service_instance = models.ForeignKey("ServiceInstance")
 	characteristic = models.ForeignKey("gatt.Characteristic")
@@ -116,4 +116,3 @@ class DeviceMapping(models.Model):
 
 	def __unicode__(self):
 		return "%s to %s" % (self.from_device.device, self.to_device)
-		
