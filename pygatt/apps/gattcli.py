@@ -41,7 +41,7 @@ def getArguments():
 
 def printBox(s):
 	""" Print a header """
-	print "%s\n|| %s ||\n%s\s" % ("=" * len(s), s, "=" * len(s))
+	print "%s\n|| %s ||\n%s\s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
 
 def readClientParams():
 	"""Ask the user for params until done."""
