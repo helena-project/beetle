@@ -18,7 +18,7 @@ import random
 import struct
 import traceback
 
-from .pygatt import ManagedSocket, GattServer, GattClient, ClientError
+from pygatt import ManagedSocket, GattServer, GattClient, ClientError
 
 def getArguments():
 	"""Arguments for script."""
@@ -43,7 +43,7 @@ def getArguments():
 
 def printBox(s):
 	""" Print a header """
-	print "%s\n|| %s ||\n%s\s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
+	print "%s\n|| %s ||\n%s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
 
 HEART_RATE_SERVICE_UUID = 0x180D
 HEART_RATE_CONTROL_POINT_CHARAC_UUID = 0x2A39
@@ -221,8 +221,10 @@ def main(args):
 			ca_certs=args.rootca, cert_reqs=ssl.CERT_REQUIRED)
 	s.connect((args.host, args.port))
 
+	printBox("Starting as %s" % args.name)
+
 	# Send initial connection parameters.
-	appParams = ["client " + args.name, "server true"]
+	appParams = ["client %s" % args.name, "server true"]
 
 	print ""
 	printBox("Connection request")
@@ -232,8 +234,8 @@ def main(args):
 	# Send connection request parameters to Beetle
 	appParamsStr = "\n".join(appParams)
 	appParamsLength = struct.pack("!i", len(appParamsStr))
-	s.send(appParamsLength.encode('utf-8'))
-	s.send(appParamsStr.encode('utf-8'))
+	s.sendall(appParamsLength.encode('utf-8'))
+	s.sendall(appParamsStr.encode('utf-8'))
 
 	# Read parameters in plaintext from Beetle
 	serverParamsLength = struct.unpack("!i", s.recv(4))[0]

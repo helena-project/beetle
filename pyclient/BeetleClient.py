@@ -115,8 +115,8 @@ def readClientParams():
 clientParams = readClientParams()
 
 clientParamsLength = struct.pack("!i", len(clientParams))
-s.send(clientParamsLength.encode('utf-8'))
-s.send(clientParams.encode('utf-8'))
+s.sendall(clientParamsLength.encode('utf-8'))
+s.sendall(clientParams.encode('utf-8'))
 
 # Read parameters in plaintext from server
 serverParamsLength = struct.unpack("!i", s.recv(4))[0]

@@ -150,7 +150,6 @@ class ManagedSocket(object):
 			pdu = bytearray(ord(x) for x in pdu)
 
 		op = pdu[0]
-
 		if op == att.OP_MTU_REQ:
 			resp = bytearray(3)
 			resp[0] = att.OP_MTU_RESP
@@ -1320,31 +1319,42 @@ class GattClient(object):
 
 	# Public methods
 
-	def discoverServices(self, uuid=None):
+	def discoverServices(self, uuid=None, startHandle=1, endHandle=0xFFFF):
 		"""Find services on the server.
 
 		Notes: if uuid is None, all services are discovered. Any previously
 			discovered services are invalidated.
 		Args:
 			uuid : type of service to discover
+			startHandle : beginning of the handle range
+			endHandle : end of the handle range
 		Returns:
 			A list of services."""
+		if startHandle == 0:
+			raise ClientError("invalid start handle")
+
+		if startHandle > endHandle:
+			raise ClientError("invalid handle range")
+
 		if uuid and not isinstance(uuid, UUID):
 			uuid = UUID(uuid)
 
 		if uuid is None:
-			return self.__discover_all_services()
+			return self.__discover_all_services(startHandle=startHandle,
+				endHandle=endHandle)
 		else:
-			return self.__discover_services_by_uuid(uuid)
+			return self.__discover_services_by_uuid(uuid,
+				startHandle=startHandle, endHandle=endHandle)
 
-	def discoverAll(self):
+	def discoverAll(self, startHandle=1, endHandle=0xFFFF):
 		"""Discover all of the handles on the server
 
 		Returns:
 			A list of services.
 		"""
 		services = []
-		services = self.discoverServices()
+		services = self.discoverServices(startHandle=startHandle,
+			endHandle=endHandle)
 		for service in services:
 			for charac in service.discoverCharacteristics():
 				charac.discoverDescriptors()
@@ -1367,7 +1377,7 @@ class GattClient(object):
 
 		self._transactionLock.acquire()
 		assert self._currentRequest is None
-		assert self._currentResponse is None
+		self._currentResponse is None
 
 		try:
 			if self._disconnected:
@@ -1424,7 +1434,7 @@ class GattClient(object):
 
 		return None
 
-	def __discover_services(self, startHandle=1, endHandle=0xFFFF):
+	def __discover_services(self, startHandle, endHandle):
 		primSvcUuid = UUID(gatt.PRIM_SVC_UUID)
 
 		services = []
@@ -1472,15 +1482,16 @@ class GattClient(object):
 
 		return services, serviceHandles
 
-	def __discover_all_services(self):
-		services, serviceHandles = self.__discover_services()
+	def __discover_all_services(self, startHandle, endHandle):
+		services, serviceHandles = self.__discover_services(
+			startHandle=startHandle, endHandle=endHandle)
 		self._serviceHandles = serviceHandles
+
+		# TODO(james): overwrite only those in range
 		self.services = services
 		return services
 
-	def __discover_services_by_uuid(self, uuid):
-		startHandle = 1
-		endHandle = 0xFFFF
+	def __discover_services_by_uuid(self, uuid, startHandle, endHandle):
 		primSvcUuid = UUID(gatt.PRIM_SVC_UUID)
 
 		services = []

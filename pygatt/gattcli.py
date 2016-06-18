@@ -14,8 +14,10 @@ import argparse
 import struct
 import traceback
 import re
+import ast
+import operator as op
 
-from ..pygatt import ManagedSocket, GattClient, ClientError
+from pygatt import ManagedSocket, GattClient, ClientError
 
 def getArguments():
 	"""Arguments for script."""
@@ -41,7 +43,7 @@ def getArguments():
 
 def printBox(s):
 	""" Print a header """
-	print "%s\n|| %s ||\n%s\s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
+	print "%s\n|| %s ||\n%s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
 
 def readClientParams():
 	"""Ask the user for params until done."""
@@ -77,10 +79,26 @@ def printGattHierarchy(services, indent=2):
 			print "%sChar: %s (%s)" % (charIndent, str(charac.uuid),
 				", ".join(charDesc))
 
+OPERATORS = {
+	ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul,
+	ast.Div: op.truediv, ast.Pow: op.pow, ast.BitXor: op.xor,
+	ast.USub: op.neg
+}
+
+def safeEval(node):
+    if isinstance(node, ast.Num): # <number>
+        return node.n
+    elif isinstance(node, ast.BinOp): # <left> <operator> <right>
+        return OPERATORS[type(node.op)](safeEval(node.left), safeEval(node.right))
+    elif isinstance(node, ast.UnaryOp): # <operator> <operand> e.g., -1
+        return OPERATORS[type(node.op)](safeEval(node.operand))
+    else:
+        raise TypeError(node)
+
 def parseHandleExpr(expr):
 	try:
-		return int(eval(expr))
-	except Exception, err:
+		return safeEval(ast.parse(expr, mode='eval').body)
+	except TypeError, err:
 		print "invalid handle:", err
 	return -1
 
@@ -259,8 +277,8 @@ def main(args):
 
 	# Send connection request parameters to Beetle
 	appParamsLength = struct.pack("!i", len(appParams))
-	s.send(appParamsLength.encode('utf-8'))
-	s.send(appParams.encode('utf-8'))
+	s.sendall(appParamsLength.encode('utf-8'))
+	s.sendall(appParams.encode('utf-8'))
 
 	# Read parameters in plaintext from Beetle
 	serverParamsLength = struct.unpack("!i", s.recv(4))[0]

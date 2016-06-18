@@ -24,7 +24,7 @@ class ManagedGateway(object):
 		Args:
 			conn : a socket
 			ip : string
-			port : int 
+			port : int
 			session_token : token to find connected gateway instance
 			name : name of the gateway
 		"""
@@ -74,7 +74,7 @@ class ManagedGateway(object):
 
 		self._command_mutex.acquire()
 		try:
-			self._conn.send(str(cmd) + '\n')
+			self._conn.sendall(str(cmd) + '\n')
 		finally:
 			self._command_mutex.release()
 
@@ -139,11 +139,11 @@ class Manager(object):
 		cmd = None
 
 		if to_device.gateway_instance == from_device.gateway_instance:
-			cmd = ["map-local", str(from_device.remote_id), 
+			cmd = ["map-local", str(from_device.remote_id),
 				str(to_device.remote_id)]
 		else:
 			cmd = ["map-remote", from_device.gateway_instance.ip_address,
-				str(from_device.gateway_instance.port), 
+				str(from_device.gateway_instance.port),
 				str(from_device.remote_id), str(to_device.remote_id)]
 
 		gateway = self.__find_managed_gateway(to_device.gateway_instance)
