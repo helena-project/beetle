@@ -14,14 +14,16 @@ import argparse
 import struct
 import traceback
 
-from pygatt import ManagedSocket, GattClient, ClientError
+from ..pygatt import ManagedSocket, GattClient
 
 def getArguments():
 	"""Arguments for script."""
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--name", default="lightapp",
+	parser.add_argument("--name", default="cloudmonitor",
 		help="name of the application")
+	parser.add_argument("--app-port", type=int, default="8081",
+		help="port to run application server")
 
 	parser.add_argument("--host", default="localhost",
 		help="hostname of the Beetle server")
@@ -40,16 +42,10 @@ def getArguments():
 
 def printBox(s):
 	""" Print a header """
-	s = "|| %s ||" % s
-	print "=" * len(s)
-	print s
-	print "=" * len(s)
+	print "%s\n|| %s ||\n%s\s" % ("=" * len(s), s, "=" * len(s))
 
 def runHttpServer():
 	pass
-
-LIGHT_SERVICE_UUID = 
-WHITE_CHARAC_UUID = 
 
 def runClient(client):
 	pass
