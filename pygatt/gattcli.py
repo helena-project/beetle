@@ -15,7 +15,7 @@ import struct
 import traceback
 import re
 
-from ..pygatt import ManagedSocket, GattClient, ClientError
+from pygatt import ManagedSocket, GattClient, ClientError
 
 def getArguments():
 	"""Arguments for script."""
@@ -41,7 +41,7 @@ def getArguments():
 
 def printBox(s):
 	""" Print a header """
-	print "%s\n|| %s ||\n%s\s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
+	print "%s\n|| %s ||\n%s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
 
 def readClientParams():
 	"""Ask the user for params until done."""

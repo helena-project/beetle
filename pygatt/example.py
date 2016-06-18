@@ -18,7 +18,7 @@ import random
 import struct
 import traceback
 
-from .pygatt import ManagedSocket, GattServer, GattClient, ClientError
+from pygatt import ManagedSocket, GattServer, GattClient, ClientError
 
 def getArguments():
 	"""Arguments for script."""
@@ -43,7 +43,7 @@ def getArguments():
 
 def printBox(s):
 	""" Print a header """
-	print "%s\n|| %s ||\n%s\s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
+	print "%s\n|| %s ||\n%s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
 
 HEART_RATE_SERVICE_UUID = 0x180D
 HEART_RATE_CONTROL_POINT_CHARAC_UUID = 0x2A39

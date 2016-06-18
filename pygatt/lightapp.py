@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """
-pygatt cloud monitoring
-=======================
+pygatt light app
+================
 
-This module implements a cloud monitoring application
+This module implements a home lighting application.
 """
 
 import os
@@ -14,7 +14,7 @@ import argparse
 import struct
 import traceback
 
-from ..pygatt import ManagedSocket, GattClient
+from pygatt import ManagedSocket, GattClient
 
 def getArguments():
 	"""Arguments for script."""
@@ -42,7 +42,7 @@ def getArguments():
 
 def printBox(s):
 	""" Print a header """
-	print "%s\n|| %s ||\n%s\s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
+	print "%s\n|| %s ||\n%s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
 
 def runHttpServer():
 	pass
