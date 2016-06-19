@@ -9,7 +9,7 @@ from .models import RuleException
 @require_GET
 def view_rule_exceptions(request, rule):
 	"""View in admin UI."""
-	
+
 	response = []
 	for exception in RuleException.objects.filter(rule__name=rule):
 		response.append({

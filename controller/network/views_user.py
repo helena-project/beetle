@@ -16,10 +16,10 @@ def view_device(request, device, detailed=True):
 	"""Returns in json, the device's service anc characteristic uuids"""
 
 	device_conns = ConnectedDevice.objects.filter(device__name=device)
-	
+
 	if len(device_conns) == 0:
 		return HttpResponse(status=202)
-	
+
 	response = []
 	device_conn = device_conns[0]
 	for service_ins in ServiceInstance.objects.filter(device_instance=device_conn):
@@ -35,9 +35,9 @@ def view_device(request, device, detailed=True):
 		else:
 			response.append({
 				"uuid": service_ins.service.uuid,
-				"chars": [x.characteristic.uuid for x in 
+				"chars": [x.characteristic.uuid for x in
 					CharInstance.objects.filter(service_instance=service_ins)]})
-	
+
 	return JsonResponse(response, safe=False)
 
 @require_GET
@@ -88,17 +88,17 @@ def discover_with_uuid(request, uuid, is_service=True):
 		qs = ServiceInstance.objects.filter(service__uuid=uuid)
 	else:
 		qs = CharInstance.objects.filter(characteristic__uuid=uuid)
-	
+
 	for x in qs:
 
 		if gateway_conn is not None and device_conn is not None:
 			can_map, _ = query_can_map_static(
-				x.device_instance.gateway_instance.gateway, 
-				x.device_instance.device, gateway_conn.gateway, 
+				x.device_instance.gateway_instance.gateway,
+				x.device_instance.device, gateway_conn.gateway,
 				device_conn.device, current_time)
 		else:
 			can_map = True
-		
+
 		if not can_map:
 			continue
 
@@ -119,12 +119,12 @@ def discover_with_uuid(request, uuid, is_service=True):
 @require_GET
 def find_gateway(request, gateway):
 	"""Get information on how to reach a gateway"""
-	
+
 	try:
 		gateway_conn = ConnectedGateway.objects.get(gateway__name=gateway)
 	except ConnectedGateway.DoesNotExist:
 		return HttpResponse("could not locate " + gateway, status=400)
-		
+
 	return JsonResponse({
 		"ip" : gateway_conn.ip_address,
 		"port" : gateway_conn.port,

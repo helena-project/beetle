@@ -33,7 +33,7 @@ body {
 <table>
 	<th colspan="2">
 		<span style="font-weight: normal;">
-			<h3>Authorize <ins><i>{{ rule.name }}</i></ins><sub>rule</sub> for 
+			<h3>Authorize <ins><i>{{ rule.name }}</i></ins><sub>rule</sub> for
 				<ins><i>{{ principal.name }}</i></ins><sub>{{ principal.ttype }}</sub>.</h3>
 		</span>
 	</th>
@@ -50,12 +50,12 @@ body {
 	<tr>
 		<form method="post">{% csrf_token %}
 			<td><input type="submit" value="Code"></td>
-			<td><input type="password" name="code" style="width: 100%; box-sizing: border-box;"></td>		
+			<td><input type="password" name="code" style="width: 100%; box-sizing: border-box;"></td>
 		</form>
 	</tr>
 </table>
 
-</center>  
-</div>  
+</center>
+</div>
 </body>
 </html>

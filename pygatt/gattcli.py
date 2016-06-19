@@ -14,6 +14,8 @@ import argparse
 import struct
 import traceback
 import re
+import ast
+import operator as op
 
 from pygatt import ManagedSocket, GattClient, ClientError
 
@@ -21,30 +23,27 @@ def getArguments():
 	"""Arguments for script."""
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--host", default="localhost", 
+	parser.add_argument("--host", default="localhost",
 		help="hostname of the Beetle server")
-	parser.add_argument("--port", "-p", type=int, default=3002, 
+	parser.add_argument("--port", "-p", type=int, default=3002,
 		help="port the server is runnng on")
 	parser.add_argument("--cert", "-c", type=str,
 		help="client certificate")
 	parser.add_argument("--key", "-k", type=str,
 		help="private key for client certificate")
-	parser.add_argument("--rootca", "-r", 
+	parser.add_argument("--rootca", "-r",
 		help="root CA certificate")
-	parser.add_argument("--measure", "-m", action='store_true', 
+	parser.add_argument("--measure", "-m", action='store_true',
 		help="print performance measurements")
-	parser.add_argument("--debug", "-d", action='store_true', 
+	parser.add_argument("--debug", "-d", action='store_true',
 		help="print debugging")
-	parser.add_argument("--nocerts", "-x", action="store_true", 
+	parser.add_argument("--nocerts", "-x", action="store_true",
 		help="disable verification and use of client certificates")
 	return parser.parse_args()
 
 def printBox(s):
 	""" Print a header """
-	s = "|| %s ||" % s  
-	print "=" * len(s)
-	print s
-	print "=" * len(s)
+	print "%s\n|| %s ||\n%s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
 
 def readClientParams():
 	"""Ask the user for params until done."""
@@ -68,8 +67,6 @@ def printGattHierarchy(services, indent=2):
 	"""Prints the full handle space"""
 
 	charIndent = " " * indent
-	descIndent = " " * indent * 2
-
 	for service in services:
 		print "Service: %s" % str(service.uuid)
 		for charac in service.characteristics:
@@ -82,10 +79,26 @@ def printGattHierarchy(services, indent=2):
 			print "%sChar: %s (%s)" % (charIndent, str(charac.uuid),
 				", ".join(charDesc))
 
+OPERATORS = {
+	ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul,
+	ast.Div: op.truediv, ast.Pow: op.pow, ast.BitXor: op.xor,
+	ast.USub: op.neg
+}
+
+def safeEval(node):
+    if isinstance(node, ast.Num): # <number>
+        return node.n
+    elif isinstance(node, ast.BinOp): # <left> <operator> <right>
+        return OPERATORS[type(node.op)](safeEval(node.left), safeEval(node.right))
+    elif isinstance(node, ast.UnaryOp): # <operator> <operand> e.g., -1
+        return OPERATORS[type(node.op)](safeEval(node.operand))
+    else:
+        raise TypeError(node)
+
 def parseHandleExpr(expr):
 	try:
-		return int(eval(expr))
-	except Exception, err:
+		return safeEval(ast.parse(expr, mode='eval').body)
+	except TypeError, err:
 		print "invalid handle:", err
 	return -1
 
@@ -117,11 +130,11 @@ def doSubscribe(client, services, cmd):
 			print "Data from", characteristic.uuid
 			print ">>>", " ".join("%02x" % x for x in value)
 		return _callback
-	
+
 	try:
-		charac.subscribe(makeCallback(charac))	
+		charac.subscribe(makeCallback(charac))
 	except ClientError, err:
-		print "ClientError:", err	
+		print "ClientError:", err
 
 def doUnsubscribe(client, services, cmd):
 	if len(cmd) < 2:
@@ -138,9 +151,9 @@ def doUnsubscribe(client, services, cmd):
 		return
 
 	try:
-		charac.unsubscribe()	
+		charac.unsubscribe()
 	except ClientError, err:
-		print "ClientError:", err	
+		print "ClientError:", err
 
 def doRead(client, services, cmd):
 	if len(cmd) < 2:
@@ -154,7 +167,7 @@ def doRead(client, services, cmd):
 	charac = findCharacByValHandle(services, handleNo)
 	if charac is None:
 		print "no characteristic with handleNo %d" % handleNo
-		return 
+		return
 
 	try:
 		value = charac.read()
@@ -209,7 +222,7 @@ def runClient(client):
 	while True:
 		line = raw_input("> ")
 		cmd = line.strip().lower().split(" ")
-		
+
 		if not cmd or len(cmd[0]) < 1:
 			printGattHierarchy(services)
 			continue
@@ -241,7 +254,7 @@ def runClient(client):
 			print "unrecognized command"
 
 def main(args):
-	"""Set up and run an example HRM server and client"""
+	"""Set up a GATT client"""
 
 	def onDisconnect(err):
 		print "Disconnect:", err
@@ -255,7 +268,7 @@ def main(args):
 	if args.nocerts:
 		s = ssl.wrap_socket(s, cert_reqs=ssl.CERT_NONE)
 	else:
-		s = ssl.wrap_socket(s, keyfile=args.key, certfile=args.cert, 
+		s = ssl.wrap_socket(s, keyfile=args.key, certfile=args.cert,
 			ca_certs=args.rootca, cert_reqs=ssl.CERT_REQUIRED)
 	s.connect((args.host, args.port))
 
@@ -264,12 +277,12 @@ def main(args):
 
 	# Send connection request parameters to Beetle
 	appParamsLength = struct.pack("!i", len(appParams))
-	s.send(appParamsLength.encode('utf-8'))
-	s.send(appParams.encode('utf-8'))
+	s.sendall(appParamsLength.encode('utf-8'))
+	s.sendall(appParams.encode('utf-8'))
 
 	# Read parameters in plaintext from Beetle
 	serverParamsLength = struct.unpack("!i", s.recv(4))[0]
-	
+
 	print ""
 	printBox("Beetle response")
 	for serverParam in s.recv(serverParamsLength).split("\n"):

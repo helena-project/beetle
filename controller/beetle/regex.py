@@ -8,4 +8,3 @@ def device(arg):
 	"""Return a regex that captures device name"""
 	assert isinstance(arg, str)
 	return r"(?P<%s>[\w_\-@\' \.]+)" % (arg,)
-	

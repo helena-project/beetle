@@ -8,7 +8,7 @@ def list_devices(request):
 	"""Return a list of application and peripheral names"""
 
 	return JsonResponse(
-		[e.name for e in VirtualDevice.objects.all().order_by("name")], 
+		[e.name for e in VirtualDevice.objects.all().order_by("name")],
 			safe=False)
 
 @require_GET
@@ -32,7 +32,7 @@ def find_device(request, device):
 @require_GET
 def find_gateway(request, gateway):
 	"""Return information about gateway"""
-	
+
 	gateway = Gateway.objects.get(name=gateway)
 	return JsonResponse({
 		"name": gateway.name,

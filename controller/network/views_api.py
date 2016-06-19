@@ -88,7 +88,7 @@ def __load_services_and_characteristics(services, device_conn):
 			pass
 
 		service_ins, _ = ServiceInstance.objects.get_or_create(
-			service=service, 
+			service=service,
 			device_instance=device_conn)
 		service_ins.save()
 
@@ -103,8 +103,8 @@ def __load_services_and_characteristics(services, device_conn):
 				pass
 
 			char_ins, _ = CharInstance.objects.get_or_create(
-				characteristic=char, 
-				device_instance=device_conn, 
+				characteristic=char,
+				device_instance=device_conn,
 				service_instance=service_ins)
 			char_ins.save()
 
@@ -125,13 +125,13 @@ def connect_device(request, device, remote_id):
 
 	try:
 		device_conn = ConnectedDevice.objects.get(
-			device=device, 
+			device=device,
 			gateway_instance=gateway_conn)
 		device_conn.remote_id = remote_id
 	except ConnectedDevice.DoesNotExist:
 		device_conn = ConnectedDevice(
-			device=device, 
-			gateway_instance=gateway_conn, 
+			device=device,
+			gateway_instance=gateway_conn,
 			remote_id=remote_id)
 
 	gateway_conn.save()
@@ -180,17 +180,17 @@ def update_device(request, remote_id):
 		else:
 			return response
 
-	elif request.method == "DELETE":		
+	elif request.method == "DELETE":
 		##############
 		# Disconnect #
 		##############
 		device_conns = ConnectedDevice.objects.filter(
-			gateway_instance=gateway_conn, 
+			gateway_instance=gateway_conn,
 			remote_id=remote_id)
 		device_conns.delete()
 
 		return HttpResponse("disconnected")
-	
+
 	else:
 		return HttpResponse(status=405)
 
@@ -211,14 +211,14 @@ def map_devices(request, from_gateway, from_id, to_gateway, to_id):
 
 	if request.method == "POST":
 		mapping, _ = DeviceMapping.objects.get_or_create(
-			from_device=conn_from_device, 
+			from_device=conn_from_device,
 			to_device=conn_to_device)
 		mapping.save()
 		return HttpResponse()
 
 	elif request.method == "DELETE":
 		mappings = DeviceMapping.objects.filter(
-			from_device=conn_from_device, 
+			from_device=conn_from_device,
 			to_device=conn_to_device)
 		mappings.delete()
 		return HttpResponse()
@@ -233,19 +233,19 @@ def register_interest(request, remote_id, uuid, is_service=True):
 	"""Register interest for a service or characteristic"""
 
 	device_instance = ConnectedDevice.objects.get(
-		gateway_instance__session_token=__get_session_token(request), 
+		gateway_instance__session_token=__get_session_token(request),
 		remote_id=remote_id)
 
 	if not check_uuid(uuid):
 		return HttpResponse(status=400)
 
-	uuid = convert_uuid(uuid) 
+	uuid = convert_uuid(uuid)
 
 	if is_service:
 		try:
 			service = Service.objects.get(uuid=uuid)
 			device_instance.interested_services.add(service)
-			
+
 			register_interest_service_evt.delay(device_instance.id, service.uuid)
 		except Service.DoesNotExist:
 			pass
@@ -259,4 +259,3 @@ def register_interest(request, remote_id, uuid, is_service=True):
 	device_instance.save()
 
 	return HttpResponse()
-	

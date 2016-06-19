@@ -5,15 +5,15 @@ from django.db import models
 # Create your models here.
 class Service(models.Model):
 	"""A GATT service"""
-	
+
 	name = models.CharField(max_length=200)
 	uuid = models.CharField(
-		max_length=36, 
-		blank=True, 
+		max_length=36,
+		blank=True,
 		primary_key=True,
 		help_text="16 or 128-bit UUID.")
 	ttype = models.CharField(
-		max_length=200, 
+		max_length=200,
 		blank=True,
 		verbose_name="type")
 	verified = models.BooleanField(
@@ -31,13 +31,13 @@ class Characteristic(models.Model):
 
 	name = models.CharField(max_length=200)
 	uuid = models.CharField(
-		max_length=36, 
-		blank=True, 
+		max_length=36,
+		blank=True,
 		primary_key=True,
 		help_text="16 or 128-bit UUID.")
 	ttype = models.CharField(
-		max_length=200, 
-		blank=True, 
+		max_length=200,
+		blank=True,
 		verbose_name="type")
 	verified = models.BooleanField(
 		default=False,
@@ -54,13 +54,13 @@ class Descriptor(models.Model):
 
 	name = models.CharField(max_length=200)
 	uuid = models.CharField(
-		max_length=36, 
-		blank=True, 
+		max_length=36,
+		blank=True,
 		primary_key=True,
 		help_text="16 or 128-bit UUID.")
 	ttype = models.CharField(
-		max_length=200, 
-		blank=True, 
+		max_length=200,
+		blank=True,
 		verbose_name="type")
 
 	def __unicode__(self):
@@ -68,4 +68,3 @@ class Descriptor(models.Model):
 			return self.name
 		else:
 			return "<unk desc>." + self.uuid
-			

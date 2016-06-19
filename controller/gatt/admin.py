@@ -9,7 +9,7 @@ from .uuid import check_uuid, convert_uuid
 class ServiceAdminForm(forms.ModelForm):
 	def __init__(self, *args, **kwargs):
 		super(ServiceAdminForm, self).__init__(*args, **kwargs)
-		self.initial["verified"] = True 
+		self.initial["verified"] = True
 
 	def clean_uuid(self):
 		uuid = self.cleaned_data["uuid"]
@@ -29,7 +29,7 @@ class ServiceAdmin(admin.ModelAdmin):
 class CharacteristicAdminForm(forms.ModelForm):
 	def __init__(self, *args, **kwargs):
 		super(CharacteristicAdminForm, self).__init__(*args, **kwargs)
-		self.initial["verified"] = True 
+		self.initial["verified"] = True
 
 	def clean_uuid(self):
 		uuid = self.cleaned_data["uuid"]

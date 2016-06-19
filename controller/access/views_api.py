@@ -33,7 +33,7 @@ def __get_dynamic_auth(rule, principal):
 		elif isinstance(auth, UserAuth):
 			auth_obj["type"] = "user"
 			if principal.owner.id == Contact.NULL:
-				# Rule is unsatisfiable: there is user to 
+				# Rule is unsatisfiable: there is user to
 				# authenticate
 				return False, []
 		elif isinstance(auth, AdminAuth):
@@ -44,22 +44,22 @@ def __get_dynamic_auth(rule, principal):
 		else:
 			continue
 		result.append(auth_obj)
-	
+
 	return True, result
 
 def __get_minimal_rules(rules, cached_relations):
 	"""Returns the rules that are 'minimal'."""
-	
+
 	if rules.count() == 0:
 		return rules
 
 	not_minimal_ids = set()
-	# TODO: this is not particularly efficient... 
+	# TODO: this is not particularly efficient...
 	# filling in upper triangular matrix of strict partial order.
 	for lhs in rules.order_by("id"):
 		for rhs in rules.filter(id__gte=lhs.id):
 			key = (lhs.id, rhs.id)
-			if key not in cached_relations:				
+			if key not in cached_relations:
 				lhs_lte_rhs = lhs.static_lte(rhs)
 				rhs_lte_lhs = rhs.static_lte(lhs)
 				if lhs_lte_rhs and rhs_lte_lhs:
@@ -92,7 +92,7 @@ def __evaluate_cron(rule, timestamp, cached_cron):
 	try:
 		cron_str = str(rule.cron_expression)
 		cron = cronex.CronExpression(cron_str)
-		result = cron.check_trigger(timestamp.timetuple()[:5], 
+		result = cron.check_trigger(timestamp.timetuple()[:5],
 			utc_offset=timestamp.utcoffset().seconds / (60 ** 2))
 	except Exception, err:
 		print err
@@ -120,9 +120,9 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 	to_gateway, to_principal, _, _ = \
 		get_gateway_and_device_helper(to_gateway, to_id)
 
-	can_map, applicable_rules = query_can_map_static(from_gateway, 
+	can_map, applicable_rules = query_can_map_static(from_gateway,
 		from_principal, to_gateway, to_principal, timestamp)
-	
+
 	response = {}
 	if not can_map:
 		response["result"] = False
@@ -141,9 +141,9 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 	# 				"lease" : 1000,		# Expiration time
 	#				"excl" : False,
 	#				"dauth" : [
-	#					... 			# Additional auth	
+	#					... 			# Additional auth
 	#				]
-	# 			}, 
+	# 			},
 	# 		},
 	# 		"services": {
 	# 			"2A00" : {				# Service
@@ -168,10 +168,10 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 
 		for char_instance in CharInstance.objects.filter(
 			service_instance=service_instance):
-			
+
 			characteristic = char_instance.characteristic
 
-			char_rules = service_rules.filter(Q(characteristic=characteristic) | 
+			char_rules = service_rules.filter(Q(characteristic=characteristic) |
 				Q(characteristic__name="*"))
 
 			for char_rule in __get_minimal_rules(char_rules, cached_relations):
@@ -179,7 +179,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 				#####################################
 				# Compute access per characteristic #
 				#####################################
-				
+
 				# Evaluate the cron expression
 				if not __evaluate_cron(char_rule, timestamp, cached_cron):
 					continue
@@ -190,7 +190,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 				if characteristic.uuid not in services[service.uuid]:
 					services[service.uuid][characteristic.uuid] = []
 				if char_rule.id not in rules:
-					satisfiable, dauth = __get_dynamic_auth(char_rule, 
+					satisfiable, dauth = __get_dynamic_auth(char_rule,
 						to_principal)
 					if not satisfiable:
 						continue
@@ -213,7 +213,7 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 
 				services[service.uuid][characteristic.uuid].append(
 					char_rule.id)
-				
+
 	if not rules:
 		response["result"] = False
 	else:
@@ -223,4 +223,3 @@ def query_can_map(request, from_gateway, from_id, to_gateway, to_id):
 			"services" : services,
 		}
 	return JsonResponse(response)
-	

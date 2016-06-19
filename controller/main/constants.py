@@ -5,7 +5,7 @@ Beetle controller global application level constants defined here.
 NUM_HIGH_PRIORITY_LEVELS = 1
 
 # Port used by gateways to listen for connections.
-GATEWAY_TCP_SERVER_PORT = 3002 
+GATEWAY_TCP_SERVER_PORT = 3002
 
 # Port to serve internal APIs.
 CONTROLLER_REST_API_PORT = 3003
