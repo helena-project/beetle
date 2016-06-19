@@ -939,7 +939,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 					}
 				});
 			}
-		} else {
+		} else if (opCode == ATT_OP_WRITE_REQ) {
 			uint8_t resp = ATT_OP_WRITE_RESP;
 			sourceDevice->writeResponse(&resp, 1);
 		}
