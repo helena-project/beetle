@@ -16,3 +16,8 @@ To send requests:
 * ```FFFF...``` *(directly send hex)*
 
 In the above examples, ```handleNo``` can be an int or an expression ```o+h```.
+
+## Notes
+
+For practical usage, ```gattcli.py``` in the ```pygatt``` module is more user
+friendly and safe. This module is retained for experimentation.
