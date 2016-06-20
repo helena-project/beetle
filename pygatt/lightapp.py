@@ -67,6 +67,7 @@ class LightInstance(object):
 		self.g = None
 		self.b = None
 		self.w = None
+		self.rgbw = None
 		self.token = binascii.b2a_hex(os.urandom(8))
 
 	@property
@@ -113,7 +114,8 @@ class LightInstance(object):
 	@property
 	def ready(self):
 		return (self.name is not None and self.r is not None and
-			self.g is not None and self.b is not None and self.w is not None)
+			self.g is not None and self.b is not None and
+			self.w is not None and self.rgbw is not None)
 
 	def __str__(self):
 		return self.name
@@ -134,8 +136,6 @@ def runHttpServer(port, client, reset, ready, devices):
 			self.send_response(200, 'OK')
 			self.send_header('Content-type', 'html')
 			self.end_headers()
-
-			print devices
 
 			self.wfile.write(template.render(devices=devices))
 			self.wfile.close()
@@ -228,7 +228,7 @@ def runHttpServer(port, client, reset, ready, devices):
 
 			for device in devices:
 				if device.token == token:
-					if field == "w" or field == "off" or field == "on":
+					if field == "w":
 						device.w.write(valueToWrite)
 					elif field == "r":
 						device.r.write(valueToWrite)
@@ -236,6 +236,13 @@ def runHttpServer(port, client, reset, ready, devices):
 						device.g.write(valueToWrite)
 					elif field == "b":
 						device.b.write(valueToWrite)
+					elif field == "off" or field == "on":
+						# it would be preferable to use the RGB char, but
+						# writes are not permitted
+						device.r.write(bytearray(1))
+						device.g.write(bytearray(1))
+						device.b.write(bytearray(1))
+						device.w.write(valueToWrite)
 					else:
 						raise NotImplementedError
 
@@ -280,6 +287,7 @@ def runClient(client, reset, ready, devices):
 	greenUuid = uuid.UUID(GREEN_CHARAC_UUID)
 	blueUuid = uuid.UUID(BLUE_CHARAC_UUID)
 	whiteUuid = uuid.UUID(WHITE_CHARAC_UUID)
+	rgbwUuid = uuid.UUID(RGBW_CHARAC_UUID)
 
 	def _daemon():
 		while True:
@@ -323,6 +331,8 @@ def runClient(client, reset, ready, devices):
 								currDevice.g = charac
 							elif charac.uuid == blueUuid:
 								currDevice.b = charac
+							elif charac.uuid == rgbwUuid:
+								currDevice.rgbw = charac
 
 					if currDevice is not None:
 						print currDevice, currDevice.ready
