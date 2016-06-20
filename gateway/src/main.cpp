@@ -38,6 +38,7 @@
 /* Global debug variables */
 bool debug;
 bool debug_scan;
+bool debug_topology;
 bool debug_discovery;
 bool debug_router;
 bool debug_socket;
@@ -47,6 +48,7 @@ bool debug_performance;
 void setDebugAll() {
 	debug = true;
 	debug_scan = true;
+	debug_topology = true;
 	debug_router = true;
 	debug_socket = true;
 	debug_discovery = true;
@@ -56,6 +58,7 @@ void setDebugAll() {
 
 void setDebug(BeetleConfig btlConfig) {
 	debug_scan = btlConfig.debugScan;
+	debug_topology = btlConfig.debugTopology;
 	debug_router = btlConfig.debugRouter;
 	debug_socket = btlConfig.debugSocket;
 	debug_discovery = btlConfig.debugDiscovery;

@@ -77,7 +77,7 @@ std::function<void()> AutoConnect::getDaemon() {
 		std::lock_guard<std::mutex> lg(lastAttemptMutex);
 		for (auto it = lastAttempt.cbegin(); it != lastAttempt.cend();) {
 			if (difftime(now, it->second) > minBackoff) {
-				if (debug_scan) {
+				if (debug_topology) {
 					pdebug("can try connecting to '" + it->first + "' again");
 				}
 				lastAttempt.erase(it++);
@@ -98,7 +98,7 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 			 * Consult whitelist
 			 */
 			if (!connectAll && whitelist.find(addr) == whitelist.end()) {
-				if (debug_scan) {
+				if (debug_topology) {
 					std::stringstream ss;
 					ss << "whitelist does not contain " << addr;
 					pdebug(ss.str());
@@ -111,7 +111,7 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 			 */
 			std::unique_lock<std::mutex> lastAttemptLk(lastAttemptMutex);
 			if (lastAttempt.find(addr) != lastAttempt.end()) {
-				if (debug_scan) {
+				if (debug_topology) {
 					std::stringstream ss;
 					ss << "recently tried connecting to " << addr;
 					pdebug(ss.str());
@@ -140,7 +140,7 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 			}
 			devicesLk.unlock();
 
-			if (debug_scan) {
+			if (debug_topology) {
 				pdebug("trying to auto-connect to " + addr);
 			}
 
@@ -152,7 +152,7 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 			// do not unlock
 			connectLk.release();
 		} else {
-			if (debug_scan) {
+			if (debug_topology) {
 				pdebug("auto-connect in progress, skipping");
 			}
 		}
