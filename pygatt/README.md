@@ -18,13 +18,24 @@ This is bound to a ManagedSocket and allows the application to serve GATT
 services, characteristics, and descriptors.
 
 ## Usage
-See ```example.py``` for an implementation of a heart rate monitor that also
-acts as a GATT client.
+See ```example.py``` for library usage patterns and an implementation of a 
+heart rate monitor that also acts as a GATT client.
 
-## CLI
+## Applications
+
+#### Command Line Interface
 ```gattcli.py``` implements a command line interface that supports read, write,
 subscription, discovery features.
 
-## Notes
-This library is a work in progress. Read, notify, indicate, write are tested and
-working. See the example application for details.
+#### Home Lighting App
+```lightapp.py``` implements a client that connects to multiple lightbulbs and
+serves a basic web UI.
+
+#### Cloud Sensing App
+```sensorapp.py``` implements a web application that monitors environmental sensors
+in a home.
+
+## TODOs
+1. Make the library a module. 
+2. Move demo applications into separate modules.
+3. Handle partial rediscovery by handle ranges.
