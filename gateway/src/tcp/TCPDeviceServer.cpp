@@ -151,8 +151,6 @@ static void startTcpDeviceHelper(Beetle &beetle, SSL *ssl, int clifd, struct soc
 		}
 	}
 
-	pdebug("1");
-
 	/*
 	 * Instantiate the virtual device around the client socket.
 	 */

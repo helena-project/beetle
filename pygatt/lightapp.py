@@ -237,8 +237,7 @@ def runHttpServer(port, client, reset, ready, devices):
 					elif field == "b":
 						device.b.write(valueToWrite)
 					elif field == "off" or field == "on":
-						# it would be preferable to use the RGB char, but
-						# writes are not permitted
+						# TODO: it would be preferable to use the RGBW char
 						device.r.write(bytearray(1))
 						device.g.write(bytearray(1))
 						device.b.write(bytearray(1))
