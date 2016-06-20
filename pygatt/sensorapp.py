@@ -72,7 +72,7 @@ def main(args):
 	printBox("Starting as %s" % args.name)
 
 	# Send initial connection parameters.
-	appParams = ["client %s" % args.name, "server true"]
+	appParams = ["client %s" % args.name, "server false"]
 
 	print ""
 	printBox("Connection request")

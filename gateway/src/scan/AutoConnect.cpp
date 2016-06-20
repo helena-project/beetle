@@ -55,10 +55,13 @@ AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, s
 				bdaddr_t bdaddr;
 				str2ba(addr.c_str(), &bdaddr);
 				whitelist.insert(ba2str_cpp(bdaddr));
-				std::cout << "  " << ba2str_cpp(bdaddr) << std::endl;
 			} else {
 				throw ParseExecption("invalid address in whitelist file - " + line);
 			}
+		}
+
+		for (auto &addr : whitelist) {
+			std::cout << "  " << addr << std::endl;
 		}
 	}
 }
@@ -95,6 +98,11 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 			 * Consult whitelist
 			 */
 			if (!connectAll && whitelist.find(addr) == whitelist.end()) {
+				if (debug_scan) {
+					std::stringstream ss;
+					ss << "whitelist does not contain " << addr;
+					pdebug(ss.str());
+				}
 				return;
 			}
 
@@ -103,6 +111,11 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 			 */
 			std::unique_lock<std::mutex> lastAttemptLk(lastAttemptMutex);
 			if (lastAttempt.find(addr) != lastAttempt.end()) {
+				if (debug_scan) {
+					std::stringstream ss;
+					ss << "recently tried connecting to " << addr;
+					pdebug(ss.str());
+				}
 				return;
 			} else {
 				time_t now = time(NULL);
@@ -120,7 +133,7 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 				if (kv.second->getType() == Device::LE_PERIPHERAL &&
 						(le = std::dynamic_pointer_cast<LEPeripheral>(kv.second))) {
 					if (le->getAddrType() == info.bdaddrType &&
-							memcmp(le->getBdaddr().b, info.bdaddr.b, sizeof(bdaddr_t))) {
+							memcmp(le->getBdaddr().b, info.bdaddr.b, sizeof(bdaddr_t)) == 0) {
 						return;
 					}
 				}

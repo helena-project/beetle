@@ -62,11 +62,13 @@ class ManagedSocket(object):
 		self._readThread = threading.Thread(target=self.__recv)
 		self._readThread.setDaemon(daemon)
 
-	def getSendMtu(self):
+	@property
+	def sendMTU(self):
 		"""Return the MTU supported by the other end"""
 		return self._send_mtu
 
-	def getRecvMtu(self):
+	@property
+	def recvMTU(self):
 		"""Return the MTU supported by this end"""
 		return self._recv_mtu
 
@@ -633,7 +635,7 @@ class GattServer(object):
 				resp.append(1 if respFmt == 2 else 2)
 			if len(handle._uuid) != respFmt:
 				break
-			if len(resp) + 2 + respFmt > self._socket.getSendMtu():
+			if len(resp) + 2 + respFmt > self._socket.sendMTU:
 				break
 			resp += handle._get_handle_as_bytearray()
 			resp += handle._uuid.raw()[::-1]
@@ -663,7 +665,7 @@ class GattServer(object):
 				continue
 			if handle._read() != value:
 				continue
-			if len(resp) + 4 > self._socket.getSendMtu():
+			if len(resp) + 4 > self._socket.sendMTU:
 				break
 			resp += handle._get_handle_as_bytearray()
 			resp += handle._owner._get_end_group_handle()._get_handle_as_bytearray()
@@ -705,7 +707,7 @@ class GattServer(object):
 				resp[1] = valLen + 2
 			if valLen != len(valRead):
 				break
-			if len(resp) + 2 + valLen > self._socket.getSendMtu():
+			if len(resp) + 2 + valLen > self._socket.sendMTU:
 				break
 			resp += handle._get_handle_as_bytearray()
 			resp += valRead
@@ -747,7 +749,7 @@ class GattServer(object):
 				resp[1] = valLen + 4
 			if valLen != len(valRead):
 				break
-			if len(resp) + 4 + valLen > self._socket.getSendMtu():
+			if len(resp) + 4 + valLen > self._socket.sendMTU:
 				break
 			resp += handle._get_handle_as_bytearray()
 			resp += handle._owner._get_end_group_handle()._get_handle_as_bytearray()
@@ -1016,12 +1018,14 @@ class _ClientCharacteristic(object):
 
 	# Public methods
 
-	def getValHandle(self):
+	@property
+	def valHandle(self):
 		"""Returns the handle of the characteristic attribute value."""
 
 		return self._valHandleNo
 
-	def getUserDescription(self):
+	@property
+	def userDescription(self):
 		"""Return the user description if it exists."""
 
 		if self._user_desc:

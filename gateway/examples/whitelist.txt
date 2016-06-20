@@ -1,5 +1,6 @@
 # a comment
 
 98:7B:F3:66:BF:E6 # this is a lightbulb's public addr
+98:7B:F3:70:BD:28 # this is a 2nd lightbulb's public addr
 
 66:4E:3B:6A:5C:7C # a random address :(

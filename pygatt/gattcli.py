@@ -71,11 +71,11 @@ def printGattHierarchy(services, indent=2):
 		print "Service: %s" % str(service.uuid)
 		for charac in service.characteristics:
 			charDesc = []
-			description = charac.getUserDescription()
+			description = charac.userDescription
 			if description and isinstance(description, str):
 				charDesc.append("desc: %s" % (description,))
 			charDesc.append("props: %s" % ("".join(charac.permissions),))
-			charDesc.append("handle: %d" % (charac.getValHandle(),))
+			charDesc.append("handle: %d" % (charac.valHandle,))
 			print "%sChar: %s (%s)" % (charIndent, str(charac.uuid),
 				", ".join(charDesc))
 
@@ -105,8 +105,8 @@ def parseHandleExpr(expr):
 def findCharacByValHandle(services, valHandle):
 	for service in services:
 		for charac in service.characteristics:
-			print "searching: %d for %d" % (charac.getValHandle(), valHandle)
-			if charac.getValHandle() == valHandle:
+			print "searching: %d for %d" % (charac.valHandle, valHandle)
+			if charac.valHandle == valHandle:
 				return charac
 	return None
 
