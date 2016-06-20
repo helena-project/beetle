@@ -12,8 +12,9 @@ import socket
 import ssl
 import argparse
 import struct
-import traceback
 
+import lib.gatt as gatt
+import lib.uuid as uuid
 from pygatt import ManagedSocket, GattClient
 
 def getArguments():
@@ -44,14 +45,27 @@ def printBox(s):
 	""" Print a header """
 	print "%s\n|| %s ||\n%s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
 
+
+ENV_SENSING_SERVICE_UUID = 0x181A
+PRESSURE_CHARAC_UUID = 0x2A6D
+TEMPERATURE_CHARAC_UUID = 0x2A6E
+HUMIDITY_CHARAC_UUID = 0x2A6F
+
 def runHttpServer():
 	pass
 
 def runClient(client):
-	pass
+	"""Start a beetle client"""
+
+	gapUuid = uuid.UUID(gatt.GAP_SERVICE_UUID)
+	nameUuid = uuid.UUID(gatt.GAP_CHARAC_DEVICE_NAME_UUID)
+	envSenseUuid = uuid.UUID(ENV_SENSING_SERVICE_UUID)
+	pressureUuid = uuid.UUID(PRESSURE_CHARAC_UUID)
+	temperatureUuid = uuid.UUID(TEMPERATURE_CHARAC_UUID)
+	humidityUuid = uuid.UUID(HUMIDITY_CHARAC_UUID)
 
 def main(args):
-	"""Set up and run an example HRM server and client"""
+	"""Set up a web app"""
 
 	def onDisconnect(err):
 		print "Disconnect:", err
@@ -69,7 +83,7 @@ def main(args):
 			ca_certs=args.rootca, cert_reqs=ssl.CERT_REQUIRED)
 	s.connect((args.host, args.port))
 
-	printBox("Starting as %s" % args.name)
+	printBox("Starting as: %s" % args.name)
 
 	# Send initial connection parameters.
 	appParams = ["client %s" % args.name, "server false"]
@@ -96,13 +110,14 @@ def main(args):
 	# Transfer ownership of the socket
 	managedSocket.bind(s, True)
 
-	runHttpServer()
-	runClient(client)
+	devices = []
+	reset = threading.Event()
+	ready = threading.Event()
+
+	runClient(client, reset, ready, devices)
+	runHttpServer(args.app_port, client, reset, ready, devices)
 
 if __name__ == "__main__":
-	try:
-		args = getArguments()
-		main(args)
-	except KeyboardInterrupt, err:
-		traceback.print_exc()
-		os._exit(0)
+	args = getArguments()
+	main(args)
+	os._exit(0)

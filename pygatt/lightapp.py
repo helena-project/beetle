@@ -14,9 +14,7 @@ import socket
 import ssl
 import struct
 import threading
-import traceback
 import cgi
-import urllib
 from jinja2 import Environment, FileSystemLoader
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -349,13 +347,13 @@ def runClient(client, reset, ready, devices):
 	clientThread.start()
 
 def main(args):
-	"""Set up and run an example HRM server and client"""
+	"""Set up a web app"""
 
 	def onDisconnect(err):
 		print "Disconnect:", err
 		os._exit(0)
 
-	# Declare a managed socket, and bind a GATT server and client
+	# Declare a managed socket, and bind a GATT client
 	managedSocket = ManagedSocket(daemon=True)
 	client = GattClient(managedSocket, onDisconnect=onDisconnect)
 
