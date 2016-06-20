@@ -74,6 +74,7 @@ bool Beetle::removeDevice(device_t id, std::string &err) {
 					ss << "unsubscribing " << id << " from " << server;
 					pdebug(ss.str());
 				}
+				devices[server]->mappedTo.erase(id);
 				devices[server]->unsubscribeAll(id);
 			}
 		}
