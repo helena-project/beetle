@@ -1,5 +1,10 @@
 # FromDevice tab ToDevice
 deviceOne	deviceTwo # comment
 
+# blank lines are ok
 
 deviceTwo	deviceThree
+
+# Now, some serious apps
+LEDBlue-F366BFE6	lightapp
+LEDBlue-F370BD28	lightapp

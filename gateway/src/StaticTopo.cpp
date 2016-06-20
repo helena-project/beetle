@@ -100,6 +100,12 @@ UpdateDeviceHandler StaticTopo::getUpdateDeviceHandler() {
 		std::string deviceName = beetle.devices[id]->getName();
 		auto thisEntry = staticMappings.find(deviceName);
 
+		if (debug) {
+			std::stringstream ss;
+			ss << "setting up mappings for " << deviceName;
+			pdebug(ss.str());
+		}
+
 		std::set<device_t> mapFromIds;
 		std::set<device_t> mapToIds;
 		for (auto &kv : beetle.devices) {
