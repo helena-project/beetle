@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+
+	<title>Home Lighting</title>
+
+	<!-- bootstrap -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+
+	<!-- Google fonts -->
+	<link href='http://fonts.googleapis.com/css?family=Roboto:400,300' rel='stylesheet' type='text/css'>
+
+	<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+
+<div id="header">
+	<center>
+		<h1>Home Lighting Application</h1>
+	</center>
+	<div style="clear:both;"></div>
+</div>
+
+<br>
+
+<script type="text/javascript">
+	function rescan() {
+		window.alert("Rescanning for devices... Please be patient. This page will automatically reload when done.");
+
+		var req = new XMLHttpRequest();
+		req.onreadystatechange = function() {
+			if (req.readyState == 4) {
+				if (req.status == 200) {
+					location.reload();
+				} else {
+					window.alert("Failure. :(");
+				}
+			}
+		};
+		req.open("POST", "/rescan", true);
+		req.send();
+	}
+</script>
+
+<div class="container sec">
+	<table class="table">
+		<tr class="active">
+			<th>Name</th>
+			<th>State</th>
+			<th><font color="red">Red</font></th>
+			<th><font color="green">Green</font></th>
+			<th><font color="blue">Blue</font></th>
+			<th>White</th>
+			<th>Action</th>
+			<th>Value</th>
+			<th></th>
+		</tr>
+
+	{% if devices %}
+	{% for device in devices %}
+		<form method="post">
+		<input type="hidden" name="token" value="{{device.token}}">
+
+		<tr>
+			<td>{{ device.name }}</td>
+			<td>{{ device.state }}</td>
+			<td>{{ device.red }}</td>
+			<td>{{ device.green }}</td>
+			<td>{{ device.blue }}</td>
+			<td>{{ device.white }}</td>
+			<td>
+				<select type="select" name="field" default="w">
+					<option value="on" selected="selected">On</option>
+					<option value="off">Off</option>
+					<option value="r">Red</option>
+					<option value="g">Green</option>
+					<option value="b">Blue</option>
+					<option value="w">White</option>
+				</select>
+			</td>
+			<td>
+				<input type="number" name="value" default="0" min="0" max="255">
+			</td>
+			<td><input type="submit" value="Write"></td>
+		</tr>
+
+		</form>
+	{% endfor %}
+	{% else %}
+		<tr>
+			<td colspan="9"><i>No devices to show.</i></td>
+		</tr>
+	{% endif %}
+
+	</table>
+</div>
+
+<div class="container sec">
+	<center>
+		<button type="button" onclick="rescan()">Refresh device list</button>
+	</center>
+</div>
+
+</body>
+
+</html>
