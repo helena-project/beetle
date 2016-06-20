@@ -152,10 +152,20 @@ def runHttpServer(port, client, reset, ready, devices):
 				self.wfile.close()
 
 		def _serve_css(self):
+			if self.path == "/style.css":
+				f = open("static/style.css", "rb")
+			elif self.path == "/fonts.css":
+				f = open("static/google-fonts.css", "rb")
+			else:
+				self.send_error(404)
+				self.end_headers()
+				self.wfile.close()
+				return
+
 			self.send_response(200, 'OK')
 			self.send_header('Content-type', 'css')
 			self.end_headers()
-			f = open("static/style.css", "rb")
+
 			try:
 				self.wfile.write(f.read())
 			finally:
@@ -236,7 +246,7 @@ def runHttpServer(port, client, reset, ready, devices):
 				self._serve_main()
 			elif self.path == "/favicon.ico":
 				self._serve_favicon()
-			elif self.path == "/style.css":
+			elif self.path.endswith(".css"):
 				self._serve_css()
 			else:
 				self.send_error(404)
