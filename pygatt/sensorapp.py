@@ -12,10 +12,14 @@ import socket
 import ssl
 import argparse
 import struct
+import threading
+from jinja2 import Environment, FileSystemLoader
+
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 import lib.gatt as gatt
 import lib.uuid as uuid
-from pygatt import ManagedSocket, GattClient
+from pygatt import ManagedSocket, GattClient, ClientError
 
 def getArguments():
 	"""Arguments for script."""
@@ -45,24 +49,238 @@ def printBox(s):
 	""" Print a header """
 	print "%s\n|| %s ||\n%s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
 
-
 ENV_SENSING_SERVICE_UUID = 0x181A
 PRESSURE_CHARAC_UUID = 0x2A6D
 TEMPERATURE_CHARAC_UUID = 0x2A6E
 HUMIDITY_CHARAC_UUID = 0x2A6F
+UNK1_CHARAC_UUID = 0xC512
+UNK2_CHARAC_UUID = 0xF801
 
-def runHttpServer():
-	pass
+class SensorInstance(object):
+	def __init__(self, name):
+		self.name = name
+		self.address = ":".join(["00"] * 6)
+		self._pressure = None
+		self._temperature = None
+		self._humidity = None
+		self._unk1 = None
+		self._unk2 = None
 
-def runClient(client):
+	@property
+	def pressure(self):
+		try:
+			buf = self._pressure.read()
+			if len(buf) != 4:
+				return float("nan")
+			raw = struct.unpack('<I', bytes(buf))[0]
+			return float(raw) / 10.0
+		except Exception, err:
+			print err
+		return float("nan")
+
+	@property
+	def temperature(self):
+		try:
+			buf = self._temperature.read()
+			if len(buf) != 2:
+				return float("nan")
+			raw = struct.unpack('<h', bytes(buf))[0]
+			return float(raw) / 100.0
+		except Exception, err:
+			print err
+		return float("nan")
+
+	@property
+	def humidity(self):
+		try:
+			buf = self._humidity.read()
+			if len(buf) != 2:
+				return float("nan")
+			raw = struct.unpack('<H', bytes(buf))[0]
+			return float(raw) / 10.0
+		except Exception, err:
+			print err
+		return float("nan")
+
+	@property
+	def unk1(self):
+		try:
+			buf = self._unk1.read()
+			if len(buf) != 2:
+				return -1
+			return struct.unpack('<H', bytes(buf))[0]
+		except Exception, err:
+			print err
+		return -1
+
+	@property
+	def unk2(self):
+		try:
+			buf = self._unk1.read()
+			if len(buf) != 1:
+				return -1
+			return buf[0]
+		except Exception, err:
+			print err
+		return -1
+
+	@property
+	def ready(self):
+		return (self.name is not None and self._pressure is not None
+			and self._temperature is not None and self._humidity is not None
+			and self._unk1 is not None and self._unk2 is not None)
+
+def runHttpServer(port, client, reset, ready, devices):
+	"""Start the HTTP server"""
+
+	class WebServerHandler(BaseHTTPRequestHandler):
+		"""Handle HTTP requests and serve a simple web UI"""
+
+		def _serve_main(self):
+			"""Serve the main page"""
+			ready.wait()
+
+			env = Environment(loader=FileSystemLoader("templates"))
+			template = env.get_template("sensorapp.html")
+
+			self.send_response(200, 'OK')
+			self.send_header('Content-type', 'html')
+			self.end_headers()
+
+			self.wfile.write(template.render(devices=devices))
+			self.wfile.close()
+
+		def _serve_favicon(self):
+			self.send_response(200, 'OK')
+			self.send_header('Content-type', 'png')
+			self.end_headers()
+			f = open("static/icons/sensorapp.png", "rb")
+			try:
+				self.wfile.write(f.read())
+			finally:
+				f.close()
+				self.wfile.close()
+
+		def _serve_css(self):
+			if self.path == "/style.css":
+				f = open("static/style.css", "rb")
+			elif self.path == "/fonts.css":
+				f = open("static/google-fonts.css", "rb")
+			else:
+				self.send_error(404)
+				self.end_headers()
+				self.wfile.close()
+				return
+
+			self.send_response(200, 'OK')
+			self.send_header('Content-type', 'css')
+			self.end_headers()
+
+			try:
+				self.wfile.write(f.read())
+			finally:
+				f.close()
+				self.wfile.close()
+
+		def do_GET(self):
+			if self.path == "/":
+				self._serve_main()
+			elif self.path == "/favicon.ico":
+				self._serve_favicon()
+			elif self.path.endswith(".css"):
+				self._serve_css()
+			else:
+				self.send_error(404)
+
+		def do_POST(self):
+			if self.path == "/rescan":
+				ready.clear()
+				reset.set()
+				ready.wait()
+				self.send_response(200, 'OK')
+				self.end_headers()
+				self.wfile.close()
+			else:
+				self.send_error(404)
+
+	server = HTTPServer(("", port), WebServerHandler)
+	try:
+		server.serve_forever()
+	finally:
+		server.socket.close()
+
+def runClient(client, reset, ready, devices):
 	"""Start a beetle client"""
 
 	gapUuid = uuid.UUID(gatt.GAP_SERVICE_UUID)
 	nameUuid = uuid.UUID(gatt.GAP_CHARAC_DEVICE_NAME_UUID)
+
 	envSenseUuid = uuid.UUID(ENV_SENSING_SERVICE_UUID)
 	pressureUuid = uuid.UUID(PRESSURE_CHARAC_UUID)
 	temperatureUuid = uuid.UUID(TEMPERATURE_CHARAC_UUID)
 	humidityUuid = uuid.UUID(HUMIDITY_CHARAC_UUID)
+	unk1Uuid = uuid.UUID(UNK1_CHARAC_UUID)
+	unk2Uuid = uuid.UUID(UNK2_CHARAC_UUID)
+
+	def _daemon():
+		while True:
+			del devices[:]
+			services = client.discoverAll()
+
+			currDevice = None
+
+			# proceed down the services, separating out devices
+			# TODO(james): add Beetle service to include service id
+
+			printBox("Discovering handles")
+
+			for service in services:
+				print service
+
+				if service.uuid == gapUuid:
+					for charac in service.characteristics:
+						print "  ", charac
+
+						if charac.uuid == nameUuid:
+							currDevice = None
+							try:
+								currDeviceName = str(charac.read())
+								currDevice = SensorInstance(name=currDeviceName)
+							except ClientError, err:
+								print err
+							except Exception, err:
+								print err
+
+				elif service.uuid == envSenseUuid:
+					for charac in service.characteristics:
+						print "  ", charac
+
+						if currDevice is not None:
+							if charac.uuid == pressureUuid:
+								currDevice._pressure = charac
+							elif charac.uuid == temperatureUuid:
+								currDevice._temperature = charac
+							elif charac.uuid == humidityUuid:
+								currDevice._humidity = charac
+							elif charac.uuid == unk1Uuid:
+								currDevice._unk1 = charac
+							elif charac.uuid == unk2Uuid:
+								currDevice._unk2 = charac
+
+					if currDevice is not None:
+						print currDevice, currDevice.ready
+					if currDevice is not None and currDevice.ready:
+						devices.append(currDevice)
+						currDevice = None
+
+			ready.set()
+			reset.clear()
+			reset.wait()
+			ready.clear()
+
+	clientThread = threading.Thread(target=_daemon)
+	clientThread.setDaemon(True)
+	clientThread.start()
 
 def main(args):
 	"""Set up a web app"""

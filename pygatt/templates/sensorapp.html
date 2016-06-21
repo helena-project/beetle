@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+
+	<title>Remote Sensing</title>
+
+	<!-- bootstrap -->
+	<!-- https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css -->
+	<link rel="stylesheet" type='text/css' href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<!-- https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css -->
+	<link rel="stylesheet" type='text/css' href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+
+	<!-- Google fonts -->
+	<!-- https://fonts.googleapis.com/css?family=Roboto:400,300 -->
+	<link rel='stylesheet' type='text/css' href="fonts.css">
+
+	<link rel="stylesheet" type="text/css" href="style.css" >
+</head>
+
+<body>
+
+<div id="header">
+	<center>
+		<h1>Remote Home Sensing Application</h1>
+	</center>
+	<div style="clear:both;"></div>
+</div>
+
+<br>
+
+<script type="text/javascript">
+	function rescan() {
+		window.alert("Rescanning for sensors... Please be patient. This page will automatically reload when done.");
+
+		var req = new XMLHttpRequest();
+		req.onreadystatechange = function() {
+			if (req.readyState == 4) {
+				if (req.status == 200) {
+					location.reload();
+				} else {
+					window.alert("Failure. :(");
+				}
+			}
+		};
+		req.open("POST", "/rescan", true);
+		req.send();
+	}
+</script>
+
+<div class="container sec">
+	<table class="table">
+		<tr class="active">
+			<th>Name</th>
+			<th>Address</th>
+			<th>Temperature (C)</th>
+			<th>Pressure (Pa)</th>
+			<th>Humidity (%)</th>
+			<th>Unknown 1</th>
+			<th>Unknown 2</th>
+		</tr>
+
+	{% if devices %}
+	{% for device in devices %}
+		<tr>
+			<td>{{ device.name }}</td>
+			<td>{{ device.address }}</td>
+			<td>{{ device.temperature }}</td>
+			<td>{{ device.pressure }}</td>
+			<td>{{ device.humidity }}</td>
+			<td>{{ device.unk1 }}</td>
+			<td>{{ device.unk2 }}</td>
+		</tr>
+	{% endfor %}
+	{% else %}
+		<tr>
+			<td colspan="7"><i>No devices to show.</i></td>
+		</tr>
+	{% endif %}
+
+	</table>
+</div>
+
+<div class="container sec">
+	<center>
+		<button type="button" onclick="rescan()">Refresh device list</button>
+	</center>
+</div>
+
+</body>
+
+</html>

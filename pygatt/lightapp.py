@@ -279,6 +279,7 @@ def runClient(client, reset, ready, devices):
 
 	gapUuid = uuid.UUID(gatt.GAP_SERVICE_UUID)
 	nameUuid = uuid.UUID(gatt.GAP_CHARAC_DEVICE_NAME_UUID)
+
 	lightUuid = uuid.UUID(LIGHT_SERVICE_UUID)
 	redUuid = uuid.UUID(RED_CHARAC_UUID)
 	greenUuid = uuid.UUID(GREEN_CHARAC_UUID)
@@ -300,6 +301,7 @@ def runClient(client, reset, ready, devices):
 
 			for service in services:
 				print service
+
 				if service.uuid == gapUuid:
 					for charac in service.characteristics:
 						print "  ", charac
@@ -315,7 +317,6 @@ def runClient(client, reset, ready, devices):
 								print err
 
 				elif service.uuid == lightUuid:
-
 					for charac in service.characteristics:
 						print "  ", charac, charac.userDescription
 
