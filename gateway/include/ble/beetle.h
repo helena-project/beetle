@@ -1,0 +1,18 @@
+/*
+ * beetle.h
+ *
+ *  Created on: Jun 20, 2016
+ *      Author: James Hong
+ */
+
+#ifndef BLE_BEETLE_H_
+#define BLE_BEETLE_H_
+
+#define BEETLE_SERVICE_UUID 0xBE00
+#define BEETLE_CHARAC_BDADDR_UUID 0xBE01
+#define BEETLE_DESC_BDADDR_TYPE_UUID 0xBE02
+#define BEETLE_CHARAC_HANDLE_RANGE_UUID 0xBE03
+#define BEETLE_CHARAC_CONNECED_TIME_UUID 0xBE04
+#define BEETLE_CHARAC_CONNECED_GATEWAY_UUID 0xBE05
+
+#endif /* BLE_BEETLE_H_ */
