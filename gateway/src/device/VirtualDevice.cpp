@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <bluetooth/bluetooth.h>
+#include <bluetooth/hci.h>
 #include <cstring>
 #include <map>
 #include <string>
@@ -17,11 +18,13 @@
 
 #include "Beetle.h"
 #include "ble/att.h"
+#include "ble/beetle.h"
 #include "ble/gatt.h"
 #include "ble/helper.h"
 #include "controller/NetworkDiscoveryClient.h"
 #include "Debug.h"
 #include "device/socket/tcp/TCPServerProxy.h"
+#include "device/socket/LEPeripheral.h"
 #include "Handle.h"
 #include "Router.h"
 #include "sync/Semaphore.h"
@@ -40,6 +43,8 @@ VirtualDevice::VirtualDevice(Beetle &beetle, bool isEndpoint_, HandleAllocationT
 	mtu = ATT_DEFAULT_LE_MTU;
 	unfinishedClientTransactions = 0;
 	lastTransactionMillis = 0;
+	highestForwardedHandle = -1;
+	connectedTime = time(NULL);
 }
 
 VirtualDevice::~VirtualDevice() {
@@ -75,9 +80,15 @@ void VirtualDevice::start(bool discoverHandles) {
 		handlesMutex.lock();
 		handles = handlesTmp;
 		handlesMutex.unlock();
-
-		beetle.updateDevice(getId());
 	}
+
+	highestForwardedHandle = getHighestHandle();
+
+	if (isEndpoint) {
+		setupBeetleService(highestForwardedHandle + 1);
+	}
+
+	beetle.updateDevice(getId());
 }
 
 std::vector<uint64_t> VirtualDevice::getTransactionLatencies() {
@@ -162,6 +173,10 @@ int VirtualDevice::writeTransactionBlocking(uint8_t *buf, int len, uint8_t *&res
 
 int VirtualDevice::getMTU() {
 	return mtu;
+}
+
+int VirtualDevice::getHighestForwardedHandle() {
+	return highestForwardedHandle;
 }
 
 bool VirtualDevice::isLive() {
@@ -285,6 +300,91 @@ void VirtualDevice::readHandler(uint8_t *buf, int len) {
 			beetle.router->route(buf, len, getId());
 		}
 	}
+}
+
+void VirtualDevice::setupBeetleService(int handleAlloc) {
+	handleAlloc++;
+
+	auto beetleServiceHandle = std::make_shared<PrimaryService>();
+	beetleServiceHandle->setHandle(handleAlloc++);
+	auto beetleServiceUUID = boost::shared_array<uint8_t>(new uint8_t[2]);
+	*(uint16_t *) beetleServiceUUID.get() = btohs(BEETLE_SERVICE_UUID);
+	beetleServiceHandle->cache.set(beetleServiceUUID, 2);
+	beetleServiceHandle->setCacheInfinite(true);
+	handles[beetleServiceHandle->getHandle()] = beetleServiceHandle;
+
+	if (type == LE_PERIPHERAL) {
+		LEPeripheral *le = dynamic_cast<LEPeripheral *>(this);
+		assert(le);
+
+		auto beetleBdaddrCharHandle = std::make_shared<Characteristic>();
+		beetleBdaddrCharHandle->setHandle(handleAlloc++);
+		beetleBdaddrCharHandle->setServiceHandle(beetleServiceHandle->getHandle());
+		auto beetleBdaddrCharHandleValue = boost::shared_array<uint8_t>(new uint8_t[5]);
+		beetleBdaddrCharHandleValue[0] = GATT_CHARAC_PROP_READ;
+		*(uint16_t *) (beetleBdaddrCharHandleValue.get() + 3) = htobs(BEETLE_CHARAC_BDADDR_UUID);
+		beetleBdaddrCharHandle->cache.set(beetleBdaddrCharHandleValue, 5);
+		beetleBdaddrCharHandle->setCacheInfinite(true);
+		handles[beetleBdaddrCharHandle->getHandle()] = beetleBdaddrCharHandle;
+
+		auto beetleBdaddrAttrHandle = std::make_shared<CharacteristicValue>();
+		beetleBdaddrAttrHandle->setHandle(handleAlloc++);
+		beetleBdaddrAttrHandle->setUuid(BEETLE_CHARAC_BDADDR_UUID);
+		beetleBdaddrAttrHandle->setServiceHandle(beetleServiceHandle->getHandle());
+		beetleBdaddrAttrHandle->setCharHandle(beetleBdaddrCharHandle->getHandle());
+		auto beetleBdaddrAttrHandleValue = boost::shared_array<uint8_t>(new uint8_t[sizeof(bdaddr_t)]);
+		memcpy(beetleBdaddrAttrHandleValue.get(), le->getBdaddr().b, sizeof(bdaddr_t));
+		beetleBdaddrAttrHandle->cache.set(beetleBdaddrAttrHandleValue, sizeof(bdaddr_t));
+		beetleBdaddrAttrHandle->setCacheInfinite(true);
+		handles[beetleBdaddrAttrHandle->getHandle()] = beetleBdaddrAttrHandle;
+
+		// fill in attr handle for characteristic
+		beetleBdaddrCharHandle->setCharHandle(beetleBdaddrAttrHandle->getHandle());
+		*(uint16_t *) (beetleBdaddrCharHandleValue.get() + 1) = htobs(beetleBdaddrAttrHandle->getHandle());
+
+		auto beetleBdaddrTypeHandle = std::make_shared<Handle>();
+		beetleBdaddrTypeHandle->setHandle(handleAlloc++);
+		beetleBdaddrTypeHandle->setServiceHandle(beetleServiceHandle->getHandle());
+		beetleBdaddrTypeHandle->setCharHandle(beetleBdaddrCharHandle->getHandle());
+		beetleBdaddrTypeHandle->setUuid(UUID(BEETLE_DESC_BDADDR_TYPE_UUID));
+		auto beetleBdaddrTypeHandleValue = boost::shared_array<uint8_t>(new uint8_t[1]);
+		beetleBdaddrTypeHandleValue[0] = (le->getAddrType() == LEPeripheral::PUBLIC) ?
+				LE_PUBLIC_ADDRESS : LE_RANDOM_ADDRESS;
+		beetleBdaddrTypeHandle->cache.set(beetleBdaddrTypeHandleValue, 1);
+		beetleBdaddrTypeHandle->setCacheInfinite(true);
+		handles[beetleBdaddrTypeHandle->getHandle()] = beetleBdaddrTypeHandle;
+
+		beetleBdaddrCharHandle->setEndGroupHandle(beetleBdaddrTypeHandle->getHandle());
+	}
+
+	auto beetleConnTimeCharHandle = std::make_shared<Characteristic>();
+	beetleConnTimeCharHandle->setHandle(handleAlloc++);
+	beetleConnTimeCharHandle->setServiceHandle(beetleServiceHandle->getHandle());
+	auto beetleConnTimeCharHandleValue = boost::shared_array<uint8_t>(new uint8_t[5]);
+	beetleConnTimeCharHandleValue[0] = GATT_CHARAC_PROP_READ;
+	*(uint16_t *) (beetleConnTimeCharHandleValue.get() + 3) = htobs(BEETLE_CHARAC_CONNECED_TIME_UUID);
+	beetleConnTimeCharHandle->cache.set(beetleConnTimeCharHandleValue, 5);
+	beetleConnTimeCharHandle->setCacheInfinite(true);
+	handles[beetleConnTimeCharHandle->getHandle()] = beetleConnTimeCharHandle;
+
+	auto beetleConnTimeAttrHandle = std::make_shared<CharacteristicValue>();
+	beetleConnTimeAttrHandle->setHandle(handleAlloc++);
+	beetleConnTimeAttrHandle->setUuid(UUID(BEETLE_CHARAC_CONNECED_TIME_UUID));
+	beetleConnTimeAttrHandle->setServiceHandle(beetleServiceHandle->getHandle());
+	beetleConnTimeAttrHandle->setCharHandle(beetleConnTimeCharHandle->getHandle());
+	auto beetleConnTimeAttrHandleValue = boost::shared_array<uint8_t>(new uint8_t[sizeof(int32_t)]);
+	*(int32_t *) (beetleConnTimeAttrHandleValue.get()) = htobl(static_cast<int32_t>(connectedTime));
+	beetleConnTimeAttrHandle->cache.set(beetleConnTimeAttrHandleValue, sizeof(int32_t));
+	beetleConnTimeAttrHandle->setCacheInfinite(true);
+	handles[beetleConnTimeAttrHandle->getHandle()] = beetleConnTimeAttrHandle;
+
+	// fill in attr handle for characteristic
+	beetleConnTimeCharHandle->setCharHandle(beetleConnTimeAttrHandle->getHandle());
+	*(uint16_t *) (beetleConnTimeCharHandleValue.get() + 1) = htobs(beetleConnTimeAttrHandle->getHandle());
+
+	beetleConnTimeCharHandle->setEndGroupHandle(beetleConnTimeAttrHandle->getHandle());
+
+	beetleServiceHandle->setEndGroupHandle(beetleConnTimeAttrHandle->getHandle());
 }
 
 typedef struct {

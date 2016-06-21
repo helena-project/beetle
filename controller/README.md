@@ -3,6 +3,7 @@
 Runs a HTTPS server in django to serve API and TCP server to push commands.
 
 ## Easy Setup
+
 1. ```pip install -r requirements.txt```
 2. ```./setup.sh```
 3. ```sudo ./runserver.sh```
@@ -10,10 +11,13 @@ Runs a HTTPS server in django to serve API and TCP server to push commands.
 rules.
 
 ## Requirements
+
 - redis-server
 
 ## Notes
+
 ```runserver.sh``` starts a development version of the server.
 
 ## Certs
+
 This contains default certificates for testing.

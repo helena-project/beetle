@@ -100,6 +100,7 @@ public:
 	bool debugPerformance = false;
 	bool debugRouter = false;
 	bool debugScan = false;
+	bool debugTopology = false;
 	bool debugSocket = false;
 };
 

@@ -169,6 +169,8 @@ BeetleConfig::BeetleConfig(std::string filename) {
 				debugDiscovery = it.value();
 			} else if (it.key() == "scan") {
 				debugScan = it.value();
+			} else if (it.key() == "topology") {
+				debugTopology = it.value();
 			} else if (it.key() == "socket") {
 				debugSocket = it.value();
 			} else if (it.key() == "router") {
@@ -242,6 +244,7 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	debug["performance"] = debugPerformance;
 	debug["router"] = debugRouter;
 	debug["scan"] = debugScan;
+	debug["topology"] = debugTopology;
 	debug["socket"] = debugSocket;
 	config["debug"] = debug;
 

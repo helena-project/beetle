@@ -14,9 +14,7 @@ import socket
 import ssl
 import struct
 import threading
-import traceback
 import cgi
-import urllib
 from jinja2 import Environment, FileSystemLoader
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -60,6 +58,8 @@ BLUE_CHARAC_UUID = 0xFFE8
 RGBW_CHARAC_UUID = 0xFFE9
 WHITE_CHARAC_UUID = 0xFFEA
 
+INTERNAL_REFRESH_INTERVAL = 60 * 5
+
 class LightInstance(object):
 	def __init__(self, name):
 		self.name = name
@@ -67,6 +67,7 @@ class LightInstance(object):
 		self.g = None
 		self.b = None
 		self.w = None
+		self.rgbw = None
 		self.token = binascii.b2a_hex(os.urandom(8))
 
 	@property
@@ -113,7 +114,8 @@ class LightInstance(object):
 	@property
 	def ready(self):
 		return (self.name is not None and self.r is not None and
-			self.g is not None and self.b is not None and self.w is not None)
+			self.g is not None and self.b is not None and
+			self.w is not None and self.rgbw is not None)
 
 	def __str__(self):
 		return self.name
@@ -135,8 +137,6 @@ def runHttpServer(port, client, reset, ready, devices):
 			self.send_header('Content-type', 'html')
 			self.end_headers()
 
-			print devices
-
 			self.wfile.write(template.render(devices=devices))
 			self.wfile.close()
 
@@ -152,10 +152,20 @@ def runHttpServer(port, client, reset, ready, devices):
 				self.wfile.close()
 
 		def _serve_css(self):
+			if self.path == "/style.css":
+				f = open("static/style.css", "rb")
+			elif self.path == "/fonts.css":
+				f = open("static/google-fonts.css", "rb")
+			else:
+				self.send_error(404)
+				self.end_headers()
+				self.wfile.close()
+				return
+
 			self.send_response(200, 'OK')
 			self.send_header('Content-type', 'css')
 			self.end_headers()
-			f = open("static/style.css", "rb")
+
 			try:
 				self.wfile.write(f.read())
 			finally:
@@ -218,7 +228,7 @@ def runHttpServer(port, client, reset, ready, devices):
 
 			for device in devices:
 				if device.token == token:
-					if field == "w" or field == "off" or field == "on":
+					if field == "w":
 						device.w.write(valueToWrite)
 					elif field == "r":
 						device.r.write(valueToWrite)
@@ -226,6 +236,12 @@ def runHttpServer(port, client, reset, ready, devices):
 						device.g.write(valueToWrite)
 					elif field == "b":
 						device.b.write(valueToWrite)
+					elif field == "off" or field == "on":
+						# TODO: it would be preferable to use the RGBW char
+						device.r.write(bytearray(1))
+						device.g.write(bytearray(1))
+						device.b.write(bytearray(1))
+						device.w.write(valueToWrite)
 					else:
 						raise NotImplementedError
 
@@ -236,7 +252,7 @@ def runHttpServer(port, client, reset, ready, devices):
 				self._serve_main()
 			elif self.path == "/favicon.ico":
 				self._serve_favicon()
-			elif self.path == "/style.css":
+			elif self.path.endswith(".css"):
 				self._serve_css()
 			else:
 				self.send_error(404)
@@ -265,11 +281,13 @@ def runClient(client, reset, ready, devices):
 
 	gapUuid = uuid.UUID(gatt.GAP_SERVICE_UUID)
 	nameUuid = uuid.UUID(gatt.GAP_CHARAC_DEVICE_NAME_UUID)
+
 	lightUuid = uuid.UUID(LIGHT_SERVICE_UUID)
 	redUuid = uuid.UUID(RED_CHARAC_UUID)
 	greenUuid = uuid.UUID(GREEN_CHARAC_UUID)
 	blueUuid = uuid.UUID(BLUE_CHARAC_UUID)
 	whiteUuid = uuid.UUID(WHITE_CHARAC_UUID)
+	rgbwUuid = uuid.UUID(RGBW_CHARAC_UUID)
 
 	def _daemon():
 		while True:
@@ -285,6 +303,7 @@ def runClient(client, reset, ready, devices):
 
 			for service in services:
 				print service
+
 				if service.uuid == gapUuid:
 					for charac in service.characteristics:
 						print "  ", charac
@@ -300,7 +319,6 @@ def runClient(client, reset, ready, devices):
 								print err
 
 				elif service.uuid == lightUuid:
-
 					for charac in service.characteristics:
 						print "  ", charac, charac.userDescription
 
@@ -313,6 +331,8 @@ def runClient(client, reset, ready, devices):
 								currDevice.g = charac
 							elif charac.uuid == blueUuid:
 								currDevice.b = charac
+							elif charac.uuid == rgbwUuid:
+								currDevice.rgbw = charac
 
 					if currDevice is not None:
 						print currDevice, currDevice.ready
@@ -322,7 +342,7 @@ def runClient(client, reset, ready, devices):
 
 			ready.set()
 			reset.clear()
-			reset.wait()
+			reset.wait(INTERNAL_REFRESH_INTERVAL)
 			ready.clear()
 
 	clientThread = threading.Thread(target=_daemon)
@@ -330,13 +350,13 @@ def runClient(client, reset, ready, devices):
 	clientThread.start()
 
 def main(args):
-	"""Set up and run an example HRM server and client"""
+	"""Set up a web app"""
 
 	def onDisconnect(err):
 		print "Disconnect:", err
 		os._exit(0)
 
-	# Declare a managed socket, and bind a GATT server and client
+	# Declare a managed socket, and bind a GATT client
 	managedSocket = ManagedSocket(daemon=True)
 	client = GattClient(managedSocket, onDisconnect=onDisconnect)
 

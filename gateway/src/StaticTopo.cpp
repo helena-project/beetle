@@ -76,8 +76,13 @@ StaticTopo::StaticTopo(Beetle &beetle, std::string staticMappingsFile) :
 			throw ParseExecption("cannot map device to itself! - " + line);
 		}
 
-		std::cout << "  " << from << " -> " << to << std::endl;
 		staticMappings[from].insert(to);
+	}
+
+	for (auto &kv : staticMappings) {
+		for (auto &to : kv.second) {
+			std::cout << "  " << kv.first << " -> " << to << std::endl;
+		}
 	}
 }
 
@@ -100,7 +105,7 @@ UpdateDeviceHandler StaticTopo::getUpdateDeviceHandler() {
 		std::string deviceName = beetle.devices[id]->getName();
 		auto thisEntry = staticMappings.find(deviceName);
 
-		if (debug) {
+		if (debug_topology) {
 			std::stringstream ss;
 			ss << "setting up mappings for " << deviceName;
 			pdebug(ss.str());

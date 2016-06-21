@@ -4,3 +4,11 @@
 98:7B:F3:70:BD:28 # this is a 2nd lightbulb's public addr
 
 66:4E:3B:6A:5C:7C # a random address :(
+
+# environmental sensors
+C0:98:E5:30:00:6C
+C0:98:E5:30:00:6D
+C0:98:E5:30:00:6E
+C0:98:E5:30:00:6F
+C0:98:E5:30:00:70
+C0:98:E5:30:00:71

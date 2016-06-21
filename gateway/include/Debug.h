@@ -16,8 +16,11 @@
 // General debugging.
 extern bool debug;
 
-// Print debug information when scanning an automatically connecting
+// Print debug information when scanning
 extern bool debug_scan;
+
+// Print debug information when setting up mappings and connections
+extern bool debug_topology;
 
 // Print debug information when discovering handles
 extern bool debug_discovery;

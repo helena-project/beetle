@@ -42,6 +42,8 @@ public:
 
 	virtual bool isLive();
 
+	int getHighestForwardedHandle();
+
 	/*
 	 * Get the latencies in ms for the latest transactions.
 	 */
@@ -73,6 +75,10 @@ private:
 
 	int mtu;
 
+	time_t connectedTime;
+
+	int highestForwardedHandle;
+
 	/*
 	 * Number of unfinished client transactions. Only ever accessed
 	 * by the thread that calls readHandler().
@@ -102,7 +108,7 @@ private:
 	 * Helper methods
 	 */
 	void discoverNetworkServices(UUID serviceUuid);
-
+	void setupBeetleService(int handleAlloc);
 
 	/* Timeout transaction and shutdown the device. */
 	static constexpr int ASYNC_TRANSACTION_TIMEOUT = 60;

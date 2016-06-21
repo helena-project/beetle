@@ -710,6 +710,10 @@ void CLI::doSetDebug(const std::vector<std::string>& cmd) {
 			debug_scan = value;
 			isValid |= true;
 		}
+		if (isAll || cmd[1] == "topology") {
+			debug_topology = value;
+			isValid |= true;
+		}
 		if (isAll || cmd[1] == "router") {
 			debug_router = value;
 			isValid |= true;
