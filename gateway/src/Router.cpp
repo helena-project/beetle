@@ -1025,8 +1025,8 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 			sourceDevice->writeResponse(&resp, 1);
 		}
 	} else if (opCode == ATT_OP_READ_REQ && proxyH->cache.value != NULL
-			&& (dst == BEETLE_RESERVED_DEVICE || proxyH->cache.cachedSet.find(src) == proxyH->cache.cachedSet.end())
-			&& proxyH->isCacheInfinite()) {
+			&& ((dst == BEETLE_RESERVED_DEVICE || proxyH->cache.cachedSet.find(src) == proxyH->cache.cachedSet.end())
+			|| proxyH->isCacheInfinite())) {
 		/*
 		 * Serve read from cache
 		 */
@@ -1039,7 +1039,7 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 		auto ch = std::dynamic_pointer_cast<Characteristic>(proxyH);
 		if (ch) {
 			/*
-			 * This works because characterisics are cached infinitely.
+			 * This works because characteristics are cached infinitely.
 			 */
 			uint8_t properties;
 			if (beetle.accessControl && beetle.accessControl->getCharAccessProperties(sourceDevice, destinationDevice,
