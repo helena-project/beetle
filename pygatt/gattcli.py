@@ -105,7 +105,7 @@ def parseHandleExpr(expr):
 def findCharacByValHandle(services, valHandle):
 	for service in services:
 		for charac in service.characteristics:
-			print "searching: %d for %d" % (charac.valHandle, valHandle)
+			# print "searching: %d for %d" % (charac.valHandle, valHandle)
 			if charac.valHandle == valHandle:
 				return charac
 	return None

@@ -58,6 +58,8 @@ BLUE_CHARAC_UUID = 0xFFE8
 RGBW_CHARAC_UUID = 0xFFE9
 WHITE_CHARAC_UUID = 0xFFEA
 
+INTERNAL_REFRESH_INTERVAL = 60 * 5
+
 class LightInstance(object):
 	def __init__(self, name):
 		self.name = name
@@ -340,7 +342,7 @@ def runClient(client, reset, ready, devices):
 
 			ready.set()
 			reset.clear()
-			reset.wait()
+			reset.wait(INTERNAL_REFRESH_INTERVAL)
 			ready.clear()
 
 	clientThread = threading.Thread(target=_daemon)

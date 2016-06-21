@@ -19,13 +19,14 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 import lib.gatt as gatt
 import lib.uuid as uuid
+import lib.beetle as beetle
 from pygatt import ManagedSocket, GattClient, ClientError
 
 def getArguments():
 	"""Arguments for script."""
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--name", default="cloudmonitor",
+	parser.add_argument("--name", default="sensorapp",
 		help="name of the application")
 	parser.add_argument("--app-port", type=int, default="8081",
 		help="port to run application server")
@@ -56,10 +57,12 @@ HUMIDITY_CHARAC_UUID = 0x2A6F
 UNK1_CHARAC_UUID = 0xC512
 UNK2_CHARAC_UUID = 0xF801
 
+INTERNAL_REFRESH_INTERVAL = 60 * 5
+
 class SensorInstance(object):
 	def __init__(self, name):
 		self.name = name
-		self.address = ":".join(["00"] * 6)
+		self.address = None
 		self._pressure = None
 		self._temperature = None
 		self._humidity = None
@@ -97,7 +100,7 @@ class SensorInstance(object):
 			if len(buf) != 2:
 				return float("nan")
 			raw = struct.unpack('<H', bytes(buf))[0]
-			return float(raw) / 10.0
+			return float(raw) / 100.0
 		except Exception, err:
 			print err
 		return float("nan")
@@ -128,7 +131,11 @@ class SensorInstance(object):
 	def ready(self):
 		return (self.name is not None and self._pressure is not None
 			and self._temperature is not None and self._humidity is not None
-			and self._unk1 is not None and self._unk2 is not None)
+			and self._unk1 is not None and self._unk2 is not None
+			and self.address is not None)
+
+	def __str__(self):
+		return "%s (%s)" % (self.name, self.address)
 
 def runHttpServer(port, client, reset, ready, devices):
 	"""Start the HTTP server"""
@@ -222,6 +229,9 @@ def runClient(client, reset, ready, devices):
 	unk1Uuid = uuid.UUID(UNK1_CHARAC_UUID)
 	unk2Uuid = uuid.UUID(UNK2_CHARAC_UUID)
 
+	beetleUuid = uuid.UUID(beetle.BEETLE_SERVICE_UUID)
+	bdAddrUuid = uuid.UUID(beetle.BEETLE_CHARAC_BDADDR_UUID)
+
 	def _daemon():
 		while True:
 			del devices[:]
@@ -267,15 +277,30 @@ def runClient(client, reset, ready, devices):
 							elif charac.uuid == unk2Uuid:
 								currDevice._unk2 = charac
 
-					if currDevice is not None:
-						print currDevice, currDevice.ready
-					if currDevice is not None and currDevice.ready:
-						devices.append(currDevice)
-						currDevice = None
+				elif service.uuid == beetleUuid:
+					for charac in service.characteristics:
+						print "  ", charac
+
+						if currDevice is not None:
+							if charac.uuid == bdAddrUuid:
+								try:
+									bdaddr = charac.read()[::-1]
+									currDevice.address = ":".join(
+										"%02X" % x for x in bdaddr)
+								except ClientError, err:
+									print err
+								except Exception, err:
+									print err
+
+							print currDevice, currDevice.ready
+
+							if currDevice.ready:
+								devices.append(currDevice)
+								currDevice = None
 
 			ready.set()
 			reset.clear()
-			reset.wait()
+			reset.wait(INTERNAL_REFRESH_INTERVAL)
 			ready.clear()
 
 	clientThread = threading.Thread(target=_daemon)
