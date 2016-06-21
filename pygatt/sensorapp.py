@@ -64,67 +64,102 @@ class SensorInstance(object):
 		self.name = name
 		self.address = None
 		self._pressure = None
+		self._pressure_cached = None
 		self._temperature = None
+		self._temperature_cached = None
 		self._humidity = None
+		self._humidity_cached = None
 		self._unk1 = None
+		self._unk1_cached = None
 		self._unk2 = None
+		self._unk2_cached = None
 
 	@property
 	def pressure(self):
+		if self._pressure_cached is not None:
+			return self._pressure_cached
+
 		try:
 			buf = self._pressure.read()
 			if len(buf) != 4:
 				return float("nan")
 			raw = struct.unpack('<I', bytes(buf))[0]
-			return float(raw) / 10.0
+			self._pressure_cached = float(raw) / 10.0
+			return self._pressure_cached
+
 		except Exception, err:
 			print err
+
 		return float("nan")
 
 	@property
 	def temperature(self):
+		if self._temperature_cached is not None:
+			return self._temperature_cached
+
 		try:
 			buf = self._temperature.read()
 			if len(buf) != 2:
 				return float("nan")
 			raw = struct.unpack('<h', bytes(buf))[0]
-			return float(raw) / 100.0
+			self._temperature_cached = float(raw) / 100.0
+			return self._temperature_cached
+
 		except Exception, err:
 			print err
+
 		return float("nan")
 
 	@property
 	def humidity(self):
+		if self._humidity_cached is not None:
+			return self._humidity_cached
+
 		try:
 			buf = self._humidity.read()
 			if len(buf) != 2:
 				return float("nan")
 			raw = struct.unpack('<H', bytes(buf))[0]
-			return float(raw) / 100.0
+			self._humidity_cached = float(raw) / 100.0
+			return self._humidity_cached
+
 		except Exception, err:
 			print err
+
 		return float("nan")
 
 	@property
 	def unk1(self):
+		if self._unk1_cached is not None:
+			return self._unk1_cached
+
 		try:
 			buf = self._unk1.read()
 			if len(buf) != 2:
 				return -1
-			return struct.unpack('<H', bytes(buf))[0]
+			self._unk1_cached = struct.unpack('<H', bytes(buf))[0]
+			return self._unk1_cached
+
 		except Exception, err:
 			print err
+
 		return -1
 
 	@property
 	def unk2(self):
+		if self._unk2_cached is not None:
+			return self._unk2_cached
+
 		try:
-			buf = self._unk1.read()
+			buf = self._unk2.read()
 			if len(buf) != 1:
 				return -1
-			return buf[0]
+			self._unk2_cached = buf[0]
+			return self._unk2_cached
+
 		except Exception, err:
 			print err
+
 		return -1
 
 	@property
