@@ -307,7 +307,7 @@ def runClient(client, reset, ready, devices):
 
 	beetleUuid = uuid.UUID(beetle.BEETLE_SERVICE_UUID)
 	bdAddrUuid = uuid.UUID(beetle.BEETLE_CHARAC_BDADDR_UUID)
-	connTimeUuid = uuid.UUID(beetle.BEETLE_CHARAC_CONNECED_TIME_UUID)
+	connTimeUuid = uuid.UUID(beetle.BEETLE_CHARAC_CONNECTED_TIME_UUID)
 
 	def _daemon():
 		while True:
