@@ -177,7 +177,7 @@ def runHttpServer(port, client, reset, ready, devices):
 				f.close()
 				self.wfile.close()
 
-		WRITEABLE_FIELDS = set(["w", "r", "g", "b", "on", "off"])
+		WRITEABLE_FIELDS = frozenset(["w", "r", "g", "b", "on", "off"])
 
 		def _update_device(self):
 			ctype, pdict = cgi.parse_header(

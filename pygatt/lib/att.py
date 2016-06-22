@@ -67,23 +67,23 @@ def opcodeLookup(opcode):
 	return __OPCODE_TO_STRING[opcode] if opcode in __OPCODE_TO_STRING \
 		else "unknown"
 
-__OP_COMMAND = set([OP_WRITE_CMD, OP_SIGNED_WRITE_CMD])
+__OP_COMMAND = frozenset((OP_WRITE_CMD, OP_SIGNED_WRITE_CMD))
 def isCommand(opcode):
 	return opcode in __OP_COMMAND
 
-__OP_REQUEST = set([
+__OP_REQUEST = frozenset((
 	OP_MTU_REQ, OP_FIND_INFO_REQ, OP_FIND_BY_TYPE_REQ, OP_READ_BY_TYPE_REQ,
 	OP_READ_REQ, OP_READ_BLOB_REQ, OP_READ_MULTI_REQ, OP_READ_BY_GROUP_REQ,
 	OP_WRITE_REQ, OP_PREP_WRITE_REQ, OP_EXEC_WRITE_REQ,
-])
+))
 def isRequest(opcode):
 	return opcode in __OP_REQUEST
 
-__OP_RESPONSE = set([
+__OP_RESPONSE = frozenset((
 	OP_MTU_RESP, OP_FIND_INFO_RESP, OP_FIND_BY_TYPE_RESP, OP_READ_BY_TYPE_RESP,
 	OP_READ_RESP, OP_READ_BLOB_RESP, OP_READ_MULTI_RESP, OP_READ_BY_GROUP_RESP,
 	OP_WRITE_RESP, OP_PREP_WRITE_RESP, OP_EXEC_WRITE_RESP,
-])
+))
 def isResponse(opcode):
 	return opcode in __OP_RESPONSE
 
