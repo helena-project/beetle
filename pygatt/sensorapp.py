@@ -74,6 +74,12 @@ class SensorInstance(object):
 		self._unk2 = None
 		self._unk2_cached = None
 
+	def _unpack_pressure(self, buf):
+		if len(buf) != 4:
+			return float("nan")
+		raw = struct.unpack('<I', bytes(buf))[0]
+		return float(raw) / 10.0
+
 	@property
 	def pressure(self):
 		if self._pressure_cached is not None:
@@ -81,16 +87,19 @@ class SensorInstance(object):
 
 		try:
 			buf = self._pressure.read()
-			if len(buf) != 4:
-				return float("nan")
-			raw = struct.unpack('<I', bytes(buf))[0]
-			self._pressure_cached = float(raw) / 10.0
+			self._pressure_cached = self._unpack_pressure(buf)
 			return self._pressure_cached
 
 		except Exception, err:
 			print err
 
 		return float("nan")
+
+	def _unpack_temperature(self, buf):
+		if len(buf) != 2:
+			return float("nan")
+		raw = struct.unpack('<h', bytes(buf))[0]
+		return float(raw) / 100.0
 
 	@property
 	def temperature(self):
@@ -99,16 +108,19 @@ class SensorInstance(object):
 
 		try:
 			buf = self._temperature.read()
-			if len(buf) != 2:
-				return float("nan")
-			raw = struct.unpack('<h', bytes(buf))[0]
-			self._temperature_cached = float(raw) / 100.0
+			self._temperature_cached = self._unpack_temperature(buf)
 			return self._temperature_cached
 
 		except Exception, err:
 			print err
 
 		return float("nan")
+
+	def _unpack_humidity(self, buf):
+		if len(buf) != 2:
+			return float("nan")
+		raw = struct.unpack('<H', bytes(buf))[0]
+		return float(raw) / 100.0
 
 	@property
 	def humidity(self):
@@ -117,16 +129,18 @@ class SensorInstance(object):
 
 		try:
 			buf = self._humidity.read()
-			if len(buf) != 2:
-				return float("nan")
-			raw = struct.unpack('<H', bytes(buf))[0]
-			self._humidity_cached = float(raw) / 100.0
+			self._humidity_cached = self._unpack_humidity(buf)
 			return self._humidity_cached
 
 		except Exception, err:
 			print err
 
 		return float("nan")
+
+	def _unpack_unk1(self, buf):
+		if len(buf) != 2:
+			return -1
+		return struct.unpack('<H', bytes(buf))[0]
 
 	@property
 	def unk1(self):
@@ -135,15 +149,18 @@ class SensorInstance(object):
 
 		try:
 			buf = self._unk1.read()
-			if len(buf) != 2:
-				return -1
-			self._unk1_cached = struct.unpack('<H', bytes(buf))[0]
+			self._unk1_cached = self._unpack_unk1(buf)
 			return self._unk1_cached
 
 		except Exception, err:
 			print err
 
 		return -1
+
+	def _unpack_unk2(self, buf):
+		if len(buf) != 1:
+			return -1
+		return buf[0]
 
 	@property
 	def unk2(self):
@@ -152,9 +169,7 @@ class SensorInstance(object):
 
 		try:
 			buf = self._unk2.read()
-			if len(buf) != 1:
-				return -1
-			self._unk2_cached = buf[0]
+			self._unk2_cached = self._unpack_unk2(buf)
 			return self._unk2_cached
 
 		except Exception, err:
@@ -168,6 +183,30 @@ class SensorInstance(object):
 			and self._temperature is not None and self._humidity is not None
 			and self._unk1 is not None and self._unk2 is not None
 			and self.address is not None)
+
+	def subscribeAll(self):
+		assert self.ready
+		print "Subscribing to notifications: %s" % self.address
+
+		def _pressure_handler(buf):
+			self._pressure_cached = self._unpack_pressure(buf)
+		self._pressure.subscribe(_pressure_handler)
+
+		def _temperature_handler(buf):
+			self._temperature_cached = self._unpack_temperature(buf)
+		self._temperature.subscribe(_temperature_handler)
+
+		def _humidity_handler(buf):
+			self._humidity_cached = self._unpack_humidity(buf)
+		self._humidity.subscribe(_humidity_handler)
+
+		def _unk1_handler(buf):
+			self._unk1_cached = self._unpack_unk1(buf)
+		self._unk1.subscribe(_unk1_handler)
+
+		def _unk2_handler(buf):
+			self._unk2_cached = self._unpack_unk2(buf)
+		self._unk2.subscribe(_unk2_handler)
 
 	def __str__(self):
 		return "%s (%s)" % (self.name, self.address)
@@ -330,6 +369,7 @@ def runClient(client, reset, ready, devices):
 							print currDevice, currDevice.ready
 
 							if currDevice.ready:
+								currDevice.subscribeAll()
 								devices.append(currDevice)
 								currDevice = None
 
