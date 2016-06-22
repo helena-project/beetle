@@ -79,10 +79,15 @@ class LightInstance(object):
 	def state(self):
 		if not self.w:
 			return "ERROR"
-		elif self.w.read()[0] == 0:
-			return "OFF"
-		else:
-			return "ON"
+
+		try:
+			if self.w.read()[0] == 0:
+				return "OFF"
+			else:
+				return "ON"
+		except Exception, err:
+			print err
+			return "ERROR"
 
 	@property
 	def red(self):
