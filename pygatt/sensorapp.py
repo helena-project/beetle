@@ -13,6 +13,7 @@ import ssl
 import argparse
 import struct
 import threading
+from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -63,6 +64,7 @@ class SensorInstance(object):
 	def __init__(self, name):
 		self.name = name
 		self.address = None
+		self.connectTime = None
 		self._pressure = None
 		self._pressure_cached = None
 		self._temperature = None
@@ -182,7 +184,7 @@ class SensorInstance(object):
 		return (self.name is not None and self._pressure is not None
 			and self._temperature is not None and self._humidity is not None
 			and self._unk1 is not None and self._unk2 is not None
-			and self.address is not None)
+			and self.address is not None and self.connectTime is not None)
 
 	def subscribeAll(self):
 		assert self.ready
@@ -305,6 +307,7 @@ def runClient(client, reset, ready, devices):
 
 	beetleUuid = uuid.UUID(beetle.BEETLE_SERVICE_UUID)
 	bdAddrUuid = uuid.UUID(beetle.BEETLE_CHARAC_BDADDR_UUID)
+	connTimeUuid = uuid.UUID(beetle.BEETLE_CHARAC_CONNECED_TIME_UUID)
 
 	def _daemon():
 		while True:
@@ -361,6 +364,19 @@ def runClient(client, reset, ready, devices):
 									bdaddr = charac.read()[::-1]
 									currDevice.address = ":".join(
 										"%02X" % x for x in bdaddr)
+								except ClientError, err:
+									print err
+								except Exception, err:
+									print err
+							elif charac.uuid == connTimeUuid:
+								try:
+									raw = charac.read()
+									if len(raw) != 4:
+										continue
+									epoch = struct.unpack('<I', bytes(raw))[0]
+									currDevice.connectTime = \
+										datetime.utcfromtimestamp(epoch)
+
 								except ClientError, err:
 									print err
 								except Exception, err:
