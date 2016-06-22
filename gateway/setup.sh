@@ -4,7 +4,7 @@ sudo apt-get install libboost-all-dev libbluetooth-dev libasio-dev openssl
 
 sudo apt-get install cmake doxygen
 
-rm -r deps
+sudo rm -r deps
 mkdir deps
 
 cd deps
