@@ -67,8 +67,10 @@ def printGattHierarchy(services, indent=2):
 	"""Prints the full handle space"""
 
 	charIndent = " " * indent
+	descIndent = " " * (indent * 2)
 	for service in services:
 		print "Service: %s" % str(service.uuid)
+
 		for charac in service.characteristics:
 			charDesc = []
 			description = charac.userDescription
@@ -78,6 +80,10 @@ def printGattHierarchy(services, indent=2):
 			charDesc.append("handle: %d" % (charac.valHandle,))
 			print "%sChar: %s (%s)" % (charIndent, str(charac.uuid),
 				", ".join(charDesc))
+
+			for descriptor in charac.descriptors:
+				print "%sDescriptor: %s (handle: %d)" % (descIndent,
+					str(descriptor.uuid), descriptor.handle)
 
 OPERATORS = {
 	ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul,

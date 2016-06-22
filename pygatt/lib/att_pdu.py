@@ -29,14 +29,14 @@ def new_read_by_group_req(startHandle, endHandle, uuid):
 	pdu = bytearray([att.OP_READ_BY_GROUP_REQ])
 	pdu += pack_handle(startHandle)
 	pdu += pack_handle(endHandle)
-	pdu += uuid.raw()[::-1]
+	pdu += uuid.raw[::-1]
 	return pdu
 
 def new_read_by_type_req(startHandle, endHandle, uuid):
 	pdu = bytearray([att.OP_READ_BY_TYPE_REQ])
 	pdu += pack_handle(startHandle)
 	pdu += pack_handle(endHandle)
-	pdu += uuid.raw()[::-1]
+	pdu += uuid.raw[::-1]
 	return pdu
 
 def new_find_info_req(startHandle, endHandle):
@@ -49,7 +49,7 @@ def new_find_by_type_value_req(startHandle, endHandle, uuid, value):
 	pdu = bytearray([att.OP_FIND_BY_TYPE_REQ])
 	pdu += pack_handle(startHandle)
 	pdu += pack_handle(endHandle)
-	pdu += uuid.raw()[::-1]
+	pdu += uuid.raw[::-1]
 	pdu += value
 	return pdu
 

@@ -15,12 +15,14 @@ import ssl
 import struct
 import threading
 import cgi
+from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 import lib.gatt as gatt
 import lib.uuid as uuid
+import lib.beetle as beetle
 from pygatt import ManagedSocket, GattClient, ClientError
 
 def getArguments():
@@ -63,6 +65,9 @@ INTERNAL_REFRESH_INTERVAL = 60 * 5
 class LightInstance(object):
 	def __init__(self, name):
 		self.name = name
+		self.address = None
+		self.connectTime = None
+		self.gateway = None
 		self.r = None
 		self.g = None
 		self.b = None
@@ -113,9 +118,11 @@ class LightInstance(object):
 
 	@property
 	def ready(self):
-		return (self.name is not None and self.r is not None and
-			self.g is not None and self.b is not None and
-			self.w is not None and self.rgbw is not None)
+		return (self.name is not None and self.r is not None
+			and self.g is not None and self.b is not None
+			and self.w is not None and self.rgbw is not None
+			and self.connectTime is not None and self.address is not None
+			and self.gateway is not None)
 
 	def __str__(self):
 		return self.name
@@ -172,7 +179,7 @@ def runHttpServer(port, client, reset, ready, devices):
 				f.close()
 				self.wfile.close()
 
-		WRITEABLE_FIELDS = set(["w", "r", "g", "b", "on", "off"])
+		WRITEABLE_FIELDS = frozenset(["w", "r", "g", "b", "on", "off"])
 
 		def _update_device(self):
 			ctype, pdict = cgi.parse_header(
@@ -289,6 +296,11 @@ def runClient(client, reset, ready, devices):
 	whiteUuid = uuid.UUID(WHITE_CHARAC_UUID)
 	rgbwUuid = uuid.UUID(RGBW_CHARAC_UUID)
 
+	beetleUuid = uuid.UUID(beetle.BEETLE_SERVICE_UUID)
+	bdAddrUuid = uuid.UUID(beetle.BEETLE_CHARAC_BDADDR_UUID)
+	connTimeUuid = uuid.UUID(beetle.BEETLE_CHARAC_CONNECTED_TIME_UUID)
+	gatewayUuid = uuid.UUID(beetle.BEETLE_CHARAC_CONNECTED_GATEWAY_UUID)
+
 	def _daemon():
 		while True:
 			del devices[:]
@@ -297,8 +309,6 @@ def runClient(client, reset, ready, devices):
 			currDevice = None
 
 			# proceed down the services, separating out devices
-			# TODO(james): add Beetle service to delimit devices
-
 			printBox("Discovering handles")
 
 			for service in services:
@@ -333,6 +343,48 @@ def runClient(client, reset, ready, devices):
 								currDevice.b = charac
 							elif charac.uuid == rgbwUuid:
 								currDevice.rgbw = charac
+
+				elif service.uuid == beetleUuid:
+					for charac in service.characteristics:
+						print "  ", charac
+
+						if currDevice is not None:
+							if charac.uuid == bdAddrUuid:
+								try:
+									bdaddr = charac.read()[::-1]
+									currDevice.address = ":".join(
+										"%02X" % x for x in bdaddr)
+								except ClientError, err:
+									print err
+								except Exception, err:
+									print err
+							elif charac.uuid == connTimeUuid:
+								try:
+									raw = charac.read()
+									if len(raw) != 4:
+										continue
+									epoch = struct.unpack('<I', bytes(raw))[0]
+									currDevice.connectTime = \
+										datetime.utcfromtimestamp(epoch)
+
+								except ClientError, err:
+									print err
+								except Exception, err:
+									print err
+							elif charac.uuid == gatewayUuid:
+								try:
+									gateway = charac.read()
+									currDevice.gateway = str(gateway)
+								except ClientError, err:
+									print err
+								except Exception, err:
+									print err
+
+							print currDevice, currDevice.ready
+
+							if currDevice.ready:
+								devices.append(currDevice)
+								currDevice = None
 
 					if currDevice is not None:
 						print currDevice, currDevice.ready

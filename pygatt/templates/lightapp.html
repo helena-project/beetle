@@ -8,9 +8,11 @@
 
 	<!-- bootstrap -->
 	<!-- https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css -->
-	<link rel="stylesheet" type='text/css' href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<link rel="stylesheet" type='text/css'
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 	<!-- https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css -->
-	<link rel="stylesheet" type='text/css' href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" type='text/css'
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 
 	<!-- Google fonts -->
 	<!-- https://fonts.googleapis.com/css?family=Roboto:400,300 -->
@@ -34,7 +36,8 @@
 
 <script type="text/javascript">
 	function rescan() {
-		window.alert("Rescanning for devices... Please be patient. This page will automatically reload when done.");
+		window.alert("Rescanning for devices... Please be patient. " +
+			"This page will automatically reload when done.");
 
 		var req = new XMLHttpRequest();
 		req.onreadystatechange = function() {
@@ -49,12 +52,27 @@
 		req.open("POST", "/rescan", true);
 		req.send();
 	}
+
+	function validateUpdateForm(name) {
+		var form = document.forms[name];
+		var field = form['field'].value;
+		var value = form['value'].value;
+		if (field == 'r' || field == 'g' || field == 'b' || field == 'w') {
+			if (value == null || value == "") {
+				alert("Cannot write blank value to color channel.");
+				return false;
+			}
+		}
+		return true;
+	}
 </script>
 
 <div class="container sec">
 	<table class="table">
 		<tr class="active">
 			<th>Name</th>
+			<th>Gateway</th>
+			<th>Connect Time (UTC)</th>
 			<th>State</th>
 			<th><font color="red">Red</font></th>
 			<th><font color="green">Green</font></th>
@@ -67,11 +85,14 @@
 
 	{% if devices %}
 	{% for device in devices %}
-		<form method="post">
+		<form name="{{device.token}}" method="post"
+			onsubmit="return validateUpdateForm('{{device.token}}');">
 		<input type="hidden" name="token" value="{{device.token}}">
 
 		<tr>
 			<td>{{ device.name }}</td>
+			<td>{{ device.gateway }}</td>
+			<td>{{ device.connectTime }}</td>
 			<td>{{ device.state }}</td>
 			<td>{{ device.red }}</td>
 			<td>{{ device.green }}</td>
@@ -97,7 +118,7 @@
 	{% endfor %}
 	{% else %}
 		<tr>
-			<td colspan="9"><i>No devices to show.</i></td>
+			<td colspan="11"><i>No devices to show.</i></td>
 		</tr>
 	{% endif %}
 

@@ -8,9 +8,11 @@
 
 	<!-- bootstrap -->
 	<!-- https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css -->
-	<link rel="stylesheet" type='text/css' href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<link rel="stylesheet" type='text/css'
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 	<!-- https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css -->
-	<link rel="stylesheet" type='text/css' href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" type='text/css'
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 
 	<!-- Google fonts -->
 	<!-- https://fonts.googleapis.com/css?family=Roboto:400,300 -->
@@ -34,7 +36,8 @@
 
 <script type="text/javascript">
 	function rescan() {
-		window.alert("Rescanning for sensors... Please be patient. This page will automatically reload when done.");
+		window.alert("Rescanning for sensors... Please be patient. " +
+			"This page will automatically reload when done.");
 
 		var req = new XMLHttpRequest();
 		req.onreadystatechange = function() {
@@ -56,6 +59,8 @@
 		<tr class="active">
 			<th>Name</th>
 			<th>Address</th>
+			<th>Gateway</th>
+			<th>Connect Time (UTC)</th>
 			<th>Temperature (C)</th>
 			<th>Pressure (Pa)</th>
 			<th>Humidity (%)</th>
@@ -68,6 +73,8 @@
 		<tr>
 			<td>{{ device.name }}</td>
 			<td>{{ device.address }}</td>
+			<td>{{ device.gateway }}</td>
+			<td>{{ device.connectTime }}</td>
 			<td>{{ device.temperature }}</td>
 			<td>{{ device.pressure }}</td>
 			<td>{{ device.humidity }}</td>
@@ -77,7 +84,7 @@
 	{% endfor %}
 	{% else %}
 		<tr>
-			<td colspan="7"><i>No devices to show.</i></td>
+			<td colspan="9"><i>No devices to show.</i></td>
 		</tr>
 	{% endif %}
 
