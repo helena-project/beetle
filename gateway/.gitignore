@@ -4,5 +4,6 @@
 /Release/*.json
 *~
 /.settings/
+/deps/
 *.o
 *.d
