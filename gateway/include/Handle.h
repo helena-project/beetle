@@ -36,11 +36,11 @@ public:
  */
 class Handle {
 public:
-	Handle();
+	Handle(bool staticHandle = false, bool cacheInfinite = false);
 	virtual ~Handle();
 
 	bool isCacheInfinite() const;
-	void setCacheInfinite(bool cacheInfinite);
+	bool isStaticHandle() const;
 
 	/*
 	 * Stores the handle of the characteristic, or the handle of the attribute
@@ -72,7 +72,8 @@ protected:
 	uint16_t serviceHandle = 0;
 	uint16_t charHandle = 0;
 	uint16_t endGroupHandle = 0;
-	bool cacheInfinite = false;
+	bool staticHandle;
+	bool cacheInfinite;
 };
 
 class PrimaryService: public Handle {
@@ -92,6 +93,8 @@ public:
 };
 
 class CharacteristicValue: public Handle {
+public:
+	CharacteristicValue(bool staticHandle = false, bool cacheInfinite = false);
 	std::string str() const;
 };
 

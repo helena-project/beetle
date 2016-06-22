@@ -59,12 +59,13 @@
 		<tr class="active">
 			<th>Name</th>
 			<th>Address</th>
+			<th>Gateway</th>
+			<th>Connect Time (UTC)</th>
 			<th>Temperature (C)</th>
 			<th>Pressure (Pa)</th>
 			<th>Humidity (%)</th>
 			<th>Unknown 1</th>
 			<th>Unknown 2</th>
-			<th>Connect Time (UTC)</th>
 		</tr>
 
 	{% if devices %}
@@ -72,17 +73,18 @@
 		<tr>
 			<td>{{ device.name }}</td>
 			<td>{{ device.address }}</td>
+			<td>{{ device.gateway }}</td>
+			<td>{{ device.connectTime }}</td>
 			<td>{{ device.temperature }}</td>
 			<td>{{ device.pressure }}</td>
 			<td>{{ device.humidity }}</td>
 			<td>{{ device.unk1 }}</td>
 			<td>{{ device.unk2 }}</td>
-			<td>{{ device.connectTime }}</td>
 		</tr>
 	{% endfor %}
 	{% else %}
 		<tr>
-			<td colspan="8"><i>No devices to show.</i></td>
+			<td colspan="9"><i>No devices to show.</i></td>
 		</tr>
 	{% endif %}
 

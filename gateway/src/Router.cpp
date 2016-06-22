@@ -22,6 +22,7 @@
 
 #include "Beetle.h"
 #include "ble/att.h"
+#include "ble/beetle.h"
 #include "ble/gatt.h"
 #include "ble/helper.h"
 #include "controller/AccessControl.h"
@@ -568,10 +569,15 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 						memcpy(resp + 4, handle->cache.value.get(), handle->cache.len);
 						respLen += 2 + handle->cache.len;
 						resp[1] = 2 + handle->cache.len;
-						if (attType.isShort() && attType.getShort() == GATT_CHARAC_UUID) {
-							uint16_t valueHandle = btohs(*(uint16_t *)(resp + 5));
-							valueHandle += currHandleRange.start;
-							*(uint16_t *)(resp + 5) = htobs(valueHandle);
+						if (attType.isShort()) {
+							if (attType.getShort() == GATT_CHARAC_UUID) {
+								uint16_t valueHandle = btohs(*(uint16_t *)(resp + 5));
+								valueHandle += currHandleRange.start;
+								*(uint16_t *)(resp + 5) = htobs(valueHandle);
+							} else if (attType.getShort() == BEETLE_CHARAC_HANDLE_RANGE_UUID) {
+								*(uint16_t *)(resp + 4) = htobs(currHandleRange.start);
+								*(uint16_t *)(resp + 6) = htobs(currHandleRange.end);
+							}
 						}
 						break;
 					}
@@ -650,11 +656,19 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 							 */
 							handle += currHandleRange.start;
 							*(uint16_t *)(resp + i) = htobs(handle);
-							if (attType.isShort() && attType.getShort() == GATT_CHARAC_UUID) {
-								int j = i + 3;
-								uint16_t valueHandle = btohs(*(uint16_t *)(resp + j));
-								valueHandle += currHandleRange.start;
-								*(uint16_t *)(resp + j) = htobs(valueHandle);
+							if (attType.isShort()) {
+								if (attType.getShort() == GATT_CHARAC_UUID) {
+									int j = i + 3;
+									uint16_t valueHandle = btohs(*(uint16_t *)(resp + j));
+									valueHandle += currHandleRange.start;
+									*(uint16_t *)(resp + j) = htobs(valueHandle);
+								} else if (attType.getShort() == BEETLE_CHARAC_HANDLE_RANGE_UUID) {
+									int j = i + 2;
+									uint16_t start = btohs(*(uint16_t *)(resp + j));
+									uint16_t end = btohs(*(uint16_t *)(resp + j + 2));
+									*(uint16_t *)(resp + j) = htobs(currHandleRange.start + start);
+									*(uint16_t *)(resp + j + 2) = htobs(currHandleRange.start + end);
+								}
 							}
 							memcpy(respCopy + respCopyLen, resp + i, segLen);
 							respCopyLen += segLen;
@@ -1058,8 +1072,9 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 			sourceDevice->writeResponse(&resp, 1);
 		}
 	} else if (opCode == ATT_OP_READ_REQ && proxyH->cache.value != NULL
-			&& ((dst == BEETLE_RESERVED_DEVICE || proxyH->cache.cachedSet.find(src) == proxyH->cache.cachedSet.end())
-			|| proxyH->isCacheInfinite())) {
+			&& ((dst == BEETLE_RESERVED_DEVICE || proxyH->isStaticHandle()
+					|| proxyH->cache.cachedSet.find(src) == proxyH->cache.cachedSet.end())
+			&& proxyH->isCacheInfinite())) {
 		/*
 		 * Serve read from cache
 		 */
@@ -1084,6 +1099,22 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 			}
 			resp[1] &= properties;
 		}
+
+		auto attType = proxyH->getUuid();
+		if (attType.isShort()) {
+			if (attType.getShort() == GATT_CHARAC_UUID) {
+				uint16_t valueHandle = btohs(*(uint16_t *)(resp + 2));
+				valueHandle += handleRange.start;
+				*(uint16_t *)(resp + 2) = htobs(valueHandle);
+			} else if (attType.getShort() == BEETLE_CHARAC_HANDLE_RANGE_UUID) {
+				/*
+				 * TODO(James): this might not be correct with variable block allocations
+				 */
+				*(uint16_t *)(resp + 1) = htobs(handleRange.start);
+				*(uint16_t *)(resp + 3) = htobs(handleRange.end);
+			}
+		}
+
 		sourceDevice->writeResponse(resp, respLen);
 	} else {
 		/*

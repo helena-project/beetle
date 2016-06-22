@@ -71,6 +71,7 @@
 	<table class="table">
 		<tr class="active">
 			<th>Name</th>
+			<th>Gateway</th>
 			<th>Connect Time (UTC)</th>
 			<th>State</th>
 			<th><font color="red">Red</font></th>
@@ -90,6 +91,7 @@
 
 		<tr>
 			<td>{{ device.name }}</td>
+			<td>{{ device.gateway }}</td>
 			<td>{{ device.connectTime }}</td>
 			<td>{{ device.state }}</td>
 			<td>{{ device.red }}</td>
@@ -116,7 +118,7 @@
 	{% endfor %}
 	{% else %}
 		<tr>
-			<td colspan="10"><i>No devices to show.</i></td>
+			<td colspan="11"><i>No devices to show.</i></td>
 		</tr>
 	{% endif %}
 

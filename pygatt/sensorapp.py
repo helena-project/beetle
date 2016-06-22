@@ -65,6 +65,7 @@ class SensorInstance(object):
 		self.name = name
 		self.address = None
 		self.connectTime = None
+		self.gateway = None
 		self._pressure = None
 		self._pressure_cached = None
 		self._temperature = None
@@ -184,7 +185,8 @@ class SensorInstance(object):
 		return (self.name is not None and self._pressure is not None
 			and self._temperature is not None and self._humidity is not None
 			and self._unk1 is not None and self._unk2 is not None
-			and self.address is not None and self.connectTime is not None)
+			and self.address is not None and self.connectTime is not None
+			and self.gateway is not None)
 
 	def subscribeAll(self):
 		assert self.ready
@@ -308,6 +310,7 @@ def runClient(client, reset, ready, devices):
 	beetleUuid = uuid.UUID(beetle.BEETLE_SERVICE_UUID)
 	bdAddrUuid = uuid.UUID(beetle.BEETLE_CHARAC_BDADDR_UUID)
 	connTimeUuid = uuid.UUID(beetle.BEETLE_CHARAC_CONNECTED_TIME_UUID)
+	gatewayUuid = uuid.UUID(beetle.BEETLE_CHARAC_CONNECTED_GATEWAY_UUID)
 
 	def _daemon():
 		while True:
@@ -317,8 +320,6 @@ def runClient(client, reset, ready, devices):
 			currDevice = None
 
 			# proceed down the services, separating out devices
-			# TODO(james): add Beetle service to include service id
-
 			printBox("Discovering handles")
 
 			for service in services:
@@ -332,7 +333,8 @@ def runClient(client, reset, ready, devices):
 							currDevice = None
 							try:
 								currDeviceName = str(charac.read())
-								currDevice = SensorInstance(name=currDeviceName)
+								currDevice = SensorInstance(
+									name=currDeviceName)
 							except ClientError, err:
 								print err
 							except Exception, err:
@@ -381,6 +383,15 @@ def runClient(client, reset, ready, devices):
 									print err
 								except Exception, err:
 									print err
+							elif charac.uuid == gatewayUuid:
+								try:
+									gateway = charac.read()
+									currDevice.gateway = str(gateway)
+								except ClientError, err:
+									print err
+								except Exception, err:
+									print err
+
 
 							print currDevice, currDevice.ready
 

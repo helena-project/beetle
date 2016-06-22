@@ -310,10 +310,14 @@ void VirtualDevice::setupBeetleService(int handleAlloc) {
 	auto beetleServiceUUID = boost::shared_array<uint8_t>(new uint8_t[2]);
 	*(uint16_t *) beetleServiceUUID.get() = btohs(BEETLE_SERVICE_UUID);
 	beetleServiceHandle->cache.set(beetleServiceUUID, 2);
-	beetleServiceHandle->setCacheInfinite(true);
 	handles[beetleServiceHandle->getHandle()] = beetleServiceHandle;
 
+	uint16_t lastHandle = 0;
+
 	if (type == LE_PERIPHERAL) {
+		/*
+		 * Bdaddr characteristic
+		 */
 		LEPeripheral *le = dynamic_cast<LEPeripheral *>(this);
 		assert(le);
 
@@ -324,10 +328,9 @@ void VirtualDevice::setupBeetleService(int handleAlloc) {
 		beetleBdaddrCharHandleValue[0] = GATT_CHARAC_PROP_READ;
 		*(uint16_t *) (beetleBdaddrCharHandleValue.get() + 3) = htobs(BEETLE_CHARAC_BDADDR_UUID);
 		beetleBdaddrCharHandle->cache.set(beetleBdaddrCharHandleValue, 5);
-		beetleBdaddrCharHandle->setCacheInfinite(true);
 		handles[beetleBdaddrCharHandle->getHandle()] = beetleBdaddrCharHandle;
 
-		auto beetleBdaddrAttrHandle = std::make_shared<CharacteristicValue>();
+		auto beetleBdaddrAttrHandle = std::make_shared<CharacteristicValue>(true, true);
 		beetleBdaddrAttrHandle->setHandle(handleAlloc++);
 		beetleBdaddrAttrHandle->setUuid(BEETLE_CHARAC_BDADDR_UUID);
 		beetleBdaddrAttrHandle->setServiceHandle(beetleServiceHandle->getHandle());
@@ -335,14 +338,13 @@ void VirtualDevice::setupBeetleService(int handleAlloc) {
 		auto beetleBdaddrAttrHandleValue = boost::shared_array<uint8_t>(new uint8_t[sizeof(bdaddr_t)]);
 		memcpy(beetleBdaddrAttrHandleValue.get(), le->getBdaddr().b, sizeof(bdaddr_t));
 		beetleBdaddrAttrHandle->cache.set(beetleBdaddrAttrHandleValue, sizeof(bdaddr_t));
-		beetleBdaddrAttrHandle->setCacheInfinite(true);
 		handles[beetleBdaddrAttrHandle->getHandle()] = beetleBdaddrAttrHandle;
 
 		// fill in attr handle for characteristic
 		beetleBdaddrCharHandle->setCharHandle(beetleBdaddrAttrHandle->getHandle());
 		*(uint16_t *) (beetleBdaddrCharHandleValue.get() + 1) = htobs(beetleBdaddrAttrHandle->getHandle());
 
-		auto beetleBdaddrTypeHandle = std::make_shared<Handle>();
+		auto beetleBdaddrTypeHandle = std::make_shared<Handle>(true, true);
 		beetleBdaddrTypeHandle->setHandle(handleAlloc++);
 		beetleBdaddrTypeHandle->setServiceHandle(beetleServiceHandle->getHandle());
 		beetleBdaddrTypeHandle->setCharHandle(beetleBdaddrCharHandle->getHandle());
@@ -351,40 +353,114 @@ void VirtualDevice::setupBeetleService(int handleAlloc) {
 		beetleBdaddrTypeHandleValue[0] = (le->getAddrType() == LEPeripheral::PUBLIC) ?
 				LE_PUBLIC_ADDRESS : LE_RANDOM_ADDRESS;
 		beetleBdaddrTypeHandle->cache.set(beetleBdaddrTypeHandleValue, 1);
-		beetleBdaddrTypeHandle->setCacheInfinite(true);
 		handles[beetleBdaddrTypeHandle->getHandle()] = beetleBdaddrTypeHandle;
 
 		beetleBdaddrCharHandle->setEndGroupHandle(beetleBdaddrTypeHandle->getHandle());
+
+		lastHandle = beetleBdaddrTypeHandle->getHandle();
 	}
 
-	auto beetleConnTimeCharHandle = std::make_shared<Characteristic>();
-	beetleConnTimeCharHandle->setHandle(handleAlloc++);
-	beetleConnTimeCharHandle->setServiceHandle(beetleServiceHandle->getHandle());
-	auto beetleConnTimeCharHandleValue = boost::shared_array<uint8_t>(new uint8_t[5]);
-	beetleConnTimeCharHandleValue[0] = GATT_CHARAC_PROP_READ;
-	*(uint16_t *) (beetleConnTimeCharHandleValue.get() + 3) = htobs(BEETLE_CHARAC_CONNECED_TIME_UUID);
-	beetleConnTimeCharHandle->cache.set(beetleConnTimeCharHandleValue, 5);
-	beetleConnTimeCharHandle->setCacheInfinite(true);
-	handles[beetleConnTimeCharHandle->getHandle()] = beetleConnTimeCharHandle;
+	/*
+	 * Handle range characteristic
+	 */
+	{
+		auto beetleHandleRangeCharHandle = std::make_shared<Characteristic>();
+		beetleHandleRangeCharHandle->setHandle(handleAlloc++);
+		beetleHandleRangeCharHandle->setServiceHandle(beetleServiceHandle->getHandle());
+		auto beetleHandleRangeCharHandleValue = boost::shared_array<uint8_t>(new uint8_t[5]);
+		beetleHandleRangeCharHandleValue[0] = GATT_CHARAC_PROP_READ;
+		*(uint16_t *) (beetleHandleRangeCharHandleValue.get() + 3) = htobs(BEETLE_CHARAC_HANDLE_RANGE_UUID);
+		beetleHandleRangeCharHandle->cache.set(beetleHandleRangeCharHandleValue, 5);
+		handles[beetleHandleRangeCharHandle->getHandle()] = beetleHandleRangeCharHandle;
 
-	auto beetleConnTimeAttrHandle = std::make_shared<CharacteristicValue>();
-	beetleConnTimeAttrHandle->setHandle(handleAlloc++);
-	beetleConnTimeAttrHandle->setUuid(UUID(BEETLE_CHARAC_CONNECED_TIME_UUID));
-	beetleConnTimeAttrHandle->setServiceHandle(beetleServiceHandle->getHandle());
-	beetleConnTimeAttrHandle->setCharHandle(beetleConnTimeCharHandle->getHandle());
-	auto beetleConnTimeAttrHandleValue = boost::shared_array<uint8_t>(new uint8_t[sizeof(int32_t)]);
-	*(int32_t *) (beetleConnTimeAttrHandleValue.get()) = htobl(static_cast<int32_t>(connectedTime));
-	beetleConnTimeAttrHandle->cache.set(beetleConnTimeAttrHandleValue, sizeof(int32_t));
-	beetleConnTimeAttrHandle->setCacheInfinite(true);
-	handles[beetleConnTimeAttrHandle->getHandle()] = beetleConnTimeAttrHandle;
+		auto beetleHandleRangeAttrHandle = std::make_shared<CharacteristicValue>(true, true);
+		beetleHandleRangeAttrHandle->setHandle(handleAlloc++);
+		beetleHandleRangeAttrHandle->setUuid(UUID(BEETLE_CHARAC_HANDLE_RANGE_UUID));
+		beetleHandleRangeAttrHandle->setServiceHandle(beetleServiceHandle->getHandle());
+		beetleHandleRangeAttrHandle->setCharHandle(beetleHandleRangeCharHandle->getHandle());
+		auto beetleHandleRangeAttrHandleValue = boost::shared_array<uint8_t>(new uint8_t[4]);
+		memset(beetleHandleRangeAttrHandleValue.get(), 0, 4);
+		beetleHandleRangeAttrHandle->cache.set(beetleHandleRangeAttrHandleValue, 4);
+		handles[beetleHandleRangeAttrHandle->getHandle()] = beetleHandleRangeAttrHandle;
 
-	// fill in attr handle for characteristic
-	beetleConnTimeCharHandle->setCharHandle(beetleConnTimeAttrHandle->getHandle());
-	*(uint16_t *) (beetleConnTimeCharHandleValue.get() + 1) = htobs(beetleConnTimeAttrHandle->getHandle());
+		// fill in attr handle for characteristic
+		beetleHandleRangeCharHandle->setCharHandle(beetleHandleRangeAttrHandle->getHandle());
+		*(uint16_t *) (beetleHandleRangeCharHandleValue.get() + 1) = htobs(beetleHandleRangeAttrHandle->getHandle());
 
-	beetleConnTimeCharHandle->setEndGroupHandle(beetleConnTimeAttrHandle->getHandle());
+		beetleHandleRangeCharHandle->setEndGroupHandle(beetleHandleRangeAttrHandle->getHandle());
 
-	beetleServiceHandle->setEndGroupHandle(beetleConnTimeAttrHandle->getHandle());
+		lastHandle = beetleHandleRangeAttrHandle->getHandle();
+	}
+
+	/*
+	 * Connected time characteristic
+	 */
+	{
+		auto beetleConnTimeCharHandle = std::make_shared<Characteristic>();
+		beetleConnTimeCharHandle->setHandle(handleAlloc++);
+		beetleConnTimeCharHandle->setServiceHandle(beetleServiceHandle->getHandle());
+		auto beetleConnTimeCharHandleValue = boost::shared_array<uint8_t>(new uint8_t[5]);
+		beetleConnTimeCharHandleValue[0] = GATT_CHARAC_PROP_READ;
+		*(uint16_t *) (beetleConnTimeCharHandleValue.get() + 3) = htobs(BEETLE_CHARAC_CONNECTED_TIME_UUID);
+		beetleConnTimeCharHandle->cache.set(beetleConnTimeCharHandleValue, 5);
+		handles[beetleConnTimeCharHandle->getHandle()] = beetleConnTimeCharHandle;
+
+		auto beetleConnTimeAttrHandle = std::make_shared<CharacteristicValue>(true, true);
+		beetleConnTimeAttrHandle->setHandle(handleAlloc++);
+		beetleConnTimeAttrHandle->setUuid(UUID(BEETLE_CHARAC_CONNECTED_TIME_UUID));
+		beetleConnTimeAttrHandle->setServiceHandle(beetleServiceHandle->getHandle());
+		beetleConnTimeAttrHandle->setCharHandle(beetleConnTimeCharHandle->getHandle());
+		auto beetleConnTimeAttrHandleValue = boost::shared_array<uint8_t>(new uint8_t[sizeof(int32_t)]);
+		*(int32_t *) (beetleConnTimeAttrHandleValue.get()) = htobl(static_cast<int32_t>(connectedTime));
+		beetleConnTimeAttrHandle->cache.set(beetleConnTimeAttrHandleValue, sizeof(int32_t));
+		handles[beetleConnTimeAttrHandle->getHandle()] = beetleConnTimeAttrHandle;
+
+		// fill in attr handle for characteristic
+		beetleConnTimeCharHandle->setCharHandle(beetleConnTimeAttrHandle->getHandle());
+		*(uint16_t *) (beetleConnTimeCharHandleValue.get() + 1) = htobs(beetleConnTimeAttrHandle->getHandle());
+
+		beetleConnTimeCharHandle->setEndGroupHandle(beetleConnTimeAttrHandle->getHandle());
+
+		lastHandle = beetleConnTimeAttrHandle->getHandle();
+	}
+
+	/*
+	 * Gateway name characteristic
+	 */
+	{
+		auto beetleConnGatewayCharHandle = std::make_shared<Characteristic>();
+		beetleConnGatewayCharHandle->setHandle(handleAlloc++);
+		beetleConnGatewayCharHandle->setServiceHandle(beetleServiceHandle->getHandle());
+		auto beetleConnGatewayCharHandleValue = boost::shared_array<uint8_t>(new uint8_t[5]);
+		beetleConnGatewayCharHandleValue[0] = GATT_CHARAC_PROP_READ;
+		*(uint16_t *) (beetleConnGatewayCharHandleValue.get() + 3) = htobs(BEETLE_CHARAC_CONNECTED_GATEWAY_UUID);
+		beetleConnGatewayCharHandle->cache.set(beetleConnGatewayCharHandleValue, 5);
+		handles[beetleConnGatewayCharHandle->getHandle()] = beetleConnGatewayCharHandle;
+
+		auto beetleConnGatewayAttrHandle = std::make_shared<CharacteristicValue>(true, true);
+		beetleConnGatewayAttrHandle->setHandle(handleAlloc++);
+		beetleConnGatewayAttrHandle->setUuid(UUID(BEETLE_CHARAC_CONNECTED_GATEWAY_UUID));
+		beetleConnGatewayAttrHandle->setServiceHandle(beetleServiceHandle->getHandle());
+		beetleConnGatewayAttrHandle->setCharHandle(beetleConnGatewayCharHandle->getHandle());
+		int gatewayNameLen = beetle.name.length();
+		if (gatewayNameLen >= ATT_DEFAULT_LE_MTU - 3) {
+			gatewayNameLen = ATT_DEFAULT_LE_MTU - 3;
+		}
+		auto beetleConnGatewayAttrHandleValue = boost::shared_array<uint8_t>(new uint8_t[gatewayNameLen]);
+		memcpy(beetleConnGatewayAttrHandleValue.get(), beetle.name.c_str(), gatewayNameLen);
+		beetleConnGatewayAttrHandle->cache.set(beetleConnGatewayAttrHandleValue, gatewayNameLen);
+		handles[beetleConnGatewayAttrHandle->getHandle()] = beetleConnGatewayAttrHandle;
+
+		// fill in attr handle for characteristic
+		beetleConnGatewayCharHandle->setCharHandle(beetleConnGatewayAttrHandle->getHandle());
+		*(uint16_t *) (beetleConnGatewayCharHandleValue.get() + 1) = htobs(beetleConnGatewayAttrHandle->getHandle());
+
+		beetleConnGatewayCharHandle->setEndGroupHandle(beetleConnGatewayAttrHandle->getHandle());
+
+		lastHandle = beetleConnGatewayAttrHandle->getHandle();
+	}
+
+	beetleServiceHandle->setEndGroupHandle(lastHandle);
 }
 
 typedef struct {
@@ -618,7 +694,6 @@ static std::map<uint16_t, std::shared_ptr<Handle>> discoverAllHandles(VirtualDev
 		auto serviceHandle = std::make_shared<PrimaryService>();
 		serviceHandle->setHandle(service.handle);
 		serviceHandle->setEndGroupHandle(service.endGroup);
-		serviceHandle->setCacheInfinite(true);
 		serviceHandle->cache.set(service.value, service.len);
 		assert(handles.find(service.handle) == handles.end());
 		handles[service.handle] = serviceHandle;
@@ -629,7 +704,6 @@ static std::map<uint16_t, std::shared_ptr<Handle>> discoverAllHandles(VirtualDev
 			auto charHandle = std::make_shared<Characteristic>();
 			charHandle->setHandle(characteristic.handle);
 			charHandle->setServiceHandle(serviceHandle->getHandle());
-			charHandle->setCacheInfinite(true);
 
 			// let the handle inherit the pointer
 			charHandle->cache.set(characteristic.value, characteristic.len);
@@ -655,14 +729,13 @@ static std::map<uint16_t, std::shared_ptr<Handle>> discoverAllHandles(VirtualDev
 					if (handleUuid.isShort() && handleUuid.getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
 						handle = std::make_shared<ClientCharCfg>();
 					} else if (handleInfo.handle == charHandle->getAttrHandle()) {
-						handle = std::make_shared<CharacteristicValue>();
+						handle = std::make_shared<CharacteristicValue>(false, false);
 						handle->setUuid(handleUuid);
 					} else {
 						handle = std::make_shared<Handle>();
 						handle->setUuid(handleUuid);
 					}
 					handle->setHandle(handleInfo.handle);
-					handle->setCacheInfinite(false);
 					handle->setServiceHandle(serviceHandle->getHandle());
 					handle->setCharHandle(characteristic.handle);
 					assert(handles.find(handleInfo.handle) == handles.end());
@@ -683,14 +756,13 @@ static std::map<uint16_t, std::shared_ptr<Handle>> discoverAllHandles(VirtualDev
 				if (handleUuid.isShort() && handleUuid.getShort() == GATT_CLIENT_CHARAC_CFG_UUID) {
 					handle = std::make_shared<ClientCharCfg>();
 				} else if (handleInfo.handle == charHandle->getAttrHandle()) {
-					handle = std::make_shared<CharacteristicValue>();
+					handle = std::make_shared<CharacteristicValue>(false, false);
 					handle->setUuid(handleUuid);
 				} else {
 					handle = std::make_shared<Handle>();
 					handle->setUuid(handleUuid);
 				}
 				handle->setHandle(handleInfo.handle);
-				handle->setCacheInfinite(false);
 				handle->setServiceHandle(serviceHandle->getHandle());
 				handle->setCharHandle(characteristic.handle);
 				assert(handles.find(handleInfo.handle) == handles.end());

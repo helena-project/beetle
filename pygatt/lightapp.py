@@ -67,6 +67,7 @@ class LightInstance(object):
 		self.name = name
 		self.address = None
 		self.connectTime = None
+		self.gateway = None
 		self.r = None
 		self.g = None
 		self.b = None
@@ -117,10 +118,11 @@ class LightInstance(object):
 
 	@property
 	def ready(self):
-		return (self.name is not None and self.r is not None and
-			self.g is not None and self.b is not None and
-			self.w is not None and self.rgbw is not None and
-			self.connectTime is not None and self.address is not None)
+		return (self.name is not None and self.r is not None
+			and self.g is not None and self.b is not None
+			and self.w is not None and self.rgbw is not None
+			and self.connectTime is not None and self.address is not None
+			and self.gateway is not None)
 
 	def __str__(self):
 		return self.name
@@ -297,6 +299,7 @@ def runClient(client, reset, ready, devices):
 	beetleUuid = uuid.UUID(beetle.BEETLE_SERVICE_UUID)
 	bdAddrUuid = uuid.UUID(beetle.BEETLE_CHARAC_BDADDR_UUID)
 	connTimeUuid = uuid.UUID(beetle.BEETLE_CHARAC_CONNECTED_TIME_UUID)
+	gatewayUuid = uuid.UUID(beetle.BEETLE_CHARAC_CONNECTED_GATEWAY_UUID)
 
 	def _daemon():
 		while True:
@@ -306,8 +309,6 @@ def runClient(client, reset, ready, devices):
 			currDevice = None
 
 			# proceed down the services, separating out devices
-			# TODO(james): add Beetle service to delimit devices
-
 			printBox("Discovering handles")
 
 			for service in services:
@@ -366,6 +367,14 @@ def runClient(client, reset, ready, devices):
 									currDevice.connectTime = \
 										datetime.utcfromtimestamp(epoch)
 
+								except ClientError, err:
+									print err
+								except Exception, err:
+									print err
+							elif charac.uuid == gatewayUuid:
+								try:
+									gateway = charac.read()
+									currDevice.gateway = str(gateway)
 								except ClientError, err:
 									print err
 								except Exception, err:

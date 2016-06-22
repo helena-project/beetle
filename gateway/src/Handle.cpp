@@ -29,20 +29,21 @@ void CachedHandle::clear() {
 	time = ::time(NULL);
 }
 
-Handle::Handle() {
-
+Handle::Handle(bool staticHandle_, bool cacheInfinite_) {
+	staticHandle = staticHandle_;
+	cacheInfinite = cacheInfinite_;
 }
 
 Handle::~Handle() {
 
 }
 
-bool Handle::isCacheInfinite() const {
-	return cacheInfinite;
+bool Handle::isStaticHandle() const {
+	return staticHandle;
 }
 
-void Handle::setCacheInfinite(bool cacheInfinite) {
-	this->cacheInfinite = cacheInfinite;
+bool Handle::isCacheInfinite() const {
+	return cacheInfinite;
 }
 
 uint16_t Handle::getCharHandle() const {
@@ -100,6 +101,11 @@ std::string Handle::str() const {
 	return ss.str();
 }
 
+CharacteristicValue::CharacteristicValue(bool staticHandle, bool cacheInfinite)
+	: Handle(staticHandle, cacheInfinite) {
+
+}
+
 std::string CharacteristicValue::str() const {
 	std::set<device_t> subscribers;
 	subscribers.insert(subscribersNotify.cbegin(), subscribersNotify.cend());
@@ -129,7 +135,7 @@ std::string CharacteristicValue::str() const {
 	return ss.str();
 }
 
-PrimaryService::PrimaryService() {
+PrimaryService::PrimaryService() : Handle(true, true) {
 	uuid = UUID(GATT_PRIM_SVC_UUID);
 }
 
@@ -144,7 +150,7 @@ std::string PrimaryService::str() const {
 	return ss.str();
 }
 
-Characteristic::Characteristic() {
+Characteristic::Characteristic() : Handle(true, true) {
 	uuid = UUID(GATT_CHARAC_UUID);
 }
 
@@ -187,7 +193,7 @@ std::string Characteristic::str() const {
 	return ss.str();
 }
 
-ClientCharCfg::ClientCharCfg() {
+ClientCharCfg::ClientCharCfg() : Handle(false, false) {
 	uuid = UUID(GATT_CLIENT_CHARAC_CFG_UUID);
 }
 
