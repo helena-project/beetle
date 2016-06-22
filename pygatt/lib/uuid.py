@@ -31,6 +31,7 @@ class UUID(object):
 		else:
 			raise Exception("unsupported type")
 
+	@property
 	def raw(self):
 		"""Return the uuid as a bytearray"""
 		return self._raw[:]

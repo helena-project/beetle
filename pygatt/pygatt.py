@@ -276,7 +276,7 @@ class _ServerService(object):
 		self._handle = _ServerHandle(server, self, UUID(gatt.PRIM_SVC_UUID))
 
 		# reversed by convention
-		self._handle._set_read_value(uuid.raw()[::-1])
+		self._handle._set_read_value(uuid.raw[::-1])
 
 	def _add_characteristic(self, char):
 		self.characteristics.append(char)
@@ -355,7 +355,7 @@ class _ServerCharacteristic(object):
 			"""Properties may change."""
 			handleValue = bytearray([self._properties])
 			handleValue += self._valHandle._get_handle_as_bytearray()
-			handleValue += self.uuid.raw()[::-1]
+			handleValue += self.uuid.raw[::-1]
 			return handleValue
 		self._handle._set_read_callback(read_cb)
 
@@ -638,7 +638,7 @@ class GattServer(object):
 			if len(resp) + 2 + respFmt > self._socket.sendMTU:
 				break
 			resp += handle._get_handle_as_bytearray()
-			resp += handle._uuid.raw()[::-1]
+			resp += handle._uuid.raw[::-1]
 			respCount += 1
 
 		if respCount == 0:
@@ -1227,6 +1227,11 @@ class _ClientDescriptor(object):
 
 	# Public methods
 
+	@property
+	def handle(self):
+		"""The handle number of the descriptor"""
+		return self._handleNo
+
 	def read(self):
 		"""Blocking read of the descriptor.
 
@@ -1505,7 +1510,7 @@ class GattClient(object):
 
 		while True:
 			req = att_pdu.new_find_by_type_value_req(currHandle, endHandle,
-				primSvcUuid, uuid.raw()[::-1])
+				primSvcUuid, uuid.raw[::-1])
 
 			resp = self._new_transaction(req)
 			if not resp:
