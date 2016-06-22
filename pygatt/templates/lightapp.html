@@ -20,7 +20,7 @@
 
 	<link rel="stylesheet" type="text/css" href="style.css" >
 
-	<meta http-equiv="refresh" content="30">
+	<meta http-equiv="refresh" content="60">
 </head>
 
 <body>
@@ -50,6 +50,22 @@
 			}
 		};
 		req.open("POST", "/rescan", true);
+		req.send();
+	}
+
+	function allOnOff(on) {
+		var req = new XMLHttpRequest();
+		req.onreadystatechange = function() {
+			if (req.readyState == 4) {
+				if (req.status == 200) {
+					location.reload();
+				} else {
+					window.alert("Failure. :(");
+				}
+			}
+		};
+		var action = on ? "/allOn" : "/allOff"
+		req.open("POST", action, true);
 		req.send();
 	}
 
@@ -124,6 +140,15 @@
 
 	</table>
 </div>
+
+<div class="container sec">
+	<center>
+		<button type="button" onclick="allOnOff(true)">All on</button>
+		<button type="button" onclick="allOnOff(false)">All off</button>
+	</center>
+</div>
+
+<br>
 
 <div class="container sec">
 	<center>

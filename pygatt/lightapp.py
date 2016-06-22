@@ -132,6 +132,8 @@ class LightInstance(object):
 	def __str__(self):
 		return self.name
 
+DEFAULT_ON_VALUE = 100
+
 def runHttpServer(port, client, reset, ready, devices):
 	"""Start the HTTP server"""
 
@@ -219,7 +221,7 @@ def runHttpServer(port, client, reset, ready, devices):
 
 			value = -1
 			if field == "on":
-				value = 100
+				value = DEFAULT_ON_VALUE
 			elif field == "off":
 				value = 0
 			else:
@@ -259,6 +261,19 @@ def runHttpServer(port, client, reset, ready, devices):
 
 			self._serve_main()
 
+		def _all_action(self, on=True):
+			valueToWrite = bytearray([DEFAULT_ON_VALUE if on else 0])
+			for device in devices:
+				# TODO: it would be preferable to use the RGBW char
+				device.r.write(bytearray(1))
+				device.g.write(bytearray(1))
+				device.b.write(bytearray(1))
+				device.w.write(valueToWrite)
+
+			self.send_response(200, 'OK')
+			self.end_headers()
+			self.wfile.close()
+
 		def do_GET(self):
 			if self.path == "/":
 				self._serve_main()
@@ -277,6 +292,10 @@ def runHttpServer(port, client, reset, ready, devices):
 				self.send_response(200, 'OK')
 				self.end_headers()
 				self.wfile.close()
+			elif self.path == "/allOn":
+				self._all_action(on=True)
+			elif self.path == "/allOff":
+				self._all_action(on=False)
 			elif self.path == "/":
 				self._update_device()
 			else:
