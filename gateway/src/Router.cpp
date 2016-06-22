@@ -418,106 +418,119 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 	 */
 	std::lock_guard<std::mutex> hatLg(sourceDevice->hatMutex);
 
-	// TODO forward the request to the device where the range falls, this does not work if you want to read across
-	// multiple devices
+	bool success = false;
 
-	device_t dst = sourceDevice->hat->getDeviceForHandle(startHandle);
-	if (dst == BEETLE_RESERVED_DEVICE) {
-		std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
-		if (debug_router) {
-			pdebug("ReadByTypeRequest to " + destinationDevice->getName());
-		}
+	int currHandle = startHandle;
+	while (currHandle < endHandle) {
+		device_t dst = sourceDevice->hat->getDeviceForHandle(currHandle);
+		handle_range_t currHandleRange = sourceDevice->hat->getHandleRange(currHandle);
 
-		/*
-		 * Lock handles
-		 */
-		std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
-
-		// TODO be less lazy and return more than 1
-		uint8_t resp[destinationDevice->getMTU()];
-		resp[0] = ATT_OP_READ_BY_TYPE_RESP;
-		int respLen = 2;
-		for (auto &kv : destinationDevice->handles) {
-			if (kv.first < startHandle) {
-				continue;
-			} else if (kv.first > endHandle) {
-				break;
-			}
-
-			auto handle = kv.second;
-			if (handle->getUuid() == attType) {
-				*(uint16_t*) (resp + 2) = htobs(handle->getHandle());
-				memcpy(resp + 4, handle->cache.value.get(), handle->cache.len);
-				respLen += 2 + handle->cache.len;
-				resp[1] = 2 + handle->cache.len;
-				break;
-			}
-		}
-
-		if (respLen > 2) {
-			sourceDevice->writeResponse(resp, respLen);
-		} else {
-			uint8_t err[ATT_ERROR_PDU_LEN];
-			pack_error_pdu(opCode, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
-			sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
-		}
-	} else if (dst == NULL_RESERVED_DEVICE) {
-		if (debug_router) {
-			pdebug("ReadByTypeRequest to null");
-		}
-		uint8_t err[ATT_ERROR_PDU_LEN];
-		pack_error_pdu(opCode, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
-		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
-	} else {
-		handle_range_t handleRange = sourceDevice->hat->getHandleRange(startHandle);
-		*(uint16_t *) (buf + 1) = htobs(startHandle - handleRange.start);
-		*(uint16_t *) (buf + 3) = htobs(endHandle - handleRange.start);
-
-		if (beetle.devices.find(dst) == beetle.devices.end()) {
-			pwarn(std::to_string(dst) + " does not id a device");
-			return -1;
-		}
-
-		std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
-		if (debug_router) {
-			pdebug("ReadByTypeRequest to " + destinationDevice->getName());
-		}
-
-		/*
-		 * Check whether the attribute type may be read.
-		 */
-		if (beetle.accessControl
-				&& beetle.accessControl->canReadType(sourceDevice, destinationDevice, attType) == false) {
-			uint8_t err[ATT_ERROR_PDU_LEN];
-			pack_error_pdu(opCode, startHandle, ATT_ECODE_READ_NOT_PERM, err);
-			sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
-			return 0;
-		}
-
-		bool serveFromCache = false;
-
-		auto destinationVirtualDevice = std::dynamic_pointer_cast<VirtualDevice>(destinationDevice);
-		assert(destinationVirtualDevice);
-
-		/*
-		 * Field the request from Beetle's metadata handles. This occurs when the start handle exceeds the largest
-		 * natural handle or when there are no more handles of target type at or after start handle.
-		 */
-		serveFromCache = startHandle > destinationVirtualDevice->getHighestForwardedHandle() + handleRange.start;
-		if (!serveFromCache) {
+		if (dst == BEETLE_RESERVED_DEVICE) {
+			std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
 			if (debug_router) {
-				pdebug("ReadByTypeRequest: finding first match");
+				pdebug("ReadByTypeRequest to " + destinationDevice->getName());
 			}
-			int firstHandleMatch = -1;
+
+			/*
+			 * Lock handles
+			 */
+			std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
+
+			// TODO be less lazy and return more than 1
+			uint8_t resp[destinationDevice->getMTU()];
+			resp[0] = ATT_OP_READ_BY_TYPE_RESP;
+			int respLen = 2;
 			for (auto &kv : destinationDevice->handles) {
-				if (kv.first + handleRange.start < startHandle) {
+				if (kv.first < startHandle) {
 					continue;
-				} else if (kv.first + handleRange.start > endHandle) {
+				} else if (kv.first > endHandle) {
 					break;
 				}
 
 				auto handle = kv.second;
 				if (handle->getUuid() == attType) {
+					*(uint16_t*) (resp + 2) = htobs(handle->getHandle());
+					memcpy(resp + 4, handle->cache.value.get(), handle->cache.len);
+					respLen += 2 + handle->cache.len;
+					resp[1] = 2 + handle->cache.len;
+					break;
+				}
+			}
+
+			if (respLen > 2) {
+				sourceDevice->writeResponse(resp, respLen);
+				success = true;
+				break;
+			} else {
+				currHandle = currHandleRange.end + 1;
+				continue;
+			}
+		} else if (dst == NULL_RESERVED_DEVICE) {
+			if (debug_router) {
+				pdebug("ReadByTypeRequest to null");
+			}
+			currHandle = currHandleRange.end + 1;
+			continue;
+		} else {
+			*(uint16_t *) (buf + 1) = htobs(startHandle - currHandleRange.start);
+			*(uint16_t *) (buf + 3) = htobs(endHandle - currHandleRange.start);
+
+			if (beetle.devices.find(dst) == beetle.devices.end()) {
+				pwarn(std::to_string(dst) + " does not id a device");
+				return -1;
+			}
+
+			std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
+			if (debug_router) {
+				pdebug("ReadByTypeRequest to " + destinationDevice->getName());
+			}
+
+			/*
+			 * Check whether the attribute type may be read.
+			 */
+			if (beetle.accessControl
+					&& beetle.accessControl->canReadType(sourceDevice, destinationDevice, attType) == false) {
+				uint8_t err[ATT_ERROR_PDU_LEN];
+				pack_error_pdu(opCode, startHandle, ATT_ECODE_READ_NOT_PERM, err);
+				sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
+				return 0;
+			}
+
+
+			auto destinationVirtualDevice = std::dynamic_pointer_cast<VirtualDevice>(destinationDevice);
+			assert(destinationVirtualDevice);
+
+			if (debug_router) {
+				pdebug("ReadByTypeRequest: finding first match");
+			}
+
+			/*
+			 * Is the handle a Beetle generated handle? If so, it is served from the cache.
+			 */
+			bool serveMetadataHandle = false;
+
+			int firstHandleMatch = -1;
+			for (auto &kv : destinationDevice->handles) {
+				if (kv.first + currHandleRange.start < startHandle) {
+					continue;
+				} else if (kv.first + currHandleRange.start > endHandle) {
+					break;
+				}
+
+				auto handle = kv.second;
+				if (handle->getUuid() == attType) {
+
+					if (kv.first > destinationVirtualDevice->getHighestForwardedHandle()) {
+						/*
+						 * Ensure access to at least one handle is allowed.
+						 */
+						uint8_t unused;
+						if (beetle.accessControl && beetle.accessControl->canAccessHandle(sourceDevice,
+								destinationDevice, handle, ATT_OP_READ_REQ, unused) == false) {
+							continue;
+						}
+					}
+
 					firstHandleMatch = handle->getHandle();
 					break;
 				}
@@ -525,132 +538,152 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 
 			if (firstHandleMatch >= 0) {
 				if (firstHandleMatch >= destinationVirtualDevice->getHighestForwardedHandle()) {
-					serveFromCache = true;
+					serveMetadataHandle = true;
 				}
 			} else {
-				serveFromCache = true;
-			}
-		}
-
-		std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
-		if (serveFromCache) {
-			// TODO be less lazy and return more than 1
-			uint8_t resp[destinationDevice->getMTU()];
-			resp[0] = ATT_OP_READ_BY_TYPE_RESP;
-			int respLen = 2;
-			for (auto &kv : destinationVirtualDevice->handles) {
-				if (kv.first < destinationVirtualDevice->getHighestForwardedHandle()) {
-					continue;
-				} else if (kv.first + handleRange.start < startHandle) {
-					continue;
-				} else if (kv.first + handleRange.start > endHandle) {
-					break;
-				}
-
-				auto handle = kv.second;
-				if (handle->getUuid() == attType) {
-					*(uint16_t*) (resp + 2) = htobs(handle->getHandle() + handleRange.start);
-					memcpy(resp + 4, handle->cache.value.get(), handle->cache.len);
-					respLen += 2 + handle->cache.len;
-					resp[1] = 2 + handle->cache.len;
-					if (attType.isShort() && attType.getShort() == GATT_CHARAC_UUID) {
-						uint16_t valueHandle = btohs(*(uint16_t *)(resp + 5));
-						valueHandle += handleRange.start;
-						*(uint16_t *)(resp + 5) = htobs(valueHandle);
-					}
-					break;
-				}
-			}
-
-			if (respLen > 2) {
-				sourceDevice->writeResponse(resp, respLen);
-			} else {
-				uint8_t err[ATT_ERROR_PDU_LEN];
-				pack_error_pdu(opCode, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
-				sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
-			}
-		} else {
-			/*
-			 * Send the request to the device
-			 */
-			destinationDevice->writeTransaction(buf, len, [this, src, dst, attType, handleRange, startHandle](
-					uint8_t *resp, int respLen) {
 				/*
-				 * Lock devices
+				 * No matching handle found on this device
 				 */
-				boost::shared_lock<boost::shared_mutex> devicesLk(this->beetle.devicesMutex);
+				currHandle = currHandleRange.end + 1;
+				continue;
+			}
 
-				if (beetle.devices.find(src) == beetle.devices.end()) {
-					pwarn(std::to_string(src) + " does not id a device");
-					return;
-				}
-				std::shared_ptr<Device> sourceDevice = beetle.devices[src];
+			if (serveMetadataHandle) {
+				// TODO be less lazy and return more than 1
+				uint8_t resp[destinationDevice->getMTU()];
+				resp[0] = ATT_OP_READ_BY_TYPE_RESP;
+				int respLen = 2;
+				for (auto &kv : destinationVirtualDevice->handles) {
+					if (kv.first < destinationVirtualDevice->getHighestForwardedHandle()) {
+						continue;
+					} else if (kv.first + currHandleRange.start < startHandle) {
+						continue;
+					} else if (kv.first + currHandleRange.start > endHandle) {
+						break;
+					}
 
-				if (beetle.devices.find(dst) == beetle.devices.end()) {
-					pwarn(std::to_string(src) + " does not id a device");
-					return;
-				}
-				std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
-				std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
-
-				if (resp == NULL || respLen <= 2) {
-					uint8_t err[ATT_ERROR_PDU_LEN];
-					pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, startHandle, ATT_ECODE_UNLIKELY, err);
-					sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
-				} else if (resp[0] == ATT_OP_ERROR) {
-					*(uint16_t *)(resp + 2) = htobs(startHandle);
-					sourceDevice->writeResponse(resp, respLen);
-				} else {
-					uint8_t respCopy[respLen];
-					int respCopyLen = 0;
-					respCopy[0] = resp[0];
-					respCopy[1] = resp[1];
-					respCopyLen += 2;
-
-					int segLen = resp[1];
-					for (int i = 2; i < respLen; i += segLen) {
-						uint16_t handle = btohs(*(uint16_t *)(resp + i));
-
-						if (destinationDevice->handles.find(handle) == destinationDevice->handles.end()) {
-							pwarn("response for unknown handle : " + std::to_string(handle));
-							continue;
-						}
-						auto h = destinationDevice->handles[handle];
-
-						/*
-						 * Check if access is permitted.
-						 */
-						uint8_t unused;
-						if (beetle.accessControl && beetle.accessControl->canAccessHandle(sourceDevice,
-								destinationDevice, h, ATT_OP_READ_REQ, unused) == false) {
-							continue;
-						}
-
-						/*
-						 * Update the response
-						 */
-						handle += handleRange.start;
-						*(uint16_t *)(resp + i) = htobs(handle);
+					auto handle = kv.second;
+					if (handle->getUuid() == attType) {
+						*(uint16_t*) (resp + 2) = htobs(handle->getHandle() + currHandleRange.start);
+						memcpy(resp + 4, handle->cache.value.get(), handle->cache.len);
+						respLen += 2 + handle->cache.len;
+						resp[1] = 2 + handle->cache.len;
 						if (attType.isShort() && attType.getShort() == GATT_CHARAC_UUID) {
-							int j = i + 3;
-							uint16_t valueHandle = btohs(*(uint16_t *)(resp + j));
-							valueHandle += handleRange.start;
-							*(uint16_t *)(resp + j) = htobs(valueHandle);
+							uint16_t valueHandle = btohs(*(uint16_t *)(resp + 5));
+							valueHandle += currHandleRange.start;
+							*(uint16_t *)(resp + 5) = htobs(valueHandle);
 						}
-						memcpy(respCopy + respCopyLen, resp + i, segLen);
-						respCopyLen += segLen;
-					}
-					if (respCopyLen == 2) {
-						uint8_t err[ATT_ERROR_PDU_LEN];
-						pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, startHandle, ATT_ECODE_READ_NOT_PERM, err);
-						sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
-					} else {
-						sourceDevice->writeResponse(respCopy, respCopyLen);
+						break;
 					}
 				}
-			});
+
+				if (respLen > 2) {
+					sourceDevice->writeResponse(resp, respLen);
+					success = true;
+					break;
+				} else {
+					/*
+					 * This should be redundant.
+					 */
+					currHandle = currHandleRange.end + 1;
+					continue;
+				}
+			} else {
+				/*
+				 * Send the request to the device
+				 */
+				destinationDevice->writeTransaction(buf, len, [this, src, dst, attType, currHandleRange, startHandle](
+						uint8_t *resp, int respLen) {
+					/*
+					 * Lock devices
+					 */
+					boost::shared_lock<boost::shared_mutex> devicesLk(this->beetle.devicesMutex);
+
+					if (beetle.devices.find(src) == beetle.devices.end()) {
+						pwarn(std::to_string(src) + " does not id a device");
+						return;
+					}
+					std::shared_ptr<Device> sourceDevice = beetle.devices[src];
+
+					if (beetle.devices.find(dst) == beetle.devices.end()) {
+						pwarn(std::to_string(src) + " does not id a device");
+						return;
+					}
+					std::shared_ptr<Device> destinationDevice = beetle.devices[dst];
+					std::lock_guard<std::recursive_mutex> handlesLg(destinationDevice->handlesMutex);
+
+					if (resp == NULL || respLen <= 2) {
+						uint8_t err[ATT_ERROR_PDU_LEN];
+						pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, startHandle, ATT_ECODE_UNLIKELY, err);
+						sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
+					} else if (resp[0] == ATT_OP_ERROR) {
+						*(uint16_t *)(resp + 2) = htobs(startHandle);
+						sourceDevice->writeResponse(resp, respLen);
+					} else {
+						uint8_t respCopy[respLen];
+						int respCopyLen = 0;
+						respCopy[0] = resp[0];
+						respCopy[1] = resp[1];
+						respCopyLen += 2;
+
+						int segLen = resp[1];
+						for (int i = 2; i < respLen; i += segLen) {
+							uint16_t handle = btohs(*(uint16_t *)(resp + i));
+
+							if (destinationDevice->handles.find(handle) == destinationDevice->handles.end()) {
+								pwarn("response for unknown handle : " + std::to_string(handle));
+								continue;
+							}
+							auto h = destinationDevice->handles[handle];
+
+							/*
+							 * Check if access is permitted.
+							 */
+							uint8_t unused;
+							if (beetle.accessControl && beetle.accessControl->canAccessHandle(sourceDevice,
+									destinationDevice, h, ATT_OP_READ_REQ, unused) == false) {
+								continue;
+							}
+
+							/*
+							 * Update the response
+							 */
+							handle += currHandleRange.start;
+							*(uint16_t *)(resp + i) = htobs(handle);
+							if (attType.isShort() && attType.getShort() == GATT_CHARAC_UUID) {
+								int j = i + 3;
+								uint16_t valueHandle = btohs(*(uint16_t *)(resp + j));
+								valueHandle += currHandleRange.start;
+								*(uint16_t *)(resp + j) = htobs(valueHandle);
+							}
+							memcpy(respCopy + respCopyLen, resp + i, segLen);
+							respCopyLen += segLen;
+						}
+						if (respCopyLen == 2) {
+							uint8_t err[ATT_ERROR_PDU_LEN];
+							pack_error_pdu(ATT_OP_READ_BY_TYPE_REQ, startHandle, ATT_ECODE_READ_NOT_PERM, err);
+							sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
+						} else {
+							sourceDevice->writeResponse(respCopy, respCopyLen);
+						}
+					}
+				});
+
+				success = true;
+				break;
+			}
 		}
 	}
+
+	/*
+	 * No handle found, send not found response
+	 */
+	if (!success) {
+		uint8_t err[ATT_ERROR_PDU_LEN];
+		pack_error_pdu(opCode, startHandle, ATT_ECODE_ATTR_NOT_FOUND, err);
+		sourceDevice->writeResponse(err, ATT_ERROR_PDU_LEN);
+	}
+
 	return 0;
 }
 
