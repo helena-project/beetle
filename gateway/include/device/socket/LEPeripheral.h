@@ -24,6 +24,7 @@ public:
 	};
 
 	LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType);
+	LEPeripheral(Beetle &beetle, int sockfd, struct sockaddr_l2 sockaddr);
 	virtual ~LEPeripheral();
 
 	bdaddr_t getBdaddr();

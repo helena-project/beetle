@@ -69,6 +69,11 @@ public:
 	std::string ipcPath = "/tmp/beetle";
 
 	/*
+	 * Peripheral settings
+	 */
+	bool peripheralEnabled = false;
+
+	/*
 	 * Controller settings
 	 */
 	bool controllerEnabled = false;

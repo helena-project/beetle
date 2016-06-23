@@ -8,6 +8,7 @@
 #include "device/socket/LEPeripheral.h"
 
 #include <bluetooth/l2cap.h>
+#include <bluetooth/hci.h>
 #include <cstring>
 #include <errno.h>
 #include <iostream>
@@ -63,6 +64,32 @@ LEPeripheral::LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType) :
 		close(sockfd);
 		throw DeviceException("could not connect");
 	}
+
+	unsigned int connInfoLen = sizeof(connInfo);
+	if (getsockopt(sockfd, SOL_L2CAP, L2CAP_CONNINFO, &connInfo, &connInfoLen) < 0) {
+		close(sockfd);
+		throw DeviceException("could not get l2cap conn info");
+	}
+
+	/*
+	 * Set default connection interval.
+	 */
+	beetle.hci.setConnectionInterval(connInfo.hci_handle, 10, 40, 0, 0x0C80, 0);
+
+	if (!request_device_name(sockfd, name, delayedPackets)) {
+		throw DeviceException("could not discover device name");
+	}
+}
+
+LEPeripheral::LEPeripheral(Beetle &beetle, int sockfd_, struct sockaddr_l2 sockaddr) :
+		VirtualDevice(beetle, true) {
+	type = LE_PERIPHERAL;
+
+	bdaddr = sockaddr.l2_bdaddr;
+	bdaddrType = (sockaddr.l2_bdaddr_type == LE_PUBLIC_ADDRESS) ? PUBLIC : RANDOM;
+	stopped = false;
+
+	sockfd = sockfd_;
 
 	unsigned int connInfoLen = sizeof(connInfo);
 	if (getsockopt(sockfd, SOL_L2CAP, L2CAP_CONNINFO, &connInfo, &connInfoLen) < 0) {

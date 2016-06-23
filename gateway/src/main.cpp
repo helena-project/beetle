@@ -27,6 +27,7 @@
 #include "device/socket/tcp/TCPServerProxy.h"
 #include "HCI.h"
 #include "ipc/UnixDomainSocketServer.h"
+#include <l2cap/L2CAPServer.h>
 #include "StaticTopo.h"
 #include "scan/AutoConnect.h"
 #include "scan/Scanner.h"
@@ -180,6 +181,12 @@ int main(int argc, char *argv[]) {
 		std::unique_ptr<UnixDomainSocketServer> ipcServer;
 		if (btlConfig.ipcEnabled || enableIpc) {
 			ipcServer.reset(new UnixDomainSocketServer(btl, btlConfig.ipcPath));
+		}
+
+		/* Listen for ble centrals */
+		std::unique_ptr<L2CAPServer> l2capServer;
+		if (btlConfig.peripheralEnabled) {
+			l2capServer = std::make_unique<L2CAPServer>(btl);
 		}
 
 		/* Setup controller modules */
