@@ -18,8 +18,6 @@
 	<link rel='stylesheet' type='text/css' href="static/google-fonts.css">
 
 	<link rel="stylesheet" type="text/css" href="static/style.css">
-
-	<meta http-equiv="refresh" content="15">
 </head>
 
 <body>
@@ -34,7 +32,15 @@
 <br>
 
 <script type="text/javascript">
+	var reloadTrue= true;
+	setInterval(function() {
+		if (reloadTrue) {
+			location.reload(true);
+		}
+	}, 10000);
+
 	function rescan() {
+		reloadTrue = false;
 		window.alert("Rescanning for sensors... Please be patient. " +
 			"This page will automatically reload when done.");
 
@@ -45,6 +51,7 @@
 					location.reload();
 				} else {
 					window.alert("Failure. :(");
+					reloadTrue = true;
 				}
 			}
 		};

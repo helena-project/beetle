@@ -1,24 +1,26 @@
 #!/usr/bin/env python
 
 """
-pygatt light app
-================
+pygatt cloud monitoring
+=======================
 
-This module implements a home lighting application.
+This module implements a cloud monitoring application for home sensors
 """
 
 import argparse
-import binascii
 import os
 import socket
 import ssl
 import struct
+import sys
 import threading
-import cgi
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+
+PYGATT_PATH = "../pygatt"
+sys.path.append(PYGATT_PATH)
 
 import lib.gatt as gatt
 import lib.uuid as uuid
@@ -29,9 +31,9 @@ def getArguments():
 	"""Arguments for script."""
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--name", default="lightapp",
+	parser.add_argument("--name", default="sensorapp",
 		help="name of the application")
-	parser.add_argument("--app-port", type=int, default="8080",
+	parser.add_argument("--app-port", type=int, default="8081",
 		help="port to run application server")
 
 	parser.add_argument("--host", default="localhost",
@@ -53,86 +55,169 @@ def printBox(s):
 	""" Print a header """
 	print "%s\n|| %s ||\n%s" % ("=" * (len(s) + 6), s, "=" * (len(s) + 6))
 
-LIGHT_SERVICE_UUID = 0xFFE5
-RED_CHARAC_UUID = 0xFFE6
-GREEN_CHARAC_UUID = 0xFFE7
-BLUE_CHARAC_UUID = 0xFFE8
-RGBW_CHARAC_UUID = 0xFFE9
-WHITE_CHARAC_UUID = 0xFFEA
+ENV_SENSING_SERVICE_UUID = 0x181A
+PRESSURE_CHARAC_UUID = 0x2A6D
+TEMPERATURE_CHARAC_UUID = 0x2A6E
+HUMIDITY_CHARAC_UUID = 0x2A6F
+UNK1_CHARAC_UUID = 0xC512
+UNK2_CHARAC_UUID = 0xF801
 
 INTERNAL_REFRESH_INTERVAL = 60 * 5
 
-class LightInstance(object):
+class SensorInstance(object):
 	def __init__(self, name):
 		self.name = name
 		self.address = None
 		self.connectTime = None
 		self.gateway = None
-		self.r = None
-		self.g = None
-		self.b = None
-		self.w = None
-		self.rgbw = None
-		self.token = binascii.b2a_hex(os.urandom(8))
+		self._pressure = None
+		self._pressure_cached = None
+		self._temperature = None
+		self._temperature_cached = None
+		self._humidity = None
+		self._humidity_cached = None
+		self._unk1 = None
+		self._unk1_cached = None
+		self._unk2 = None
+		self._unk2_cached = None
+
+	def _unpack_pressure(self, buf):
+		if len(buf) != 4:
+			return float("nan")
+		raw = struct.unpack('<I', bytes(buf))[0]
+		return float(raw) / 10.0
 
 	@property
-	def state(self):
-		if not self.w:
-			return "ERROR"
+	def pressure(self):
+		if self._pressure_cached is not None:
+			return self._pressure_cached
 
 		try:
-			if self.w.read()[0] == 0:
-				return "OFF"
-			else:
-				return "ON"
+			buf = self._pressure.read()
+			self._pressure_cached = self._unpack_pressure(buf)
+			return self._pressure_cached
+
 		except Exception, err:
 			print err
-			return "ERROR"
+
+		return float("nan")
+
+	def _unpack_temperature(self, buf):
+		if len(buf) != 2:
+			return float("nan")
+		raw = struct.unpack('<h', bytes(buf))[0]
+		return float(raw) / 100.0
 
 	@property
-	def red(self):
+	def temperature(self):
+		if self._temperature_cached is not None:
+			return self._temperature_cached
+
 		try:
-			return self.r.read()[0]
+			buf = self._temperature.read()
+			self._temperature_cached = self._unpack_temperature(buf)
+			return self._temperature_cached
+
 		except Exception, err:
 			print err
+
+		return float("nan")
+
+	def _unpack_humidity(self, buf):
+		if len(buf) != 2:
+			return float("nan")
+		raw = struct.unpack('<H', bytes(buf))[0]
+		return float(raw) / 100.0
+
+	@property
+	def humidity(self):
+		if self._humidity_cached is not None:
+			return self._humidity_cached
+
+		try:
+			buf = self._humidity.read()
+			self._humidity_cached = self._unpack_humidity(buf)
+			return self._humidity_cached
+
+		except Exception, err:
+			print err
+
+		return float("nan")
+
+	def _unpack_unk1(self, buf):
+		if len(buf) != 2:
 			return -1
+		return struct.unpack('<H', bytes(buf))[0]
 
 	@property
-	def green(self):
+	def unk1(self):
+		if self._unk1_cached is not None:
+			return self._unk1_cached
+
 		try:
-			return self.g.read()[0]
+			buf = self._unk1.read()
+			self._unk1_cached = self._unpack_unk1(buf)
+			return self._unk1_cached
+
 		except Exception, err:
 			print err
+
+		return -1
+
+	def _unpack_unk2(self, buf):
+		if len(buf) != 1:
 			return -1
+		return buf[0]
 
 	@property
-	def blue(self):
-		try:
-			return self.b.read()[0]
-		except Exception, err:
-			print err
-			return -1
+	def unk2(self):
+		if self._unk2_cached is not None:
+			return self._unk2_cached
 
-	@property
-	def white(self):
 		try:
-			return self.w.read()[0]
+			buf = self._unk2.read()
+			self._unk2_cached = self._unpack_unk2(buf)
+			return self._unk2_cached
+
 		except Exception, err:
 			print err
-			return -1
+
+		return -1
 
 	@property
 	def ready(self):
-		return (self.name is not None and self.r is not None
-			and self.g is not None and self.b is not None
-			and self.w is not None and self.rgbw is not None
-			and self.connectTime is not None and self.address is not None
+		return (self.name is not None and self._pressure is not None
+			and self._temperature is not None and self._humidity is not None
+			and self._unk1 is not None and self._unk2 is not None
+			and self.address is not None and self.connectTime is not None
 			and self.gateway is not None)
 
-	def __str__(self):
-		return self.name
+	def subscribeAll(self):
+		assert self.ready
+		print "Subscribing to notifications: %s" % self.address
 
-DEFAULT_ON_VALUE = 100
+		def _pressure_handler(buf):
+			self._pressure_cached = self._unpack_pressure(buf)
+		self._pressure.subscribe(_pressure_handler)
+
+		def _temperature_handler(buf):
+			self._temperature_cached = self._unpack_temperature(buf)
+		self._temperature.subscribe(_temperature_handler)
+
+		def _humidity_handler(buf):
+			self._humidity_cached = self._unpack_humidity(buf)
+		self._humidity.subscribe(_humidity_handler)
+
+		def _unk1_handler(buf):
+			self._unk1_cached = self._unpack_unk1(buf)
+		self._unk1.subscribe(_unk1_handler)
+
+		def _unk2_handler(buf):
+			self._unk2_cached = self._unpack_unk2(buf)
+		self._unk2.subscribe(_unk2_handler)
+
+	def __str__(self):
+		return "%s (%s)" % (self.name, self.address)
 
 def runHttpServer(port, client, reset, ready, devices):
 	"""Start the HTTP server"""
@@ -145,7 +230,7 @@ def runHttpServer(port, client, reset, ready, devices):
 			ready.wait()
 
 			env = Environment(loader=FileSystemLoader("templates"))
-			template = env.get_template("lightapp.html")
+			template = env.get_template("sensorapp.html")
 
 			self.send_response(200, 'OK')
 			self.send_header('Content-type', 'html')
@@ -184,94 +269,6 @@ def runHttpServer(port, client, reset, ready, devices):
 				finally:
 					self.wfile.close()
 
-		WRITEABLE_FIELDS = frozenset(["w", "r", "g", "b", "on", "off"])
-
-		def _update_device(self):
-			ctype, pdict = cgi.parse_header(
-				self.headers.getheader('content-type'))
-
-			if ctype == 'multipart/form-data':
-				postvars = cgi.parse_multipart(self.rfile, pdict)
-			elif ctype == 'application/x-www-form-urlencoded':
-				length = int(self.headers.getheader('content-length'))
-				postvars = cgi.parse_qs(self.rfile.read(length),
-					keep_blank_values=1)
-			else:
-				self.send_error(400)
-				self.end_headers()
-				self.wfile.close()
-				return
-
-			if ("field" not in postvars or "value" not in postvars
-				or "token" not in postvars):
-				self.send_error(400)
-				self.end_headers()
-				self.wfile.close()
-				return
-
-			print postvars
-			field = postvars["field"][0]
-			if not field in self.WRITEABLE_FIELDS:
-				self.send_error(400)
-				self.end_headers()
-				self.wfile.close()
-				return
-
-			value = -1
-			if field == "on":
-				value = DEFAULT_ON_VALUE
-			elif field == "off":
-				value = 0
-			else:
-				try:
-					value = int(postvars["value"][0])
-				except Exception, err:
-					print err
-
-			if value < 0 or value > 0xFF:
-				self.send_error(400)
-				self.end_headers()
-				self.wfile.close()
-				return
-
-			valueToWrite = bytearray([value])
-
-			token = postvars["token"][0]
-
-			for device in devices:
-				if device.token == token:
-					if field == "w":
-						device.w.write(valueToWrite)
-					elif field == "r":
-						device.r.write(valueToWrite)
-					elif field == "g":
-						device.g.write(valueToWrite)
-					elif field == "b":
-						device.b.write(valueToWrite)
-					elif field == "off" or field == "on":
-						# TODO: it would be preferable to use the RGBW char
-						device.r.write(bytearray(1))
-						device.g.write(bytearray(1))
-						device.b.write(bytearray(1))
-						device.w.write(valueToWrite)
-					else:
-						raise NotImplementedError
-
-			self._serve_main()
-
-		def _all_action(self, on=True):
-			valueToWrite = bytearray([DEFAULT_ON_VALUE if on else 0])
-			for device in devices:
-				# TODO: it would be preferable to use the RGBW char
-				device.r.write(bytearray(1))
-				device.g.write(bytearray(1))
-				device.b.write(bytearray(1))
-				device.w.write(valueToWrite)
-
-			self.send_response(200, 'OK')
-			self.end_headers()
-			self.wfile.close()
-
 		def do_GET(self):
 			if self.path == "/":
 				self._serve_main()
@@ -290,12 +287,6 @@ def runHttpServer(port, client, reset, ready, devices):
 				self.send_response(200, 'OK')
 				self.end_headers()
 				self.wfile.close()
-			elif self.path == "/allOn":
-				self._all_action(on=True)
-			elif self.path == "/allOff":
-				self._all_action(on=False)
-			elif self.path == "/":
-				self._update_device()
 			else:
 				self.send_error(404)
 				self.end_headers()
@@ -308,17 +299,17 @@ def runHttpServer(port, client, reset, ready, devices):
 		server.socket.close()
 
 def runClient(client, reset, ready, devices):
-	"""Start a Beetle client"""
+	"""Start a beetle client"""
 
 	gapUuid = uuid.UUID(gatt.GAP_SERVICE_UUID)
 	nameUuid = uuid.UUID(gatt.GAP_CHARAC_DEVICE_NAME_UUID)
 
-	lightUuid = uuid.UUID(LIGHT_SERVICE_UUID)
-	redUuid = uuid.UUID(RED_CHARAC_UUID)
-	greenUuid = uuid.UUID(GREEN_CHARAC_UUID)
-	blueUuid = uuid.UUID(BLUE_CHARAC_UUID)
-	whiteUuid = uuid.UUID(WHITE_CHARAC_UUID)
-	rgbwUuid = uuid.UUID(RGBW_CHARAC_UUID)
+	envSenseUuid = uuid.UUID(ENV_SENSING_SERVICE_UUID)
+	pressureUuid = uuid.UUID(PRESSURE_CHARAC_UUID)
+	temperatureUuid = uuid.UUID(TEMPERATURE_CHARAC_UUID)
+	humidityUuid = uuid.UUID(HUMIDITY_CHARAC_UUID)
+	unk1Uuid = uuid.UUID(UNK1_CHARAC_UUID)
+	unk2Uuid = uuid.UUID(UNK2_CHARAC_UUID)
 
 	beetleUuid = uuid.UUID(beetle.BEETLE_SERVICE_UUID)
 	bdAddrUuid = uuid.UUID(beetle.BEETLE_CHARAC_BDADDR_UUID)
@@ -346,27 +337,28 @@ def runClient(client, reset, ready, devices):
 							currDevice = None
 							try:
 								currDeviceName = str(charac.read())
-								currDevice = LightInstance(name=currDeviceName)
+								currDevice = SensorInstance(
+									name=currDeviceName)
 							except ClientError, err:
 								print err
 							except Exception, err:
 								print err
 
-				elif service.uuid == lightUuid:
+				elif service.uuid == envSenseUuid:
 					for charac in service.characteristics:
-						print "  ", charac, charac.userDescription
+						print "  ", charac
 
 						if currDevice is not None:
-							if charac.uuid == whiteUuid:
-								currDevice.w = charac
-							elif charac.uuid == redUuid:
-								currDevice.r = charac
-							elif charac.uuid == greenUuid:
-								currDevice.g = charac
-							elif charac.uuid == blueUuid:
-								currDevice.b = charac
-							elif charac.uuid == rgbwUuid:
-								currDevice.rgbw = charac
+							if charac.uuid == pressureUuid:
+								currDevice._pressure = charac
+							elif charac.uuid == temperatureUuid:
+								currDevice._temperature = charac
+							elif charac.uuid == humidityUuid:
+								currDevice._humidity = charac
+							elif charac.uuid == unk1Uuid:
+								currDevice._unk1 = charac
+							elif charac.uuid == unk2Uuid:
+								currDevice._unk2 = charac
 
 				elif service.uuid == beetleUuid:
 					for charac in service.characteristics:
@@ -404,17 +396,13 @@ def runClient(client, reset, ready, devices):
 								except Exception, err:
 									print err
 
+
 							print currDevice, currDevice.ready
 
 							if currDevice.ready:
+								currDevice.subscribeAll()
 								devices.append(currDevice)
 								currDevice = None
-
-					if currDevice is not None:
-						print currDevice, currDevice.ready
-					if currDevice is not None and currDevice.ready:
-						devices.append(currDevice)
-						currDevice = None
 
 			ready.set()
 			reset.clear()
@@ -432,7 +420,7 @@ def main(args):
 		print "Disconnect:", err
 		os._exit(0)
 
-	# Declare a managed socket, and bind a GATT client
+	# Declare a managed socket, and bind a GATT server and client
 	managedSocket = ManagedSocket(daemon=True)
 	client = GattClient(managedSocket, onDisconnect=onDisconnect)
 

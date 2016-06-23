@@ -21,21 +21,6 @@ services, characteristics, and descriptors.
 See ```example.py``` for library usage patterns and an implementation of a
 heart rate monitor that also acts as a GATT client.
 
-## Applications
-
-#### Command Line Interface
-```gattcli.py``` implements a command line interface that supports read, write,
-subscription, discovery features.
-
-#### Home Lighting App
-```lightapp.py``` implements a client that connects to multiple light-bulbs and
-serves a basic web UI.
-
-#### Cloud Sensing App
-```sensorapp.py``` implements a web application that monitors environmental
-sensors in a home.
-
 ## TODOs
 1. Make the library a module.
-2. Move demo applications into separate modules.
-3. Handle partial rediscovery by handle ranges.
+2. Handle partial rediscovery by handle ranges.

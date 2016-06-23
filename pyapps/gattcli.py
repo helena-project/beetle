@@ -7,15 +7,19 @@ pygatt gattcli
 This module implements a cli GATT client.
 """
 
+import argparse
+import ast
 import os
+import re
 import socket
 import ssl
-import argparse
 import struct
+import sys
 import traceback
-import re
-import ast
 import operator as op
+
+PYGATT_PATH = "../pygatt"
+sys.path.append(PYGATT_PATH)
 
 from pygatt import ManagedSocket, GattClient, ClientError
 

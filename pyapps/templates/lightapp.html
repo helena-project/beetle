@@ -19,8 +19,6 @@
 	<link rel='stylesheet' type='text/css' href="static/google-fonts.css">
 
 	<link rel="stylesheet" type="text/css" href="static/style.css">
-
-	<meta http-equiv="refresh" content="60">
 </head>
 
 <body>
@@ -35,7 +33,15 @@
 <br>
 
 <script type="text/javascript">
+	var reloadTrue= true;
+	setInterval(function() {
+		if (reloadTrue) {
+			location.reload(true);
+		}
+	}, 60000);
+
 	function rescan() {
+		reloadTrue = false;
 		window.alert("Rescanning for devices... Please be patient. " +
 			"This page will automatically reload when done.");
 
@@ -46,6 +52,7 @@
 					location.reload();
 				} else {
 					window.alert("Failure. :(");
+					reloadTrue = true;
 				}
 			}
 		};
@@ -54,6 +61,7 @@
 	}
 
 	function allOnOff(on) {
+		reloadTrue = false;
 		var req = new XMLHttpRequest();
 		req.onreadystatechange = function() {
 			if (req.readyState == 4) {
@@ -61,6 +69,7 @@
 					location.reload();
 				} else {
 					window.alert("Failure. :(");
+					reloadTrue = true;
 				}
 			}
 		};
