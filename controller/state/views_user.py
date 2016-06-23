@@ -34,14 +34,14 @@ def view_form_passcode(request, rule, principal):
 			"title" : "An error occurred...",
 			"message" : "%s does not require passcode auth." % (rule.name,),
 		}
-		return render_to_response('state/empty_response.html', 
+		return render_to_response('state/empty_response.html',
 			context_dict, context)
 	except Exception, err:
 		context_dict = {
 			"title" : "An error occurred...",
 			"message" : str(err),
 		}
-		return render_to_response('state/empty_response.html', 
+		return render_to_response('state/empty_response.html',
 			context_dict, context)
 
 	now = timezone.now()
@@ -64,14 +64,14 @@ def view_form_passcode(request, rule, principal):
 				"b" : "denied",
 			}
 		})
-		return render_to_response('state/passcode_form_submit.html', 
+		return render_to_response('state/passcode_form_submit.html',
 			context_dict, context)
 
 	if request.method == "GET":
 		#######################
 		# Requesting the form #
 		#######################
-		if passcode_auth.code == "":	
+		if passcode_auth.code == "":
 			# No passcode, grant access
 			auth_instance, _ = PasscodeAuthInstance.objects.get_or_create(
 				principal=principal, rule=rule)
@@ -85,11 +85,11 @@ def view_form_passcode(request, rule, principal):
 					"b" : "approved",
 				}
 			})
-			return render_to_response('state/passcode_form_submit.html', 
+			return render_to_response('state/passcode_form_submit.html',
 				context_dict, context)
 		else:
 			# Render the password form
-			return render_to_response('state/passcode_form.html', 
+			return render_to_response('state/passcode_form.html',
 				context_dict, context)
 
 	elif request.method == "POST":
@@ -99,7 +99,7 @@ def view_form_passcode(request, rule, principal):
 		code = request.POST["code"]
 		allowed = False
 		try:
-			allowed = pwd_context.verify(code, passcode_auth.chash) 
+			allowed = pwd_context.verify(code, passcode_auth.chash)
 		except Exception:
 			pass
 
@@ -124,7 +124,7 @@ def view_form_passcode(request, rule, principal):
 				}
 			})
 
-		return render_to_response('state/passcode_form_submit.html', 
+		return render_to_response('state/passcode_form_submit.html',
 			context_dict, context)
 
 	else:
@@ -145,14 +145,14 @@ def view_form_passcode_generic(request, rule):
 			"title" : "An error occurred...",
 			"message" : "%s does not require passcode auth." % (rule.name,),
 		}
-		return render_to_response('state/empty_response.html', 
+		return render_to_response('state/empty_response.html',
 			context_dict, context)
 	except Exception, err:
 		context_dict = {
 			"title" : "An error occurred...",
 			"message" : str(err),
 		}
-		return render_to_response('state/empty_response.html', 
+		return render_to_response('state/empty_response.html',
 			context_dict, context)
 
 	now = timezone.now()
@@ -178,7 +178,7 @@ def view_form_passcode_generic(request, rule):
 
 		context_dict["principals"] = principals
 
-		return render_to_response('state/passcode_form_generic.html', 
+		return render_to_response('state/passcode_form_generic.html',
 			context_dict, context)
 
 	elif request.method == "POST":
@@ -193,10 +193,10 @@ def view_form_passcode_generic(request, rule):
 			or __is_rule_exempt_helper(rule, principal):
 			context_dict = {
 				"title" : "An error occurred...",
-				"message" : "%s does not apply for %s." % (rule.name, 
+				"message" : "%s does not apply for %s." % (rule.name,
 					principal.name),
 			}
-			return render_to_response('state/empty_response.html', 
+			return render_to_response('state/empty_response.html',
 				context_dict, context)
 
 		context_dict["principal"] = principal
@@ -204,7 +204,7 @@ def view_form_passcode_generic(request, rule):
 		allowed = False
 		try:
 			if passcode_auth.code != "":
-				allowed = pwd_context.verify(code, passcode_auth.chash) 
+				allowed = pwd_context.verify(code, passcode_auth.chash)
 			elif code == "":
 				allowed = True
 		except Exception:
@@ -230,7 +230,7 @@ def view_form_passcode_generic(request, rule):
 					"b" : "approved",
 				}
 			})
-		return render_to_response('state/passcode_form_submit.html', 
+		return render_to_response('state/passcode_form_submit.html',
 			context_dict, context)
 
 	else:

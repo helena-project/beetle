@@ -1,1622 +1,1622 @@
 [
   {
     "fields": {
-      "name": "Aerobic Heart Rate Lower Limit", 
-      "ttype": "org.bluetooth.characteristic.aerobic_heart_rate_lower_limit", 
+      "name": "Aerobic Heart Rate Lower Limit",
+      "ttype": "org.bluetooth.characteristic.aerobic_heart_rate_lower_limit",
       "uuid": "2A7E",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Aerobic Heart Rate Upper Limit", 
-      "ttype": "org.bluetooth.characteristic.aerobic_heart_rate_upper_limit", 
+      "name": "Aerobic Heart Rate Upper Limit",
+      "ttype": "org.bluetooth.characteristic.aerobic_heart_rate_upper_limit",
       "uuid": "2A84",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Aerobic Threshold", 
-      "ttype": "org.bluetooth.characteristic.aerobic_threshold", 
+      "name": "Aerobic Threshold",
+      "ttype": "org.bluetooth.characteristic.aerobic_threshold",
       "uuid": "2A7F",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Age", 
-      "ttype": "org.bluetooth.characteristic.age", 
+      "name": "Age",
+      "ttype": "org.bluetooth.characteristic.age",
       "uuid": "2A80",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Aggregate", 
-      "ttype": "org.bluetooth.characteristic.aggregate", 
+      "name": "Aggregate",
+      "ttype": "org.bluetooth.characteristic.aggregate",
       "uuid": "2A5A",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Alert Category ID", 
-      "ttype": "org.bluetooth.characteristic.alert_category_id", 
+      "name": "Alert Category ID",
+      "ttype": "org.bluetooth.characteristic.alert_category_id",
       "uuid": "2A43",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Alert Category ID Bit Mask", 
-      "ttype": "org.bluetooth.characteristic.alert_category_id_bit_mask", 
+      "name": "Alert Category ID Bit Mask",
+      "ttype": "org.bluetooth.characteristic.alert_category_id_bit_mask",
       "uuid": "2A42",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Alert Level", 
-      "ttype": "org.bluetooth.characteristic.alert_level", 
+      "name": "Alert Level",
+      "ttype": "org.bluetooth.characteristic.alert_level",
       "uuid": "2A06",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Alert Notification Control Point", 
-      "ttype": "org.bluetooth.characteristic.alert_notification_control_point", 
+      "name": "Alert Notification Control Point",
+      "ttype": "org.bluetooth.characteristic.alert_notification_control_point",
       "uuid": "2A44",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Alert Status", 
-      "ttype": "org.bluetooth.characteristic.alert_status", 
+      "name": "Alert Status",
+      "ttype": "org.bluetooth.characteristic.alert_status",
       "uuid": "2A3F",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Altitude", 
-      "ttype": "org.bluetooth.characteristic.altitude", 
+      "name": "Altitude",
+      "ttype": "org.bluetooth.characteristic.altitude",
       "uuid": "2AB3",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Anaerobic Heart Rate Lower Limit", 
-      "ttype": "org.bluetooth.characteristic.anaerobic_heart_rate_lower_limit", 
+      "name": "Anaerobic Heart Rate Lower Limit",
+      "ttype": "org.bluetooth.characteristic.anaerobic_heart_rate_lower_limit",
       "uuid": "2A81",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Anaerobic Heart Rate Upper Limit", 
-      "ttype": "org.bluetooth.characteristic.anaerobic_heart_rate_upper_limit", 
+      "name": "Anaerobic Heart Rate Upper Limit",
+      "ttype": "org.bluetooth.characteristic.anaerobic_heart_rate_upper_limit",
       "uuid": "2A82",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Anaerobic Threshold", 
-      "ttype": "org.bluetooth.characteristic.anaerobic_threshold", 
+      "name": "Anaerobic Threshold",
+      "ttype": "org.bluetooth.characteristic.anaerobic_threshold",
       "uuid": "2A83",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Analog", 
-      "ttype": "org.bluetooth.characteristic.analog", 
+      "name": "Analog",
+      "ttype": "org.bluetooth.characteristic.analog",
       "uuid": "2A58",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Apparent Wind Direction ", 
-      "ttype": "org.bluetooth.characteristic.apparent_wind_direction", 
+      "name": "Apparent Wind Direction ",
+      "ttype": "org.bluetooth.characteristic.apparent_wind_direction",
       "uuid": "2A73",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Apparent Wind Speed", 
-      "ttype": "org.bluetooth.characteristic.apparent_wind_speed", 
+      "name": "Apparent Wind Speed",
+      "ttype": "org.bluetooth.characteristic.apparent_wind_speed",
       "uuid": "2A72",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Appearance", 
-      "ttype": "org.bluetooth.characteristic.gap.appearance", 
+      "name": "Appearance",
+      "ttype": "org.bluetooth.characteristic.gap.appearance",
       "uuid": "2A01",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Barometric Pressure Trend", 
-      "ttype": "org.bluetooth.characteristic.barometric_pressure_trend", 
+      "name": "Barometric Pressure Trend",
+      "ttype": "org.bluetooth.characteristic.barometric_pressure_trend",
       "uuid": "2AA3",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Battery Level", 
-      "ttype": "org.bluetooth.characteristic.battery_level", 
+      "name": "Battery Level",
+      "ttype": "org.bluetooth.characteristic.battery_level",
       "uuid": "2A19",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Blood Pressure Feature", 
-      "ttype": "org.bluetooth.characteristic.blood_pressure_feature", 
+      "name": "Blood Pressure Feature",
+      "ttype": "org.bluetooth.characteristic.blood_pressure_feature",
       "uuid": "2A49",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Blood Pressure Measurement", 
-      "ttype": "org.bluetooth.characteristic.blood_pressure_measurement", 
+      "name": "Blood Pressure Measurement",
+      "ttype": "org.bluetooth.characteristic.blood_pressure_measurement",
       "uuid": "2A35",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Body Composition Feature", 
-      "ttype": "org.bluetooth.characteristic.body_composition_feature", 
+      "name": "Body Composition Feature",
+      "ttype": "org.bluetooth.characteristic.body_composition_feature",
       "uuid": "2A9B",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Body Composition Measurement", 
-      "ttype": "org.bluetooth.characteristic.body_composition_measurement", 
+      "name": "Body Composition Measurement",
+      "ttype": "org.bluetooth.characteristic.body_composition_measurement",
       "uuid": "2A9C",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Body Sensor Location", 
-      "ttype": "org.bluetooth.characteristic.body_sensor_location", 
+      "name": "Body Sensor Location",
+      "ttype": "org.bluetooth.characteristic.body_sensor_location",
       "uuid": "2A38",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Bond Management Control Point", 
-      "ttype": "org.bluetooth.characteristic.bond_management_control_point", 
+      "name": "Bond Management Control Point",
+      "ttype": "org.bluetooth.characteristic.bond_management_control_point",
       "uuid": "2AA4",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Bond Management Feature", 
-      "ttype": "org.bluetooth.characteristic.bond_management_feature", 
+      "name": "Bond Management Feature",
+      "ttype": "org.bluetooth.characteristic.bond_management_feature",
       "uuid": "2AA5",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Boot Keyboard Input Report", 
-      "ttype": "org.bluetooth.characteristic.boot_keyboard_input_report", 
+      "name": "Boot Keyboard Input Report",
+      "ttype": "org.bluetooth.characteristic.boot_keyboard_input_report",
       "uuid": "2A22",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Boot Keyboard Output Report", 
-      "ttype": "org.bluetooth.characteristic.boot_keyboard_output_report", 
+      "name": "Boot Keyboard Output Report",
+      "ttype": "org.bluetooth.characteristic.boot_keyboard_output_report",
       "uuid": "2A32",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Boot Mouse Input Report", 
-      "ttype": "org.bluetooth.characteristic.boot_mouse_input_report", 
+      "name": "Boot Mouse Input Report",
+      "ttype": "org.bluetooth.characteristic.boot_mouse_input_report",
       "uuid": "2A33",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Central Address Resolution", 
-      "ttype": "org.bluetooth.characteristic.gap.central_address_resolution_support", 
+      "name": "Central Address Resolution",
+      "ttype": "org.bluetooth.characteristic.gap.central_address_resolution_support",
       "uuid": "2AA6",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "CGM Feature", 
-      "ttype": "org.bluetooth.characteristic.cgm_feature", 
+      "name": "CGM Feature",
+      "ttype": "org.bluetooth.characteristic.cgm_feature",
       "uuid": "2AA8",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "CGM Measurement", 
-      "ttype": "org.bluetooth.characteristic.cgm_measurement", 
+      "name": "CGM Measurement",
+      "ttype": "org.bluetooth.characteristic.cgm_measurement",
       "uuid": "2AA7",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "CGM Session Run Time", 
-      "ttype": "org.bluetooth.characteristic.cgm_session_run_time", 
+      "name": "CGM Session Run Time",
+      "ttype": "org.bluetooth.characteristic.cgm_session_run_time",
       "uuid": "2AAB",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "CGM Session Start Time", 
-      "ttype": "org.bluetooth.characteristic.cgm_session_start_time", 
+      "name": "CGM Session Start Time",
+      "ttype": "org.bluetooth.characteristic.cgm_session_start_time",
       "uuid": "2AAA",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "CGM Specific Ops Control Point", 
-      "ttype": "org.bluetooth.characteristic.cgm_specific_ops_control_point", 
+      "name": "CGM Specific Ops Control Point",
+      "ttype": "org.bluetooth.characteristic.cgm_specific_ops_control_point",
       "uuid": "2AAC",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "CGM Status", 
-      "ttype": "org.bluetooth.characteristic.cgm_status", 
+      "name": "CGM Status",
+      "ttype": "org.bluetooth.characteristic.cgm_status",
       "uuid": "2AA9",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "CSC Feature", 
-      "ttype": "org.bluetooth.characteristic.csc_feature", 
+      "name": "CSC Feature",
+      "ttype": "org.bluetooth.characteristic.csc_feature",
       "uuid": "2A5C",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "CSC Measurement", 
-      "ttype": "org.bluetooth.characteristic.csc_measurement", 
+      "name": "CSC Measurement",
+      "ttype": "org.bluetooth.characteristic.csc_measurement",
       "uuid": "2A5B",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Current Time", 
-      "ttype": "org.bluetooth.characteristic.current_time", 
+      "name": "Current Time",
+      "ttype": "org.bluetooth.characteristic.current_time",
       "uuid": "2A2B",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Cycling Power Control Point", 
-      "ttype": "org.bluetooth.characteristic.cycling_power_control_point", 
+      "name": "Cycling Power Control Point",
+      "ttype": "org.bluetooth.characteristic.cycling_power_control_point",
       "uuid": "2A66",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Cycling Power Feature", 
-      "ttype": "org.bluetooth.characteristic.cycling_power_feature", 
+      "name": "Cycling Power Feature",
+      "ttype": "org.bluetooth.characteristic.cycling_power_feature",
       "uuid": "2A65",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Cycling Power Measurement", 
-      "ttype": "org.bluetooth.characteristic.cycling_power_measurement", 
+      "name": "Cycling Power Measurement",
+      "ttype": "org.bluetooth.characteristic.cycling_power_measurement",
       "uuid": "2A63",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Cycling Power Vector", 
-      "ttype": "org.bluetooth.characteristic.cycling_power_vector", 
+      "name": "Cycling Power Vector",
+      "ttype": "org.bluetooth.characteristic.cycling_power_vector",
       "uuid": "2A64",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Database Change Increment", 
-      "ttype": "org.bluetooth.characteristic.database_change_increment", 
+      "name": "Database Change Increment",
+      "ttype": "org.bluetooth.characteristic.database_change_increment",
       "uuid": "2A99",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Date of Birth", 
-      "ttype": "org.bluetooth.characteristic.date_of_birth", 
+      "name": "Date of Birth",
+      "ttype": "org.bluetooth.characteristic.date_of_birth",
       "uuid": "2A85",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Date of Threshold Assessment", 
-      "ttype": "org.bluetooth.characteristic.date_of_threshold_assessment", 
+      "name": "Date of Threshold Assessment",
+      "ttype": "org.bluetooth.characteristic.date_of_threshold_assessment",
       "uuid": "2A86",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Date Time", 
-      "ttype": "org.bluetooth.characteristic.date_time", 
+      "name": "Date Time",
+      "ttype": "org.bluetooth.characteristic.date_time",
       "uuid": "2A08",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Day Date Time", 
-      "ttype": "org.bluetooth.characteristic.day_date_time", 
+      "name": "Day Date Time",
+      "ttype": "org.bluetooth.characteristic.day_date_time",
       "uuid": "2A0A",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Day of Week", 
-      "ttype": "org.bluetooth.characteristic.day_of_week", 
+      "name": "Day of Week",
+      "ttype": "org.bluetooth.characteristic.day_of_week",
       "uuid": "2A09",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Descriptor Value Changed", 
-      "ttype": "org.bluetooth.characteristic.descriptor_value_changed", 
+      "name": "Descriptor Value Changed",
+      "ttype": "org.bluetooth.characteristic.descriptor_value_changed",
       "uuid": "2A7D",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Device type", 
-      "ttype": "org.bluetooth.characteristic.gap.device_type", 
+      "name": "Device type",
+      "ttype": "org.bluetooth.characteristic.gap.device_type",
       "uuid": "2A00",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Dew Point", 
-      "ttype": "org.bluetooth.characteristic.dew_point", 
+      "name": "Dew Point",
+      "ttype": "org.bluetooth.characteristic.dew_point",
       "uuid": "2A7B",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Digital", 
-      "ttype": "org.bluetooth.characteristic.digital", 
+      "name": "Digital",
+      "ttype": "org.bluetooth.characteristic.digital",
       "uuid": "2A56",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "DST Offset", 
-      "ttype": "org.bluetooth.characteristic.dst_offset", 
+      "name": "DST Offset",
+      "ttype": "org.bluetooth.characteristic.dst_offset",
       "uuid": "2A0D",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Elevation", 
-      "ttype": "org.bluetooth.characteristic.elevation", 
+      "name": "Elevation",
+      "ttype": "org.bluetooth.characteristic.elevation",
       "uuid": "2A6C",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Email Address", 
-      "ttype": "org.bluetooth.characteristic.email_address", 
+      "name": "Email Address",
+      "ttype": "org.bluetooth.characteristic.email_address",
       "uuid": "2A87",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Exact Time 256", 
-      "ttype": "org.bluetooth.characteristic.exact_time_256", 
+      "name": "Exact Time 256",
+      "ttype": "org.bluetooth.characteristic.exact_time_256",
       "uuid": "2A0C",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Fat Burn Heart Rate Lower Limit", 
-      "ttype": "org.bluetooth.characteristic.fat_burn_heart_rate_lower_limit", 
+      "name": "Fat Burn Heart Rate Lower Limit",
+      "ttype": "org.bluetooth.characteristic.fat_burn_heart_rate_lower_limit",
       "uuid": "2A88",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Fat Burn Heart Rate Upper Limit", 
-      "ttype": "org.bluetooth.characteristic.fat_burn_heart_rate_upper_limit", 
+      "name": "Fat Burn Heart Rate Upper Limit",
+      "ttype": "org.bluetooth.characteristic.fat_burn_heart_rate_upper_limit",
       "uuid": "2A89",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Firmware Revision String", 
-      "ttype": "org.bluetooth.characteristic.firmware_revision_string", 
+      "name": "Firmware Revision String",
+      "ttype": "org.bluetooth.characteristic.firmware_revision_string",
       "uuid": "2A26",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "First type", 
-      "ttype": "org.bluetooth.characteristic.first_type", 
+      "name": "First type",
+      "ttype": "org.bluetooth.characteristic.first_type",
       "uuid": "2A8A",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Five Zone Heart Rate Limits", 
-      "ttype": "org.bluetooth.characteristic.five_zone_heart_rate_limits", 
+      "name": "Five Zone Heart Rate Limits",
+      "ttype": "org.bluetooth.characteristic.five_zone_heart_rate_limits",
       "uuid": "2A8B",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Floor Number", 
-      "ttype": "org.bluetooth.characteristic.floor_number", 
+      "name": "Floor Number",
+      "ttype": "org.bluetooth.characteristic.floor_number",
       "uuid": "2AB2",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Gender", 
-      "ttype": "org.bluetooth.characteristic.gender", 
+      "name": "Gender",
+      "ttype": "org.bluetooth.characteristic.gender",
       "uuid": "2A8C",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Glucose Feature", 
-      "ttype": "org.bluetooth.characteristic.glucose_feature", 
+      "name": "Glucose Feature",
+      "ttype": "org.bluetooth.characteristic.glucose_feature",
       "uuid": "2A51",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Glucose Measurement", 
-      "ttype": "org.bluetooth.characteristic.glucose_measurement", 
+      "name": "Glucose Measurement",
+      "ttype": "org.bluetooth.characteristic.glucose_measurement",
       "uuid": "2A18",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Glucose Measurement Context", 
-      "ttype": "org.bluetooth.characteristic.glucose_measurement_context", 
+      "name": "Glucose Measurement Context",
+      "ttype": "org.bluetooth.characteristic.glucose_measurement_context",
       "uuid": "2A34",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Gust Factor", 
-      "ttype": "org.bluetooth.characteristic.gust_factor", 
+      "name": "Gust Factor",
+      "ttype": "org.bluetooth.characteristic.gust_factor",
       "uuid": "2A74",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Hardware Revision String", 
-      "ttype": "org.bluetooth.characteristic.hardware_revision_string", 
+      "name": "Hardware Revision String",
+      "ttype": "org.bluetooth.characteristic.hardware_revision_string",
       "uuid": "2A27",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Heart Rate Control Point", 
-      "ttype": "org.bluetooth.characteristic.heart_rate_control_point", 
+      "name": "Heart Rate Control Point",
+      "ttype": "org.bluetooth.characteristic.heart_rate_control_point",
       "uuid": "2A39",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Heart Rate Max", 
-      "ttype": "org.bluetooth.characteristic.heart_rate_max", 
+      "name": "Heart Rate Max",
+      "ttype": "org.bluetooth.characteristic.heart_rate_max",
       "uuid": "2A8D",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Heart Rate Measurement", 
-      "ttype": "org.bluetooth.characteristic.heart_rate_measurement", 
+      "name": "Heart Rate Measurement",
+      "ttype": "org.bluetooth.characteristic.heart_rate_measurement",
       "uuid": "2A37",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Heat Index", 
-      "ttype": "org.bluetooth.characteristic.heat_index", 
+      "name": "Heat Index",
+      "ttype": "org.bluetooth.characteristic.heat_index",
       "uuid": "2A7A",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Height", 
-      "ttype": "org.bluetooth.characteristic.height", 
+      "name": "Height",
+      "ttype": "org.bluetooth.characteristic.height",
       "uuid": "2A8E",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "HID Control Point", 
-      "ttype": "org.bluetooth.characteristic.hid_control_point", 
+      "name": "HID Control Point",
+      "ttype": "org.bluetooth.characteristic.hid_control_point",
       "uuid": "2A4C",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "HID Information", 
-      "ttype": "org.bluetooth.characteristic.hid_information", 
+      "name": "HID Information",
+      "ttype": "org.bluetooth.characteristic.hid_information",
       "uuid": "2A4A",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Hip Circumference", 
-      "ttype": "org.bluetooth.characteristic.hip_circumference", 
+      "name": "Hip Circumference",
+      "ttype": "org.bluetooth.characteristic.hip_circumference",
       "uuid": "2A8F",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "HTTP Control Point", 
-      "ttype": "org.bluetooth.characteristic.http_control_point", 
+      "name": "HTTP Control Point",
+      "ttype": "org.bluetooth.characteristic.http_control_point",
       "uuid": "2ABA",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "HTTP Entity Body", 
-      "ttype": "org.bluetooth.characteristic.http_entity_body", 
+      "name": "HTTP Entity Body",
+      "ttype": "org.bluetooth.characteristic.http_entity_body",
       "uuid": "2AB9",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "HTTP Headers", 
-      "ttype": "org.bluetooth.characteristic.http_headers", 
+      "name": "HTTP Headers",
+      "ttype": "org.bluetooth.characteristic.http_headers",
       "uuid": "2AB7",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "HTTP Status Code", 
-      "ttype": "org.bluetooth.characteristic.http_status_code", 
+      "name": "HTTP Status Code",
+      "ttype": "org.bluetooth.characteristic.http_status_code",
       "uuid": "2AB8",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "HTTPS Security", 
-      "ttype": "org.bluetooth.characteristic.https_security", 
+      "name": "HTTPS Security",
+      "ttype": "org.bluetooth.characteristic.https_security",
       "uuid": "2ABB",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Humidity", 
-      "ttype": "org.bluetooth.characteristic.humidity", 
+      "name": "Humidity",
+      "ttype": "org.bluetooth.characteristic.humidity",
       "uuid": "2A6F",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "IEEE 11073-20601 Regulatory Certification Data List", 
-      "ttype": "org.bluetooth.characteristic.ieee_11073-20601_regulatory_certification_data_list", 
+      "name": "IEEE 11073-20601 Regulatory Certification Data List",
+      "ttype": "org.bluetooth.characteristic.ieee_11073-20601_regulatory_certification_data_list",
       "uuid": "2A2A",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Indoor Positioning Configuration", 
-      "ttype": "org.bluetooth.characteristic.indoor_positioning_configuration", 
+      "name": "Indoor Positioning Configuration",
+      "ttype": "org.bluetooth.characteristic.indoor_positioning_configuration",
       "uuid": "2AAD",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Intermediate Cuff Pressure", 
-      "ttype": "org.bluetooth.characteristic.intermediate_cuff_pressure", 
+      "name": "Intermediate Cuff Pressure",
+      "ttype": "org.bluetooth.characteristic.intermediate_cuff_pressure",
       "uuid": "2A36",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Intermediate Temperature", 
-      "ttype": "org.bluetooth.characteristic.intermediate_temperature", 
+      "name": "Intermediate Temperature",
+      "ttype": "org.bluetooth.characteristic.intermediate_temperature",
       "uuid": "2A1E",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Irradiance", 
-      "ttype": "org.bluetooth.characteristic.irradiance", 
+      "name": "Irradiance",
+      "ttype": "org.bluetooth.characteristic.irradiance",
       "uuid": "2A77",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Language", 
-      "ttype": "org.bluetooth.characteristic.language", 
+      "name": "Language",
+      "ttype": "org.bluetooth.characteristic.language",
       "uuid": "2AA2",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Last type", 
-      "ttype": "org.bluetooth.characteristic.last_type", 
+      "name": "Last type",
+      "ttype": "org.bluetooth.characteristic.last_type",
       "uuid": "2A90",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Latitude", 
-      "ttype": "org.bluetooth.characteristic.latitude", 
+      "name": "Latitude",
+      "ttype": "org.bluetooth.characteristic.latitude",
       "uuid": "2AAE",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "LN Control Point", 
-      "ttype": "org.bluetooth.characteristic.ln_control_point", 
+      "name": "LN Control Point",
+      "ttype": "org.bluetooth.characteristic.ln_control_point",
       "uuid": "2A6B",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "LN Feature", 
-      "ttype": "org.bluetooth.characteristic.ln_feature", 
+      "name": "LN Feature",
+      "ttype": "org.bluetooth.characteristic.ln_feature",
       "uuid": "2A6A",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Local East Coordinate", 
-      "ttype": "org.bluetooth.characteristic.local_east_coordinate", 
+      "name": "Local East Coordinate",
+      "ttype": "org.bluetooth.characteristic.local_east_coordinate",
       "uuid": "2AB1",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Local North Coordinate", 
-      "ttype": "org.bluetooth.characteristic.local_north_coordinate", 
+      "name": "Local North Coordinate",
+      "ttype": "org.bluetooth.characteristic.local_north_coordinate",
       "uuid": "2AB0",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Local Time Information", 
-      "ttype": "org.bluetooth.characteristic.local_time_information", 
+      "name": "Local Time Information",
+      "ttype": "org.bluetooth.characteristic.local_time_information",
       "uuid": "2A0F",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Location and Speed", 
-      "ttype": "org.bluetooth.characteristic.location_and_speed", 
+      "name": "Location and Speed",
+      "ttype": "org.bluetooth.characteristic.location_and_speed",
       "uuid": "2A67",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Location type", 
-      "ttype": "org.bluetooth.characteristic.location_type", 
+      "name": "Location type",
+      "ttype": "org.bluetooth.characteristic.location_type",
       "uuid": "2AB5",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Longitude", 
-      "ttype": "org.bluetooth.characteristic.longitude", 
+      "name": "Longitude",
+      "ttype": "org.bluetooth.characteristic.longitude",
       "uuid": "2AAF",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Magnetic Declination", 
-      "ttype": "org.bluetooth.characteristic.magnetic_declination", 
+      "name": "Magnetic Declination",
+      "ttype": "org.bluetooth.characteristic.magnetic_declination",
       "uuid": "2A2C",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Magnetic Flux Density - 2D", 
-      "ttype": "org.bluetooth.characteristic.magnetic_flux_density_2D", 
+      "name": "Magnetic Flux Density - 2D",
+      "ttype": "org.bluetooth.characteristic.magnetic_flux_density_2D",
       "uuid": "2AA0",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Magnetic Flux Density - 3D", 
-      "ttype": "org.bluetooth.characteristic.magnetic_flux_density_3D", 
+      "name": "Magnetic Flux Density - 3D",
+      "ttype": "org.bluetooth.characteristic.magnetic_flux_density_3D",
       "uuid": "2AA1",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Manufacturer type String", 
-      "ttype": "org.bluetooth.characteristic.manufacturer_ttypestring", 
+      "name": "Manufacturer type String",
+      "ttype": "org.bluetooth.characteristic.manufacturer_ttypestring",
       "uuid": "2A29",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Maximum Recommended Heart Rate", 
-      "ttype": "org.bluetooth.characteristic.maximum_recommended_heart_rate", 
+      "name": "Maximum Recommended Heart Rate",
+      "ttype": "org.bluetooth.characteristic.maximum_recommended_heart_rate",
       "uuid": "2A91",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Measurement Interval", 
-      "ttype": "org.bluetooth.characteristic.measurement_interval", 
+      "name": "Measurement Interval",
+      "ttype": "org.bluetooth.characteristic.measurement_interval",
       "uuid": "2A21",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Model Number String", 
-      "ttype": "org.bluetooth.characteristic.model_number_string", 
+      "name": "Model Number String",
+      "ttype": "org.bluetooth.characteristic.model_number_string",
       "uuid": "2A24",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Navigation", 
-      "ttype": "org.bluetooth.characteristic.navigation", 
+      "name": "Navigation",
+      "ttype": "org.bluetooth.characteristic.navigation",
       "uuid": "2A68",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "New Alert", 
-      "ttype": "org.bluetooth.characteristic.new_alert", 
+      "name": "New Alert",
+      "ttype": "org.bluetooth.characteristic.new_alert",
       "uuid": "2A46",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Object Action Control Point", 
-      "ttype": "org.bluetooth.characteristic.object_action_control_point", 
+      "name": "Object Action Control Point",
+      "ttype": "org.bluetooth.characteristic.object_action_control_point",
       "uuid": "2AC5",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Object Changed", 
-      "ttype": "org.bluetooth.characteristic.object_changed", 
+      "name": "Object Changed",
+      "ttype": "org.bluetooth.characteristic.object_changed",
       "uuid": "2AC8",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Object First-Created", 
-      "ttype": "org.bluetooth.characteristic.object_first_created", 
+      "name": "Object First-Created",
+      "ttype": "org.bluetooth.characteristic.object_first_created",
       "uuid": "2AC1",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Object ID", 
-      "ttype": "org.bluetooth.characteristic.object_id", 
+      "name": "Object ID",
+      "ttype": "org.bluetooth.characteristic.object_id",
       "uuid": "2AC3",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Object Last-Modified", 
-      "ttype": "org.bluetooth.characteristic.object_last_modified", 
+      "name": "Object Last-Modified",
+      "ttype": "org.bluetooth.characteristic.object_last_modified",
       "uuid": "2AC2",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Object List Control Point", 
-      "ttype": "org.bluetooth.characteristic.object_list_control_point", 
+      "name": "Object List Control Point",
+      "ttype": "org.bluetooth.characteristic.object_list_control_point",
       "uuid": "2AC6",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Object List Filter", 
-      "ttype": "org.bluetooth.characteristic.object_list_filter", 
+      "name": "Object List Filter",
+      "ttype": "org.bluetooth.characteristic.object_list_filter",
       "uuid": "2AC7",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Object type", 
-      "ttype": "org.bluetooth.characteristic.object_type", 
+      "name": "Object type",
+      "ttype": "org.bluetooth.characteristic.object_type",
       "uuid": "2ABE",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Object Properties", 
-      "ttype": "org.bluetooth.characteristic.object_properties", 
+      "name": "Object Properties",
+      "ttype": "org.bluetooth.characteristic.object_properties",
       "uuid": "2AC4",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Object Size", 
-      "ttype": "org.bluetooth.characteristic.object_size", 
+      "name": "Object Size",
+      "ttype": "org.bluetooth.characteristic.object_size",
       "uuid": "2AC0",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Object Type", 
-      "ttype": "org.bluetooth.characteristic.object_type", 
+      "name": "Object Type",
+      "ttype": "org.bluetooth.characteristic.object_type",
       "uuid": "2ABF",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "OTS Feature", 
-      "ttype": "org.bluetooth.characteristic.ots_feature", 
+      "name": "OTS Feature",
+      "ttype": "org.bluetooth.characteristic.ots_feature",
       "uuid": "2ABD",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Peripheral Preferred Connection Parameters", 
-      "ttype": "org.bluetooth.characteristic.gap.peripheral_preferred_connection_parameters", 
+      "name": "Peripheral Preferred Connection Parameters",
+      "ttype": "org.bluetooth.characteristic.gap.peripheral_preferred_connection_parameters",
       "uuid": "2A04",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Peripheral Privacy Flag", 
-      "ttype": "org.bluetooth.characteristic.gap.peripheral_privacy_flag", 
+      "name": "Peripheral Privacy Flag",
+      "ttype": "org.bluetooth.characteristic.gap.peripheral_privacy_flag",
       "uuid": "2A02",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "PLX Continuous Measurement", 
-      "ttype": "org.bluetooth.characteristic.plx_continuous_measurement", 
+      "name": "PLX Continuous Measurement",
+      "ttype": "org.bluetooth.characteristic.plx_continuous_measurement",
       "uuid": "2A5F",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "PLX Features", 
-      "ttype": "org.bluetooth.characteristic.plx_features", 
+      "name": "PLX Features",
+      "ttype": "org.bluetooth.characteristic.plx_features",
       "uuid": "2A60",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "PLX Spot-Check Measurement", 
-      "ttype": "org.bluetooth.characteristic.plx_spot_check_measurement", 
+      "name": "PLX Spot-Check Measurement",
+      "ttype": "org.bluetooth.characteristic.plx_spot_check_measurement",
       "uuid": "2A5E",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "PnP ID", 
-      "ttype": "org.bluetooth.characteristic.pnp_id", 
+      "name": "PnP ID",
+      "ttype": "org.bluetooth.characteristic.pnp_id",
       "uuid": "2A50",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Pollen Concentration", 
-      "ttype": "org.bluetooth.characteristic.pollen_concentration", 
+      "name": "Pollen Concentration",
+      "ttype": "org.bluetooth.characteristic.pollen_concentration",
       "uuid": "2A75",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Position Quality", 
-      "ttype": "org.bluetooth.characteristic.position_quality", 
+      "name": "Position Quality",
+      "ttype": "org.bluetooth.characteristic.position_quality",
       "uuid": "2A69",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Pressure", 
-      "ttype": "org.bluetooth.characteristic.pressure", 
+      "name": "Pressure",
+      "ttype": "org.bluetooth.characteristic.pressure",
       "uuid": "2A6D",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Protocol Mode", 
-      "ttype": "org.bluetooth.characteristic.protocol_mode", 
+      "name": "Protocol Mode",
+      "ttype": "org.bluetooth.characteristic.protocol_mode",
       "uuid": "2A4E",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Rainfall", 
-      "ttype": "org.bluetooth.characteristic.rainfall", 
+      "name": "Rainfall",
+      "ttype": "org.bluetooth.characteristic.rainfall",
       "uuid": "2A78",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Reconnection Address", 
-      "ttype": "org.bluetooth.characteristic.gap.reconnection_address", 
+      "name": "Reconnection Address",
+      "ttype": "org.bluetooth.characteristic.gap.reconnection_address",
       "uuid": "2A03",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Record Access Control Point", 
-      "ttype": "org.bluetooth.characteristic.record_access_control_point", 
+      "name": "Record Access Control Point",
+      "ttype": "org.bluetooth.characteristic.record_access_control_point",
       "uuid": "2A52",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Reference Time Information", 
-      "ttype": "org.bluetooth.characteristic.reference_time_information", 
+      "name": "Reference Time Information",
+      "ttype": "org.bluetooth.characteristic.reference_time_information",
       "uuid": "2A14",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Report", 
-      "ttype": "org.bluetooth.characteristic.report", 
+      "name": "Report",
+      "ttype": "org.bluetooth.characteristic.report",
       "uuid": "2A4D",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Report Map", 
-      "ttype": "org.bluetooth.characteristic.report_map", 
+      "name": "Report Map",
+      "ttype": "org.bluetooth.characteristic.report_map",
       "uuid": "2A4B",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Resting Heart Rate", 
-      "ttype": "org.bluetooth.characteristic.resting_heart_rate", 
+      "name": "Resting Heart Rate",
+      "ttype": "org.bluetooth.characteristic.resting_heart_rate",
       "uuid": "2A92",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Ringer Control Point", 
-      "ttype": "org.bluetooth.characteristic.ringer_control_point", 
+      "name": "Ringer Control Point",
+      "ttype": "org.bluetooth.characteristic.ringer_control_point",
       "uuid": "2A40",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Ringer Setting", 
-      "ttype": "org.bluetooth.characteristic.ringer_setting", 
+      "name": "Ringer Setting",
+      "ttype": "org.bluetooth.characteristic.ringer_setting",
       "uuid": "2A41",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "RSC Feature", 
-      "ttype": "org.bluetooth.characteristic.rsc_feature", 
+      "name": "RSC Feature",
+      "ttype": "org.bluetooth.characteristic.rsc_feature",
       "uuid": "2A54",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "RSC Measurement", 
-      "ttype": "org.bluetooth.characteristic.rsc_measurement", 
+      "name": "RSC Measurement",
+      "ttype": "org.bluetooth.characteristic.rsc_measurement",
       "uuid": "2A53",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "SC Control Point", 
-      "ttype": "org.bluetooth.characteristic.sc_control_point", 
+      "name": "SC Control Point",
+      "ttype": "org.bluetooth.characteristic.sc_control_point",
       "uuid": "2A55",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Scan Interval Window", 
-      "ttype": "org.bluetooth.characteristic.scan_interval_window", 
+      "name": "Scan Interval Window",
+      "ttype": "org.bluetooth.characteristic.scan_interval_window",
       "uuid": "2A4F",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Scan Refresh", 
-      "ttype": "org.bluetooth.characteristic.scan_refresh", 
+      "name": "Scan Refresh",
+      "ttype": "org.bluetooth.characteristic.scan_refresh",
       "uuid": "2A31",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Sensor Location", 
-      "ttype": "org.blueooth.characteristic.sensor_location", 
+      "name": "Sensor Location",
+      "ttype": "org.blueooth.characteristic.sensor_location",
       "uuid": "2A5D",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Serial Number String", 
-      "ttype": "org.bluetooth.characteristic.serial_number_string", 
+      "name": "Serial Number String",
+      "ttype": "org.bluetooth.characteristic.serial_number_string",
       "uuid": "2A25",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Service Changed", 
-      "ttype": "org.bluetooth.characteristic.gatt.service_changed", 
+      "name": "Service Changed",
+      "ttype": "org.bluetooth.characteristic.gatt.service_changed",
       "uuid": "2A05",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Software Revision String", 
-      "ttype": "org.bluetooth.characteristic.software_revision_string", 
+      "name": "Software Revision String",
+      "ttype": "org.bluetooth.characteristic.software_revision_string",
       "uuid": "2A28",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Sport Type for Aerobic and Anaerobic Thresholds", 
-      "ttype": "org.bluetooth.characteristic.sport_ttypefor_aerobic_and_anaerobic_thresholds", 
+      "name": "Sport Type for Aerobic and Anaerobic Thresholds",
+      "ttype": "org.bluetooth.characteristic.sport_ttypefor_aerobic_and_anaerobic_thresholds",
       "uuid": "2A93",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Supported New Alert Category", 
-      "ttype": "org.bluetooth.characteristic.supported_new_alert_category", 
+      "name": "Supported New Alert Category",
+      "ttype": "org.bluetooth.characteristic.supported_new_alert_category",
       "uuid": "2A47",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Supported Unread Alert Category", 
-      "ttype": "org.bluetooth.characteristic.supported_unread_alert_category", 
+      "name": "Supported Unread Alert Category",
+      "ttype": "org.bluetooth.characteristic.supported_unread_alert_category",
       "uuid": "2A48",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "System ID", 
-      "ttype": "org.bluetooth.characteristic.system_id", 
+      "name": "System ID",
+      "ttype": "org.bluetooth.characteristic.system_id",
       "uuid": "2A23",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "TDS Control Point", 
-      "ttype": "org.bluetooth.characteristic.tds_control_point", 
+      "name": "TDS Control Point",
+      "ttype": "org.bluetooth.characteristic.tds_control_point",
       "uuid": "2ABC",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Temperature", 
-      "ttype": "org.bluetooth.characteristic.temperature", 
+      "name": "Temperature",
+      "ttype": "org.bluetooth.characteristic.temperature",
       "uuid": "2A6E",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Temperature Measurement", 
-      "ttype": "org.bluetooth.characteristic.temperature_measurement", 
+      "name": "Temperature Measurement",
+      "ttype": "org.bluetooth.characteristic.temperature_measurement",
       "uuid": "2A1C",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Temperature Type", 
-      "ttype": "org.bluetooth.characteristic.temperature_type", 
+      "name": "Temperature Type",
+      "ttype": "org.bluetooth.characteristic.temperature_type",
       "uuid": "2A1D",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Three Zone Heart Rate Limits", 
-      "ttype": "org.bluetooth.characteristic.three_zone_heart_rate_limits", 
+      "name": "Three Zone Heart Rate Limits",
+      "ttype": "org.bluetooth.characteristic.three_zone_heart_rate_limits",
       "uuid": "2A94",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Time Accuracy", 
-      "ttype": "org.bluetooth.characteristic.time_accuracy", 
+      "name": "Time Accuracy",
+      "ttype": "org.bluetooth.characteristic.time_accuracy",
       "uuid": "2A12",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Time Source", 
-      "ttype": "org.bluetooth.characteristic.time_source", 
+      "name": "Time Source",
+      "ttype": "org.bluetooth.characteristic.time_source",
       "uuid": "2A13",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Time Update Control Point", 
-      "ttype": "org.bluetooth.characteristic.time_update_control_point", 
+      "name": "Time Update Control Point",
+      "ttype": "org.bluetooth.characteristic.time_update_control_point",
       "uuid": "2A16",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Time Update State", 
-      "ttype": "org.bluetooth.characteristic.time_update_state", 
+      "name": "Time Update State",
+      "ttype": "org.bluetooth.characteristic.time_update_state",
       "uuid": "2A17",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Time with DST", 
-      "ttype": "org.bluetooth.characteristic.time_with_dst", 
+      "name": "Time with DST",
+      "ttype": "org.bluetooth.characteristic.time_with_dst",
       "uuid": "2A11",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Time Zone", 
-      "ttype": "org.bluetooth.characteristic.time_zone", 
+      "name": "Time Zone",
+      "ttype": "org.bluetooth.characteristic.time_zone",
       "uuid": "2A0E",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "True Wind Direction", 
-      "ttype": "org.bluetooth.characteristic.true_wind_direction", 
+      "name": "True Wind Direction",
+      "ttype": "org.bluetooth.characteristic.true_wind_direction",
       "uuid": "2A71",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "True Wind Speed", 
-      "ttype": "org.bluetooth.characteristic.true_wind_speed", 
+      "name": "True Wind Speed",
+      "ttype": "org.bluetooth.characteristic.true_wind_speed",
       "uuid": "2A70",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Two Zone Heart Rate Limit", 
-      "ttype": "org.bluetooth.characteristic.two_zone_heart_rate_limit", 
+      "name": "Two Zone Heart Rate Limit",
+      "ttype": "org.bluetooth.characteristic.two_zone_heart_rate_limit",
       "uuid": "2A95",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Tx Power Level", 
-      "ttype": "org.bluetooth.characteristic.tx_power_level", 
+      "name": "Tx Power Level",
+      "ttype": "org.bluetooth.characteristic.tx_power_level",
       "uuid": "2A07",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Uncertainty", 
-      "ttype": "org.bluetooth.characteristic.uncertainty", 
+      "name": "Uncertainty",
+      "ttype": "org.bluetooth.characteristic.uncertainty",
       "uuid": "2AB4",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Unread Alert Status", 
-      "ttype": "org.bluetooth.characteristic.unread_alert_status", 
+      "name": "Unread Alert Status",
+      "ttype": "org.bluetooth.characteristic.unread_alert_status",
       "uuid": "2A45",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "URI", 
-      "ttype": "org.bluetooth.characteristic.uri", 
+      "name": "URI",
+      "ttype": "org.bluetooth.characteristic.uri",
       "uuid": "2AB6",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "User Control Point", 
-      "ttype": "org.bluetooth.characteristic.user_control_point", 
+      "name": "User Control Point",
+      "ttype": "org.bluetooth.characteristic.user_control_point",
       "uuid": "2A9F",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "User Index", 
-      "ttype": "org.bluetooth.characteristic.user_index", 
+      "name": "User Index",
+      "ttype": "org.bluetooth.characteristic.user_index",
       "uuid": "2A9A",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "UV Index", 
-      "ttype": "org.bluetooth.characteristic.uv_index", 
+      "name": "UV Index",
+      "ttype": "org.bluetooth.characteristic.uv_index",
       "uuid": "2A76",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "VO2 Max", 
-      "ttype": "org.bluetooth.characteristic.vo2_max", 
+      "name": "VO2 Max",
+      "ttype": "org.bluetooth.characteristic.vo2_max",
       "uuid": "2A96",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Waist Circumference", 
-      "ttype": "org.bluetooth.characteristic.waist_circumference", 
+      "name": "Waist Circumference",
+      "ttype": "org.bluetooth.characteristic.waist_circumference",
       "uuid": "2A97",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Weight", 
-      "ttype": "org.bluetooth.characteristic.weight", 
+      "name": "Weight",
+      "ttype": "org.bluetooth.characteristic.weight",
       "uuid": "2A98",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Weight Measurement", 
-      "ttype": "org.bluetooth.characteristic.weight_measurement", 
+      "name": "Weight Measurement",
+      "ttype": "org.bluetooth.characteristic.weight_measurement",
       "uuid": "2A9D",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Weight Scale Feature", 
-      "ttype": "org.bluetooth.characteristic.weight_scale_feature", 
+      "name": "Weight Scale Feature",
+      "ttype": "org.bluetooth.characteristic.weight_scale_feature",
       "uuid": "2A9E",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
-  }, 
+  },
   {
     "fields": {
-      "name": "Wind Chill", 
-      "ttype": "org.bluetooth.characteristic.wind_chill", 
+      "name": "Wind Chill",
+      "ttype": "org.bluetooth.characteristic.wind_chill",
       "uuid": "2A79",
       "verified": true
-    }, 
+    },
     "model": "gatt.Characteristic"
   }
 ]

@@ -7,21 +7,21 @@ from .models import AdminAuthInstance, PasscodeAuthInstance, UserAuthInstance, E
 
 @admin.register(AdminAuthInstance)
 class AdminAuthInstanceAdmin(admin.ModelAdmin):
-	list_display = ("rule", "principal", "timestamp", "expire") 
+	list_display = ("rule", "principal", "timestamp", "expire")
 	list_searchable = ("rule", "principal")
 	list_filter = ("rule", "principal")
 	readonly_fields = list_display
 
 @admin.register(UserAuthInstance)
 class UserAuthInstanceAdmin(admin.ModelAdmin):
-	list_display = ("rule", "principal", "timestamp", "expire") 
+	list_display = ("rule", "principal", "timestamp", "expire")
 	list_searchable = ("rule", "principal")
 	list_filter = ("rule", "principal")
 	readonly_fields = list_display
 
 @admin.register(PasscodeAuthInstance)
 class PasscodeAuthInstanceAdmin(admin.ModelAdmin):
-	list_display = ("rule", "principal", "timestamp", "expire") 
+	list_display = ("rule", "principal", "timestamp", "expire")
 	list_searchable = ("rule", "principal")
 	list_filter = ("rule", "principal")
 	readonly_fields = list_display
@@ -31,4 +31,3 @@ class ExclusiveLeaseAdmin(admin.ModelAdmin):
 	list_display = ("device_instance", "group", "timestamp", "expire")
 	search_fields = ("device_instance", "group")
 	readonly_fields = list_display
-	

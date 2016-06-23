@@ -13,7 +13,7 @@ In ```pygatt``` subdirectory.
 In ```controller``` subdirectory. Needed to run with the controller enabled.
 
 ## Gateway applications
-In ```pyapps``` directory.
+In ```pyapps``` supdirectory.
 
 ## Certs directory
 Basic scripts to generate self-signed certificates for Beetle.

@@ -8,15 +8,15 @@
     }
   },
   {
-    "model": "beetle.Principal", 
-    "pk": "*", 
+    "model": "beetle.Principal",
+    "pk": "*",
     "fields": {
       "polymorphic_ctype": ["beetle", "principalgroup"]
     }
   },
   {
-    "model": "beetle.Gateway", 
-    "pk": "*", 
+    "model": "beetle.Gateway",
+    "pk": "*",
     "fields": {
       "polymorphic_ctype": ["beetle", "gatewaygroup"]
     }
