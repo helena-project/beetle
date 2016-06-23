@@ -27,7 +27,7 @@
 #include "device/socket/tcp/TCPServerProxy.h"
 #include "HCI.h"
 #include "ipc/UnixDomainSocketServer.h"
-#include <l2cap/L2CAPServer.h>
+#include "l2cap/L2CAPServer.h"
 #include "StaticTopo.h"
 #include "scan/AutoConnect.h"
 #include "scan/Scanner.h"

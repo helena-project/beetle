@@ -31,7 +31,7 @@
 
 // Set advertising interval to 100 ms
 // Note: 0x00A0 * 0.625ms = 100ms
-int hci_le_set_advertising_parameters(int dd, int to) {
+static int hci_le_set_advertising_parameters(int dd, int to) {
 	struct hci_request rq;
 	le_set_advertising_parameters_cp adv_params_cp;
 	uint8_t status;
@@ -61,7 +61,7 @@ int hci_le_set_advertising_parameters(int dd, int to) {
 	return 0;
 }
 
-int hci_le_set_advertising_data(int dd, uint8_t* data, uint8_t length, int to) {
+static int hci_le_set_advertising_data(int dd, uint8_t* data, uint8_t length, int to) {
 	struct hci_request rq;
 	le_set_advertising_data_cp data_cp;
 	uint8_t status;
@@ -90,7 +90,7 @@ int hci_le_set_advertising_data(int dd, uint8_t* data, uint8_t length, int to) {
 	return 0;
 }
 
-int hci_le_set_scan_response_data(int dd, uint8_t* data, uint8_t length, int to) {
+static int hci_le_set_scan_response_data(int dd, uint8_t* data, uint8_t length, int to) {
 	struct hci_request rq;
 	le_set_scan_response_data_cp data_cp;
 	uint8_t status;
@@ -167,10 +167,48 @@ L2CAPServer::L2CAPServer(Beetle &beetle) : beetle(beetle) {
 		}
 
 		beetle.workers.schedule([&beetle, clifd, cli_addr] {
-			startL2capCentralHelper(beetle, clifd, cli_addr);
+			startL2CAPCentralHelper(beetle, clifd, cli_addr);
 		});
 	});
 
+	bleAdvertisingDaemon(deviceId);
+}
+
+L2CAPServer::~L2CAPServer() {
+	beetle.readers.remove(fd);
+	shutdown(fd, SHUT_RDWR);
+	close(fd);
+	if (debug) {
+		pdebug("l2cap server stopped");
+	}
+}
+
+void L2CAPServer::startL2CAPCentralHelper(Beetle &beetle, int clifd, struct sockaddr_l2 cliaddr) {
+	std::shared_ptr<VirtualDevice> device = NULL;
+	try {
+		/*
+		 * Takes over the clifd
+		 */
+		device = std::make_shared<LEPeripheral>(beetle, clifd, cliaddr);
+
+		boost::shared_lock<boost::shared_mutex> devicesLk;
+		beetle.addDevice(device, devicesLk);
+		device->start();
+
+		pdebug("connected to " + device->getName());
+		if (debug) {
+			pdebug(device->getName() + " has handle range [0,"
+					+ std::to_string(device->getHighestHandle()) + "]");
+		}
+	} catch (std::exception& e) {
+		pexcept(e);
+		if (device) {
+			beetle.removeDevice(device->getId());
+		}
+	}
+}
+
+void L2CAPServer::bleAdvertisingDaemon(int deviceId) {
 	advertisementDataLen = 0;
 	scanDataLen = 0;
 
@@ -238,7 +276,7 @@ L2CAPServer::L2CAPServer(Beetle &beetle) : beetle(beetle) {
 	// start advertising
 	if (hci_le_set_advertise_enable(deviceHandle, 1, 1000) < 0) {
 		std::stringstream ss;
-		ss << "failed to disable advertising: " << strerror(errno);
+		ss << "failed to enable advertising: " << strerror(errno);
 		throw std::runtime_error(ss.str());
 	}
 
@@ -254,40 +292,6 @@ L2CAPServer::L2CAPServer(Beetle &beetle) : beetle(beetle) {
 		std::stringstream ss;
 		ss << "failed to set advertisement data: " << strerror(errno);
 		throw std::runtime_error(ss.str());
-	}
-}
-
-L2CAPServer::~L2CAPServer() {
-	beetle.readers.remove(fd);
-	shutdown(fd, SHUT_RDWR);
-	close(fd);
-	if (debug) {
-		pdebug("l2cap server stopped");
-	}
-}
-
-void L2CAPServer::startL2capCentralHelper(Beetle &beetle, int clifd, struct sockaddr_l2 cliaddr) {
-	std::shared_ptr<VirtualDevice> device = NULL;
-	try {
-		/*
-		 * Takes over the clifd
-		 */
-		device = std::make_shared<LEPeripheral>(beetle, clifd, cliaddr);
-
-		boost::shared_lock<boost::shared_mutex> devicesLk;
-		beetle.addDevice(device, devicesLk);
-		device->start();
-
-		pdebug("connected to " + device->getName());
-		if (debug) {
-			pdebug(device->getName() + " has handle range [0,"
-					+ std::to_string(device->getHighestHandle()) + "]");
-		}
-	} catch (std::exception& e) {
-		pexcept(e);
-		if (device) {
-			beetle.removeDevice(device->getId());
-		}
 	}
 }
 

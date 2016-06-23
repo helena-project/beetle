@@ -28,7 +28,9 @@ private:
 	uint8_t scanDataBuf[256];
 	int scanDataLen;
 
-	static void startL2capCentralHelper(Beetle &beetle, int clifd, struct sockaddr_l2 cliaddr);
+	void bleAdvertisingDaemon(int deviceId);
+
+	static void startL2CAPCentralHelper(Beetle &beetle, int clifd, struct sockaddr_l2 cliaddr);
 };
 
 #endif /* L2CAP_L2CAPSERVER_H_ */
