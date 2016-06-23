@@ -235,47 +235,45 @@ def runHttpServer(port, client, reset, ready, devices):
 			self.wfile.write(template.render(devices=devices))
 			self.wfile.close()
 
-		def _serve_favicon(self):
-			self.send_response(200, 'OK')
-			self.send_header('Content-type', 'png')
-			self.end_headers()
-			f = open("static/icons/sensorapp.png", "rb")
-			try:
-				self.wfile.write(f.read())
-			finally:
-				f.close()
-				self.wfile.close()
-
-		def _serve_css(self):
-			if self.path == "/style.css":
-				f = open("static/style.css", "rb")
-			elif self.path == "/fonts.css":
-				f = open("static/google-fonts.css", "rb")
-			else:
+		def _serve_static(self):
+			if self.path == "" or not os.path.isfile(self.path[1:]):
 				self.send_error(404)
 				self.end_headers()
 				self.wfile.close()
 				return
 
+			path = self.path[1:]
+			_, extension = os.path.splitext(path)
+			print extension
+			if extension == ".css":
+				extension = "text/css"
+			elif extension == ".png":
+				extension = "image/png"
+			else:
+				self.send_error(403)
+				self.end_headers()
+				self.wfile.close()
+				return
+
 			self.send_response(200, 'OK')
-			self.send_header('Content-type', 'css')
+			self.send_header('Content-type', extension)
 			self.end_headers()
 
-			try:
-				self.wfile.write(f.read())
-			finally:
-				f.close()
-				self.wfile.close()
+			with open(path, "rb") as f:
+				try:
+					self.wfile.write(f.read())
+				finally:
+					self.wfile.close()
 
 		def do_GET(self):
 			if self.path == "/":
 				self._serve_main()
-			elif self.path == "/favicon.ico":
-				self._serve_favicon()
-			elif self.path.endswith(".css"):
-				self._serve_css()
+			elif self.path.startswith("/static"):
+				self._serve_static()
 			else:
 				self.send_error(404)
+				self.end_headers()
+				self.wfile.close()
 
 		def do_POST(self):
 			if self.path == "/rescan":
@@ -287,6 +285,8 @@ def runHttpServer(port, client, reset, ready, devices):
 				self.wfile.close()
 			else:
 				self.send_error(404)
+				self.end_headers()
+				self.wfile.close()
 
 	server = HTTPServer(("", port), WebServerHandler)
 	try:
