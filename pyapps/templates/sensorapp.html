@@ -6,21 +6,18 @@
 
 	<title>Remote Sensing</title>
 
+	<link rel='shortcut icon' type='image/png' href='static/icons/sensorapp.png'>
 	<!-- bootstrap -->
 	<!-- https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css -->
-	<link rel="stylesheet" type='text/css'
-	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<link rel="stylesheet" type='text/css' href="static/bootstrap/css/bootstrap.min.css">
 	<!-- https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css -->
-	<link rel="stylesheet" type='text/css'
-	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" type='text/css' href="static/bootstrap/css/bootstrap-theme.min.css">
 
 	<!-- Google fonts -->
 	<!-- https://fonts.googleapis.com/css?family=Roboto:400,300 -->
-	<link rel='stylesheet' type='text/css' href="fonts.css">
+	<link rel='stylesheet' type='text/css' href="static/google-fonts.css">
 
-	<link rel="stylesheet" type="text/css" href="style.css" >
-
-	<meta http-equiv="refresh" content="30">
+	<link rel="stylesheet" type="text/css" href="static/style.css">
 </head>
 
 <body>
@@ -35,7 +32,15 @@
 <br>
 
 <script type="text/javascript">
+	var reloadTrue= true;
+	setInterval(function() {
+		if (reloadTrue) {
+			location.reload(true);
+		}
+	}, 10000);
+
 	function rescan() {
+		reloadTrue = false;
 		window.alert("Rescanning for sensors... Please be patient. " +
 			"This page will automatically reload when done.");
 
@@ -46,6 +51,7 @@
 					location.reload();
 				} else {
 					window.alert("Failure. :(");
+					reloadTrue = true;
 				}
 			}
 		};

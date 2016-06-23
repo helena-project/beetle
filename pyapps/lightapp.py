@@ -9,16 +9,20 @@ This module implements a home lighting application.
 
 import argparse
 import binascii
+import cgi
 import os
 import socket
 import ssl
 import struct
+import sys
 import threading
-import cgi
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+
+PYGATT_PATH = "../pygatt"
+sys.path.append(PYGATT_PATH)
 
 import lib.gatt as gatt
 import lib.uuid as uuid
@@ -79,10 +83,15 @@ class LightInstance(object):
 	def state(self):
 		if not self.w:
 			return "ERROR"
-		elif self.w.read()[0] == 0:
-			return "OFF"
-		else:
-			return "ON"
+
+		try:
+			if self.w.read()[0] == 0:
+				return "OFF"
+			else:
+				return "ON"
+		except Exception, err:
+			print err
+			return "ERROR"
 
 	@property
 	def red(self):
@@ -127,6 +136,8 @@ class LightInstance(object):
 	def __str__(self):
 		return self.name
 
+DEFAULT_ON_VALUE = 100
+
 def runHttpServer(port, client, reset, ready, devices):
 	"""Start the HTTP server"""
 
@@ -147,37 +158,35 @@ def runHttpServer(port, client, reset, ready, devices):
 			self.wfile.write(template.render(devices=devices))
 			self.wfile.close()
 
-		def _serve_favicon(self):
-			self.send_response(200, 'OK')
-			self.send_header('Content-type', 'png')
-			self.end_headers()
-			f = open("static/icons/lightapp.png", "rb")
-			try:
-				self.wfile.write(f.read())
-			finally:
-				f.close()
-				self.wfile.close()
-
-		def _serve_css(self):
-			if self.path == "/style.css":
-				f = open("static/style.css", "rb")
-			elif self.path == "/fonts.css":
-				f = open("static/google-fonts.css", "rb")
-			else:
+		def _serve_static(self):
+			if self.path == "" or not os.path.isfile(self.path[1:]):
 				self.send_error(404)
 				self.end_headers()
 				self.wfile.close()
 				return
 
+			path = self.path[1:]
+			_, extension = os.path.splitext(path)
+			print extension
+			if extension == ".css":
+				extension = "text/css"
+			elif extension == ".png":
+				extension = "image/png"
+			else:
+				self.send_error(403)
+				self.end_headers()
+				self.wfile.close()
+				return
+
 			self.send_response(200, 'OK')
-			self.send_header('Content-type', 'css')
+			self.send_header('Content-type', extension)
 			self.end_headers()
 
-			try:
-				self.wfile.write(f.read())
-			finally:
-				f.close()
-				self.wfile.close()
+			with open(path, "rb") as f:
+				try:
+					self.wfile.write(f.read())
+				finally:
+					self.wfile.close()
 
 		WRITEABLE_FIELDS = frozenset(["w", "r", "g", "b", "on", "off"])
 
@@ -214,7 +223,7 @@ def runHttpServer(port, client, reset, ready, devices):
 
 			value = -1
 			if field == "on":
-				value = 100
+				value = DEFAULT_ON_VALUE
 			elif field == "off":
 				value = 0
 			else:
@@ -254,15 +263,28 @@ def runHttpServer(port, client, reset, ready, devices):
 
 			self._serve_main()
 
+		def _all_action(self, on=True):
+			valueToWrite = bytearray([DEFAULT_ON_VALUE if on else 0])
+			for device in devices:
+				# TODO: it would be preferable to use the RGBW char
+				device.r.write(bytearray(1))
+				device.g.write(bytearray(1))
+				device.b.write(bytearray(1))
+				device.w.write(valueToWrite)
+
+			self.send_response(200, 'OK')
+			self.end_headers()
+			self.wfile.close()
+
 		def do_GET(self):
 			if self.path == "/":
 				self._serve_main()
-			elif self.path == "/favicon.ico":
-				self._serve_favicon()
-			elif self.path.endswith(".css"):
-				self._serve_css()
+			elif self.path.startswith("/static"):
+				self._serve_static()
 			else:
 				self.send_error(404)
+				self.end_headers()
+				self.wfile.close()
 
 		def do_POST(self):
 			if self.path == "/rescan":
@@ -272,10 +294,16 @@ def runHttpServer(port, client, reset, ready, devices):
 				self.send_response(200, 'OK')
 				self.end_headers()
 				self.wfile.close()
+			elif self.path == "/allOn":
+				self._all_action(on=True)
+			elif self.path == "/allOff":
+				self._all_action(on=False)
 			elif self.path == "/":
 				self._update_device()
 			else:
 				self.send_error(404)
+				self.end_headers()
+				self.wfile.close()
 
 	server = HTTPServer(("", port), WebServerHandler)
 	try:
