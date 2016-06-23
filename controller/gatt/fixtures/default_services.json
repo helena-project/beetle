@@ -1,317 +1,317 @@
 [
   {
     "fields": {
-      "name": "Alert Notification Service", 
-      "ttype": "org.bluetooth.service.alert_notification", 
+      "name": "Alert Notification Service",
+      "ttype": "org.bluetooth.service.alert_notification",
       "uuid": "1811",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Automation IO", 
-      "ttype": "org.bluetooth.service.automation_io", 
+      "name": "Automation IO",
+      "ttype": "org.bluetooth.service.automation_io",
       "uuid": "1815",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Battery Service", 
-      "ttype": "org.bluetooth.service.battery_service", 
+      "name": "Battery Service",
+      "ttype": "org.bluetooth.service.battery_service",
       "uuid": "180F",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Blood Pressure", 
-      "ttype": "org.bluetooth.service.blood_pressure", 
+      "name": "Blood Pressure",
+      "ttype": "org.bluetooth.service.blood_pressure",
       "uuid": "1810",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Body Composition", 
-      "ttype": "org.bluetooth.service.body_composition", 
+      "name": "Body Composition",
+      "ttype": "org.bluetooth.service.body_composition",
       "uuid": "181B",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Bond Management", 
-      "ttype": "org.bluetooth.service.bond_management", 
+      "name": "Bond Management",
+      "ttype": "org.bluetooth.service.bond_management",
       "uuid": "181E",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Continuous Glucose Monitoring", 
-      "ttype": "org.bluetooth.service.continuous_glucose_monitoring", 
+      "name": "Continuous Glucose Monitoring",
+      "ttype": "org.bluetooth.service.continuous_glucose_monitoring",
       "uuid": "181F",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Current Time Service", 
-      "ttype": "org.bluetooth.service.current_time", 
+      "name": "Current Time Service",
+      "ttype": "org.bluetooth.service.current_time",
       "uuid": "1805",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Cycling Power", 
-      "ttype": "org.bluetooth.service.cycling_power", 
+      "name": "Cycling Power",
+      "ttype": "org.bluetooth.service.cycling_power",
       "uuid": "1818",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Cycling Speed and Cadence", 
-      "ttype": "org.bluetooth.service.cycling_speed_and_cadence", 
+      "name": "Cycling Speed and Cadence",
+      "ttype": "org.bluetooth.service.cycling_speed_and_cadence",
       "uuid": "1816",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Device Information", 
-      "ttype": "org.bluetooth.service.device_information", 
+      "name": "Device Information",
+      "ttype": "org.bluetooth.service.device_information",
       "uuid": "180A",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Environmental Sensing", 
-      "ttype": "org.bluetooth.service.environmental_sensing", 
+      "name": "Environmental Sensing",
+      "ttype": "org.bluetooth.service.environmental_sensing",
       "uuid": "181A",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Generic Access", 
-      "ttype": "org.bluetooth.service.generic_access", 
+      "name": "Generic Access",
+      "ttype": "org.bluetooth.service.generic_access",
       "uuid": "1800",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Generic Attribute", 
-      "ttype": "org.bluetooth.service.generic_attribute", 
+      "name": "Generic Attribute",
+      "ttype": "org.bluetooth.service.generic_attribute",
       "uuid": "1801",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Glucose", 
-      "ttype": "org.bluetooth.service.glucose", 
+      "name": "Glucose",
+      "ttype": "org.bluetooth.service.glucose",
       "uuid": "1808",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Health Thermometer", 
-      "ttype": "org.bluetooth.service.health_thermometer", 
+      "name": "Health Thermometer",
+      "ttype": "org.bluetooth.service.health_thermometer",
       "uuid": "1809",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Heart Rate", 
-      "ttype": "org.bluetooth.service.heart_rate", 
+      "name": "Heart Rate",
+      "ttype": "org.bluetooth.service.heart_rate",
       "uuid": "180D",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "HTTP Proxy", 
-      "ttype": "org.bluetooth.service.http_proxy", 
+      "name": "HTTP Proxy",
+      "ttype": "org.bluetooth.service.http_proxy",
       "uuid": "1823",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Human Interface Device", 
-      "ttype": "org.bluetooth.service.human_interface_device", 
+      "name": "Human Interface Device",
+      "ttype": "org.bluetooth.service.human_interface_device",
       "uuid": "1812",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Immediate Alert", 
-      "ttype": "org.bluetooth.service.immediate_alert", 
+      "name": "Immediate Alert",
+      "ttype": "org.bluetooth.service.immediate_alert",
       "uuid": "1802",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Indoor Positioning", 
-      "ttype": "org.bluetooth.service.indoor_positioning", 
+      "name": "Indoor Positioning",
+      "ttype": "org.bluetooth.service.indoor_positioning",
       "uuid": "1821",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Internet Protocol Support", 
-      "ttype": "org.bluetooth.service.internet_protocol_support", 
+      "name": "Internet Protocol Support",
+      "ttype": "org.bluetooth.service.internet_protocol_support",
       "uuid": "1820",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Link Loss", 
-      "ttype": "org.bluetooth.service.link_loss", 
+      "name": "Link Loss",
+      "ttype": "org.bluetooth.service.link_loss",
       "uuid": "1803",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Location and Navigation", 
-      "ttype": "org.bluetooth.service.location_and_navigation", 
+      "name": "Location and Navigation",
+      "ttype": "org.bluetooth.service.location_and_navigation",
       "uuid": "1819",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Next DST Change Service", 
-      "ttype": "org.bluetooth.service.next_dst_change", 
+      "name": "Next DST Change Service",
+      "ttype": "org.bluetooth.service.next_dst_change",
       "uuid": "1807",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Object Transfer", 
-      "ttype": "org.bluetooth.service.object_transfer", 
+      "name": "Object Transfer",
+      "ttype": "org.bluetooth.service.object_transfer",
       "uuid": "1825",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Phone Alert Status Service", 
-      "ttype": "org.bluetooth.service.phone_alert_status", 
+      "name": "Phone Alert Status Service",
+      "ttype": "org.bluetooth.service.phone_alert_status",
       "uuid": "180E",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Pulse Oximeter", 
-      "ttype": "org.bluetooth.service.pulse_oximeter", 
+      "name": "Pulse Oximeter",
+      "ttype": "org.bluetooth.service.pulse_oximeter",
       "uuid": "1822",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Reference Time Update Service", 
-      "ttype": "org.bluetooth.service.reference_time_update", 
+      "name": "Reference Time Update Service",
+      "ttype": "org.bluetooth.service.reference_time_update",
       "uuid": "1806",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Running Speed and Cadence", 
-      "ttype": "org.bluetooth.service.running_speed_and_cadence", 
+      "name": "Running Speed and Cadence",
+      "ttype": "org.bluetooth.service.running_speed_and_cadence",
       "uuid": "1814",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Scan Parameters", 
-      "ttype": "org.bluetooth.service.scan_parameters", 
+      "name": "Scan Parameters",
+      "ttype": "org.bluetooth.service.scan_parameters",
       "uuid": "1813",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Transport Discovery", 
-      "ttype": "org.bluetooth.service.transport_discovery", 
+      "name": "Transport Discovery",
+      "ttype": "org.bluetooth.service.transport_discovery",
       "uuid": "1824",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Tx Power", 
-      "ttype": "org.bluetooth.service.tx_power", 
+      "name": "Tx Power",
+      "ttype": "org.bluetooth.service.tx_power",
       "uuid": "1804",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "User Data", 
-      "ttype": "org.bluetooth.service.user_data", 
+      "name": "User Data",
+      "ttype": "org.bluetooth.service.user_data",
       "uuid": "181C",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
-  }, 
+  },
   {
     "fields": {
-      "name": "Weight Scale", 
-      "ttype": "org.bluetooth.service.weight_scale", 
+      "name": "Weight Scale",
+      "ttype": "org.bluetooth.service.weight_scale",
       "uuid": "181D",
       "verified": true
-    }, 
+    },
     "model": "gatt.Service"
   }
 ]
