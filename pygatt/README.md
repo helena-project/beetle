@@ -18,7 +18,7 @@ This is bound to a ManagedSocket and allows the application to serve GATT
 services, characteristics, and descriptors.
 
 ## Usage
-See ```example.py``` for library usage patterns and an implementation of a 
+See ```example.py``` for library usage patterns and an implementation of a
 heart rate monitor that also acts as a GATT client.
 
 ## Applications
@@ -28,14 +28,14 @@ heart rate monitor that also acts as a GATT client.
 subscription, discovery features.
 
 #### Home Lighting App
-```lightapp.py``` implements a client that connects to multiple lightbulbs and
+```lightapp.py``` implements a client that connects to multiple light-bulbs and
 serves a basic web UI.
 
 #### Cloud Sensing App
-```sensorapp.py``` implements a web application that monitors environmental sensors
-in a home.
+```sensorapp.py``` implements a web application that monitors environmental
+sensors in a home.
 
 ## TODOs
-1. Make the library a module. 
+1. Make the library a module.
 2. Move demo applications into separate modules.
 3. Handle partial rediscovery by handle ranges.
