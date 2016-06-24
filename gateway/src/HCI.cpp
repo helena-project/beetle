@@ -30,6 +30,12 @@ HCI::HCI(std::string dev) {
 	if (dd < 0) {
 		throw HCIException("could not get handle to hci device");
 	}
+
+	hci_dev_info devInfo;
+	hci_devinfo(deviceId, &devInfo);
+
+	device = std::string(devInfo.name);
+	bdaddr = devInfo.bdaddr;
 }
 
 HCI::~HCI() {
@@ -61,6 +67,14 @@ int HCI::getHCIDeviceId(std::string device) {
 	} else {
 		return hci_devid(device.c_str());
 	}
+}
+
+bdaddr_t HCI::getBdaddr() {
+	return bdaddr;
+}
+
+std::string HCI::getDevice() {
+	return device;
 }
 
 std::string HCI::getDefaultHCIDevice() {

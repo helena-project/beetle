@@ -33,7 +33,7 @@ const int DEFAULT_NUM_READERS = 4;
 
 class Beetle {
 public:
-	Beetle(std::string name, int numWorkers = DEFAULT_NUM_WORKERS, int numWriters = DEFAULT_NUM_WRITERS,
+	Beetle(std::string name, HCI &hci, int numWorkers = DEFAULT_NUM_WORKERS, int numWriters = DEFAULT_NUM_WRITERS,
 			int numReaders = DEFAULT_NUM_READERS);
 	virtual ~Beetle();
 
@@ -135,9 +135,9 @@ public:
 	std::unique_ptr<Router> router;
 
 	/*
-	 * HCI socket
+	 * HCI socket for all peripheral connections.
 	 */
-	HCI hci;
+	HCI &hci;
 
 	/*
 	 * Set the access control mechanism.

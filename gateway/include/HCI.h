@@ -8,6 +8,7 @@
 #ifndef HCI_H_
 #define HCI_H_
 
+#include <bluetooth/bluetooth.h>
 #include <exception>
 #include <string>
 #include <mutex>
@@ -24,7 +25,7 @@ class HCIException : public std::exception {
 
 class HCI {
 public:
-	HCI(std::string dev = "");
+	HCI(std::string dev);
 	virtual ~HCI();
 
 	/*
@@ -40,15 +41,21 @@ public:
 			uint16_t maxInterval, uint16_t latency, uint16_t supervisionTimeout,
 			int to);
 
+	std::string getDevice();
+	bdaddr_t getBdaddr();
+
 	/*
 	 * Static helpers
 	 */
-	static void resetHCI(std::string dev = "");
-	static int getHCIDeviceId(std::string dev = "");
+	static void resetHCI(std::string dev);
+	static int getHCIDeviceId(std::string dev);
 	static std::string getDefaultHCIDevice();
 	static int getDefaultHCIDeviceId();
 private:
 	int dd;
+	bdaddr_t bdaddr;
+	std::string device;
+
 	std::mutex m;
 };
 

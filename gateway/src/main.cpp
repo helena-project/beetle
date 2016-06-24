@@ -157,29 +157,43 @@ int main(int argc, char *argv[]) {
 		setDebug(btlConfig);
 	}
 
-	std::string defaultDev = HCI::getDefaultHCIDevice();
+	if (btlConfig.dev == "") {
+		btlConfig.dev = HCI::getDefaultHCIDevice();
+	}
+
+	if (btlConfig.advertiseDev == "") {
+		btlConfig.advertiseDev = HCI::getDefaultHCIDevice();
+	}
+
+	if (btlConfig.scanDev == "") {
+		btlConfig.scanDev = HCI::getDefaultHCIDevice();
+	}
+
+	std::string connectDev;
 	if (resetHci) {
 		std::set<std::string> reset;
+		if (reset.find(btlConfig.dev) == reset.end()) {
+			HCI::resetHCI(btlConfig.dev);
+			reset.insert(btlConfig.dev);
+		}
 
-		HCI::resetHCI(defaultDev);
-		reset.insert(defaultDev);
-
-		if (btlConfig.advertiseDev != "" && reset.find(btlConfig.advertiseDev) == reset.end()) {
+		if (reset.find(btlConfig.advertiseDev) == reset.end()) {
 			HCI::resetHCI(btlConfig.advertiseDev);
 			reset.insert(btlConfig.advertiseDev);
 		}
 
-		if (btlConfig.scanDev != "" && reset.find(btlConfig.scanDev) == reset.end()) {
+		if (reset.find(btlConfig.scanDev) == reset.end()) {
 			HCI::resetHCI(btlConfig.scanDev);
 			reset.insert(btlConfig.scanDev);
 		}
 	}
-	std::cout << "default hci: " << defaultDev << std::endl;
 
 	SSLConfig clientSSLConfig(btlConfig.sslVerifyPeers, false, btlConfig.sslCert,
 			btlConfig.sslKey, btlConfig.sslCaCert);
 	TCPServerProxy::initSSL(&clientSSLConfig);
 	signal(SIGPIPE, sigpipe_handler_ignore);
+
+	HCI(dev);
 
 	try {
 		Beetle btl(btlConfig.name);

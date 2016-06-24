@@ -13,12 +13,13 @@
 #include "hat/HandleAllocationTable.h"
 #include "Router.h"
 
-Beetle::Beetle(std::string name_, int numWorkers, int numWriters, int numReaders) :
-		workers(numWorkers), writers(numWriters), readers(numReaders) {
+Beetle::Beetle(std::string name_, HCI &hci, std::string device, int numWorkers, int numWriters, int numReaders) :
+		hci(hci), workers(numWorkers), writers(numWriters), readers(numReaders) {
 	router = std::make_unique<Router>(*this);
 	beetleDevice = std::make_shared<BeetleInternal>(*this, name_);
 	devices[BEETLE_RESERVED_DEVICE] = beetleDevice;
 	name = name_;
+	HCI()
 }
 
 Beetle::~Beetle() {

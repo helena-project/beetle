@@ -40,6 +40,10 @@ BeetleConfig::BeetleConfig(std::string filename) {
 		name = getDefaultName();
 	}
 
+	if (config.count("dev")) {
+		dev = config["dev"];
+	}
+
 	if (config.count("cli")) {
 		cliEnabled = config["cli"];
 	}
@@ -212,6 +216,7 @@ std::string BeetleConfig::str(unsigned int indent) const {
 
 	json config;
 	config["name"] = name;
+	config["dev"] = dev;
 	config["cli"] = cliEnabled;
 
 	{

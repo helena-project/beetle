@@ -30,9 +30,8 @@ LEDevice *LEDevice::newPeripheral(Beetle &beetle, bdaddr_t bdaddr, AddrType addr
 	struct sockaddr_l2 loc_addr;
 	memset(&loc_addr, 0, sizeof(struct sockaddr_l2));
 	loc_addr.l2_family = AF_BLUETOOTH;
-	bdaddr_t tmp;
-	memset(tmp.b, 0, sizeof(bdaddr_t));
-	bacpy(&loc_addr.l2_bdaddr, &tmp);
+	bdaddr_t dev_addr = beetle.hci.getBdaddr();
+	bacpy(&loc_addr.l2_bdaddr, &dev_addr);
 	loc_addr.l2_psm = 0;
 	loc_addr.l2_cid = htobs(ATT_CID);
 	loc_addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;

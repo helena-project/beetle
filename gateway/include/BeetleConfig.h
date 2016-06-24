@@ -40,6 +40,11 @@ public:
 	std::string name;
 
 	/*
+	 * Bluetooth device
+	 */
+	std::string dev;
+
+	/*
 	 * Run command line interface.
 	 */
 	bool cliEnabled = true;
