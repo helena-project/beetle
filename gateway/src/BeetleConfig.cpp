@@ -49,6 +49,8 @@ BeetleConfig::BeetleConfig(std::string filename) {
 		for (json::iterator it = scanConfig.begin(); it != scanConfig.end(); ++it) {
 			if (it.key() == "enable") {
 				scanEnabled = it.value();
+			} else if (it.key() == "bdaddr") {
+				scanBdaddr = it.value();
 			} else {
 				throw ConfigException("unknown scan param: " + it.key());
 			}
@@ -115,13 +117,15 @@ BeetleConfig::BeetleConfig(std::string filename) {
 		}
 	}
 
-	if (config.count("peripheral")) {
-		json peripheralConfig = config["peripheral"];
-		for (json::iterator it = peripheralConfig.begin(); it != peripheralConfig.end(); ++it) {
+	if (config.count("advertise")) {
+		json advertiseConfig = config["advertise"];
+		for (json::iterator it = advertiseConfig.begin(); it != advertiseConfig.end(); ++it) {
 			if (it.key() == "enable") {
-				peripheralEnabled = it.value();
+				advertiseEnabled = it.value();
+			} else if (it.key() == "bdaddr") {
+				advertiseBdaddr = it.value();
 			} else {
-				throw ConfigException("unknown peripheral param: " + it.key());
+				throw ConfigException("unknown advertisement param: " + it.key());
 			}
 		}
 	}
@@ -211,6 +215,7 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	{
 		json scan;
 		scan["enable"] = scanEnabled;
+		scan["bdaddr"] = scanBdaddr;
 		config["scan"] = scan;
 	}
 
@@ -244,9 +249,10 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	}
 
 	{
-		json peripheral;
-		peripheral["enable"] = peripheralEnabled;
-		config["peripheral"] = peripheral;
+		json advertise;
+		advertise["enable"] = advertiseEnabled;
+		advertise["bdaddr"] = advertiseBdaddr;
+		config["advertise"] = advertise;
 	}
 
 	{

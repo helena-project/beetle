@@ -24,7 +24,7 @@
 #include "controller/NetworkDiscoveryClient.h"
 #include "Debug.h"
 #include "device/socket/tcp/TCPServerProxy.h"
-#include "device/socket/LEPeripheral.h"
+#include "device/socket/LEDevice.h"
 #include "Handle.h"
 #include "Router.h"
 #include "sync/Semaphore.h"
@@ -314,11 +314,11 @@ void VirtualDevice::setupBeetleService(int handleAlloc) {
 
 	uint16_t lastHandle = 0;
 
-	if (type == LE_PERIPHERAL) {
+	if (type == LE_PERIPHERAL || type == LE_CENTRAL) {
 		/*
 		 * Bdaddr characteristic
 		 */
-		LEPeripheral *le = dynamic_cast<LEPeripheral *>(this);
+		LEDevice *le = dynamic_cast<LEDevice *>(this);
 		assert(le);
 
 		auto beetleBdaddrCharHandle = std::make_shared<Characteristic>();
@@ -350,7 +350,7 @@ void VirtualDevice::setupBeetleService(int handleAlloc) {
 		beetleBdaddrTypeHandle->setCharHandle(beetleBdaddrCharHandle->getHandle());
 		beetleBdaddrTypeHandle->setUuid(UUID(BEETLE_DESC_BDADDR_TYPE_UUID));
 		auto beetleBdaddrTypeHandleValue = boost::shared_array<uint8_t>(new uint8_t[1]);
-		beetleBdaddrTypeHandleValue[0] = (le->getAddrType() == LEPeripheral::PUBLIC) ?
+		beetleBdaddrTypeHandleValue[0] = (le->getAddrType() == LEDevice::PUBLIC) ?
 				LE_PUBLIC_ADDRESS : LE_RANDOM_ADDRESS;
 		beetleBdaddrTypeHandle->cache.set(beetleBdaddrTypeHandleValue, 1);
 		handles[beetleBdaddrTypeHandle->getHandle()] = beetleBdaddrTypeHandle;

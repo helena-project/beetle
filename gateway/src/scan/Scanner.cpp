@@ -30,7 +30,7 @@
 static std::atomic_flag staticInitDone;
 static std::set<int> staticDeviceHandles;
 
-Scanner::Scanner() {
+Scanner::Scanner(std::string bdaddr) {
 	/*
 	 * Setup static variables exactly once.
 	 */
@@ -51,6 +51,12 @@ Scanner::Scanner() {
 	scanInterval = 0x0100;	// TODO these should be configurable
 	scanWindow = 0x0010;
 
+	if (bdaddr == "" || is_bd_addr(bdaddr)) {
+		scanBdaddr = bdaddr;
+	} else {
+		throw std::invalid_argument("invalid device address : " + bdaddr);
+	}
+
 	running.reset(new std::atomic_flag(true));
 }
 
@@ -63,11 +69,10 @@ Scanner::~Scanner() {
 	 */
 }
 
-static void scanDaemon(std::shared_ptr<std::atomic_flag> terminated,
-		std::vector<DiscoveryHandler> handlers, uint16_t scanInterval,
-		uint16_t scanWindow);
+static void scanDaemon(std::shared_ptr<std::atomic_flag> terminated, std::vector<DiscoveryHandler> handlers,
+		std::string scanBdaddr, uint16_t scanInterval, uint16_t scanWindow);
 void Scanner::start() {
-	std::thread t = std::thread(&scanDaemon, running, handlers, scanInterval, scanWindow);
+	std::thread t = std::thread(&scanDaemon, running, handlers, scanBdaddr, scanInterval, scanWindow);
 	t.detach();
 }
 
@@ -116,12 +121,12 @@ static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval
 }
 
 static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<DiscoveryHandler> handlers,
-		uint16_t scanInterval, uint16_t scanWindow) {
+		std::string scanBdaddr, uint16_t scanInterval, uint16_t scanWindow) {
 	if (debug) {
 		pdebug("scanDaemon started");
 	}
 
-	int deviceId = hci_get_route(NULL);
+	int deviceId = bdaddr_to_device_id(scanBdaddr);
 	if (deviceId < 0) {
 		throw ScannerException("could not get hci device");
 	}
@@ -153,8 +158,8 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 			le_advertising_info *info = (le_advertising_info *) (meta->data + 1);
 
 			std::string addr = ba2str_cpp(info->bdaddr);
-			LEPeripheral::AddrType addrType = (info->bdaddr_type == LE_PUBLIC_ADDRESS) ?
-					LEPeripheral::AddrType::PUBLIC : LEPeripheral::AddrType::RANDOM;
+			LEDevice::AddrType addrType = (info->bdaddr_type == LE_PUBLIC_ADDRESS) ?
+					LEDevice::AddrType::PUBLIC : LEDevice::AddrType::RANDOM;
 			std::string name = "";
 			int i = 0;
 			while (i < info->length) {
@@ -171,7 +176,7 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 			if (debug_scan) {
 				std::stringstream ss;
 				ss << "advertisement for " << addr << "\t"
-						<< ((addrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random")
+						<< ((addrType == LEDevice::AddrType::PUBLIC) ? "public" : "random")
 						<< "\t" << name;
 				pdebug(ss.str());
 			}

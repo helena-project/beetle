@@ -9,6 +9,8 @@
 #define INCLUDE_BLE_HELPER_H_
 
 #include <bluetooth/bluetooth.h>
+#include <bluetooth/hci.h>
+#include <bluetooth/hci_lib.h>
 #include <cstdint>
 #include <string>
 
@@ -94,6 +96,16 @@ inline bool is_bd_addr(const std::string &s) {
 		}
 	}
 	return true;
+}
+
+inline int bdaddr_to_device_id(std::string bdaddr) {
+	if (bdaddr == "") {
+		return hci_get_route(NULL);
+	} else {
+		bdaddr_t ba;
+		str2ba(bdaddr.c_str(), &ba);
+		return hci_get_route(&ba);
+	}
 }
 
 inline bool is_att_response(uint8_t opcode) {

@@ -19,7 +19,7 @@
 
 #include "Beetle.h"
 #include "ble/helper.h"
-#include "device/socket/LEPeripheral.h"
+#include "device/socket/LEDevice.h"
 #include "Debug.h"
 #include "Device.h"
 #include "sync/ThreadPool.h"
@@ -129,9 +129,9 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 			 */
 			boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 			for (auto &kv : beetle.devices) {
-				std::shared_ptr<LEPeripheral> le = NULL;
+				std::shared_ptr<LEDevice> le = NULL;
 				if (kv.second->getType() == Device::LE_PERIPHERAL &&
-						(le = std::dynamic_pointer_cast<LEPeripheral>(kv.second))) {
+						(le = std::dynamic_pointer_cast<LEDevice>(kv.second))) {
 					if (le->getAddrType() == info.bdaddrType &&
 							memcmp(le->getBdaddr().b, info.bdaddr.b, sizeof(bdaddr_t)) == 0) {
 						return;
@@ -162,7 +162,7 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 void AutoConnect::connect(peripheral_info_t info, bool discover) {
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
-		device = std::make_shared<LEPeripheral>(beetle, info.bdaddr, info.bdaddrType);
+		device.reset(LEDevice::newPeripheral(beetle, info.bdaddr, info.bdaddrType));
 
 		boost::shared_lock<boost::shared_mutex> devicesLk;
 		beetle.addDevice(device, devicesLk);

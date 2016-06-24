@@ -40,6 +40,7 @@ TCPClientProxy::TCPClientProxy(Beetle &beetle, SSL *ssl, int sockfd, std::string
 
 	switch (beetle.devices[localProxyFor_]->getType()) {
 	case LE_PERIPHERAL:
+	case LE_CENTRAL:
 	case TCP_CLIENT:
 	case TCP_SERVER_PROXY:
 	case IPC_APPLICATION:

@@ -15,32 +15,20 @@
 #include <list>
 
 #include "sync/Countdown.h"
-#include "device/VirtualDevice.h"
+#include "device/socket/SeqPacketConnection.h"
 #include "device/socket/shared.h"
 
-enum AddrType {
-	PUBLIC, RANDOM,
-};
-
-class IPCApplication: public VirtualDevice {
+class IPCApplication: public SeqPacketConnection {
 public:
-	IPCApplication(Beetle &beetle, int sockfd, std::string name, struct sockaddr_un sockaddr, struct ucred ucred_);
+	IPCApplication(Beetle &beetle, int sockfd, std::string name,
+			struct sockaddr_un sockaddr, struct ucred ucred_);
 	virtual ~IPCApplication();
 
-protected:
-	bool write(uint8_t *buf, int len);
-	void startInternal();
+	struct sockaddr_un getSockaddr();
+	struct ucred getUcred();
 private:
-	int sockfd;
 	struct sockaddr_un sockaddr;
 	struct ucred ucred;
-
-	std::atomic_bool stopped;
-	void stopInternal();
-
-	std::list<delayed_packet_t> delayedPackets;
-
-	Countdown pendingWrites;
 };
 
 #endif /* INCLUDE_DEVICE_SOCKET_IPCAPPLICATION_H_ */

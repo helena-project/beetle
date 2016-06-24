@@ -25,7 +25,7 @@
 #include "ble/helper.h"
 #include "Beetle.h"
 #include "Debug.h"
-#include "device/socket/LEPeripheral.h"
+#include <device/socket/LEDevice.h>
 #include "sync/SocketSelect.h"
 #include "sync/ThreadPool.h"
 
@@ -119,11 +119,19 @@ static int hci_le_set_scan_response_data(int dd, uint8_t* data, uint8_t length, 
 	return 0;
 }
 
-L2CAPServer::L2CAPServer(Beetle &beetle) : beetle(beetle) {
+L2CAPServer::L2CAPServer(Beetle &beetle, std::string bdaddr) : beetle(beetle) {
+	if (!is_bd_addr(bdaddr)) {
+		throw std::invalid_argument("invalid device address: " + bdaddr);
+	}
+
+	if (bdaddr == "" || bdaddr == HCI::getDefaultHCI()) {
+		pwarn("acting as a peripheral on the default interface may have side effects");
+	}
+
 	/* create L2CAP socket, and bind it to the local adapter */
 	fd = socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
 
-	int deviceId = hci_get_route(NULL);
+	int deviceId = bdaddr_to_device_id(bdaddr);
 	hci_dev_info hciDevInfo;
 	if (hci_devinfo(deviceId, &hciDevInfo) < 0) {
 		throw std::runtime_error("failed to obtain hci device info");
@@ -171,7 +179,7 @@ L2CAPServer::L2CAPServer(Beetle &beetle) : beetle(beetle) {
 		});
 	});
 
-	bleAdvertisingDaemon(deviceId);
+	startLEAdvertising(deviceId);
 }
 
 L2CAPServer::~L2CAPServer() {
@@ -189,7 +197,7 @@ void L2CAPServer::startL2CAPCentralHelper(Beetle &beetle, int clifd, struct sock
 		/*
 		 * Takes over the clifd
 		 */
-		device = std::make_shared<LEPeripheral>(beetle, clifd, cliaddr);
+		device.reset(LEDevice::newCentral(beetle, clifd, cliaddr));
 
 		boost::shared_lock<boost::shared_mutex> devicesLk;
 		beetle.addDevice(device, devicesLk);
@@ -208,7 +216,7 @@ void L2CAPServer::startL2CAPCentralHelper(Beetle &beetle, int clifd, struct sock
 	}
 }
 
-void L2CAPServer::bleAdvertisingDaemon(int deviceId) {
+void L2CAPServer::startLEAdvertising(int deviceId) {
 	advertisementDataLen = 0;
 	scanDataLen = 0;
 

@@ -15,7 +15,7 @@
 
 class L2CAPServer {
 public:
-	L2CAPServer(Beetle &beetle);
+	L2CAPServer(Beetle &beetle, std::string bdaddr);
 	virtual ~L2CAPServer();
 private:
 	Beetle &beetle;
@@ -28,7 +28,7 @@ private:
 	uint8_t scanDataBuf[256];
 	int scanDataLen;
 
-	void bleAdvertisingDaemon(int deviceId);
+	void startLEAdvertising(int deviceId);
 
 	static void startL2CAPCentralHelper(Beetle &beetle, int clifd, struct sockaddr_l2 cliaddr);
 };

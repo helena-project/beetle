@@ -16,8 +16,8 @@
 #include "CLI.h"
 #include "controller/ControllerClient.h"
 
-RemoteCLI::RemoteCLI(Beetle &beetle, std::string host, int port,
-		BeetleConfig beetleConfig, std::shared_ptr<NetworkDiscoveryClient> discovery, bool useDaemon) {
+RemoteCLI::RemoteCLI(Beetle &beetle, std::string host, int port, BeetleConfig beetleConfig,
+		std::shared_ptr<NetworkDiscoveryClient> discovery, bool useDaemon) {
 	auto stream = new boost::asio::ip::tcp::iostream;
 
 	// TODO SSL this

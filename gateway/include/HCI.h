@@ -24,7 +24,7 @@ class HCIException : public std::exception {
 
 class HCI {
 public:
-	HCI();
+	HCI(std::string bdaddr = "");
 	virtual ~HCI();
 
 	/*
@@ -43,7 +43,13 @@ public:
 	/*
 	 * Helper to reset HCI
 	 */
-	static void resetHCI();
+	static void resetHCI(std::string bdaddr = "");
+
+	/*
+	 * Returns the address of the device from hci_get_route(NULL)
+	 */
+	static std::string getDefaultHCI();
+
 private:
 	int dd;
 	std::mutex m;

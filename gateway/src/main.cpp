@@ -154,8 +154,22 @@ int main(int argc, char *argv[]) {
 		setDebug(btlConfig);
 	}
 
+	std::string defaultBdaddr = HCI::getDefaultHCI();
 	if (resetHci) {
-		HCI::resetHCI();
+		std::set<std::string> reset;
+
+		HCI::resetHCI(defaultBdaddr);
+		reset.insert(defaultBdaddr);
+
+		if (btlConfig.advertiseBdaddr != "" && reset.find(btlConfig.advertiseBdaddr) == reset.end()) {
+			HCI::resetHCI(btlConfig.advertiseBdaddr);
+			reset.insert(btlConfig.advertiseBdaddr);
+		}
+
+		if (btlConfig.scanBdaddr != "" && reset.find(btlConfig.scanBdaddr) == reset.end()) {
+			HCI::resetHCI(btlConfig.scanBdaddr);
+			reset.insert(btlConfig.scanBdaddr);
+		}
 	}
 
 	SSLConfig clientSSLConfig(btlConfig.sslVerifyPeers, false, btlConfig.sslCert,
@@ -185,8 +199,8 @@ int main(int argc, char *argv[]) {
 
 		/* Listen for ble centrals */
 		std::unique_ptr<L2CAPServer> l2capServer;
-		if (btlConfig.peripheralEnabled) {
-			l2capServer = std::make_unique<L2CAPServer>(btl);
+		if (btlConfig.advertiseEnabled) {
+			l2capServer = std::make_unique<L2CAPServer>(btl, btlConfig.advertiseBdaddr);
 		}
 
 		/* Setup controller modules */
@@ -240,7 +254,7 @@ int main(int argc, char *argv[]) {
 		std::unique_ptr<AutoConnect> autoConnect;
 		std::unique_ptr<Scanner> scanner;
 		if (btlConfig.scanEnabled) {
-			scanner = std::make_unique<Scanner>();
+			scanner = std::make_unique<Scanner>(btlConfig.scanBdaddr);
 			autoConnect = std::make_unique<AutoConnect>(btl, autoConnectAll || btlConfig.autoConnectAll,
 					btlConfig.autoConnectMinBackoff, btlConfig.autoConnectWhitelist);
 			scanner->registerHandler(autoConnect->getDiscoveryHandler());
