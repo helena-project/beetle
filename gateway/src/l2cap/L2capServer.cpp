@@ -191,7 +191,7 @@ L2capServer::~L2capServer() {
 	if (debug) {
 		pdebug("l2cap server stopped");
 	}
-	close(callbackDeviceHandle);
+	hci_close_dev(callbackDeviceHandle);
 }
 
 void L2capServer::startL2CAPCentralHelper(int clifd, struct sockaddr_l2 cliaddr) {
@@ -201,6 +201,7 @@ void L2capServer::startL2CAPCentralHelper(int clifd, struct sockaddr_l2 cliaddr)
 		 * Takes over the clifd
 		 */
 		device.reset(LEDevice::newCentral(beetle, clifd, cliaddr, [this]{
+			/* Start advertising again */
 			startLEAdvertisingHelper(callbackDeviceHandle);
 		}));
 
@@ -218,6 +219,9 @@ void L2capServer::startL2CAPCentralHelper(int clifd, struct sockaddr_l2 cliaddr)
 		if (device) {
 			beetle.removeDevice(device->getId());
 		}
+
+		/* Start advertising again */
+		startLEAdvertisingHelper(callbackDeviceHandle);
 	}
 }
 
@@ -360,7 +364,7 @@ void L2capServer::startLEAdvertising(int deviceId) {
 		}
 	}
 
-	close(deviceHandle);
+	hci_close_dev(deviceHandle);
 }
 
 

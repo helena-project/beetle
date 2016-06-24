@@ -186,6 +186,8 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 		}
 	}
 
+	hci_close_dev(deviceHandle);
+
 	if (debug) {
 		pdebug("scanDaemon exited");
 	}
