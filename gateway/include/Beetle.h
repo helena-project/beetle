@@ -27,9 +27,9 @@ class NetworkDiscoveryClient;
 class Router;
 
 /* Defaults parallelism */
-const int DEFAULT_NUM_WORKERS = 4;
-const int DEFAULT_NUM_WRITERS = 1;
-const int DEFAULT_NUM_READERS = 1;
+const int DEFAULT_NUM_WORKERS = 8;
+const int DEFAULT_NUM_WRITERS = 4;
+const int DEFAULT_NUM_READERS = 4;
 
 class Beetle {
 public:

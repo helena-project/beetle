@@ -102,6 +102,7 @@ AddDeviceHandler NetworkStateClient::getAddDeviceHandler() {
 		switch (device->getType()) {
 			case Device::IPC_APPLICATION:
 			case Device::LE_PERIPHERAL:
+			case Device::LE_CENTRAL:
 			case Device::TCP_CLIENT: {
 				if (debug_controller) {
 					pdebug("informing controller of new connection");
@@ -141,6 +142,7 @@ UpdateDeviceHandler NetworkStateClient::getUpdateDeviceHandler() {
 		switch (device->getType()) {
 			case Device::IPC_APPLICATION:
 			case Device::LE_PERIPHERAL:
+			case Device::LE_CENTRAL:
 			case Device::TCP_CLIENT:
 			if (debug_controller) {
 				pdebug("informing controller of new connection");
@@ -187,6 +189,7 @@ bool NetworkStateClient::lookupNamesAndIds(device_t from, device_t to, std::stri
 		return false;
 	case Device::IPC_APPLICATION:
 	case Device::LE_PERIPHERAL:
+	case Device::LE_CENTRAL:
 	case Device::TCP_CLIENT: {
 		fromGateway = beetle.name;
 		fromId = fromDevice->getId();
@@ -210,6 +213,7 @@ bool NetworkStateClient::lookupNamesAndIds(device_t from, device_t to, std::stri
 		return false;
 	case Device::IPC_APPLICATION:
 	case Device::LE_PERIPHERAL:
+	case Device::LE_CENTRAL:
 	case Device::TCP_CLIENT: {
 		toGateway = beetle.name;
 		toId = toDevice->getId();

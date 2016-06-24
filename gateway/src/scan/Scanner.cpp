@@ -20,6 +20,7 @@
 
 #include "ble/helper.h"
 #include "Debug.h"
+#include "HCI.h"
 
 #define EIR_NAME_SHORT		0x08
 #define EIR_NAME_COMPLETE  	0x09
@@ -30,7 +31,7 @@
 static std::atomic_flag staticInitDone;
 static std::set<int> staticDeviceHandles;
 
-Scanner::Scanner() {
+Scanner::Scanner(std::string device) {
 	/*
 	 * Setup static variables exactly once.
 	 */
@@ -44,6 +45,12 @@ Scanner::Scanner() {
 			}
 		});
 	}
+
+	deviceId = HCI::getHCIDeviceId(device);
+	if (deviceId < 0) {
+		throw ScannerException("could not get hci device");
+	}
+	std::cout << "scanning on: " << device << std::endl;
 
 	/*
 	 * Set these intervals high since we are filtering duplicates manually.
@@ -61,18 +68,6 @@ Scanner::~Scanner() {
 	 * Can't join daemon since shutdown(SHUR_RDWR) doesn't work on hci sockets.
 	 * Have to destruct without waiting.
 	 */
-}
-
-static void scanDaemon(std::shared_ptr<std::atomic_flag> terminated,
-		std::vector<DiscoveryHandler> handlers, uint16_t scanInterval,
-		uint16_t scanWindow);
-void Scanner::start() {
-	std::thread t = std::thread(&scanDaemon, running, handlers, scanInterval, scanWindow);
-	t.detach();
-}
-
-void Scanner::registerHandler(DiscoveryHandler handler) {
-	handlers.push_back(handler);
 }
 
 static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval,
@@ -116,14 +111,9 @@ static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval
 }
 
 static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<DiscoveryHandler> handlers,
-		uint16_t scanInterval, uint16_t scanWindow) {
+		int deviceId, uint16_t scanInterval, uint16_t scanWindow) {
 	if (debug) {
 		pdebug("scanDaemon started");
-	}
-
-	int deviceId = hci_get_route(NULL);
-	if (deviceId < 0) {
-		throw ScannerException("could not get hci device");
 	}
 
 	int deviceHandle = hci_open_dev(deviceId);
@@ -153,8 +143,8 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 			le_advertising_info *info = (le_advertising_info *) (meta->data + 1);
 
 			std::string addr = ba2str_cpp(info->bdaddr);
-			LEPeripheral::AddrType addrType = (info->bdaddr_type == LE_PUBLIC_ADDRESS) ?
-					LEPeripheral::AddrType::PUBLIC : LEPeripheral::AddrType::RANDOM;
+			LEDevice::AddrType addrType = (info->bdaddr_type == LE_PUBLIC_ADDRESS) ?
+					LEDevice::AddrType::PUBLIC : LEDevice::AddrType::RANDOM;
 			std::string name = "";
 			int i = 0;
 			while (i < info->length) {
@@ -171,7 +161,7 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 			if (debug_scan) {
 				std::stringstream ss;
 				ss << "advertisement for " << addr << "\t"
-						<< ((addrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random")
+						<< ((addrType == LEDevice::AddrType::PUBLIC) ? "public" : "random")
 						<< "\t" << name;
 				pdebug(ss.str());
 			}
@@ -199,4 +189,13 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 	if (debug) {
 		pdebug("scanDaemon exited");
 	}
+}
+
+void Scanner::start() {
+	std::thread t = std::thread(&scanDaemon, running, handlers, deviceId, scanInterval, scanWindow);
+	t.detach();
+}
+
+void Scanner::registerHandler(DiscoveryHandler handler) {
+	handlers.push_back(handler);
 }

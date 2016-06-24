@@ -49,6 +49,8 @@ BeetleConfig::BeetleConfig(std::string filename) {
 		for (json::iterator it = scanConfig.begin(); it != scanConfig.end(); ++it) {
 			if (it.key() == "enable") {
 				scanEnabled = it.value();
+			} else if (it.key() == "dev") {
+				scanDev = it.value();
 			} else {
 				throw ConfigException("unknown scan param: " + it.key());
 			}
@@ -111,6 +113,19 @@ BeetleConfig::BeetleConfig(std::string filename) {
 				ipcPath = it.value();
 			} else {
 				throw ConfigException("unknown ipc param: " + it.key());
+			}
+		}
+	}
+
+	if (config.count("advertise")) {
+		json advertiseConfig = config["advertise"];
+		for (json::iterator it = advertiseConfig.begin(); it != advertiseConfig.end(); ++it) {
+			if (it.key() == "enable") {
+				advertiseEnabled = it.value();
+			} else if (it.key() == "dev") {
+				advertiseDev = it.value();
+			} else {
+				throw ConfigException("unknown advertisement param: " + it.key());
 			}
 		}
 	}
@@ -179,6 +194,8 @@ BeetleConfig::BeetleConfig(std::string filename) {
 				debugPerformance = it.value();
 			} else if (it.key() == "controller") {
 				debugController = it.value();
+			} else if (it.key() == "advertise") {
+				debugAdvertise = it.value();
 			} else {
 				throw ConfigException("unknown debug param: " + it.key());
 			}
@@ -197,56 +214,81 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	config["name"] = name;
 	config["cli"] = cliEnabled;
 
-	json scan;
-	scan["enable"] = scanEnabled;
-	config["scan"] = scan;
+	{
+		json scan;
+		scan["enable"] = scanEnabled;
+		scan["dev"] = scanDev;
+		config["scan"] = scan;
+	}
 
-	json autoConnect;
-	autoConnect["all"] = autoConnectAll;
-	autoConnect["minBackoff"] = autoConnectMinBackoff;
-	autoConnect["whitelist"] = autoConnectWhitelist;
-	config["autoConnect"] = autoConnect;
+	{
+		json autoConnect;
+		autoConnect["all"] = autoConnectAll;
+		autoConnect["minBackoff"] = autoConnectMinBackoff;
+		autoConnect["whitelist"] = autoConnectWhitelist;
+		config["autoConnect"] = autoConnect;
+	}
 
-	json staticTopo;
-	staticTopo["enable"] = staticTopoEnabled;
-	staticTopo["mappings"] = staticTopoMappings;
-	config["staticTopo"] = staticTopo;
+	{
+		json staticTopo;
+		staticTopo["enable"] = staticTopoEnabled;
+		staticTopo["mappings"] = staticTopoMappings;
+		config["staticTopo"] = staticTopo;
+	}
 
-	json tcp;
-	tcp["enable"] = tcpEnabled;
-	tcp["port"] = tcpPort;
-	config["tcp"] = tcp;
+	{
+		json tcp;
+		tcp["enable"] = tcpEnabled;
+		tcp["port"] = tcpPort;
+		config["tcp"] = tcp;
+	}
 
-	json ipc;
-	ipc["enable"] = ipcEnabled;
-	ipc["path"] = ipcPath;
-	config["ipc"] = ipc;
+	{
+		json ipc;
+		ipc["enable"] = ipcEnabled;
+		ipc["path"] = ipcPath;
+		config["ipc"] = ipc;
+	}
 
-	json controller;
-	controller["enable"] = controllerEnabled;
-	controller["host"] = controllerHost;
-	controller["apiPort"] = controllerApiPort;
-	controller["controlEnable"] = controllerControlEnabled;
-	controller["controlPort"] = controllerControlPort;
-	controller["controlMaxReconnect"] = controllerControlMaxReconnect;
-	config["controller"] = controller;
+	{
+		json advertise;
+		advertise["enable"] = advertiseEnabled;
+		advertise["dev"] = advertiseDev;
+		config["advertise"] = advertise;
+	}
 
-	json ssl;
-	ssl["verifyPeers"] = sslVerifyPeers;
-	ssl["cert"] = sslCert;
-	ssl["key"] = sslKey;
-	ssl["caCert"] = sslCaCert;
-	config["ssl"] = ssl;
+	{
+		json controller;
+		controller["enable"] = controllerEnabled;
+		controller["host"] = controllerHost;
+		controller["apiPort"] = controllerApiPort;
+		controller["controlEnable"] = controllerControlEnabled;
+		controller["controlPort"] = controllerControlPort;
+		controller["controlMaxReconnect"] = controllerControlMaxReconnect;
+		config["controller"] = controller;
+	}
 
-	json debug;
-	debug["controller"] = debugController;
-	debug["discovery"] = debugDiscovery;
-	debug["performance"] = debugPerformance;
-	debug["router"] = debugRouter;
-	debug["scan"] = debugScan;
-	debug["topology"] = debugTopology;
-	debug["socket"] = debugSocket;
-	config["debug"] = debug;
+	{
+		json ssl;
+		ssl["verifyPeers"] = sslVerifyPeers;
+		ssl["cert"] = sslCert;
+		ssl["key"] = sslKey;
+		ssl["caCert"] = sslCaCert;
+		config["ssl"] = ssl;
+	}
+
+	{
+		json debug;
+		debug["controller"] = debugController;
+		debug["discovery"] = debugDiscovery;
+		debug["performance"] = debugPerformance;
+		debug["router"] = debugRouter;
+		debug["scan"] = debugScan;
+		debug["topology"] = debugTopology;
+		debug["socket"] = debugSocket;
+		debug["advertise"] = debugAdvertise;
+		config["debug"] = debug;
+	}
 
 	return config.dump(indent);
 }

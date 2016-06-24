@@ -18,9 +18,10 @@
 #include <unistd.h>
 
 #include "Debug.h"
+#include "ble/helper.h"
 
-HCI::HCI() {
-	int deviceId = hci_get_route(NULL);
+HCI::HCI(std::string dev) {
+	int deviceId = getHCIDeviceId(dev);
 	if (deviceId < 0) {
 		throw HCIException("could not get hci device");
 	}
@@ -35,19 +36,42 @@ HCI::~HCI() {
 	hci_close_dev(dd);
 }
 
-void HCI::resetHCI() {
-	assert(system(NULL) != 0);
-	int hciDevice = hci_get_route(NULL);
-	assert(hciDevice >= 0);
-	std::string hciName = "hci" + std::to_string(hciDevice);
+void HCI::resetHCI(std::string hciName) {
+	if (system(NULL) == 0) {
+		throw std::runtime_error("call to system failed");
+	}
+
 	std::string command = "hciconfig " + hciName + " down";
 	sleep(1); // sleeping seems to ensure that the settings do get applied
-	pdebug("System: " + command);
-	assert(system(command.c_str()) == 0);
+	pdebug("system: " + command);
+	if (system(command.c_str()) != 0) {
+		throw std::runtime_error(command + " failed");
+	}
 	command = "hciconfig " + hciName + " up";
-	pdebug("System: " + command);
-	assert(system(command.c_str()) == 0);
+	pdebug("system: " + command);
+	if (system(command.c_str()) != 0) {
+		throw std::runtime_error(command + " failed");
+	}
 	sleep(1);
+}
+
+int HCI::getHCIDeviceId(std::string device) {
+	if (device == "") {
+		return hci_get_route(NULL);
+	} else {
+		return hci_devid(device.c_str());
+	}
+}
+
+std::string HCI::getDefaultHCIDevice() {
+	int deviceId = hci_get_route(NULL);
+	hci_dev_info devInfo;
+	hci_devinfo(deviceId, &devInfo);
+	return std::string(devInfo.name);
+}
+
+int HCI::getDefaultHCIDeviceId() {
+	return hci_get_route(NULL);
 }
 
 bool HCI::setConnectionInterval(uint16_t hciHandle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency,

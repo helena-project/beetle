@@ -229,12 +229,12 @@ def inputReader(s):
 					time.sleep(random.randint(*pause))
 
 				sendMessage(s, message)
-				if isRequest == True:
+				if isRequest is True:
 					transactSema.acquire()
 					latencies.append(getTimeMillis() - lastRequestTime)
 					transactSema.release()
 
-			if isRequest == True: # need to wait for last request to finish
+			if isRequest is True: # need to wait for last request to finish
 				transactSema.acquire()
 				endTime = getTimeMillis()
 				transactSema.release()

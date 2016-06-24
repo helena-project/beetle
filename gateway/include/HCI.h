@@ -24,7 +24,7 @@ class HCIException : public std::exception {
 
 class HCI {
 public:
-	HCI();
+	HCI(std::string dev = "");
 	virtual ~HCI();
 
 	/*
@@ -41,9 +41,12 @@ public:
 			int to);
 
 	/*
-	 * Helper to reset HCI
+	 * Static helpers
 	 */
-	static void resetHCI();
+	static void resetHCI(std::string dev = "");
+	static int getHCIDeviceId(std::string dev = "");
+	static std::string getDefaultHCIDevice();
+	static int getDefaultHCIDeviceId();
 private:
 	int dd;
 	std::mutex m;

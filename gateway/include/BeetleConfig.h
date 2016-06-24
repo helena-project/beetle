@@ -48,6 +48,7 @@ public:
 	 * Scan settings
 	 */
 	bool scanEnabled = true;
+	std::string scanDev = "";
 
 	/*
 	 * Autoconnect settings
@@ -67,6 +68,12 @@ public:
 	 */
 	bool ipcEnabled = false;
 	std::string ipcPath = "/tmp/beetle";
+
+	/*
+	 * Peripheral settings
+	 */
+	bool advertiseEnabled = false;
+	std::string advertiseDev = "";
 
 	/*
 	 * Controller settings
@@ -102,6 +109,7 @@ public:
 	bool debugScan = false;
 	bool debugTopology = false;
 	bool debugSocket = false;
+	bool debugAdvertise = false;
 };
 
 #endif /* BEETLECONFIG_H_ */

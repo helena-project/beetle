@@ -46,6 +46,7 @@ bool AccessControl::canMap(std::shared_ptr<Device> from, std::shared_ptr<Device>
 		return true;
 	case Device::IPC_APPLICATION:
 	case Device::LE_PERIPHERAL:
+	case Device::LE_CENTRAL:
 	case Device::TCP_CLIENT: {
 		fromGateway = beetle.name;
 		fromId = from->getId();
@@ -71,6 +72,7 @@ bool AccessControl::canMap(std::shared_ptr<Device> from, std::shared_ptr<Device>
 		return false;
 	case Device::IPC_APPLICATION:
 	case Device::LE_PERIPHERAL:
+	case Device::LE_CENTRAL:
 	case Device::TCP_CLIENT: {
 		toGateway = beetle.name;
 		toId = to->getId();

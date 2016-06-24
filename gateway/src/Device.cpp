@@ -23,10 +23,11 @@ std::atomic_int Device::idCounter(1);
 const std::string Device::deviceType2Str[] = {
 		"BeetleInternal", 	// 0
 		"LePeripheral", 	// 1
-		"TcpClient",		// 2
-		"IpcApplication",	// 3
-		"TcpClientProxy",	// 4
-		"TcpServerProxy",	// 5
+		"LeCentral",		// 2
+		"TcpClient",		// 3
+		"IpcApplication",	// 4
+		"TcpClientProxy",	// 5
+		"TcpServerProxy",	// 6
 };
 
 Device::Device(Beetle &beetle_, HandleAllocationTable *hat_) :

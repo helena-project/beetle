@@ -16,7 +16,7 @@
 #include <vector>
 #include <memory>
 
-#include "device/socket/LEPeripheral.h"
+#include <device/socket/LEDevice.h>
 
 class ScannerException : public std::exception {
 public:
@@ -34,7 +34,7 @@ private:
 typedef struct {
 	std::string name;
 	bdaddr_t bdaddr;
-	LEPeripheral::AddrType bdaddrType;
+	LEDevice::AddrType bdaddrType;
 } peripheral_info_t;
 
 /*
@@ -44,7 +44,7 @@ typedef std::function<void(peripheral_info_t info)> DiscoveryHandler;
 
 class Scanner {
 public:
-	Scanner();
+	Scanner(std::string device = "");
 	virtual ~Scanner();
 
 	/*
@@ -57,6 +57,8 @@ public:
 	 */
 	void registerHandler(DiscoveryHandler);
 private:
+	int deviceId;
+
 	uint16_t scanInterval;
 	uint16_t scanWindow;
 

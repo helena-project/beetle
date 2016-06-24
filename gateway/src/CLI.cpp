@@ -33,7 +33,7 @@
 #include "controller/NetworkDiscoveryClient.h"
 #include "Debug.h"
 #include "Device.h"
-#include "device/socket/LEPeripheral.h"
+#include "device/socket/LEDevice.h"
 #include "device/socket/tcp/TCPClientProxy.h"
 #include "device/socket/tcp/TCPServerProxy.h"
 #include "Handle.h"
@@ -266,7 +266,7 @@ void CLI::doScan(const std::vector<std::string>& cmd) {
 	for (auto &d : discoveredCopy) {
 		std::stringstream ss;
 		ss << d.alias << "\t" << ba2str_cpp(d.info.bdaddr) << "\t"
-				<< ((d.info.bdaddrType == LEPeripheral::AddrType::PUBLIC) ? "public" : "random") << "\t"
+				<< ((d.info.bdaddrType == LEDevice::AddrType::PUBLIC) ? "public" : "random") << "\t"
 				<< (int) difftime(currTime, d.lastSeen) << "\t" << d.info.name;
 		printMessage(ss.str());
 	}
@@ -278,7 +278,7 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 		printUsage("connect alias");
 		return;
 	}
-	LEPeripheral::AddrType addrType;
+	LEDevice::AddrType addrType;
 	bdaddr_t addr;
 
 	if (cmd.size() == 3) {
@@ -291,9 +291,9 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 		}
 
 		if (cmd[2] == "public") {
-			addrType = LEPeripheral::AddrType::PUBLIC;
+			addrType = LEDevice::AddrType::PUBLIC;
 		} else if (cmd[2] == "random") {
-			addrType = LEPeripheral::AddrType::RANDOM;
+			addrType = LEDevice::AddrType::RANDOM;
 		} else {
 			printUsageError("invalid address type");
 			return;
@@ -320,7 +320,7 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
-		device = std::make_shared<LEPeripheral>(beetle, addr, addrType);
+		device.reset(LEDevice::newPeripheral(beetle, addr, addrType));
 
 		boost::shared_lock<boost::shared_mutex> devicesLk;
 		beetle.addDevice(device, devicesLk);
@@ -546,11 +546,11 @@ void CLI::doListDevices(const std::vector<std::string>& cmd) {
 		printMessage("  mtu : " + std::to_string(d->getMTU()));
 		printMessage("  highestHandle : " + std::to_string(d->getHighestHandle()));
 
-		auto le = std::dynamic_pointer_cast<LEPeripheral>(d);
+		auto le = std::dynamic_pointer_cast<LEDevice>(d);
 		if (le) {
 			printMessage("  deviceAddr : " + ba2str_cpp(le->getBdaddr()));
 			std::stringstream ss;
-			ss << "  addrType : " << ((le->getAddrType() == LEPeripheral::AddrType::PUBLIC) ? "public" : "random");
+			ss << "  addrType : " << ((le->getAddrType() == LEDevice::AddrType::PUBLIC) ? "public" : "random");
 			printMessage(ss.str());
 		}
 
@@ -640,7 +640,7 @@ void CLI::doSetMaxConnectionInterval(const std::vector<std::string>& cmd) {
 
 	boost::unique_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
 	for (auto &kv : beetle.devices) {
-		auto peripheral = std::dynamic_pointer_cast<LEPeripheral>(kv.second);
+		auto peripheral = std::dynamic_pointer_cast<LEDevice>(kv.second);
 		if (peripheral) {
 			struct l2cap_conninfo connInfo = peripheral->getL2capConnInfo();
 			beetle.hci.setConnectionInterval(connInfo.hci_handle, newInterval, newInterval, 0, 0x0C80, 0);
@@ -734,6 +734,10 @@ void CLI::doSetDebug(const std::vector<std::string>& cmd) {
 			debug_performance = value;
 			isValid |= true;
 		}
+		if (isAll || cmd[1] == "advertise") {
+			debug_advertise = value;
+			isValid |= true;
+		}
 		if (!isValid) {
 			printUsageError("unrecognized category: " + cmd[1]);
 		}
@@ -751,7 +755,7 @@ std::shared_ptr<Device> CLI::matchDevice(const std::string &input) {
 		bdaddr_t addr;
 		if (str2ba(input.c_str(), &addr) == 0) {
 			for (auto &kv : beetle.devices) {
-				auto peripheral = std::dynamic_pointer_cast<LEPeripheral>(kv.second);
+				auto peripheral = std::dynamic_pointer_cast<LEDevice>(kv.second);
 				if (peripheral && memcmp(peripheral->getBdaddr().b, addr.b, sizeof(bdaddr_t)) == 0) {
 					device = peripheral;
 					break;

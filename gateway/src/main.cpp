@@ -27,6 +27,7 @@
 #include "device/socket/tcp/TCPServerProxy.h"
 #include "HCI.h"
 #include "ipc/UnixDomainSocketServer.h"
+#include <l2cap/L2capServer.h>
 #include "StaticTopo.h"
 #include "scan/AutoConnect.h"
 #include "scan/Scanner.h"
@@ -44,6 +45,7 @@ bool debug_router;
 bool debug_socket;
 bool debug_controller;
 bool debug_performance;
+bool debug_advertise;
 
 void setDebugAll() {
 	debug = true;
@@ -54,6 +56,7 @@ void setDebugAll() {
 	debug_discovery = true;
 	debug_controller = true;
 	debug_performance = true;
+	debug_advertise = true;
 }
 
 void setDebug(BeetleConfig btlConfig) {
@@ -64,6 +67,7 @@ void setDebug(BeetleConfig btlConfig) {
 	debug_discovery = btlConfig.debugDiscovery;
 	debug_controller = btlConfig.debugController;
 	debug_performance = btlConfig.debugPerformance;
+	debug_advertise = btlConfig.debugAdvertise;
 }
 
 void sigpipe_handler_ignore(int unused) {
@@ -153,9 +157,24 @@ int main(int argc, char *argv[]) {
 		setDebug(btlConfig);
 	}
 
+	std::string defaultDev = HCI::getDefaultHCIDevice();
 	if (resetHci) {
-		HCI::resetHCI();
+		std::set<std::string> reset;
+
+		HCI::resetHCI(defaultDev);
+		reset.insert(defaultDev);
+
+		if (btlConfig.advertiseDev != "" && reset.find(btlConfig.advertiseDev) == reset.end()) {
+			HCI::resetHCI(btlConfig.advertiseDev);
+			reset.insert(btlConfig.advertiseDev);
+		}
+
+		if (btlConfig.scanDev != "" && reset.find(btlConfig.scanDev) == reset.end()) {
+			HCI::resetHCI(btlConfig.scanDev);
+			reset.insert(btlConfig.scanDev);
+		}
 	}
+	std::cout << "default hci: " << defaultDev << std::endl;
 
 	SSLConfig clientSSLConfig(btlConfig.sslVerifyPeers, false, btlConfig.sslCert,
 			btlConfig.sslKey, btlConfig.sslCaCert);
@@ -180,6 +199,12 @@ int main(int argc, char *argv[]) {
 		std::unique_ptr<UnixDomainSocketServer> ipcServer;
 		if (btlConfig.ipcEnabled || enableIpc) {
 			ipcServer.reset(new UnixDomainSocketServer(btl, btlConfig.ipcPath));
+		}
+
+		/* Listen for ble centrals */
+		std::unique_ptr<L2capServer> l2capServer;
+		if (btlConfig.advertiseEnabled) {
+			l2capServer = std::make_unique<L2capServer>(btl, btlConfig.advertiseDev);
 		}
 
 		/* Setup controller modules */
@@ -233,7 +258,7 @@ int main(int argc, char *argv[]) {
 		std::unique_ptr<AutoConnect> autoConnect;
 		std::unique_ptr<Scanner> scanner;
 		if (btlConfig.scanEnabled) {
-			scanner = std::make_unique<Scanner>();
+			scanner = std::make_unique<Scanner>(btlConfig.scanDev);
 			autoConnect = std::make_unique<AutoConnect>(btl, autoConnectAll || btlConfig.autoConnectAll,
 					btlConfig.autoConnectMinBackoff, btlConfig.autoConnectWhitelist);
 			scanner->registerHandler(autoConnect->getDiscoveryHandler());

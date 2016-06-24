@@ -25,6 +25,9 @@ extern bool debug_topology;
 // Print debug information when discovering handles
 extern bool debug_discovery;
 
+// Print debug information about advertising
+extern bool debug_advertise;
+
 // Print debug information in router
 extern bool debug_router;
 

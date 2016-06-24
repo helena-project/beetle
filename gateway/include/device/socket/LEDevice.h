@@ -12,40 +12,41 @@
 #include <bluetooth/l2cap.h>
 #include <cstdint>
 #include <thread>
+#include <functional>
 
 #include "sync/Countdown.h"
-#include "device/VirtualDevice.h"
+#include "device/socket/SeqPacketConnection.h"
 #include "shared.h"
 
-class LEPeripheral: public VirtualDevice {
+class LEDevice: public SeqPacketConnection {
 public:
 	enum AddrType {
 		PUBLIC, RANDOM,
 	};
 
-	LEPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType);
-	virtual ~LEPeripheral();
+	virtual ~LEDevice();
 
 	bdaddr_t getBdaddr();
 	AddrType getAddrType();
 	struct l2cap_conninfo getL2capConnInfo();
+
+	static LEDevice *newPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType);
+	static LEDevice *newCentral(Beetle &beetle, int sockfd, struct sockaddr_l2 sockaddr,
+			std::function<void()> onDisconnect);
+
 protected:
-	bool write(uint8_t *buf, int len);
-	void startInternal();
+	LEDevice(Beetle &beetle, int sockfd, struct sockaddr_l2 sockaddr,
+			struct l2cap_conninfo connInfo, DeviceType type, std::string name,
+			std::list<delayed_packet_t> delayedPackets,
+			std::function<void()> onDisconnect = NULL);
+
 private:
 	bdaddr_t bdaddr;
 	AddrType bdaddrType;
 
-	int sockfd;
-
 	struct l2cap_conninfo connInfo;
 
-	std::atomic_bool stopped;
-	void stopInternal();
-
-	std::list<delayed_packet_t> delayedPackets;
-
-	Countdown pendingWrites;
+	std::function<void()> onDisconnect;
 };
 
 #endif /* INCLUDE_DEVICE_SOCKET_LEPERIPHERAL_H_ */

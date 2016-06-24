@@ -8,6 +8,8 @@
 #include <scan/AutoConnect.h>
 
 #include <bluetooth/bluetooth.h>
+#include <bluetooth/hci.h>
+#include <bluetooth/hci_lib.h>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
 #include <cstring>
@@ -19,12 +21,18 @@
 
 #include "Beetle.h"
 #include "ble/helper.h"
-#include "device/socket/LEPeripheral.h"
+#include "device/socket/LEDevice.h"
 #include "Debug.h"
 #include "Device.h"
 #include "sync/ThreadPool.h"
 #include "util/file.h"
 #include "util/trim.h"
+
+static int get_device_ids(int s, int deviceId, long ptr) {
+	std::set<int> *deviceIds = (std::set<int> *)ptr;
+	deviceIds->insert(deviceId);
+	return 0;
+};
 
 AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, std::string autoConnectWhitelist) :
 		beetle { beetle } {
@@ -64,6 +72,18 @@ AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, s
 			std::cout << "  " << addr << std::endl;
 		}
 	}
+
+	std::set<int> deviceIds;
+	hci_for_each_dev(HCI_UP, get_device_ids, (long)&deviceIds);
+
+	std::cout << "blacklist: " << std::endl;
+	for (int deviceId : deviceIds) {
+		hci_dev_info devInfo;
+		hci_devinfo(deviceId, &devInfo);
+		std::string addr = ba2str_cpp(devInfo.bdaddr);
+		std::cout << "  " << addr << std::endl;
+		blacklist.insert(addr);
+	}
 }
 
 AutoConnect::~AutoConnect() {
@@ -94,6 +114,13 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 
 		std::unique_lock<std::mutex> connectLk(connectMutex, std::try_to_lock);
 		if (connectLk.owns_lock()) {
+			/*
+			 * Consult blacklist
+			 */
+			if (blacklist.find(addr) != blacklist.end()) {
+				return;
+			}
+
 			/*
 			 * Consult whitelist
 			 */
@@ -129,9 +156,9 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 			 */
 			boost::shared_lock<boost::shared_mutex> devicesLk(beetle.devicesMutex);
 			for (auto &kv : beetle.devices) {
-				std::shared_ptr<LEPeripheral> le = NULL;
+				std::shared_ptr<LEDevice> le = NULL;
 				if (kv.second->getType() == Device::LE_PERIPHERAL &&
-						(le = std::dynamic_pointer_cast<LEPeripheral>(kv.second))) {
+						(le = std::dynamic_pointer_cast<LEDevice>(kv.second))) {
 					if (le->getAddrType() == info.bdaddrType &&
 							memcmp(le->getBdaddr().b, info.bdaddr.b, sizeof(bdaddr_t)) == 0) {
 						return;
@@ -162,7 +189,7 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 void AutoConnect::connect(peripheral_info_t info, bool discover) {
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
-		device = std::make_shared<LEPeripheral>(beetle, info.bdaddr, info.bdaddrType);
+		device.reset(LEDevice::newPeripheral(beetle, info.bdaddr, info.bdaddrType));
 
 		boost::shared_lock<boost::shared_mutex> devicesLk;
 		beetle.addDevice(device, devicesLk);
