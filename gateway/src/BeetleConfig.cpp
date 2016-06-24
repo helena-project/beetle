@@ -14,6 +14,7 @@
 #include <fstream>
 #include <stdexcept>
 
+#include "ble/hci.h"
 #include "util/file.h"
 
 static std::string getDefaultName() {
@@ -24,6 +25,11 @@ static std::string getDefaultName() {
 
 BeetleConfig::BeetleConfig(std::string filename) {
 	using json = nlohmann::json;
+
+	std::string defaultHciDev = hci_default_dev();
+	dev = defaultHciDev;
+	scanDev = defaultHciDev;
+	advertiseDev = defaultHciDev;
 
 	json config;
 	if (filename != "") {

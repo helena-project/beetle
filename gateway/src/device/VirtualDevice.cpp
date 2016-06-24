@@ -8,6 +8,7 @@
 #include "device/VirtualDevice.h"
 
 #include <assert.h>
+#include <ble/utils.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
 #include <cstring>
@@ -20,7 +21,6 @@
 #include "ble/att.h"
 #include "ble/beetle.h"
 #include "ble/gatt.h"
-#include "ble/helper.h"
 #include "controller/NetworkDiscoveryClient.h"
 #include "Debug.h"
 #include "device/socket/tcp/TCPServerProxy.h"

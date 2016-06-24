@@ -12,7 +12,11 @@
 #include <bluetooth/l2cap.h>
 
 #include "BeetleTypes.h"
+#include "HCI.h"
 
+/*
+ * Runs a peripheral and allows BLE centrals to connect to Beetle
+ */
 class L2capServer {
 public:
 	L2capServer(Beetle &beetle, std::string device);
@@ -20,10 +24,19 @@ public:
 private:
 	Beetle &beetle;
 
-	int fd;
+	/*
+	 * Shared hci handle for centrals
+	 */
+	HCI hci;
 
-	int callbackDeviceHandle;
+	/*
+	 * L2cap server and hci handle
+	 */
+	int serverFd;
 
+	/*
+	 * Cached packet payloads
+	 */
 	uint8_t advertisementDataBuf[256];
 	int advertisementDataLen;
 
@@ -34,7 +47,7 @@ private:
 	void startLEAdvertising(int deviceId);
 	bool startLEAdvertisingHelper(int deviceHandle);
 
-	void startL2CAPCentralHelper(int clifd, struct sockaddr_l2 cliaddr);
+	void startL2CAPCentralHelper(int deviceId, int clifd, struct sockaddr_l2 cliaddr);
 };
 
 #endif /* L2CAP_L2CAPSERVER_H_ */

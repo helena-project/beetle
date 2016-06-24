@@ -5,6 +5,7 @@
  *      Author: James Hong
  */
 
+#include <ble/utils.h>
 #include "Router.h"
 
 #include <bluetooth/bluetooth.h>
@@ -24,7 +25,6 @@
 #include "ble/att.h"
 #include "ble/beetle.h"
 #include "ble/gatt.h"
-#include "ble/helper.h"
 #include "controller/AccessControl.h"
 #include "Debug.h"
 #include "Device.h"

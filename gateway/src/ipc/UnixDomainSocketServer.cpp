@@ -26,8 +26,8 @@ UnixDomainSocketServer::UnixDomainSocketServer(Beetle &beetle, std::string path)
 		beetle(beetle) {
 	unlink(path.c_str());
 
-	fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
-	if (fd < 0) {
+	serverFd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+	if (serverFd < 0) {
 		if (debug) {
 			pdebug("failed to get ipc socket");
 		}
@@ -39,20 +39,20 @@ UnixDomainSocketServer::UnixDomainSocketServer(Beetle &beetle, std::string path)
 	addr.sun_family = AF_UNIX;
 	strncpy(addr.sun_path, path.c_str(), sizeof(addr.sun_path) - 1);
 
-	if (bind(fd, (struct sockaddr*) &addr, sizeof(addr)) < 0) {
+	if (bind(serverFd, (struct sockaddr*) &addr, sizeof(addr)) < 0) {
 		if (debug) {
 			pdebug("failed to bind ipc socket");
 		}
 		return;
 	}
 
-	listen(fd, 5);
+	listen(serverFd, 5);
 
 	/*
 	 * Add to sockets managed by select
 	 */
-	int fdShared = fd;
-	beetle.readers.add(fd, [&beetle, fdShared] {
+	int fdShared = serverFd;
+	beetle.readers.add(serverFd, [&beetle, fdShared] {
 		struct sockaddr_un cliaddr;
 		socklen_t clilen = sizeof(cliaddr);
 
@@ -83,9 +83,9 @@ UnixDomainSocketServer::UnixDomainSocketServer(Beetle &beetle, std::string path)
 }
 
 UnixDomainSocketServer::~UnixDomainSocketServer() {
-	beetle.readers.remove(fd);
-	shutdown(fd, SHUT_RDWR);
-	close(fd);
+	beetle.readers.remove(serverFd);
+	shutdown(serverFd, SHUT_RDWR);
+	close(serverFd);
 	if (debug) {
 		pdebug("ipc server stopped");
 	}

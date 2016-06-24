@@ -8,6 +8,7 @@
 #ifndef DEVICE_SOCKET_TCP_SHARED_H_
 #define DEVICE_SOCKET_TCP_SHARED_H_
 
+#include <ble/utils.h>
 #include <boost/smart_ptr/shared_array.hpp>
 #include <device/VirtualDevice.h>
 #include <cstdint>
@@ -17,7 +18,6 @@
 #include <sstream>
 
 #include "ble/gatt.h"
-#include "ble/helper.h"
 #include "Debug.h"
 #include "util/write.h"
 

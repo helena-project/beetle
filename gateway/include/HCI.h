@@ -12,6 +12,7 @@
 #include <exception>
 #include <string>
 #include <mutex>
+#include <functional>
 
 class HCIException : public std::exception {
   public:
@@ -41,21 +42,15 @@ public:
 			uint16_t maxInterval, uint16_t latency, uint16_t supervisionTimeout,
 			int to);
 
-	std::string getDevice();
-	bdaddr_t getBdaddr();
-
 	/*
-	 * Static helpers
+	 * Send a command using this hci's handle
 	 */
-	static void resetHCI(std::string dev);
-	static int getHCIDeviceId(std::string dev);
-	static std::string getDefaultHCIDevice();
-	static int getDefaultHCIDeviceId();
-private:
-	int dd;
-	bdaddr_t bdaddr;
-	std::string device;
+	int newCommand(std::function<int(int deviceHandle)> f);
 
+	int getDeviceId();
+private:
+	int deviceId;
+	int deviceHandle;
 	std::mutex m;
 };
 

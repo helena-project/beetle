@@ -22,7 +22,7 @@
 #include <sys/ioctl.h>
 #include <thread>
 
-#include "ble/helper.h"
+#include "ble/utils.h"
 #include "Beetle.h"
 #include "Debug.h"
 #include "device/socket/LEDevice.h"
@@ -119,20 +119,11 @@ static int hci_le_set_scan_response_data(int dd, uint8_t* data, uint8_t length, 
 	return 0;
 }
 
-L2capServer::L2capServer(Beetle &beetle, std::string device) : beetle(beetle) {
-	int deviceId = HCI::getHCIDeviceId(device);
-	if (deviceId == HCI::getDefaultHCIDeviceId()) {
-		pwarn("acting as a peripheral on the default interface may have side effects");
-	}
-
+L2capServer::L2capServer(Beetle &beetle, std::string device) : beetle(beetle), hci(device) {
+	int deviceId = hci.getDeviceId();
 	hci_dev_info hciDevInfo;
 	if (hci_devinfo(deviceId, &hciDevInfo) < 0) {
 		throw std::runtime_error("failed to obtain hci device info");
-	}
-
-	callbackDeviceHandle = hci_open_dev(deviceId);
-	if (callbackDeviceHandle < 0) {
-		throw std::runtime_error("failed to obtain hci device handle");
 	}
 
 	std::cout << "advertising on: " << device << std::endl;
@@ -146,18 +137,18 @@ L2capServer::L2capServer(Beetle &beetle, std::string device) : beetle(beetle) {
 	serv_addr.l2_cid = htobs(ATT_CID);
 	serv_addr.l2_bdaddr_type = hciDevInfo.type;
 
-	fd = socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
+	serverFd = socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
 
-	if (bind(fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+	if (bind(serverFd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
 		throw std::runtime_error("failed to bind l2cap server");
 	}
 
-	if (listen(fd, 5) < 0) {
+	if (listen(serverFd, 5) < 0) {
 		throw std::runtime_error("failed to listen l2cap server");
 	}
 
-	int fdShared = fd;
-	beetle.readers.add(fd, [this, &beetle, fdShared] {
+	int fdShared = serverFd;
+	beetle.readers.add(serverFd, [this, &beetle, fdShared, deviceId] {
 		struct sockaddr_l2 cli_addr;
 		socklen_t cli_len = sizeof(cli_addr);
 		int clifd = accept(fdShared, (struct sockaddr *)&cli_addr, &cli_len);
@@ -172,12 +163,8 @@ L2capServer::L2capServer(Beetle &beetle, std::string device) : beetle(beetle) {
 			pdebug("connected to " + ba2str_cpp(cli_addr.l2_bdaddr));
 		}
 
-		beetle.workers.schedule([this, clifd, cli_addr] {
-			/*
-			 * TODO(James): this is a hack, should be a better way to tell
-			 * if it is ok to start scanning again
-			 */
-			startL2CAPCentralHelper(clifd, cli_addr);
+		beetle.workers.schedule([this, clifd, cli_addr, deviceId] {
+			startL2CAPCentralHelper(deviceId, clifd, cli_addr);
 		});
 	});
 
@@ -185,24 +172,28 @@ L2capServer::L2capServer(Beetle &beetle, std::string device) : beetle(beetle) {
 }
 
 L2capServer::~L2capServer() {
-	beetle.readers.remove(fd);
-	shutdown(fd, SHUT_RDWR);
-	close(fd);
+	beetle.readers.remove(serverFd);
+	shutdown(serverFd, SHUT_RDWR);
+	close(serverFd);
 	if (debug) {
 		pdebug("l2cap server stopped");
 	}
-	hci_close_dev(callbackDeviceHandle);
 }
 
-void L2capServer::startL2CAPCentralHelper(int clifd, struct sockaddr_l2 cliaddr) {
+void L2capServer::startL2CAPCentralHelper(int hciDeviceId, int clifd, struct sockaddr_l2 cliaddr) {
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
 		/*
 		 * Takes over the clifd
 		 */
-		device.reset(LEDevice::newCentral(beetle, clifd, cliaddr, [this]{
-			/* Start advertising again */
-			startLEAdvertisingHelper(callbackDeviceHandle);
+		device.reset(LEDevice::newCentral(beetle, hci, clifd, cliaddr, [this]{
+			/*
+			 * TODO(James): this is a hack, should be a better way to tell
+			 * if it is ok to start scanning again
+			 */
+			hci.newCommand([this](int deviceHandle) {
+				return startLEAdvertisingHelper(deviceHandle) ? 0 : -1;
+			});
 		}));
 
 		boost::shared_lock<boost::shared_mutex> devicesLk;
@@ -221,7 +212,9 @@ void L2capServer::startL2CAPCentralHelper(int clifd, struct sockaddr_l2 cliaddr)
 		}
 
 		/* Start advertising again */
-		startLEAdvertisingHelper(callbackDeviceHandle);
+		hci.newCommand([this](int deviceHandle) {
+			return startLEAdvertisingHelper(deviceHandle) ? 0 : -1;
+		});
 	}
 }
 

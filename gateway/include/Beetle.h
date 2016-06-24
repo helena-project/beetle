@@ -8,16 +8,18 @@
 #ifndef INCLUDE_BEETLE_H_
 #define INCLUDE_BEETLE_H_
 
+#include <boost/thread/lock_types.hpp>
 #include <boost/thread/pthread/shared_mutex.hpp>
+#include <sync/OrderedThreadPool.h>
+#include <sync/SocketSelect.h>
+#include <sync/ThreadPool.h>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "BeetleTypes.h"
-#include "sync/OrderedThreadPool.h"
-#include "sync/ThreadPool.h"
-#include "sync/SocketSelect.h"
 #include "HCI.h"
 
 /* Forward declarations */
@@ -33,7 +35,7 @@ const int DEFAULT_NUM_READERS = 4;
 
 class Beetle {
 public:
-	Beetle(std::string name, HCI &hci, int numWorkers = DEFAULT_NUM_WORKERS, int numWriters = DEFAULT_NUM_WRITERS,
+	Beetle(std::string name, std::string dev, int numWorkers = DEFAULT_NUM_WORKERS, int numWriters = DEFAULT_NUM_WRITERS,
 			int numReaders = DEFAULT_NUM_READERS);
 	virtual ~Beetle();
 
@@ -137,7 +139,7 @@ public:
 	/*
 	 * HCI socket for all peripheral connections.
 	 */
-	HCI &hci;
+	HCI hci;
 
 	/*
 	 * Set the access control mechanism.

@@ -20,7 +20,7 @@ public:
 
 private:
 	Beetle &beetle;
-	int fd;
+	int serverFd;
 };
 
 #endif /* INCLUDE_IPC_UNIXDOMAINSOCKETSERVER_H_ */

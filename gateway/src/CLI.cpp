@@ -28,8 +28,8 @@
 #include <stdexcept>
 #include <utility>
 
+#include "ble/utils.h"
 #include "Beetle.h"
-#include "ble/helper.h"
 #include "controller/NetworkDiscoveryClient.h"
 #include "Debug.h"
 #include "Device.h"
@@ -320,7 +320,7 @@ void CLI::doConnect(const std::vector<std::string>& cmd, bool discoverHandles) {
 
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
-		device.reset(LEDevice::newPeripheral(beetle, addr, addrType));
+		device.reset(LEDevice::newPeripheral(beetle, beetle.hci, addr, addrType));
 
 		boost::shared_lock<boost::shared_mutex> devicesLk;
 		beetle.addDevice(device, devicesLk);
@@ -638,12 +638,16 @@ void CLI::doSetMaxConnectionInterval(const std::vector<std::string>& cmd) {
 		return;
 	}
 
+	if (newInterval < 7 || newInterval > 4000) {
+		printUsageError("invalid interval");
+		return;
+	}
+
 	boost::unique_lock<boost::shared_mutex> deviceslk(beetle.devicesMutex);
 	for (auto &kv : beetle.devices) {
-		auto peripheral = std::dynamic_pointer_cast<LEDevice>(kv.second);
-		if (peripheral) {
-			struct l2cap_conninfo connInfo = peripheral->getL2capConnInfo();
-			beetle.hci.setConnectionInterval(connInfo.hci_handle, newInterval, newInterval, 0, 0x0C80, 0);
+		auto le = std::dynamic_pointer_cast<LEDevice>(kv.second);
+		if (le) {
+			le->setConnectionInterval(newInterval);
 		}
 	}
 }

@@ -31,14 +31,14 @@ static void startTcpDeviceHelper(Beetle &, SSL *ssl, int clifd, struct sockaddr_
 
 TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig_, int port) :
 		beetle(beetle), sslConfig(sslConfig_) {
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	serverFd = socket(AF_INET, SOCK_STREAM, 0);
 
-	if (sockfd < 0) {
+	if (serverFd < 0) {
 		throw ServerException("error creating socket");
 	}
 
 	int unused = 1;
-	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &unused, sizeof(int)) < 0) {
+	if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &unused, sizeof(int)) < 0) {
 	    throw ServerException("error setting socket to reuse");
 	}
 
@@ -47,18 +47,18 @@ TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig_, int port
 	server_addr.sin_addr.s_addr = INADDR_ANY;
 	server_addr.sin_port = htons(port);
 
-	if (bind(sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
+	if (bind(serverFd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
 		throw ServerException("error on bind");
 	}
 
-	listen(sockfd, 5);
+	listen(serverFd, 5);
 
 	/*
 	 * Add to sockets managed by select
 	 */
-	int sockfdShared = sockfd;
+	int sockfdShared = serverFd;
 	auto sslConfigShared = sslConfig;
-	beetle.readers.add(sockfd, [&beetle, sockfdShared, sslConfigShared] {
+	beetle.readers.add(serverFd, [&beetle, sockfdShared, sslConfigShared] {
 		struct sockaddr_in client_addr;
 		socklen_t clilen = sizeof(client_addr);
 
@@ -93,9 +93,9 @@ TCPDeviceServer::TCPDeviceServer(Beetle &beetle, SSLConfig *sslConfig_, int port
 }
 
 TCPDeviceServer::~TCPDeviceServer() {
-	beetle.readers.remove(sockfd);
-	shutdown(sockfd, SHUT_RDWR);
-	close(sockfd);
+	beetle.readers.remove(serverFd);
+	shutdown(serverFd, SHUT_RDWR);
+	close(serverFd);
 	if (debug) {
 		pdebug("tcp server stopped");
 	}

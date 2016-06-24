@@ -37,7 +37,7 @@ public:
 private:
 	Beetle &beetle;
 	std::shared_ptr<SSLConfig> sslConfig;
-	int sockfd;
+	int serverFd;
 };
 
 #endif /* INCLUDE_TCP_TCPDEVICESERVER_H_ */

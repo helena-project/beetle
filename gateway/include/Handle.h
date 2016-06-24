@@ -36,6 +36,11 @@ public:
  */
 class Handle {
 public:
+	/*
+	 * Static handle means that the value is guaranteed not change.
+	 * Cache infinite means that duplicate reads will still be
+	 * forwarded to the device.
+	 */
 	Handle(bool staticHandle = false, bool cacheInfinite = false);
 	virtual ~Handle();
 

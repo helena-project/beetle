@@ -5,6 +5,7 @@
  *      Author: James Hong
  */
 
+#include <ble/utils.h>
 #include "scan/Scanner.h"
 
 #include <bluetooth/hci.h>
@@ -18,7 +19,6 @@
 #include <thread>
 #include <unistd.h>
 
-#include "ble/helper.h"
 #include "Debug.h"
 #include "HCI.h"
 
@@ -46,7 +46,7 @@ Scanner::Scanner(std::string device) {
 		});
 	}
 
-	deviceId = HCI::getHCIDeviceId(device);
+	deviceId = hci_devid(device.c_str());
 	if (deviceId < 0) {
 		throw ScannerException("could not get hci device");
 	}

@@ -19,20 +19,15 @@
 #include <unistd.h>
 #include <utility>
 
+#include "ble/hci.h"
+#include "ble/utils.h"
 #include "Beetle.h"
-#include "ble/helper.h"
 #include "device/socket/LEDevice.h"
 #include "Debug.h"
 #include "Device.h"
 #include "sync/ThreadPool.h"
 #include "util/file.h"
 #include "util/trim.h"
-
-static int get_device_ids(int s, int deviceId, long ptr) {
-	std::set<int> *deviceIds = (std::set<int> *)ptr;
-	deviceIds->insert(deviceId);
-	return 0;
-};
 
 AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, std::string autoConnectWhitelist) :
 		beetle { beetle } {
@@ -73,8 +68,7 @@ AutoConnect::AutoConnect(Beetle &beetle, bool connectAll_, double minBackoff_, s
 		}
 	}
 
-	std::set<int> deviceIds;
-	hci_for_each_dev(HCI_UP, get_device_ids, (long)&deviceIds);
+	std::set<int> deviceIds = hci_get_device_ids();
 
 	std::cout << "blacklist: " << std::endl;
 	for (int deviceId : deviceIds) {
@@ -189,7 +183,7 @@ DiscoveryHandler AutoConnect::getDiscoveryHandler() {
 void AutoConnect::connect(peripheral_info_t info, bool discover) {
 	std::shared_ptr<VirtualDevice> device = NULL;
 	try {
-		device.reset(LEDevice::newPeripheral(beetle, info.bdaddr, info.bdaddrType));
+		device.reset(LEDevice::newPeripheral(beetle, beetle.hci, info.bdaddr, info.bdaddrType));
 
 		boost::shared_lock<boost::shared_mutex> devicesLk;
 		beetle.addDevice(device, devicesLk);
