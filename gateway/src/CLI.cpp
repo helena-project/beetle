@@ -734,6 +734,10 @@ void CLI::doSetDebug(const std::vector<std::string>& cmd) {
 			debug_performance = value;
 			isValid |= true;
 		}
+		if (isAll || cmd[1] == "advertise") {
+			debug_advertise = value;
+			isValid |= true;
+		}
 		if (!isValid) {
 			printUsageError("unrecognized category: " + cmd[1]);
 		}

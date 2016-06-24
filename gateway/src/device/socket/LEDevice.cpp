@@ -81,7 +81,8 @@ LEDevice *LEDevice::newPeripheral(Beetle &beetle, bdaddr_t bdaddr, AddrType addr
 	return new LEDevice(beetle, sockfd, rem_addr, connInfo, LE_PERIPHERAL, name, delayedPackets);
 }
 
-LEDevice *LEDevice::newCentral(Beetle &beetle, int sockfd, struct sockaddr_l2 addr) {
+LEDevice *LEDevice::newCentral(Beetle &beetle, int sockfd, struct sockaddr_l2 addr,
+		std::function<void()> onDisconnect) {
 	struct l2cap_conninfo connInfo;
 	unsigned int connInfoLen = sizeof(connInfo);
 	if (getsockopt(sockfd, SOL_L2CAP, L2CAP_CONNINFO, &connInfo, &connInfoLen) < 0) {
@@ -96,19 +97,29 @@ LEDevice *LEDevice::newCentral(Beetle &beetle, int sockfd, struct sockaddr_l2 ad
 		throw DeviceException("could not discover device name");
 	}
 
-	return new LEDevice(beetle, sockfd, addr, connInfo, LE_CENTRAL, name, delayedPackets);
+	return new LEDevice(beetle, sockfd, addr, connInfo, LE_CENTRAL, name, delayedPackets,
+			onDisconnect);
 }
 
-LEDevice::LEDevice(Beetle &beetle, int sockfd, struct sockaddr_l2 sockaddr,
-		struct l2cap_conninfo connInfo, DeviceType type_, std::string name_,
-		std::list<delayed_packet_t> delayedPackets) :
-		SeqPacketConnection(beetle, sockfd, true, delayedPackets),
-		connInfo(connInfo) {
+LEDevice::LEDevice(
+		Beetle &beetle,
+		int sockfd,
+		struct sockaddr_l2 sockaddr,
+		struct l2cap_conninfo connInfo_,
+		DeviceType type_,
+		std::string name_,
+		std::list<delayed_packet_t> delayedPackets,
+		std::function<void()> onDisconnect_) :
+		SeqPacketConnection(beetle, sockfd, true, delayedPackets) {
 	type = type_;
 
 	name = name_;
 	bdaddr = sockaddr.l2_bdaddr;
 	bdaddrType = (sockaddr.l2_bdaddr_type == BDADDR_LE_PUBLIC) ? PUBLIC : RANDOM;
+
+	connInfo = connInfo_;
+
+	onDisconnect = onDisconnect_;
 
 	if (type == LE_PERIPHERAL) {
 		/*
@@ -119,7 +130,9 @@ LEDevice::LEDevice(Beetle &beetle, int sockfd, struct sockaddr_l2 sockaddr,
 }
 
 LEDevice::~LEDevice() {
-	// nothing to do
+	if (onDisconnect != NULL) {
+		beetle.workers.schedule(onDisconnect);
+	}
 }
 
 bdaddr_t LEDevice::getBdaddr() {

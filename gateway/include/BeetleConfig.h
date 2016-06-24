@@ -109,6 +109,7 @@ public:
 	bool debugScan = false;
 	bool debugTopology = false;
 	bool debugSocket = false;
+	bool debugAdvertise = false;
 };
 
 #endif /* BEETLECONFIG_H_ */

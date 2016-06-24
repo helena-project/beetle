@@ -13,14 +13,16 @@
 
 #include "BeetleTypes.h"
 
-class L2CAPServer {
+class L2capServer {
 public:
-	L2CAPServer(Beetle &beetle, std::string device);
-	virtual ~L2CAPServer();
+	L2capServer(Beetle &beetle, std::string device);
+	virtual ~L2capServer();
 private:
 	Beetle &beetle;
 
 	int fd;
+
+	int callbackDeviceHandle;
 
 	uint8_t advertisementDataBuf[256];
 	int advertisementDataLen;
@@ -28,9 +30,11 @@ private:
 	uint8_t scanDataBuf[256];
 	int scanDataLen;
 
+	void setAdvertisingScanData();
 	void startLEAdvertising(int deviceId);
+	bool startLEAdvertisingHelper(int deviceHandle);
 
-	static void startL2CAPCentralHelper(Beetle &beetle, int clifd, struct sockaddr_l2 cliaddr);
+	void startL2CAPCentralHelper(int clifd, struct sockaddr_l2 cliaddr);
 };
 
 #endif /* L2CAP_L2CAPSERVER_H_ */

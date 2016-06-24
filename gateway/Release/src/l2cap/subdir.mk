@@ -4,13 +4,13 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/l2cap/L2CAPServer.cpp 
+../src/l2cap/L2capServer.cpp 
 
 OBJS += \
-./src/l2cap/L2CAPServer.o 
+./src/l2cap/L2capServer.o 
 
 CPP_DEPS += \
-./src/l2cap/L2CAPServer.d 
+./src/l2cap/L2capServer.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -194,6 +194,8 @@ BeetleConfig::BeetleConfig(std::string filename) {
 				debugPerformance = it.value();
 			} else if (it.key() == "controller") {
 				debugController = it.value();
+			} else if (it.key() == "advertise") {
+				debugAdvertise = it.value();
 			} else {
 				throw ConfigException("unknown debug param: " + it.key());
 			}
@@ -284,6 +286,7 @@ std::string BeetleConfig::str(unsigned int indent) const {
 		debug["scan"] = debugScan;
 		debug["topology"] = debugTopology;
 		debug["socket"] = debugSocket;
+		debug["advertise"] = debugAdvertise;
 		config["debug"] = debug;
 	}
 

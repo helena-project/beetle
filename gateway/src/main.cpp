@@ -27,7 +27,7 @@
 #include "device/socket/tcp/TCPServerProxy.h"
 #include "HCI.h"
 #include "ipc/UnixDomainSocketServer.h"
-#include "l2cap/L2CAPServer.h"
+#include <l2cap/L2capServer.h>
 #include "StaticTopo.h"
 #include "scan/AutoConnect.h"
 #include "scan/Scanner.h"
@@ -45,6 +45,7 @@ bool debug_router;
 bool debug_socket;
 bool debug_controller;
 bool debug_performance;
+bool debug_advertise;
 
 void setDebugAll() {
 	debug = true;
@@ -55,6 +56,7 @@ void setDebugAll() {
 	debug_discovery = true;
 	debug_controller = true;
 	debug_performance = true;
+	debug_advertise = true;
 }
 
 void setDebug(BeetleConfig btlConfig) {
@@ -65,6 +67,7 @@ void setDebug(BeetleConfig btlConfig) {
 	debug_discovery = btlConfig.debugDiscovery;
 	debug_controller = btlConfig.debugController;
 	debug_performance = btlConfig.debugPerformance;
+	debug_advertise = btlConfig.debugAdvertise;
 }
 
 void sigpipe_handler_ignore(int unused) {
@@ -199,9 +202,9 @@ int main(int argc, char *argv[]) {
 		}
 
 		/* Listen for ble centrals */
-		std::unique_ptr<L2CAPServer> l2capServer;
+		std::unique_ptr<L2capServer> l2capServer;
 		if (btlConfig.advertiseEnabled) {
-			l2capServer = std::make_unique<L2CAPServer>(btl, btlConfig.advertiseDev);
+			l2capServer = std::make_unique<L2capServer>(btl, btlConfig.advertiseDev);
 		}
 
 		/* Setup controller modules */

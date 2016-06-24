@@ -12,6 +12,7 @@
 #include <bluetooth/l2cap.h>
 #include <cstdint>
 #include <thread>
+#include <functional>
 
 #include "sync/Countdown.h"
 #include "device/socket/SeqPacketConnection.h"
@@ -30,17 +31,22 @@ public:
 	struct l2cap_conninfo getL2capConnInfo();
 
 	static LEDevice *newPeripheral(Beetle &beetle, bdaddr_t addr, AddrType addrType);
-	static LEDevice *newCentral(Beetle &beetle, int sockfd, struct sockaddr_l2 sockaddr);
+	static LEDevice *newCentral(Beetle &beetle, int sockfd, struct sockaddr_l2 sockaddr,
+			std::function<void()> onDisconnect);
 
 protected:
 	LEDevice(Beetle &beetle, int sockfd, struct sockaddr_l2 sockaddr,
 			struct l2cap_conninfo connInfo, DeviceType type, std::string name,
-			std::list<delayed_packet_t> delayedPackets);
+			std::list<delayed_packet_t> delayedPackets,
+			std::function<void()> onDisconnect = NULL);
+
 private:
 	bdaddr_t bdaddr;
 	AddrType bdaddrType;
 
 	struct l2cap_conninfo connInfo;
+
+	std::function<void()> onDisconnect;
 };
 
 #endif /* INCLUDE_DEVICE_SOCKET_LEPERIPHERAL_H_ */
