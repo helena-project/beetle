@@ -65,6 +65,12 @@ LEDevice *LEDevice::newPeripheral(Beetle &beetle, bdaddr_t bdaddr, AddrType addr
 		throw DeviceException("could not get l2cap conn info");
 	}
 
+	if (debug_socket) {
+		std::stringstream ss;
+		ss << "peripheral hci handle: " << connInfo.hci_handle;
+		pdebug(ss.str());
+	}
+
 	std::string name;
 	std::list<delayed_packet_t> delayedPackets;
 	if (!request_device_name(sockfd, name, delayedPackets)) {

@@ -48,7 +48,7 @@ public:
 	 * Scan settings
 	 */
 	bool scanEnabled = true;
-	std::string scanBdaddr = "";
+	std::string scanDev = "";
 
 	/*
 	 * Autoconnect settings
@@ -73,7 +73,7 @@ public:
 	 * Peripheral settings
 	 */
 	bool advertiseEnabled = false;
-	std::string advertiseBdaddr = "";
+	std::string advertiseDev = "";
 
 	/*
 	 * Controller settings

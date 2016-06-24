@@ -119,31 +119,24 @@ static int hci_le_set_scan_response_data(int dd, uint8_t* data, uint8_t length, 
 	return 0;
 }
 
-L2CAPServer::L2CAPServer(Beetle &beetle, std::string bdaddr) : beetle(beetle) {
-	if (!is_bd_addr(bdaddr)) {
-		throw std::invalid_argument("invalid device address: " + bdaddr);
-	}
-
-	if (bdaddr == "" || bdaddr == HCI::getDefaultHCI()) {
-		pwarn("acting as a peripheral on the default interface may have side effects");
-	}
-
+L2CAPServer::L2CAPServer(Beetle &beetle, std::string device) : beetle(beetle) {
 	/* create L2CAP socket, and bind it to the local adapter */
 	fd = socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
 
-	int deviceId = bdaddr_to_device_id(bdaddr);
+	int deviceId = HCI::getHCIDeviceId(device);
+	if (deviceId == HCI::getDefaultHCIDeviceId()) {
+		pwarn("acting as a peripheral on the default interface may have side effects");
+	}
+
 	hci_dev_info hciDevInfo;
 	if (hci_devinfo(deviceId, &hciDevInfo) < 0) {
 		throw std::runtime_error("failed to obtain hci device info");
 	}
 
-	if (debug) {
-		std::stringstream ss;
-		ss << "Starting l2cap server:\n"
-				<< "  name: " << hciDevInfo.name << "\n"
-				<< "  bdaddr: " << ba2str_cpp(hciDevInfo.bdaddr);
-		pdebug(ss.str());
-	}
+	std::cout << "advertising on: " << device << std::endl;
+	std::cout << "starting l2cap peripheral:" << std::endl
+			<< "  name: " << hciDevInfo.name << std::endl
+			<< "  bdaddr: " << ba2str_cpp(hciDevInfo.bdaddr) << std::endl;
 
 	struct sockaddr_l2 serv_addr = { 0 };
 	serv_addr.l2_family = AF_BLUETOOTH;

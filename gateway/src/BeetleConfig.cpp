@@ -49,8 +49,8 @@ BeetleConfig::BeetleConfig(std::string filename) {
 		for (json::iterator it = scanConfig.begin(); it != scanConfig.end(); ++it) {
 			if (it.key() == "enable") {
 				scanEnabled = it.value();
-			} else if (it.key() == "bdaddr") {
-				scanBdaddr = it.value();
+			} else if (it.key() == "dev") {
+				scanDev = it.value();
 			} else {
 				throw ConfigException("unknown scan param: " + it.key());
 			}
@@ -122,8 +122,8 @@ BeetleConfig::BeetleConfig(std::string filename) {
 		for (json::iterator it = advertiseConfig.begin(); it != advertiseConfig.end(); ++it) {
 			if (it.key() == "enable") {
 				advertiseEnabled = it.value();
-			} else if (it.key() == "bdaddr") {
-				advertiseBdaddr = it.value();
+			} else if (it.key() == "dev") {
+				advertiseDev = it.value();
 			} else {
 				throw ConfigException("unknown advertisement param: " + it.key());
 			}
@@ -215,7 +215,7 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	{
 		json scan;
 		scan["enable"] = scanEnabled;
-		scan["bdaddr"] = scanBdaddr;
+		scan["dev"] = scanDev;
 		config["scan"] = scan;
 	}
 
@@ -251,7 +251,7 @@ std::string BeetleConfig::str(unsigned int indent) const {
 	{
 		json advertise;
 		advertise["enable"] = advertiseEnabled;
-		advertise["bdaddr"] = advertiseBdaddr;
+		advertise["dev"] = advertiseDev;
 		config["advertise"] = advertise;
 	}
 

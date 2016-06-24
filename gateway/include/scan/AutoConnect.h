@@ -57,6 +57,11 @@ private:
 	std::set<std::string> whitelist;
 
 	/*
+	 * Bluetooth addresses to ignore
+	 */
+	std::set<std::string> blacklist;
+
+	/*
 	 * Only one connection attempt at a time
 	 */
 	std::mutex connectMutex;

@@ -20,6 +20,7 @@
 
 #include "ble/helper.h"
 #include "Debug.h"
+#include "HCI.h"
 
 #define EIR_NAME_SHORT		0x08
 #define EIR_NAME_COMPLETE  	0x09
@@ -30,7 +31,7 @@
 static std::atomic_flag staticInitDone;
 static std::set<int> staticDeviceHandles;
 
-Scanner::Scanner(std::string bdaddr) {
+Scanner::Scanner(std::string device) {
 	/*
 	 * Setup static variables exactly once.
 	 */
@@ -45,17 +46,17 @@ Scanner::Scanner(std::string bdaddr) {
 		});
 	}
 
+	deviceId = HCI::getHCIDeviceId(device);
+	if (deviceId < 0) {
+		throw ScannerException("could not get hci device");
+	}
+	std::cout << "scanning on: " << device << std::endl;
+
 	/*
 	 * Set these intervals high since we are filtering duplicates manually.
 	 */
 	scanInterval = 0x0100;	// TODO these should be configurable
 	scanWindow = 0x0010;
-
-	if (bdaddr == "" || is_bd_addr(bdaddr)) {
-		scanBdaddr = bdaddr;
-	} else {
-		throw std::invalid_argument("invalid device address : " + bdaddr);
-	}
 
 	running.reset(new std::atomic_flag(true));
 }
@@ -67,17 +68,6 @@ Scanner::~Scanner() {
 	 * Can't join daemon since shutdown(SHUR_RDWR) doesn't work on hci sockets.
 	 * Have to destruct without waiting.
 	 */
-}
-
-static void scanDaemon(std::shared_ptr<std::atomic_flag> terminated, std::vector<DiscoveryHandler> handlers,
-		std::string scanBdaddr, uint16_t scanInterval, uint16_t scanWindow);
-void Scanner::start() {
-	std::thread t = std::thread(&scanDaemon, running, handlers, scanBdaddr, scanInterval, scanWindow);
-	t.detach();
-}
-
-void Scanner::registerHandler(DiscoveryHandler handler) {
-	handlers.push_back(handler);
 }
 
 static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval,
@@ -121,14 +111,9 @@ static struct hci_filter startScanHelper(int deviceHandle, uint16_t scanInterval
 }
 
 static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<DiscoveryHandler> handlers,
-		std::string scanBdaddr, uint16_t scanInterval, uint16_t scanWindow) {
+		int deviceId, uint16_t scanInterval, uint16_t scanWindow) {
 	if (debug) {
 		pdebug("scanDaemon started");
-	}
-
-	int deviceId = bdaddr_to_device_id(scanBdaddr);
-	if (deviceId < 0) {
-		throw ScannerException("could not get hci device");
 	}
 
 	int deviceHandle = hci_open_dev(deviceId);
@@ -204,4 +189,13 @@ static void scanDaemon(std::shared_ptr<std::atomic_flag> running, std::vector<Di
 	if (debug) {
 		pdebug("scanDaemon exited");
 	}
+}
+
+void Scanner::start() {
+	std::thread t = std::thread(&scanDaemon, running, handlers, deviceId, scanInterval, scanWindow);
+	t.detach();
+}
+
+void Scanner::registerHandler(DiscoveryHandler handler) {
+	handlers.push_back(handler);
 }

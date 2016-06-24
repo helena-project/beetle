@@ -15,7 +15,7 @@
 
 class L2CAPServer {
 public:
-	L2CAPServer(Beetle &beetle, std::string bdaddr);
+	L2CAPServer(Beetle &beetle, std::string device);
 	virtual ~L2CAPServer();
 private:
 	Beetle &beetle;

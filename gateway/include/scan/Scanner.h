@@ -44,7 +44,7 @@ typedef std::function<void(peripheral_info_t info)> DiscoveryHandler;
 
 class Scanner {
 public:
-	Scanner(std::string bdaddr = "");
+	Scanner(std::string device = "");
 	virtual ~Scanner();
 
 	/*
@@ -57,7 +57,7 @@ public:
 	 */
 	void registerHandler(DiscoveryHandler);
 private:
-	std::string scanBdaddr;
+	int deviceId;
 
 	uint16_t scanInterval;
 	uint16_t scanWindow;
