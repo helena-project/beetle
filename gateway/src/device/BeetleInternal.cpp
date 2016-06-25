@@ -5,7 +5,6 @@
  *      Author: James Hong
  */
 
-#include <ble/utils.h>
 #include "device/BeetleInternal.h"
 
 #include <bluetooth/bluetooth.h>
@@ -15,6 +14,7 @@
 #include <set>
 
 #include "Beetle.h"
+#include "ble/utils.h"
 #include "ble/gatt.h"
 #include "Debug.h"
 #include "hat/SingleAllocator.h"

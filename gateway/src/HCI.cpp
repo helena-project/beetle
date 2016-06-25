@@ -5,7 +5,7 @@
  *      Author: James Hong
  */
 
-#include <HCI.h>
+#include "HCI.h"
 
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
@@ -17,8 +17,6 @@
 #include <sstream>
 #include <unistd.h>
 
-#include "ble/hci.h"
-#include "ble/utils.h"
 #include "Debug.h"
 
 HCI::HCI(std::string dev) {

@@ -5,7 +5,6 @@
  *      Author: James Hong
  */
 
-#include <ble/utils.h>
 #include "scan/Scanner.h"
 
 #include <bluetooth/hci.h>
@@ -19,6 +18,7 @@
 #include <thread>
 #include <unistd.h>
 
+#include "ble/utils.h"
 #include "Debug.h"
 #include "HCI.h"
 

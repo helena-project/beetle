@@ -26,9 +26,8 @@
 #include "controller/NetworkStateClient.h"
 #include "Debug.h"
 #include "device/socket/tcp/TCPServerProxy.h"
-#include "HCI.h"
 #include "ipc/UnixDomainSocketServer.h"
-#include <l2cap/L2capServer.h>
+#include "l2cap/L2capServer.h"
 #include "StaticTopo.h"
 #include "scan/AutoConnect.h"
 #include "scan/Scanner.h"

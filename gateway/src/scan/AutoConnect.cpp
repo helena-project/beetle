@@ -5,7 +5,7 @@
  *      Author: James Hong
  */
 
-#include <scan/AutoConnect.h>
+#include "scan/AutoConnect.h"
 
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
