@@ -20,6 +20,7 @@
 
 #include "Beetle.h"
 #include "ble/att.h"
+#include "ble/beetle.h"
 #include "controller/ControllerClient.h"
 #include "controller/access/DynamicAuth.h"
 #include "Device.h"
@@ -638,6 +639,13 @@ bool AccessControl::canReadType(std::shared_ptr<Device> client, std::shared_ptr<
 		case GATT_GAP_CHARAC_PERIPH_PRIV_FLAG_UUID:
 		case GATT_GAP_CHARAC_PREF_CONN_PARAMS_UUID:
 		case GATT_GATT_SERVICE_UUID:
+			return true;
+		case BEETLE_SERVICE_UUID:
+		case BEETLE_CHARAC_CONNECTED_GATEWAY_UUID:
+		case BEETLE_CHARAC_CONNECTED_TIME_UUID:
+		case BEETLE_CHARAC_HANDLE_RANGE_UUID:
+		case BEETLE_CHARAC_BDADDR_UUID:
+		case BEETLE_DESC_BDADDR_TYPE_UUID:
 			return true;
 		case GATT_GAP_CHARAC_RECONNECTION_ADDR_UUID:
 		case GATT_GATT_CHARAC_SERVICE_CHANGED_UUID:
