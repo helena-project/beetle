@@ -126,8 +126,8 @@ def connect_device(request, device, remote_id):
 	try:
 		device_conn = ConnectedDevice.objects.get(
 			device=device,
+			remote_id=remote_id,
 			gateway_instance=gateway_conn)
-		device_conn.remote_id = remote_id
 	except ConnectedDevice.DoesNotExist:
 		device_conn = ConnectedDevice(
 			device=device,
