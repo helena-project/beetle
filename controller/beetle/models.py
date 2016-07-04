@@ -39,6 +39,7 @@ class Contact(models.Model):
 		(AUTH_EMAIL, "email"),
 	)
 
+	# TODO: probably should not hard-code these
 	CARRIER_GATEWAY = ""
 	CARRIER_ATT = "txt.att.net"
 	CARRIER_TMOBILE = "tmomail.net"
@@ -60,6 +61,7 @@ class Contact(models.Model):
 	phone_number = models.CharField(
 		max_length=100)
 	carrier_gateway = models.CharField(
+		max_length=100,
 		choices=CARRIER_GATEWAY_CHOICES,
 		default=CARRIER_GATEWAY)
 

@@ -47,10 +47,11 @@ def query_passcode_liveness(request, rule_id, to_gateway, to_id):
 	else:
 		return HttpResponse(auth_instance.expire.strftime("%s"), status=200)
 
+# TODO(James): each carrier does their own wonky thing...
 # EMAIL_REPLY_REGEX = re.compile(
 # 	r"X-OPWV-Extra-Message-Type:Reply\s+(\w+?)\s+*")
 EMAIL_REPLY_REGEX = re.compile(
-	r".*\s+(?<action>OK)\s+.*", re.IGNORECASE)
+	r".*\s+(?P<action>(OK)|(ALWAYS)|(NEVER))\s+.*", re.IGNORECASE)
 
 def __generate_rand_string(otp_len=6):
 	return ''.join(random.choice(string.ascii_uppercase + string.digits)
@@ -248,7 +249,7 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 		email = to_principal.owner.email_address
 	else:
 		email = to_principal.owner.phone_number.replace("-", "") + "@" \
-			+ admin_auth.admin.carrier_gateway
+			+ to_principal.owner.carrier_gateway
 	email = email.encode('ascii', 'ignore')
 
 	server = smtplib.SMTP('smtp.gmail.com', 587)
