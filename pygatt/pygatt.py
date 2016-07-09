@@ -956,6 +956,13 @@ class _ClientService(object):
 				break
 
 			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN
+				and resp[1] == att.OP_READ_BY_TYPE_REQ
+				and resp[4] == att.ECODE_READ_NOT_PERM):
+				currHandle = currHandle + 1
+				if currHandle >= endHandle:
+					break
+
+			elif (resp[0] == att.OP_ERROR and len(resp) == att_pdu.ERROR_PDU_LEN
 				and resp[1] == att.OP_READ_BY_TYPE_REQ):
 				raise ClientError("error - %s" % att.ecodeLookup(resp[4]))
 

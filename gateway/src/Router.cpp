@@ -186,8 +186,8 @@ int Router::routeFindInfo(uint8_t *buf, int len, device_t src) {
 				 */
 				uint8_t unused;
 				if (dst != BEETLE_RESERVED_DEVICE && beetle.accessControl
-						&& beetle.accessControl->canAccessHandle(sourceDevice, destinationDevice, handle, opCode,
-								unused) == false) {
+						&& beetle.accessControl->canAccessHandle(sourceDevice,
+								destinationDevice, handle, opCode, unused) == false) {
 					continue;
 				}
 
@@ -473,9 +473,6 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 			currHandle = currHandleRange.end + 1;
 			continue;
 		} else {
-			*(uint16_t *) (buf + 1) = htobs(startHandle - currHandleRange.start);
-			*(uint16_t *) (buf + 3) = htobs(endHandle - currHandleRange.start);
-
 			if (beetle.devices.find(dst) == beetle.devices.end()) {
 				pwarn(std::to_string(dst) + " does not id a device");
 				return -1;
@@ -595,6 +592,10 @@ int Router::routeReadByType(uint8_t *buf, int len, device_t src) {
 					continue;
 				}
 			} else {
+				uint16_t ofs = startHandle - currHandleRange.start;
+				*(uint16_t *) (buf + 1) = htobs(ofs > firstHandleMatch ? ofs : firstHandleMatch);
+				*(uint16_t *) (buf + 3) = htobs(endHandle - currHandleRange.start);
+
 				/*
 				 * Send the request to the device
 				 */
@@ -1107,9 +1108,6 @@ int Router::routeReadWrite(uint8_t *buf, int len, device_t src) {
 				valueHandle += handleRange.start;
 				*(uint16_t *)(resp + 2) = htobs(valueHandle);
 			} else if (attType.getShort() == BEETLE_CHARAC_HANDLE_RANGE_UUID) {
-				/*
-				 * TODO(James): this might not be correct with variable block allocations
-				 */
 				*(uint16_t *)(resp + 1) = htobs(handleRange.start);
 				*(uint16_t *)(resp + 3) = htobs(handleRange.end);
 			}

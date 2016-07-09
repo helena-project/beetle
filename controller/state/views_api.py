@@ -21,7 +21,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import AdminAuthInstance, UserAuthInstance, \
 	PasscodeAuthInstance, ExclusiveLease
 
-from beetle.models import BeetleEmailAccount
+from beetle.models import BeetleEmailAccount, Contact
 from access.models import Rule, DynamicAuth, AdminAuth, UserAuth, Exclusive
 from network.lookup import get_gateway_and_device_helper
 
@@ -47,20 +47,11 @@ def query_passcode_liveness(request, rule_id, to_gateway, to_id):
 	else:
 		return HttpResponse(auth_instance.expire.strftime("%s"), status=200)
 
-ATT = "att"
-TMOBILE = "tmobile"
-VERIZON = "verizon"
-SPRINT = "sprint"
-
-SMS_GATEWAYS = {
-	ATT : "txt.att.net",
-	TMOBILE : "tmomail.net",
-	VERIZON : "vtext.com",
-	SPRINT : "page.nextel.com",
-}
-
+# TODO(James): each carrier does their own wonky thing...
+# EMAIL_REPLY_REGEX = re.compile(
+# 	r"X-OPWV-Extra-Message-Type:Reply\s+(\w+?)\s+*")
 EMAIL_REPLY_REGEX = re.compile(
-	r"X-OPWV-Extra-Message-Type:Reply\s+(\w+?)\s+-----Original Message-----")
+	r".*\s+(?P<action>(OK)|(ALWAYS)|(NEVER))\s+.*", re.IGNORECASE)
 
 def __generate_rand_string(otp_len=6):
 	return ''.join(random.choice(string.ascii_uppercase + string.digits)
@@ -118,9 +109,11 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 	if not controller_email_acct.address:
 		return HttpResponse("no sender address set up at server", status=500)
 
-	# TODO fix this to not be AT&T
-	email = admin_auth.admin.phone_number.replace("-","") + "@" \
-		+ SMS_GATEWAYS[ATT]
+	if to_principal.owner.auth_method == Contact.AUTH_EMAIL:
+		email = admin_auth.admin.email_address
+	else:
+		email = admin_auth.admin.phone_number.replace("-","") + "@" \
+			+ admin_auth.admin.carrier_gateway
 	email = email.encode('ascii','ignore')
 
 	server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -145,7 +138,7 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 	mail = imaplib.IMAP4_SSL('imap.gmail.com')
 	mail.login(controller_email_acct.address, controller_email_acct.password)
 
-	timeout = current_time + relativedelta(seconds=60)
+	timeout = current_time + relativedelta(seconds=120)
 	while timezone.now() < timeout:
 		time.sleep(5)
 		mail.select("inbox")
@@ -162,7 +155,7 @@ def request_admin_auth(request, rule_id, to_gateway, to_id):
 
 		email_match = EMAIL_REPLY_REGEX.search(raw_email)
 		if email_match is not None:
-			reply = email_match.group(1).lower()
+			reply = email_match.groupdict()['action'].lower()
 			if reply == "ok":
 				##############
 				# Allow once #
@@ -252,9 +245,11 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 	if not controller_email_acct.address:
 		return HttpResponse("no sender address set up at server", status=500)
 
-	# TODO fix this to not be AT&T
-	email = to_principal.owner.phone_number.replace("-", "") + "@" \
-		+ SMS_GATEWAYS[ATT]
+	if to_principal.owner.auth_method == Contact.AUTH_EMAIL:
+		email = to_principal.owner.email_address
+	else:
+		email = to_principal.owner.phone_number.replace("-", "") + "@" \
+			+ to_principal.owner.carrier_gateway
 	email = email.encode('ascii', 'ignore')
 
 	server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -296,7 +291,7 @@ def request_user_auth(request, rule_id, to_gateway, to_id):
 
 		email_match = EMAIL_REPLY_REGEX.search(raw_email)
 		if email_match is not None:
-			reply = email_match.group(1).lower()
+			reply = email_match.groupdict()['action'].lower()
 			if reply == "ok":
 				##############
 				# Allow once #

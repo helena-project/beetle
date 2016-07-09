@@ -32,6 +32,27 @@ class Contact(models.Model):
 	# primary key of NULL
 	NULL = 0
 
+	AUTH_SMS = 1
+	AUTH_EMAIL = 2
+	AUTH_METHOD_CHOICES = (
+		(AUTH_SMS, "sms"),
+		(AUTH_EMAIL, "email"),
+	)
+
+	# TODO: probably should not hard-code these
+	CARRIER_GATEWAY = ""
+	CARRIER_ATT = "txt.att.net"
+	CARRIER_TMOBILE = "tmomail.net"
+	CARRIER_VERIZON = "vtext.com"
+	CARRIER_SPRINT = "page.nextel.com"
+	CARRIER_GATEWAY_CHOICES = (
+		(CARRIER_GATEWAY, "default"),
+		(CARRIER_ATT, "att"),
+		(CARRIER_TMOBILE, "tmobile"),
+		(CARRIER_VERIZON, "verizon"),
+		(CARRIER_SPRINT, "sprint"),
+	)
+
 	first_name = models.CharField(
 		max_length=100)
 	last_name = models.CharField(
@@ -39,9 +60,17 @@ class Contact(models.Model):
 		blank=True)
 	phone_number = models.CharField(
 		max_length=100)
+	carrier_gateway = models.CharField(
+		max_length=100,
+		choices=CARRIER_GATEWAY_CHOICES,
+		default=CARRIER_GATEWAY)
+
 	email_address = models.CharField(
 		max_length=100,
 		blank=True)
+	auth_method = models.IntegerField(
+		choices=AUTH_METHOD_CHOICES,
+		default=AUTH_EMAIL)
 
 	def __unicode__(self):
 		return self.first_name + " " + self.last_name
