@@ -1,4 +1,20 @@
-# Beetle for Linux
+# Beetle
+
+The next generation of computing peripherals will be low-power ubiquitous
+computing devices such as door locks, smart watches, and heart rate monitors.
+Bluetooth Low Energy is a primary protocol for connecting such peripherals to
+mobile and gateway devices. Current operating system support for Bluetooth Low
+Energy forces peripherals into vertical application silos. As a result, simple,
+intuitive applications such as opening a door with a smart watch or
+simultaneously logging and viewing heart rate data are impossible. Beetle is a
+new hardware interface that virtualizes peripherals at the application layer,
+allowing safe access by multiple programs without requiring the operating
+system to understand hardware functionality, fine-grained access control to
+peripheral device resources, and transparent access to peripherals connected
+over the network.
+
+You can read an overview of Beetle's design in our [MobiSys 2016
+paper](http://iot.stanford.edu/pubs/beetle-mobisys16.pdf).
 
 ## Beetle C++ gateway
 In ```gateway``` subdirectory.
